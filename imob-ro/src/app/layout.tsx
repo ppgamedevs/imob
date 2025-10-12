@@ -28,6 +28,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://imob-three.vercel.app'),
   title: "imob.ro - Caută, compară și vinde în București",
   description: "Preț estimat, timp până la vânzare, zone pe înțelesul tău.",
 };
