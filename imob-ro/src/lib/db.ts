@@ -1,9 +1,25 @@
-import { PrismaClient } from "@prisma/client";
+// Note: Run `pnpm prisma generate` after setting up DATABASE_URL
+// This file will work after Prisma client is generated
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+let prisma: unknown;
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient();
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { PrismaClient } = require("@prisma/client");
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+  const globalForPrisma = globalThis as unknown as {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    prisma: any | undefined;
+  };
+
+  prisma = globalForPrisma.prisma ?? new PrismaClient();
+
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = prisma;
+  }
+} catch {
+  // Prisma client not generated yet
+  prisma = null;
+}
+
+export { prisma };

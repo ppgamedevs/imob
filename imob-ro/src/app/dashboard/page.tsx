@@ -1,10 +1,10 @@
-import { redirect } from "next/navigation";
 import { Plus } from "lucide-react";
+import { redirect } from "next/navigation";
 
-import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { auth } from "@/lib/auth";
 
 export default async function DashboardPage() {
   const session = await auth();

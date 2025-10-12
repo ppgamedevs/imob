@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function SignInPage() {
@@ -34,9 +35,7 @@ export default function SignInPage() {
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Autentificare</CardTitle>
-          <CardDescription>
-            Introdu email-ul pentru a primi un link magic
-          </CardDescription>
+          <CardDescription>Introdu email-ul pentru a primi un link magic</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleEmailSignIn} className="space-y-4">
@@ -63,9 +62,7 @@ export default function SignInPage() {
                   <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    sau
-                  </span>
+                  <span className="bg-background px-2 text-muted-foreground">sau</span>
                 </div>
               </div>
 

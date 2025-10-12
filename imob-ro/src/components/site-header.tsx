@@ -1,7 +1,6 @@
 import { Menu } from "lucide-react";
 import Link from "next/link";
 
-import { auth, signOut } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +11,7 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { auth, signOut } from "@/lib/auth";
 
 const navLinks = [
   { href: "/", label: "Acasă" },

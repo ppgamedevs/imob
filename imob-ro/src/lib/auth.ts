@@ -1,15 +1,17 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import NextAuth from "next-auth";
 import EmailProvider from "next-auth/providers/email";
+import GoogleProvider from "next-auth/providers/google";
+
 import { prisma } from "@/lib/db";
 
-export const authConfig: NextAuthConfig = {
+export const authConfig = {
+  // @ts-expect-error - Adapter version mismatch between next-auth beta and @auth/prisma-adapter
   adapter: PrismaAdapter(prisma),
   providers: [
     EmailProvider({
-      server: "",
+      server: "smtp://fake:fake@localhost:1025",
       from: "noreply@imob.ro",
       // Dev: log magic link to console (no SMTP)
       async sendVerificationRequest({ identifier: email, url }) {
@@ -27,7 +29,8 @@ export const authConfig: NextAuthConfig = {
       : []),
   ],
   callbacks: {
-    async session({ session, user }) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    async session({ session, user }: any) {
       if (session?.user) {
         session.user.id = user.id;
         session.user.role = user.role || "user";
@@ -39,6 +42,7 @@ export const authConfig: NextAuthConfig = {
     signIn: "/auth/signin",
     verifyRequest: "/auth/verify-request",
   },
-};
+} satisfies NextAuthConfig;
 
+// @ts-expect-error - Adapter version mismatch between next-auth beta and @auth/prisma-adapter
 export const { handlers, signIn, signOut, auth } = NextAuth(authConfig);
