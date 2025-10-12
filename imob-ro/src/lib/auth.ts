@@ -42,6 +42,7 @@ export const authConfig = {
     signIn: "/auth/signin",
     verifyRequest: "/auth/verify-request",
   },
+  trustHost: true, // Fix CORS and dynamic URL issues
 } satisfies NextAuthConfig;
 
 // @ts-expect-error - Adapter version mismatch between next-auth beta and @auth/prisma-adapter

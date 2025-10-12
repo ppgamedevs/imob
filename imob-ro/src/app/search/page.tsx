@@ -82,11 +82,11 @@ export default function SearchPage() {
   const [sortBy, setSortBy] = useState("relevant");
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-8">
-      <div className="flex gap-8">
+    <div className="container mx-auto max-w-7xl px-4 py-4 sm:py-6 lg:py-8">
+      <div className="flex gap-6 lg:gap-8">
         {/* Desktop Filters Sidebar */}
         <aside className="hidden w-80 shrink-0 lg:block">
-          <Card className="sticky top-24">
+          <Card className="sticky top-20">
             <CardHeader>
               <CardTitle>Filtrează</CardTitle>
             </CardHeader>
@@ -98,11 +98,10 @@ export default function SearchPage() {
 
         {/* Results */}
         <div className="flex-1">
-          {/* Results Header */}
-          <div className="mb-6 flex items-center justify-between">
-            <p className="text-muted-foreground">
+          {/* Results Header - Mobile Optimized */}
+          <div className="mb-4 flex flex-col gap-3 sm:mb-6 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground sm:text-base">
               <span className="font-semibold text-foreground">{mockListings.length}</span> rezultate
-              găsite
             </p>
 
             <div className="flex items-center gap-2">
@@ -110,7 +109,7 @@ export default function SearchPage() {
                 Sortează:
               </Label>
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger id="sort" className="w-40">
+                <SelectTrigger id="sort" className="h-10 w-full text-sm sm:w-40">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -123,8 +122,8 @@ export default function SearchPage() {
             </div>
           </div>
 
-          {/* Listings Grid */}
-          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          {/* Listings Grid - Mobile First */}
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3">
             {mockListings.map((listing) => (
               <ListingCard key={listing.id} listing={listing} />
             ))}
@@ -132,16 +131,16 @@ export default function SearchPage() {
         </div>
       </div>
 
-      {/* Mobile Filters Button */}
-      <div className="fixed bottom-4 right-4 lg:hidden">
+      {/* Mobile Filters Button - Improved positioning */}
+      <div className="fixed bottom-6 right-4 z-40 lg:hidden">
         <Sheet>
           <SheetTrigger asChild>
-            <Button size="lg" className="shadow-lg">
+            <Button size="lg" className="h-14 shadow-2xl">
               <SlidersHorizontal className="mr-2 h-5 w-5" />
               Filtre
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-[85vh]">
+          <SheetContent side="bottom" className="h-[90vh] sm:h-[85vh]">
             <SheetHeader>
               <SheetTitle>Filtrează</SheetTitle>
             </SheetHeader>

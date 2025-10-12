@@ -31,16 +31,20 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="container mx-auto flex min-h-screen items-center justify-center px-4 py-12">
+    <div className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-8 sm:py-12">
       <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Autentificare</CardTitle>
-          <CardDescription>Introdu email-ul pentru a primi un link magic</CardDescription>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-xl sm:text-2xl">Autentificare</CardTitle>
+          <CardDescription className="text-sm sm:text-base">
+            Introdu email-ul pentru a primi un link magic
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <form onSubmit={handleEmailSignIn} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-sm sm:text-base">
+                Email
+              </Label>
               <Input
                 id="email"
                 type="email"
@@ -48,9 +52,10 @@ export default function SignInPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-11 text-base sm:h-10"
               />
             </div>
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="h-11 w-full text-base sm:h-10" disabled={loading}>
               {loading ? "Se trimite..." : "Trimite link magic"}
             </Button>
           </form>
