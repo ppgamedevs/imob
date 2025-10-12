@@ -1,43 +1,16 @@
-/**
- * Copilot: Create a protected Dashboard shell:
- * - If not authenticated, show a Card with sign-in CTA (link to /api/auth/signin)
- * - If authenticated: tabs "Anunțurile mele", "Creează anunț", "Setări"
- * - In "Anunțurile mele" show an empty state (Button 'Adaugă anunț')
- */
-"use client";
-
+import { redirect } from "next/navigation";
 import { Plus } from "lucide-react";
 
+import { auth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export default function DashboardPage() {
-  // For now, we'll show a simple auth CTA
-  // In Day 2, we'll integrate NextAuth
-  const isAuthenticated = false;
+export default async function DashboardPage() {
+  const session = await auth();
 
-  if (!isAuthenticated) {
-    return (
-      <div className="container mx-auto flex min-h-[calc(100vh-200px)] max-w-7xl items-center justify-center px-4">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Bine ai venit!</CardTitle>
-            <CardDescription>
-              Conectează-te pentru a vedea și gestiona anunțurile tale.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button className="w-full" size="lg" asChild>
-              <a href="/api/auth/signin">Conectează-te</a>
-            </Button>
-            <p className="text-center text-sm text-muted-foreground">
-              Nu ai cont? Înregistrarea este gratuită și rapidă.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  if (!session?.user) {
+    redirect("/auth/signin");
   }
 
   // Authenticated view

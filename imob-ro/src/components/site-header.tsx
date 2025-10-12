@@ -1,15 +1,7 @@
-/**
- * Copilot: Build <SiteHeader> with:
- * - Logo (text 'imob.ro' for now) linking to "/"
- * - NavigationMenu with links to "/", "/search", "/dashboard"
- * - Theme toggle (sun/moon)
- * - Mobile menu using <Sheet> with same links
- */
-"use client";
-
 import { Menu } from "lucide-react";
 import Link from "next/link";
 
+import { auth, signOut } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +19,9 @@ const navLinks = [
   { href: "/dashboard", label: "Dashboard" },
 ];
 
-export function SiteHeader() {
+export async function SiteHeader() {
+  const session = await auth();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between px-4">
@@ -49,8 +43,28 @@ export function SiteHeader() {
           </NavigationMenuList>
         </NavigationMenu>
 
-        {/* Right side - Theme Toggle + Mobile Menu */}
+        {/* Right side - Auth + Theme Toggle + Mobile Menu */}
         <div className="flex items-center gap-2">
+          {session?.user ? (
+            <div className="hidden items-center gap-2 md:flex">
+              <span className="text-sm text-muted-foreground">{session.user.email}</span>
+              <form
+                action={async () => {
+                  "use server";
+                  await signOut();
+                }}
+              >
+                <Button variant="outline" size="sm" type="submit">
+                  Ieșire
+                </Button>
+              </form>
+            </div>
+          ) : (
+            <Button variant="default" size="sm" asChild className="hidden md:flex">
+              <Link href="/auth/signin">Conectare</Link>
+            </Button>
+          )}
+
           <ThemeToggle />
 
           {/* Mobile Menu */}
@@ -75,6 +89,27 @@ export function SiteHeader() {
                     {link.label}
                   </Link>
                 ))}
+                {session?.user ? (
+                  <>
+                    <div className="border-t pt-4">
+                      <p className="mb-2 text-sm text-muted-foreground">{session.user.email}</p>
+                      <form
+                        action={async () => {
+                          "use server";
+                          await signOut();
+                        }}
+                      >
+                        <Button variant="outline" size="sm" type="submit" className="w-full">
+                          Ieșire
+                        </Button>
+                      </form>
+                    </div>
+                  </>
+                ) : (
+                  <Button variant="default" asChild>
+                    <Link href="/auth/signin">Conectare</Link>
+                  </Button>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
