@@ -4,9 +4,11 @@
   "description": "Analizează un link - injectează extractor și trimite datele către imob.ai",
   "version": "0.1.0",
   "action": {
-    "default_title": "Analizează pe imob.ai"
+    "default_title": "Analizează pe imob.ai",
+    "default_icon": "icon.svg"
   },
   "permissions": ["activeTab", "scripting"],
+  "host_permissions": ["http://localhost:3000/*", "https://imob.ai/*"],
   "background": {
     "service_worker": "background.js"
   }

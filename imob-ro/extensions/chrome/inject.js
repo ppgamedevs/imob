@@ -68,8 +68,8 @@
     },
   };
 
-  // Point the extractor to your local app API. Change if you deploy elsewhere.
-  const endpoint = "http://localhost:3000/api/analyze/client-push";
+  // Production endpoint (update if your production domain differs)
+  const endpoint = "https://imob.ai/api/analyze/client-push";
 
   fetch(endpoint, {
     method: "POST",
