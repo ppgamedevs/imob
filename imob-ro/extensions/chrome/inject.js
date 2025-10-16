@@ -43,7 +43,7 @@
             lng = parseFloat(m[2]);
           }
         }
-      } catch (e) {}
+      } catch {}
     }
   }
 
@@ -68,7 +68,8 @@
     },
   };
 
-  const endpoint = "https://site.tau/api/analyze/client-push";
+  // Point the extractor to your local app API. Change if you deploy elsewhere.
+  const endpoint = "http://localhost:3000/api/analyze/client-push";
 
   fetch(endpoint, {
     method: "POST",
@@ -80,8 +81,8 @@
     .then((data) => {
       alert("Trimis către imob.ai — analysisId: " + (data?.analysisId || JSON.stringify(data)));
     })
-    .catch((err) => {
-      console.error("client-push failed", err);
+    .catch(() => {
+      console.error("client-push failed");
       alert("Eroare la trimitere");
     });
 })();
