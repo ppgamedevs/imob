@@ -20,6 +20,7 @@ model User {
   accounts Account[]
   sessions Session[]
   listings Listing[]
+  analyses Analysis[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -79,7 +80,7 @@ model Area {
 }
 
 model Building {
-  id      String @id @default(cuid())
+  id      String  @id @default(cuid())
   areaId  String?
   address String
   geo     Json? // {lat, lng}
@@ -131,4 +132,90 @@ model ListingMedia {
   listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
 
   @@index([listingId])
+}
+
+/// --- Link Analyzer Models (Day 2) ---
+model Analysis {
+  id           String   @id @default(cuid())
+  userId       String?
+  sourceUrl    String
+  canonicalUrl String?
+  status       String // pending|completed|failed
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user             User?             @relation(fields: [userId], references: [id])
+  extractedListing ExtractedListing?
+  featureSnapshot  FeatureSnapshot?
+  scoreSnapshot    ScoreSnapshot?
+
+  @@index([sourceUrl])
+  @@index([userId])
+}
+
+model ExtractedListing {
+  id         String  @id @default(cuid())
+  analysisId String  @unique
+  title      String?
+  price      Int?
+  currency   String?
+  areaM2     Int?
+  rooms      Int?
+  floor      Int?
+  yearBuilt  Int?
+  addressRaw String?
+  lat        Float?
+  lng        Float?
+  photos     Json?
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([lat, lng])
+}
+
+model FeatureSnapshot {
+  id         String @id @default(cuid())
+  analysisId String @unique
+  features   Json // normalized features
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+}
+
+model ScoreSnapshot {
+  id             String @id @default(cuid())
+  analysisId     String @unique
+  avmLow         Float
+  avmHigh        Float
+  avmConf        Float
+  ttsBucket      String
+  yieldGross     Float?
+  yieldNet       Float?
+  riskSeismic    Float?
+  conditionScore Float?
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+}
+
+model PriceHistory {
+  id        String   @id @default(cuid())
+  sourceUrl String
+  ts        DateTime
+  price     Int
+  currency  String
+
+  @@index([sourceUrl])
+  @@index([sourceUrl, ts])
+}
+
+model AreaDaily {
+  id          String   @id @default(cuid())
+  areaSlug    String
+  date        DateTime @db.Date
+  medianEurM2 Float
+  supply      Int
+  demandScore Float
+
+  @@unique([areaSlug, date])
+  @@index([areaSlug])
+  @@index([date])
 }
