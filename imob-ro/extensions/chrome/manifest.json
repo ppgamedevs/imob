@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Imob.ai Extractor",
+  "description": "Analizează un link - injectează extractor și trimite datele către imob.ai",
+  "version": "0.1.0",
+  "action": {
+    "default_title": "Analizează pe imob.ai"
+  },
+  "permissions": ["activeTab", "scripting"],
+  "background": {
+    "service_worker": "background.js"
+  }
+}
