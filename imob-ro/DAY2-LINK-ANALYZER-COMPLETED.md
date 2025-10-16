@@ -7,33 +7,39 @@
 All Link Analyzer models have been added to `prisma/schema.prisma`:
 
 **1. Analysis**
+
 - Core analysis tracking table
 - Fields: `id`, `userId?`, `sourceUrl`, `canonicalUrl?`, `status`, `createdAt`, `updatedAt`
 - Indexes: `sourceUrl`, `userId`
 - Relation: Optional link to User
 
 **2. ExtractedListing**
+
 - Stores extracted property data from analyzed URLs
 - Fields: `analysisId`, `title?`, `price?`, `currency?`, `areaM2?`, `rooms?`, `floor?`, `yearBuilt?`, `addressRaw?`, `lat?`, `lng?`, `photos` (Json)
 - Indexes: `(lat, lng)` for geospatial queries
 - One-to-one relation with Analysis
 
 **3. FeatureSnapshot**
+
 - Normalized feature data snapshot
 - Fields: `analysisId`, `features` (Json)
 - One-to-one relation with Analysis
 
 **4. ScoreSnapshot**
+
 - Property valuation and scoring data
 - Fields: `analysisId`, `avmLow`, `avmHigh`, `avmConf`, `ttsBucket`, `yieldGross?`, `yieldNet?`, `riskSeismic?`, `conditionScore?`
 - One-to-one relation with Analysis
 
 **5. PriceHistory**
+
 - Historical price tracking for monitored properties
 - Fields: `sourceUrl`, `ts`, `price`, `currency`
 - Indexes: `sourceUrl`, `(sourceUrl, ts)` for efficient time-series queries
 
 **6. AreaDaily**
+
 - Daily market statistics per area
 - Fields: `areaSlug`, `date`, `medianEurM2`, `supply`, `demandScore`
 - Unique constraint: `(areaSlug, date)` to prevent duplicates
@@ -44,6 +50,7 @@ All Link Analyzer models have been added to `prisma/schema.prisma`:
 Migration file: `prisma/migrations/20251016000000_link_analyzer/migration.sql`
 
 The migration includes:
+
 - All 6 new tables with proper column types
 - All required indexes for performance
 - Foreign key constraints with appropriate cascade rules
@@ -52,11 +59,13 @@ The migration includes:
 ### Key Indexes Implemented
 
 ✅ **sourceUrl indexes**:
+
 - `Analysis.sourceUrl` - for quick lookups of analyses by URL
 - `PriceHistory.sourceUrl` - for historical price queries
 - `PriceHistory.(sourceUrl, ts)` - composite index for time-series queries
 
 ✅ **Geospatial indexes**:
+
 - `ExtractedListing.(lat, lng)` - for location-based queries and proximity searches
 
 ### Relations Configured
@@ -111,6 +120,7 @@ With the schema in place, you can now:
 ## ✨ Features Enabled
 
 This schema enables:
+
 - 🔗 **URL Analysis**: Track analysis of property listing URLs
 - 📊 **Property Extraction**: Store structured data from listings
 - 💰 **Price Tracking**: Historical price monitoring

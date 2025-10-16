@@ -15,6 +15,7 @@ Add these variables (for **Production**, **Preview**, and **Development**):
    - Should look like: `postgresql://neondb_owner:...@ep-....neon.tech/neondb?sslmode=require`
 
 2. **AUTH_SECRET**
+
    ```
    tUejT95fbzfRaYW2amXGS5RzUc811SQiKccBN+7Xaco=
    ```
@@ -41,6 +42,7 @@ Add these variables (for **Production**, **Preview**, and **Development**):
 ## After Environment Variables Are Set:
 
 Just trigger a redeploy:
+
 - Go to Vercel Dashboard → Deployments
 - Click on the latest deployment
 - Click "Redeploy" button
@@ -48,6 +50,7 @@ Just trigger a redeploy:
 ## Testing Authentication Flow:
 
 Once deployed:
+
 1. Visit your site at https://imob-three.vercel.app
 2. Click "Conectare" button
 3. Enter your email

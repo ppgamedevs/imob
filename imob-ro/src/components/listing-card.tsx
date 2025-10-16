@@ -5,6 +5,8 @@
  * - badges placeholder (Fair/Overpriced - to be wired later)
  * - skeleton state via className prop
  */
+import Image from "next/image";
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,9 +54,12 @@ export function ListingCard({ listing, isLoading }: ListingCardProps) {
       {/* Image */}
       <div className="aspect-video w-full overflow-hidden bg-muted">
         {listing.image ? (
-          <img
+          <Image
             src={listing.image}
             alt={listing.title}
+            width={16}
+            height={9}
+            sizes="(max-width: 768px) 100vw, 33vw"
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
           />
         ) : (

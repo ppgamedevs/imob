@@ -7,16 +7,16 @@ Your site is deployed at **`imob-blush.vercel.app`** but the auth configuration 
 ## Solution: Update Environment Variables on Vercel
 
 ### Step 1: Go to Vercel Dashboard
+
 https://vercel.com/ppgamedevs/imob/settings/environment-variables
 
 ### Step 2: Update AUTH_URL
 
 **Delete or Update these variables:**
 
-1. **AUTH_URL** 
+1. **AUTH_URL**
    - **For Production:** Leave it EMPTY or set to your actual domain
    - Vercel will auto-detect: `https://imob-blush.vercel.app`
-   
 2. **NEXTAUTH_URL** (if exists)
    - Same as above - leave EMPTY or set to actual domain
 
@@ -25,6 +25,7 @@ https://vercel.com/ppgamedevs/imob/settings/environment-variables
 Make sure these exist:
 
 1. **DATABASE_URL** (from Vercel Postgres)
+
    ```
    postgresql://neondb_owner:...@ep-summer-darkness-agbyo0bj...
    ```
@@ -37,6 +38,7 @@ Make sure these exist:
 ### Step 4: Redeploy
 
 After updating environment variables:
+
 1. Go to Deployments tab
 2. Click "Redeploy" on latest deployment
 3. Check the box "Use existing Build Cache"

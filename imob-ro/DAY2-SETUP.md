@@ -3,6 +3,7 @@
 ## ✅ Completed
 
 ### Dependencies Installed
+
 - `next-auth@5.0.0-beta.29` - Authentication framework
 - `@auth/prisma-adapter@2.11.0` - Prisma adapter for NextAuth
 - `@prisma/client@6.17.1` - Prisma client
@@ -11,27 +12,33 @@
 ### Files Created
 
 **Database & Auth Core:**
+
 - `prisma/schema.prisma` - Complete schema with NextAuth models + domain models
 - `src/lib/db.ts` - Prisma client singleton
 - `src/lib/auth.ts` - NextAuth configuration (email + optional Google)
 - `src/app/api/auth/[...nextauth]/route.ts` - NextAuth API routes
 
 **Auth Pages:**
+
 - `src/app/auth/signin/page.tsx` - Sign-in page with email magic link
 - `src/app/auth/verify-request/page.tsx` - Email verification message page
 
 **Protected Routes:**
+
 - `src/app/dashboard/page.tsx` - Now requires authentication (server component)
 
 **Updated Components:**
+
 - `src/components/site-header.tsx` - Now shows auth status & sign out button
 
 **Type Definitions:**
+
 - `src/types/next-auth.d.ts` - Extended NextAuth types with custom fields
 
 ### Environment Variables
 
 `.env.local` created with:
+
 ```env
 DATABASE_URL="postgresql://user:password@host:5432/database"
 AUTH_SECRET="tUejT95fbzfRaYW2amXGS5RzUc811SQiKccBN+7Xaco="
@@ -62,6 +69,7 @@ pnpm prisma generate
 ```
 
 This will:
+
 - Create all tables in your Postgres database
 - Generate the Prisma Client
 - Fix the TypeScript errors in `src/lib/db.ts`
@@ -73,6 +81,7 @@ pnpm dev
 ```
 
 Then:
+
 1. Visit http://localhost:3000
 2. Click "Conectare" in header
 3. Enter your email
@@ -93,12 +102,14 @@ Then:
 ## 📋 Database Schema
 
 ### NextAuth Tables
+
 - `User` - User accounts with role (user/agency/admin)
 - `Account` - OAuth provider connections
 - `Session` - Active sessions
 - `VerificationToken` - Email verification tokens
 
 ### Domain Tables (Initial)
+
 - `Area` - City neighborhoods (București zones)
 - `Building` - Physical buildings with address & coordinates
 - `Listing` - Property listings (apartments/houses)
