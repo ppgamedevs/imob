@@ -1,0 +1,57 @@
+name: Package Chrome Extension
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      replace_domain:
+        description: "Optional domain to replace YOUR_DOMAIN in extension files"
+        required: false
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        run: npm install -g pnpm@latest
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare extension (replace placeholder if provided)
+        env:
+          REPLACE_DOMAIN: ${{ github.event.inputs.replace_domain || env.REPLACE_DOMAIN || '' }}
+        run: |
+          if [ -n "$REPLACE_DOMAIN" ]; then
+            echo "Replacing YOUR_DOMAIN -> $REPLACE_DOMAIN";
+          else
+            echo "No replace domain provided; keeping placeholders.";
+          fi
+          pnpm run prepare-extension
+
+      - name: Zip extension
+        run: |
+          mkdir -p dist
+          cd dist
+          if [ -d extension ]; then
+            zip -r extension.zip extension -x "**/.DS_Store";
+          else
+            echo "No extension directory found";
+            exit 1
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-zip
+          path: dist/extension.zip
