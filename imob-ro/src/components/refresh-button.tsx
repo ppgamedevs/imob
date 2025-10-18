@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 export default function RefreshButton({ analysisId }: { analysisId: string }) {
   const [loading, setLoading] = useState(false);
@@ -21,7 +21,7 @@ export default function RefreshButton({ analysisId }: { analysisId: string }) {
       } else {
         toast.error(j?.error || "Eroare");
       }
-    } catch (e) {
+    } catch {
       toast.error("Eroare la server");
     } finally {
       setLoading(false);

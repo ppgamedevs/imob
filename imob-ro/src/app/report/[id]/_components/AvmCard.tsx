@@ -5,11 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
+type PriceRange = { low: number; high: number; mid: number; conf: number };
+
 type Props = {
-  priceRange: { low: number; high: number; mid: number; conf: number } | null;
+  priceRange: PriceRange | null;
   actualPrice?: number | null;
 };
-
 function compareBadge(actual: number | undefined | null, mid: number) {
   if (!actual) return { label: "—", variant: "outline" as const };
   const ratio = actual / mid;
@@ -19,15 +20,17 @@ function compareBadge(actual: number | undefined | null, mid: number) {
 }
 
 export function AvmCard({ priceRange, actualPrice }: Props) {
-  const badge = priceRange ? compareBadge(actualPrice, priceRange.mid) : { label: "—", variant: "outline" };
+  const badge = priceRange
+    ? compareBadge(actualPrice, priceRange.mid)
+    : { label: "—", variant: ("outline" as const) };
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="font-medium">Preț estimat</div>
-          <div className="flex items-center gap-2">
-            <Badge variant={badge.variant as any}>{badge.label}</Badge>
+            <div className="flex items-center gap-2">
+            <Badge variant={badge.variant}>{badge.label}</Badge>
             <Tooltip>
               <TooltipTrigger>
                 <span className="text-sm text-muted-foreground underline">Cum calculăm</span>
@@ -42,8 +45,12 @@ export function AvmCard({ priceRange, actualPrice }: Props) {
       <CardContent>
         {priceRange ? (
           <div className="flex items-baseline gap-2">
-            <div className="text-2xl font-bold">{priceRange.mid.toLocaleString("ro-RO")} €</div>
-            <div className="text-sm text-muted-foreground">({priceRange.low.toLocaleString("ro-RO")} - {priceRange.high.toLocaleString("ro-RO")} )</div>
+            <div className="text-2xl font-bold">
+              {priceRange.mid.toLocaleString("ro-RO")} €
+            </div>
+            <div className="text-sm text-muted-foreground">
+              ({priceRange.low.toLocaleString("ro-RO")} - {priceRange.high.toLocaleString("ro-RO")} {""})
+            </div>
           </div>
         ) : (
           <div className="text-sm text-muted-foreground">Calcul în curs…</div>

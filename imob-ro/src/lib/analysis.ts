@@ -13,7 +13,7 @@ export async function startAnalysis(analysisId: string, url: string) {
 
     // Wait up to 5s for a client-pushed ExtractedListing
     const deadline = Date.now() + 5000;
-    let extracted = null;
+  let extracted: Extracted | null = null;
     while (Date.now() < deadline) {
       extracted = await prisma.extractedListing.findUnique({ where: { analysisId } });
       if (extracted) break;
@@ -23,7 +23,7 @@ export async function startAnalysis(analysisId: string, url: string) {
 
     if (!extracted) {
       // try server-side fetch/extract if the domain is whitelisted
-      const serverData: Extracted | null = await maybeFetchServer(url);
+  const serverData = (await maybeFetchServer(url)) as Extracted | null;
       if (serverData) {
         // upsert ExtractedListing
         await prisma.extractedListing.upsert({
@@ -50,31 +50,33 @@ export async function startAnalysis(analysisId: string, url: string) {
         // Immediately normalize and persist FeatureSnapshot.features
         try {
           const { default: normalizeExtracted } = await import("./normalize");
-          const normalized = await normalizeExtracted(serverData as any);
+          const normalized = await normalizeExtracted(serverData as unknown);
           await prisma.featureSnapshot.upsert({
             where: { analysisId },
-            create: { analysisId, features: normalized as any },
-            update: { features: normalized as any },
+            create: { analysisId, features: normalized },
+            update: { features: normalized },
           });
-        } catch (e) {
+        } catch (err) {
           // swallow normalization errors to avoid blocking analysis flow
           // eslint-disable-next-line no-console
-          console.warn("normalize or upsert feature snapshot failed", e);
+          const e = err as Error | undefined;
+          console.warn("normalize or upsert feature snapshot failed", e?.message ?? e);
         }
       }
     } else {
       // If a client provided extracted listing exists, normalize it too
       try {
         const { default: normalizeExtracted } = await import("./normalize");
-        const normalized = await normalizeExtracted(extracted as any);
+        const normalized = await normalizeExtracted(extracted as unknown);
         await prisma.featureSnapshot.upsert({
           where: { analysisId },
-          create: { analysisId, features: normalized as any },
-          update: { features: normalized as any },
+          create: { analysisId, features: normalized },
+          update: { features: normalized },
         });
-      } catch (e) {
+      } catch (err) {
         // eslint-disable-next-line no-console
-        console.warn("normalize or upsert feature snapshot failed", e);
+        const e = err as Error | undefined;
+        console.warn("normalize or upsert feature snapshot failed", e?.message ?? e);
       }
     }
 

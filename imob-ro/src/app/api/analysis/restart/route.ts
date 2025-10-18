@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { startAnalysis } from "@/lib/analysis";
+import { prisma } from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     startAnalysis(id, a.sourceUrl).catch((e) => console.error("startAnalysis failed", e));
 
     return NextResponse.json({ ok: true });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "internal" }, { status: 500 });
   }
 }

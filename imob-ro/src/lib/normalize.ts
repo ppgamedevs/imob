@@ -16,19 +16,19 @@ function slugify(input?: string | null) {
     .replace(/^-+|-+$/g, "");
 }
 
-function toInt(v: any): number | null {
+function toInt(v: unknown): number | null {
   if (v == null) return null;
   const n = parseInt(String(v).replace(/[^0-9-]/g, ""), 10);
   return Number.isFinite(n) ? n : null;
 }
 
-function toFloat(v: any): number | null {
+function toFloat(v: unknown): number | null {
   if (v == null) return null;
   const n = parseFloat(String(v).replace(/[,\s]+/g, ""));
   return Number.isFinite(n) ? n : null;
 }
 
-function parsePriceInt(v: any): number | null {
+function parsePriceInt(v: unknown): number | null {
   if (v == null) return null;
   // remove any non-digit characters (treat dots/commas/spaces as separators)
   const s = String(v).replace(/[^0-9]/g, "");
@@ -60,18 +60,19 @@ export type NormalizedFeatures = {
  * - normalizes currency using EXCHANGE_RATE_EUR_TO_RON (fallback 4.9)
  * - optionally geocodes the raw address via Mapbox (MAPBOX_API_TOKEN env)
  */
-export async function normalizeExtracted(ex: any): Promise<NormalizedFeatures> {
+export async function normalizeExtracted(ex: unknown): Promise<NormalizedFeatures> {
+  const src = ex as Record<string, unknown> | undefined;
   const out: NormalizedFeatures = {
-    title: ex?.title ?? null,
-    currency: ex?.currency ? String(ex.currency).toUpperCase() : null,
-    address_raw: ex?.addressRaw ?? null,
-    photos: Array.isArray(ex?.photos) ? ex.photos : null,
-    area_m2: toInt(ex?.areaM2 ?? ex?.area_m2 ?? null),
-    rooms: toFloat(ex?.rooms ?? null),
-    floor: toInt(ex?.floor ?? ex?.floorNumber ?? null),
-    year_built: toInt(ex?.yearBuilt ?? ex?.year_built ?? null),
-    lat: ex?.lat ?? null,
-    lng: ex?.lng ?? null,
+    title: src?.title ? String(src.title) : null,
+    currency: src?.currency ? String(src.currency).toUpperCase() : null,
+    address_raw: src?.addressRaw ? String(src.addressRaw) : null,
+    photos: Array.isArray(src?.photos) ? (src?.photos as string[]) : null,
+    area_m2: toInt(src?.areaM2 ?? src?.area_m2 ?? null),
+    rooms: toFloat(src?.rooms ?? null),
+    floor: toInt(src?.floor ?? src?.floorNumber ?? null),
+    year_built: toInt(src?.yearBuilt ?? src?.year_built ?? null),
+    lat: (src?.lat as number) ?? null,
+    lng: (src?.lng as number) ?? null,
     price_eur: null,
     price_ron: null,
     area_slug: null,
@@ -79,7 +80,7 @@ export async function normalizeExtracted(ex: any): Promise<NormalizedFeatures> {
   };
 
   // Normalize price/currency
-  const rawPrice = parsePriceInt(ex?.price ?? ex?.price_eur ?? ex?.price_ron ?? null);
+  const rawPrice = parsePriceInt(src?.price ?? src?.price_eur ?? src?.price_ron ?? null);
   const cur = out.currency;
   const rate = DEFAULT_EUR_TO_RON;
   if (rawPrice != null) {
@@ -111,15 +112,15 @@ export async function normalizeExtracted(ex: any): Promise<NormalizedFeatures> {
     } catch (e) {
       // swallow geocode errors and continue
       // eslint-disable-next-line no-console
-      const err: any = e;
+      const err = e as Error | undefined;
       console.warn("normalizeExtracted: geocode failed", err?.message ?? err);
     }
   }
 
   // If area_slug still missing, try derive from address components or raw address
   if (!out.area_slug) {
-    const comp = out.address_components || {};
-    const candidate = comp.neighbourhood || comp.locality || comp.place || comp.region || comp.city;
+    const comp = out.address_components || ({} as Record<string, unknown>);
+    const candidate = (comp.neighbourhood as string) || (comp.locality as string) || (comp.place as string) || (comp.region as string) || (comp.city as string);
     out.area_slug = slugify(candidate ?? out.address_raw ?? null);
   }
 

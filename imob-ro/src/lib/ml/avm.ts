@@ -10,7 +10,10 @@ export type AreaStats = {
   ts?: string | number | Date;
 };
 
-export function estimatePriceRange(features: any, areaStats: AreaStats | AreaStats[]) {
+export function estimatePriceRange(
+  features: Record<string, unknown> | null | undefined,
+  areaStats: AreaStats | AreaStats[],
+) {
   // Derive base €/m2 from either the single stats or a weighted average of recent stats
   let base = 1500;
   let totalCount = 1;
@@ -26,7 +29,7 @@ export function estimatePriceRange(features: any, areaStats: AreaStats | AreaSta
     totalCount = (areaStats as AreaStats).count ?? 1;
   }
 
-  const area = Number(features?.area_m2 ?? features?.areaM2 ?? 50);
+  const area = Number((features && (features.area_m2 ?? (features as any).areaM2) ? (features.area_m2 ?? (features as any).areaM2) : 50) as number);
 
   // Base mid price
   let midEur = base * area;
