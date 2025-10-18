@@ -12,10 +12,8 @@ import estimatePriceRange from "@/lib/ml/avm";
 
 import AvmCard from "./_components/AvmCard";
 
-type Props = {
-  params: { id: string };
-};
-
+// keep params typing loose to satisfy Next.js PageProps constraints
+type Props = { params: any };
 async function loadAnalysis(id: string) {
   return prisma.analysis.findUnique({
     where: { id },
