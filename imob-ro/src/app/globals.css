@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 @import "tw-animate-css";
 
 /* Copilot: CSS vars for light/dark per shadcn preset (rounded-2xl, card shadows) */
