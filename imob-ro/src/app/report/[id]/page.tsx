@@ -5,14 +5,14 @@ import React from "react";
 
 import { ListingCard } from "@/components/listing-card";
 import RefreshButton from "@/components/refresh-button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { prisma } from "@/lib/db";
 import estimatePriceRange from "@/lib/ml/avm";
 import estimateTTS from "@/lib/ml/tts";
-import { estimateRent, computeYield, type YieldResult } from "@/lib/ml/yield";
+import { computeYield, estimateRent, type YieldResult } from "@/lib/ml/yield";
 
 import AvmCard from "./_components/AvmCard";
 
@@ -37,8 +37,8 @@ export default async function ReportPage({ params }: Props) {
   const features = (analysis?.featureSnapshot?.features ?? null) as any;
   const f = features as any;
   let yieldRes: YieldResult | null = null;
-  let rentM2: number | null = null;
-  let compsRentArr: number[] = [];
+  const rentM2: number | null = null;
+  const compsRentArr: number[] = [];
 
   // compute AVM using area daily stats when possible
   let priceRange: { low: number; high: number; mid: number; conf: number } | null = null;
@@ -58,18 +58,20 @@ export default async function ReportPage({ params }: Props) {
       try {
         const actualPrice = (f?.price_eur as number) ?? (extracted?.price as number) ?? null;
 
-  // priceDelta: relative difference (actual / avmMid - 1)
-  const avmMid = priceRange.mid ?? (priceRange.low + priceRange.high) / 2;
-  const priceDelta = actualPrice != null && avmMid ? actualPrice / avmMid - 1 : 0;
+        // priceDelta: relative difference (actual / avmMid - 1)
+        const avmMid = priceRange.mid ?? (priceRange.low + priceRange.high) / 2;
+        const priceDelta = actualPrice != null && avmMid ? actualPrice / avmMid - 1 : 0;
 
         // demandScore: prefer areaDaily.demandScore, fallback to a supply-derived heuristic or 0.5
-        const demandScore = ad?.demandScore ?? (areaStats.count ? Math.max(0, Math.min(1, 1 - areaStats.count / 20)) : 0.5);
+        const demandScore =
+          ad?.demandScore ??
+          (areaStats.count ? Math.max(0, Math.min(1, 1 - areaStats.count / 20)) : 0.5);
 
         // season heuristic: spring/summer (Apr-Sep) => high, winter (Dec-Feb) => low
         const month = new Date().getMonth();
-        let season: 'high' | 'low' | 'neutral' = 'neutral';
-        if (month >= 3 && month <= 8) season = 'high';
-        if (month === 11 || month === 0 || month === 1) season = 'low';
+        let season: "high" | "low" | "neutral" = "neutral";
+        if (month >= 3 && month <= 8) season = "high";
+        if (month === 11 || month === 0 || month === 1) season = "low";
 
         const tts = estimateTTS({ priceDelta, demandScore, season });
         // Yield estimation: extract comps rent per m2 or compute from comps with price/area
@@ -78,8 +80,12 @@ export default async function ReportPage({ params }: Props) {
         if (comps) {
           for (const c of comps) {
             // prefer explicit rent_m2 if present
-            if (typeof c?.rent_m2 === 'number') compsRentArr.push(c.rent_m2);
-            else if (typeof c?.price === 'number' && typeof c?.area_m2 === 'number' && c.area_m2 > 0) {
+            if (typeof c?.rent_m2 === "number") compsRentArr.push(c.rent_m2);
+            else if (
+              typeof c?.price === "number" &&
+              typeof c?.area_m2 === "number" &&
+              c.area_m2 > 0
+            ) {
               // if comp lists monthly_rent or price (for sale) it's not helpful; but if rent is present as price field and area provided
               // assume price field is monthly rent when flagged by c.is_rent
               if (c.is_rent) compsRentArr.push(c.price / c.area_m2);
@@ -94,13 +100,15 @@ export default async function ReportPage({ params }: Props) {
         // capex heuristic: map condition score or photo_condition to estimated one-time capex
         let capex = 0;
         const cond = f?.condition_score ?? null;
-        if (typeof cond === 'number') {
+        if (typeof cond === "number") {
           // cond: 0..1 (lower => worse) -> higher capex
           capex = Math.round((1 - cond) * 10000); // up to 10k
-        } else if (f?.photo_condition === 'poor') capex = 8000;
-        else if (f?.photo_condition === 'average') capex = 3000;
+        } else if (f?.photo_condition === "poor") capex = 8000;
+        else if (f?.photo_condition === "average") capex = 3000;
 
-  yieldRes = rentPerMonth ? computeYield((actualPrice as number) ?? 0, rentPerMonth, capex) : null;
+        yieldRes = rentPerMonth
+          ? computeYield((actualPrice as number) ?? 0, rentPerMonth, capex)
+          : null;
 
         await prisma.scoreSnapshot.upsert({
           where: { analysisId: analysis!.id },
@@ -302,7 +310,9 @@ export default async function ReportPage({ params }: Props) {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="font-medium">Randament estimat</div>
-                  <div className="text-sm text-muted-foreground">{yieldRes ? `${Math.round((yieldRes.yieldNet ?? 0) * 10000) / 100}%` : '—'}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {yieldRes ? `${Math.round((yieldRes.yieldNet ?? 0) * 10000) / 100}%` : "—"}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -323,20 +333,35 @@ export default async function ReportPage({ params }: Props) {
                         <Tooltip>
                           <TooltipTrigger>
                             <Badge
-                              variant={yieldRes.verdict === 'ok' ? 'default' : yieldRes.verdict === 'mediocre' ? 'secondary' : 'destructive'}
+                              variant={
+                                yieldRes.verdict === "ok"
+                                  ? "default"
+                                  : yieldRes.verdict === "mediocre"
+                                    ? "secondary"
+                                    : "destructive"
+                              }
                             >
                               {yieldRes.verdict}
                             </Badge>
                           </TooltipTrigger>
                           <TooltipContent sideOffset={6}>
-                            {yieldRes.verdict === 'ok' && 'Randament bun — potrivit pentru investitie.'}
-                            {yieldRes.verdict === 'mediocre' && 'Randament moderat — necesita atentie la costuri.'}
-                            {yieldRes.verdict === 'slab' && 'Randament scazut — risc ridicat sau pret prea mare.'}
+                            {yieldRes.verdict === "ok" &&
+                              "Randament bun — potrivit pentru investitie."}
+                            {yieldRes.verdict === "mediocre" &&
+                              "Randament moderat — necesita atentie la costuri."}
+                            {yieldRes.verdict === "slab" &&
+                              "Randament scazut — risc ridicat sau pret prea mare."}
                           </TooltipContent>
                         </Tooltip>
                       </div>
 
-                      <div className="text-sm text-muted-foreground">{rentM2 ? (Array.isArray(compsRentArr) && compsRentArr.length ? 'bazat pe comps' : 'estimare din features') : '—'}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {rentM2
+                          ? Array.isArray(compsRentArr) && compsRentArr.length
+                            ? "bazat pe comps"
+                            : "estimare din features"
+                          : "—"}
+                      </div>
                     </div>
                   </div>
                 ) : (

@@ -11,10 +11,10 @@
 export type TtsInput = {
   priceDelta: number; // e.g. 0.1 for +10%
   demandScore: number; // 0..1
-  season?: 'high' | 'low' | 'neutral';
+  season?: "high" | "low" | "neutral";
 };
 
-export function estimateTTS({ priceDelta, demandScore, season = 'neutral' }: TtsInput) {
+export function estimateTTS({ priceDelta, demandScore, season = "neutral" }: TtsInput) {
   // baseline expected days (in months * 30)
   // Start with a base of 60 days
   let days = 60;
@@ -28,29 +28,29 @@ export function estimateTTS({ priceDelta, demandScore, season = 'neutral' }: Tts
   days *= demandFactor;
 
   // Season adjustment
-  if (season === 'high') days *= 0.9;
-  if (season === 'low') days *= 1.15;
+  if (season === "high") days *= 0.9;
+  if (season === "low") days *= 1.15;
 
   // Clamp to reasonable range
   days = Math.max(7, Math.min(365, days));
 
   // Bucketize
-  if (days < 30) return { days: Math.round(days), bucket: '<30' };
-  if (days < 60) return { days: Math.round(days), bucket: '30-60' };
-  if (days < 90) return { days: Math.round(days), bucket: '60-90' };
-  return { days: Math.round(days), bucket: '90+' };
+  if (days < 30) return { days: Math.round(days), bucket: "<30" };
+  if (days < 60) return { days: Math.round(days), bucket: "30-60" };
+  if (days < 90) return { days: Math.round(days), bucket: "60-90" };
+  return { days: Math.round(days), bucket: "90+" };
 }
 
 export function humanizeBucket(bucket: string) {
   switch (bucket) {
-    case '<30':
-      return 'Sub 30 zile';
-    case '30-60':
-      return '30–60 zile';
-    case '60-90':
-      return '60–90 zile';
-    case '90+':
-      return 'Peste 90 zile';
+    case "<30":
+      return "Sub 30 zile";
+    case "30-60":
+      return "30–60 zile";
+    case "60-90":
+      return "60–90 zile";
+    case "90+":
+      return "Peste 90 zile";
     default:
       return String(bucket);
   }
