@@ -24,13 +24,13 @@ export async function POST(req: Request) {
         mobilenet = _require("@tensorflow-models/mobilenet");
         // attach for helper usage
         (globalThis as any).tf = tf;
-      } catch (e) {
+      } catch {
         // fallback to pure-js tfjs if native not available
         try {
           const tf = _require("@tensorflow/tfjs");
           mobilenet = _require("@tensorflow-models/mobilenet");
           (globalThis as any).tf = tf;
-        } catch (err) {
+        } catch {
           console.warn("No tfjs available on server, skipping inference");
           const neutral = 0.5;
           if (analysisId) {
@@ -50,7 +50,7 @@ export async function POST(req: Request) {
           return NextResponse.json({ score: neutral, verdict: mapScoreToVerdict(neutral) });
         }
       }
-    } catch (e) {
+    } catch {
       // If even Function('return require') is unavailable (edge), gracefully skip inference
       console.warn("Require not available in this runtime, skipping server inference");
       const neutral = 0.5;

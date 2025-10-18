@@ -5,6 +5,7 @@ import Image from "next/image";
 import React from "react";
 
 import { ListingCard } from "@/components/listing-card";
+import ReportPreview from "@/components/pdf/ReportPreview";
 import RefreshButton from "@/components/refresh-button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -149,6 +150,18 @@ export default async function ReportPage({ params }: Props) {
     }
   }
 
+  const docData = {
+    address: extracted?.addressRaw ?? null,
+    price: extracted?.price ?? null,
+    avm: priceRange ? { low: priceRange.low, high: priceRange.high, conf: priceRange.conf } : null,
+    tts: (analysis?.featureSnapshot as any)?.ttsBucket ?? null,
+    yieldNet: (analysis?.featureSnapshot as any)?.yieldNet ?? null,
+    riskSeismic: (analysis?.featureSnapshot as any)?.riskSeismic ?? null,
+    conditionScore: (analysis?.featureSnapshot as any)?.conditionScore ?? null,
+    comps: (f?.comps as any) ?? null,
+    photos: Array.isArray(extracted?.photos) ? (extracted?.photos as string[]) : null,
+  };
+
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6 flex items-center justify-between">
@@ -156,6 +169,8 @@ export default async function ReportPage({ params }: Props) {
         <div className="flex gap-2">
           {/* client-side refresh button with toast */}
           <RefreshButton analysisId={analysis?.id ?? ""} />
+          {/* Report preview (Client) */}
+          <ReportPreview analysisId={analysis?.id} />
         </div>
       </div>
 

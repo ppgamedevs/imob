@@ -1,0 +1,94 @@
+"use client";
+
+import React, { useCallback, useEffect, useRef, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+export default function ReportPreview({ analysisId }: { analysisId?: string }) {
+  const [open, setOpen] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const urlRef = useRef<string | null>(null);
+
+  const fetchPdf = useCallback(async () => {
+    if (!analysisId) return;
+    try {
+      setLoading(true);
+      const res = await fetch(`/api/report/${analysisId}/pdf`);
+      if (!res.ok) throw new Error("failed to generate pdf");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      urlRef.current = url;
+      setPdfUrl(url);
+    } catch (e) {
+      console.error(e);
+      alert("Nu s-a putut genera PDF-ul.");
+    } finally {
+      setLoading(false);
+    }
+  }, [analysisId]);
+
+  useEffect(() => {
+    if (open) fetchPdf();
+    return () => {
+      if (urlRef.current) {
+        URL.revokeObjectURL(urlRef.current);
+        urlRef.current = null;
+        setPdfUrl(null);
+      }
+    };
+    // intentionally only watch `open` — fetchPdf is stable via useCallback
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          Previzualizează PDF
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl">
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-lg font-semibold">Previzualizare PDF</div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              onClick={async () => {
+                try {
+                  const res = await fetch(`/api/report/${analysisId}/pdf`);
+                  if (!res.ok) throw new Error("failed to generate pdf");
+                  const blob = await res.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `report-${analysisId}.pdf`;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  URL.revokeObjectURL(url);
+                } catch (e) {
+                  console.error(e);
+                  alert("Nu s-a putut genera PDF-ul.");
+                }
+              }}
+            >
+              Descarcă PDF
+            </Button>
+          </div>
+        </div>
+
+        <div style={{ height: "70vh" }}>
+          {loading && <div>Se încarcă previzualizarea...</div>}
+          {pdfUrl && (
+            <iframe
+              src={pdfUrl}
+              title="Previzualizare PDF"
+              style={{ width: "100%", height: "100%" }}
+            />
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
