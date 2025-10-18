@@ -1,4 +1,5 @@
 import { prisma } from "./db";
+import { Extracted, maybeFetchServer } from "./extractors";
 
 /**
  * Placeholder startAnalysis worker.
@@ -10,7 +11,45 @@ export async function startAnalysis(analysisId: string, url: string) {
     await prisma.analysis.update({ where: { id: analysisId }, data: { status: "running" } });
     console.log(`startAnalysis: ${analysisId} -> ${url}`);
 
-    // Simulate background work (non-blocking caller should not await this long)
+    // Wait up to 5s for a client-pushed ExtractedListing
+    const deadline = Date.now() + 5000;
+    let extracted = null;
+    while (Date.now() < deadline) {
+      extracted = await prisma.extractedListing.findUnique({ where: { analysisId } });
+      if (extracted) break;
+      // sleep 500ms
+      await new Promise((r) => setTimeout(r, 500));
+    }
+
+    if (!extracted) {
+      // try server-side fetch/extract if the domain is whitelisted
+      const serverData: Extracted | null = await maybeFetchServer(url);
+      if (serverData) {
+        // upsert ExtractedListing
+        await prisma.extractedListing.upsert({
+          where: { analysisId },
+          create: {
+            analysisId,
+            title: serverData.title || undefined,
+            price: serverData.price || undefined,
+            currency: serverData.currency || undefined,
+            areaM2: serverData.areaM2 || undefined,
+            rooms: serverData.rooms || undefined,
+            addressRaw: serverData.addressRaw || undefined,
+          },
+          update: {
+            title: serverData.title || undefined,
+            price: serverData.price || undefined,
+            currency: serverData.currency || undefined,
+            areaM2: serverData.areaM2 || undefined,
+            rooms: serverData.rooms || undefined,
+            addressRaw: serverData.addressRaw || undefined,
+          },
+        });
+      }
+    }
+
+    // Simulate finishing work
     setTimeout(async () => {
       try {
         await prisma.analysis.update({ where: { id: analysisId }, data: { status: "completed" } });
