@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import ConditionCard from "@/components/vision/ConditionCard";
 import { prisma } from "@/lib/db";
 import estimatePriceRange from "@/lib/ml/avm";
 import estimateTTS from "@/lib/ml/tts";
@@ -287,17 +288,7 @@ export default async function ReportPage({ params }: Props) {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="font-medium">Stare din poze</div>
-                  <div className="text-sm text-muted-foreground">{f?.photo_condition ?? "—"}</div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {f ? <div>{f?.photo_condition ?? "—"}</div> : <Skeleton className="h-8 w-full" />}
-              </CardContent>
-            </Card>
+            <ConditionCard photos={extracted?.photos ?? (f?.photos as any) ?? null} />
 
             <Card>
               <CardHeader>
