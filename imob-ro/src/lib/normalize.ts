@@ -2,6 +2,7 @@
 // - normalizeExtracted(ex) => canonical features JSON
 // - normalizeAddress(addressRaw) => { lat, lng, areaSlug, components }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 const DEFAULT_EUR_TO_RON = Number(process.env.EXCHANGE_RATE_EUR_TO_RON) || 4.9;
 const MAPBOX_TOKEN = process.env.MAPBOX_API_TOKEN || "";
 
@@ -61,18 +62,28 @@ export type NormalizedFeatures = {
  * - optionally geocodes the raw address via Mapbox (MAPBOX_API_TOKEN env)
  */
 export async function normalizeExtracted(ex: unknown): Promise<NormalizedFeatures> {
-  const src = ex as Record<string, unknown> | undefined;
   const out: NormalizedFeatures = {
-    title: src?.title ? String(src.title) : null,
-    currency: src?.currency ? String(src.currency).toUpperCase() : null,
-    address_raw: src?.addressRaw ? String(src.addressRaw) : null,
-    photos: Array.isArray(src?.photos) ? (src?.photos as string[]) : null,
-    area_m2: toInt(src?.areaM2 ?? src?.area_m2 ?? null),
-    rooms: toFloat(src?.rooms ?? null),
-    floor: toInt(src?.floor ?? src?.floorNumber ?? null),
-    year_built: toInt(src?.yearBuilt ?? src?.year_built ?? null),
-    lat: (src?.lat as number) ?? null,
-    lng: (src?.lng as number) ?? null,
+    title: (ex as any)?.title ?? null,
+    // unknown-shaped `ex` is casted to any for property access
+
+    currency: (ex as any)?.currency ? String((ex as any).currency).toUpperCase() : null,
+
+    address_raw: (ex as any)?.addressRaw ?? null,
+
+    photos: Array.isArray((ex as any)?.photos) ? (ex as any).photos : null,
+    // numeric parsing helpers will coerce values
+
+    area_m2: toInt((ex as any)?.areaM2 ?? (ex as any)?.area_m2 ?? null),
+
+    rooms: toFloat((ex as any)?.rooms ?? null),
+
+    floor: toInt((ex as any)?.floor ?? (ex as any)?.floorNumber ?? null),
+
+    year_built: toInt((ex as any)?.yearBuilt ?? (ex as any)?.year_built ?? null),
+
+    lat: (ex as any)?.lat ?? null,
+
+    lng: (ex as any)?.lng ?? null,
     price_eur: null,
     price_ron: null,
     area_slug: null,
@@ -80,7 +91,10 @@ export async function normalizeExtracted(ex: unknown): Promise<NormalizedFeature
   };
 
   // Normalize price/currency
-  const rawPrice = parsePriceInt(src?.price ?? src?.price_eur ?? src?.price_ron ?? null);
+
+  const rawPrice = parsePriceInt(
+    (ex as any)?.price ?? (ex as any)?.price_eur ?? (ex as any)?.price_ron ?? null,
+  );
   const cur = out.currency;
   const rate = DEFAULT_EUR_TO_RON;
   if (rawPrice != null) {
@@ -111,16 +125,16 @@ export async function normalizeExtracted(ex: unknown): Promise<NormalizedFeature
       }
     } catch (e) {
       // swallow geocode errors and continue
-      // eslint-disable-next-line no-console
-      const err = e as Error | undefined;
+
+      const err: any = e;
       console.warn("normalizeExtracted: geocode failed", err?.message ?? err);
     }
   }
 
   // If area_slug still missing, try derive from address components or raw address
   if (!out.area_slug) {
-    const comp = out.address_components || ({} as Record<string, unknown>);
-    const candidate = (comp.neighbourhood as string) || (comp.locality as string) || (comp.place as string) || (comp.region as string) || (comp.city as string);
+    const comp = out.address_components || {};
+    const candidate = comp.neighborhood || comp.locality || comp.place || comp.region || comp.city;
     out.area_slug = slugify(candidate ?? out.address_raw ?? null);
   }
 
@@ -166,7 +180,12 @@ export async function normalizeAddress(addressRaw?: string | null): Promise<{
     if (f.text) components.place = f.text;
 
     // areaSlug: prefer neighbourhood/locality/place then region
-    const candidate = components.neighborhood || components.locality || components.place || components.region || components.city;
+    const candidate =
+      components.neighborhood ||
+      components.locality ||
+      components.place ||
+      components.region ||
+      components.city;
     const areaSlug = slugify(candidate ?? null);
 
     return {
@@ -175,7 +194,7 @@ export async function normalizeAddress(addressRaw?: string | null): Promise<{
       areaSlug,
       components,
     };
-  } catch (e) {
+  } catch {
     return null;
   }
 }

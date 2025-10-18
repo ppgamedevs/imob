@@ -1,15 +1,17 @@
 "use server";
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from "react";
-import { prisma } from "@/lib/db";
+
 import { ListingCard } from "@/components/listing-card";
+import RefreshButton from "@/components/refresh-button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { startAnalysis } from "@/lib/analysis";
+import { prisma } from "@/lib/db";
 import estimatePriceRange from "@/lib/ml/avm";
+
 import AvmCard from "./_components/AvmCard";
-import RefreshButton from "@/components/refresh-button";
-import type { NormalizedFeatures } from "@/lib/normalize";
 
 type Props = {
   params: { id: string };
@@ -48,22 +50,21 @@ export default async function ReportPage({ params }: Props) {
   const analysis = await loadAnalysis(params.id);
 
   const extracted = analysis?.extractedListing ?? null;
-  const features = (analysis?.featureSnapshot?.features ?? null) as (NormalizedFeatures & Record<string, unknown>) | null;
-  const bag = features as (NormalizedFeatures & Record<string, unknown>) | null;
+  const features = (analysis?.featureSnapshot?.features ?? null) as any;
+  const f = features as any;
 
   // compute AVM using area daily stats when possible
   let priceRange: { low: number; high: number; mid: number; conf: number } | null = null;
-  if (features && (features as any).area_slug) {
-    const areaSlug = String((features as any).area_slug);
+  if (f?.area_slug) {
     const ad = await prisma.areaDaily.findFirst({
-      where: { areaSlug },
+      where: { areaSlug: String(f.area_slug) },
       orderBy: { date: "desc" },
     });
     const areaStats = {
       medianEurPerM2: ad?.medianEurM2 ?? 1500,
       count: ad?.supply ?? 1,
     };
-    priceRange = estimatePriceRange(features as any, areaStats as any) as any;
+    priceRange = estimatePriceRange(f, areaStats as any) as any;
 
     // persist ScoreSnapshot
     if (priceRange) {
@@ -84,10 +85,8 @@ export default async function ReportPage({ params }: Props) {
             ttsBucket: "unknown",
           },
         });
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        const e = err as Error | undefined;
-        console.warn("Failed to upsert ScoreSnapshot", e?.message ?? e);
+      } catch (e) {
+        console.warn("Failed to upsert ScoreSnapshot", e);
       }
     }
   }
@@ -95,7 +94,7 @@ export default async function ReportPage({ params }: Props) {
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Raport analiz3</h1>
+        <h1 className="text-2xl font-semibold">Raport analiză</h1>
         <div className="flex gap-2">
           {/* client-side refresh button with toast */}
           <RefreshButton analysisId={analysis?.id ?? ""} />
@@ -124,8 +123,15 @@ export default async function ReportPage({ params }: Props) {
               {Array.isArray(extracted.photos) && extracted.photos.length > 0 ? (
                 <div className="mt-4 grid grid-cols-3 gap-2">
                   {extracted.photos.map((p: any, i: number) => (
-                    <div key={i} className="relative h-24 w-full overflow-hidden rounded-md bg-muted hover:scale-105 transition-transform cursor-pointer">
-                      <img src={String(p)} alt={`photo-${i}`} className="h-full w-full object-cover" />
+                    <div
+                      key={i}
+                      className="relative h-24 w-full overflow-hidden rounded-md bg-muted hover:scale-105 transition-transform cursor-pointer"
+                    >
+                      <img
+                        src={String(p)}
+                        alt={`photo-${i}`}
+                        className="h-full w-full object-cover"
+                      />
                     </div>
                   ))}
                 </div>
@@ -183,63 +189,70 @@ export default async function ReportPage({ params }: Props) {
         <div className="col-span-4">
           <div className="flex flex-col gap-4">
             {/* AVM card (interval) */}
-            <AvmCard priceRange={priceRange} actualPrice={typeof bag?.price_eur === "number" ? bag.price_eur : undefined} />
+            <AvmCard priceRange={priceRange} actualPrice={f?.price_eur} />
 
             {/* Other metric cards (placeholders when missing) */}
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="font-medium">Se vinde în</div>
-                  <div className="text-sm text-muted-foreground">{String(bag?.sell_in_months ?? "—")}</div>
+                  <div className="text-sm text-muted-foreground">{f?.sell_in_months ?? "—"}</div>
                 </div>
               </CardHeader>
-              <CardContent>{features ? <div>{String(bag?.sell_in_months ?? "—")}</div> : <Skeleton className="h-8 w-full" />}</CardContent>
+              <CardContent>
+                {f ? <div>{f?.sell_in_months ?? "—"}</div> : <Skeleton className="h-8 w-full" />}
+              </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="font-medium">Randament</div>
-                  <div className="text-sm text-muted-foreground">{String(bag?.yield_gross ?? "—")}</div>
+                  <div className="text-sm text-muted-foreground">{f?.yield_gross ?? "—"}</div>
                 </div>
               </CardHeader>
-              <CardContent>{features ? <div>{String(bag?.yield_gross ?? "—")}</div> : <Skeleton className="h-8 w-full" />}</CardContent>
+              <CardContent>
+                {f ? <div>{f?.yield_gross ?? "—"}</div> : <Skeleton className="h-8 w-full" />}
+              </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="font-medium">Risc seismic</div>
-                  <div className="text-sm text-muted-foreground">{String(bag?.risk_seismic ?? "—")}</div>
+                  <div className="text-sm text-muted-foreground">{f?.risk_seismic ?? "—"}</div>
                 </div>
               </CardHeader>
-              <CardContent>{features ? <div>{String(bag?.risk_seismic ?? "—")}</div> : <Skeleton className="h-8 w-full" />}</CardContent>
+              <CardContent>
+                {f ? <div>{f?.risk_seismic ?? "—"}</div> : <Skeleton className="h-8 w-full" />}
+              </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="font-medium">Stare din poze</div>
-                  <div className="text-sm text-muted-foreground">{String(bag?.photo_condition ?? "—")}</div>
+                  <div className="text-sm text-muted-foreground">{f?.photo_condition ?? "—"}</div>
                 </div>
               </CardHeader>
-              <CardContent>{features ? <div>{String(bag?.photo_condition ?? "—")}</div> : <Skeleton className="h-8 w-full" />}</CardContent>
+              <CardContent>
+                {f ? <div>{f?.photo_condition ?? "—"}</div> : <Skeleton className="h-8 w-full" />}
+              </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="font-medium">Comps</div>
-                  <div className="text-sm text-muted-foreground">{Array.isArray(bag?.comps) ? String((bag!.comps as unknown[]).length) : "—"}</div>
+                  <div className="text-sm text-muted-foreground">{f?.comps?.length ?? "—"}</div>
                 </div>
               </CardHeader>
               <CardContent>
-                {Array.isArray(bag?.comps) ? (
+                {f?.comps ? (
                   <ul className="list-inside list-disc text-sm">
-                    {(bag!.comps as unknown[]).map((c, i) => {
-                      const item = c as Record<string, unknown>;
-                      return <li key={i}>{String(item.title ?? item.address ?? JSON.stringify(item))}</li>;
-                    })}
+                    {f.comps.map((c: any, i: number) => (
+                      <li key={i}>{c.title ?? c.address ?? JSON.stringify(c)}</li>
+                    ))}
                   </ul>
                 ) : (
                   <Skeleton className="h-20 w-full" />

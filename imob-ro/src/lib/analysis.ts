@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from "./db";
 import { Extracted, maybeFetchServer } from "./extractors";
 
@@ -13,9 +14,11 @@ export async function startAnalysis(analysisId: string, url: string) {
 
     // Wait up to 5s for a client-pushed ExtractedListing
     const deadline = Date.now() + 5000;
-  let extracted: Extracted | null = null;
+    let extracted: Extracted | null = null;
     while (Date.now() < deadline) {
-      extracted = await prisma.extractedListing.findUnique({ where: { analysisId } });
+      // Prisma returns any-typed records; cast to Extracted-like shape when present
+
+      extracted = (await prisma.extractedListing.findUnique({ where: { analysisId } })) as any;
       if (extracted) break;
       // sleep 500ms
       await new Promise((r) => setTimeout(r, 500));
@@ -23,7 +26,7 @@ export async function startAnalysis(analysisId: string, url: string) {
 
     if (!extracted) {
       // try server-side fetch/extract if the domain is whitelisted
-  const serverData = (await maybeFetchServer(url)) as Extracted | null;
+      const serverData: Extracted | null = await maybeFetchServer(url);
       if (serverData) {
         // upsert ExtractedListing
         await prisma.extractedListing.upsert({
@@ -50,17 +53,17 @@ export async function startAnalysis(analysisId: string, url: string) {
         // Immediately normalize and persist FeatureSnapshot.features
         try {
           const { default: normalizeExtracted } = await import("./normalize");
+          // normalize accepts unknown-shaped objects
           const normalized = await normalizeExtracted(serverData as unknown);
           await prisma.featureSnapshot.upsert({
             where: { analysisId },
-            create: { analysisId, features: normalized },
-            update: { features: normalized },
+            create: { analysisId, features: normalized as any },
+            update: { features: normalized as any },
           });
         } catch (err) {
           // swallow normalization errors to avoid blocking analysis flow
-          // eslint-disable-next-line no-console
-          const e = err as Error | undefined;
-          console.warn("normalize or upsert feature snapshot failed", e?.message ?? e);
+
+          console.warn("normalize or upsert feature snapshot failed", err);
         }
       }
     } else {
@@ -70,13 +73,11 @@ export async function startAnalysis(analysisId: string, url: string) {
         const normalized = await normalizeExtracted(extracted as unknown);
         await prisma.featureSnapshot.upsert({
           where: { analysisId },
-          create: { analysisId, features: normalized },
-          update: { features: normalized },
+          create: { analysisId, features: normalized as any },
+          update: { features: normalized as any },
         });
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        const e = err as Error | undefined;
-        console.warn("normalize or upsert feature snapshot failed", e?.message ?? e);
+      } catch (e) {
+        console.warn("normalize or upsert feature snapshot failed", e);
       }
     }
 
