@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import Hero from "@/components/ui/hero";
 import { Input } from "@/components/ui/input";
 
 export default function AnalyzePage() {
@@ -38,7 +39,7 @@ export default function AnalyzePage() {
 
   return (
     <div className="container mx-auto max-w-2xl py-12">
-      <h1 className="mb-4 text-2xl font-semibold">Analizează un link</h1>
+      <Hero title={<>Analizează un link</>} subtitle="Primește estimări rapide în câteva secunde" />
 
       <form onSubmit={handleSubmit} className="flex gap-2">
         <Input

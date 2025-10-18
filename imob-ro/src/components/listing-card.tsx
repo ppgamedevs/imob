@@ -8,7 +8,6 @@
 import Image from "next/image";
 
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface ListingCardProps {
@@ -28,16 +27,13 @@ interface ListingCardProps {
 export function ListingCard({ listing, isLoading }: ListingCardProps) {
   if (isLoading || !listing) {
     return (
-      <Card className="overflow-hidden">
+      <div className="rounded-lg-2 overflow-hidden glass-card shadow-card-lg">
         <Skeleton className="aspect-video w-full" />
-        <CardHeader>
-          <Skeleton className="h-6 w-3/4" />
+        <div className="p-4">
+          <Skeleton className="h-6 w-3/4 mb-2" />
           <Skeleton className="h-4 w-1/2" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-4 w-full" />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     );
   }
 
@@ -50,15 +46,14 @@ export function ListingCard({ listing, isLoading }: ListingCardProps) {
   const statusInfo = listing.priceStatus ? priceStatusConfig[listing.priceStatus] : null;
 
   return (
-    <Card className="group overflow-hidden transition-all hover:shadow-lg">
-      {/* Image */}
-      <div className="aspect-video w-full overflow-hidden bg-muted">
+    <article className="rounded-lg-2 overflow-hidden glass-card shadow-card-lg transition-transform hover:-translate-y-1">
+      <div className="relative aspect-video w-full overflow-hidden bg-muted">
         {listing.image ? (
           <Image
             src={listing.image}
             alt={listing.title}
-            width={16}
-            height={9}
+            width={1200}
+            height={675}
             sizes="(max-width: 768px) 100vw, 33vw"
             className="h-full w-full object-cover transition-transform group-hover:scale-105"
           />
@@ -67,31 +62,37 @@ export function ListingCard({ listing, isLoading }: ListingCardProps) {
             <span className="text-muted-foreground">Fără imagine</span>
           </div>
         )}
-      </div>
 
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="line-clamp-1 text-lg font-semibold">{listing.title}</h3>
+        {/* overlay badges */}
+        <div className="absolute top-3 left-3 flex items-center gap-2">
           {statusInfo && (
             <Badge variant={statusInfo.variant} className="shrink-0">
               {statusInfo.label}
             </Badge>
           )}
         </div>
-        <p className="text-2xl font-bold text-primary">{listing.price.toLocaleString("ro-RO")} €</p>
-      </CardHeader>
+      </div>
 
-      <CardContent className="pb-3">
-        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
-          <span>{listing.area} m²</span>
-          <span>•</span>
-          <span>{listing.rooms} camere</span>
+      <div className="p-4">
+        <div className="flex items-center justify-between">
+          <h3 className="line-clamp-1 text-lg font-semibold font-display">{listing.title}</h3>
+          <div className="text-right">
+            <div className="text-2xl font-extrabold text-brand-600">
+              {listing.price.toLocaleString("ro-RO")} €
+            </div>
+            <div className="text-xs text-muted-foreground">preț</div>
+          </div>
         </div>
-      </CardContent>
 
-      <CardFooter>
-        <p className="text-sm text-muted-foreground">{listing.neighborhood}</p>
-      </CardFooter>
-    </Card>
+        <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex items-center gap-3">
+            <div className="font-medium">{listing.area} m²</div>
+            <div className="text-muted-foreground">•</div>
+            <div>{listing.rooms} camere</div>
+          </div>
+          <div className="text-sm text-muted-foreground">{listing.neighborhood}</div>
+        </div>
+      </div>
+    </article>
   );
 }

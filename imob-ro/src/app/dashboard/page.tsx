@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import Hero from "@/components/ui/hero";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { auth } from "@/lib/auth";
 
@@ -16,10 +17,12 @@ export default async function DashboardPage() {
   // Authenticated view
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <p className="text-muted-foreground">Gestionează-ți anunțurile și setările</p>
-      </div>
+      <Hero
+        title={<>Dashboard</>}
+        subtitle="Gestionează-ți anunțurile și vezi performanța"
+        image={"/images/hero-dashboard.jpg"}
+        cta={<Button>Adaugă anunț</Button>}
+      />
 
       <Tabs defaultValue="listings" className="space-y-6">
         <TabsList>

@@ -1,6 +1,7 @@
 "use server";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import Image from "next/image";
 import React from "react";
 
 import { ListingCard } from "@/components/listing-card";
@@ -183,10 +184,12 @@ export default async function ReportPage({ params }: Props) {
                       key={i}
                       className="relative h-24 w-full overflow-hidden rounded-md bg-muted hover:scale-105 transition-transform cursor-pointer"
                     >
-                      <img
+                      <Image
                         src={String(p)}
                         alt={`photo-${i}`}
-                        className="h-full w-full object-cover"
+                        fill
+                        sizes="(max-width: 640px) 33vw, 20vw"
+                        className="object-cover"
                       />
                     </div>
                   ))}

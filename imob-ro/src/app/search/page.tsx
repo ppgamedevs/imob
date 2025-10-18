@@ -13,6 +13,7 @@ import { useState } from "react";
 import { ListingCard } from "@/components/listing-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Hero from "@/components/ui/hero";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -83,6 +84,12 @@ export default function SearchPage() {
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-4 sm:py-6 lg:py-8">
+      <Hero
+        title={<>Caută proprietăți</>}
+        subtitle="Filtrează, sortează și găsește oferte relevante"
+        image={"/images/hero-search.jpg"}
+      />
+
       <div className="flex gap-6 lg:gap-8">
         {/* Desktop Filters Sidebar */}
         <aside className="hidden w-80 shrink-0 lg:block">
