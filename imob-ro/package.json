@@ -16,8 +16,8 @@
     "seed": "node prisma/seed.js",
     "prepare-extension": "node ./scripts/prepare-extension.js",
     "package-extension": "node ./scripts/package-extension.js",
-  "package-extension2": "node ./scripts/package-extension.js",
-  "test": "vitest"
+    "package-extension2": "node ./scripts/package-extension.js",
+    "test": "vitest"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.0",

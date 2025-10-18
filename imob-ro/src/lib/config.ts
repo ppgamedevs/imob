@@ -10,20 +10,29 @@ export const getAnalyzeEndpoint = () => {
 };
 
 export const ANALYZE_ENDPOINT = getAnalyzeEndpoint();
- 
+
 // Server-side: read whitelist from SERVER_WHITELIST env (comma separated), fallback to a small default set.
 export function getServerWhitelist(): Set<string> {
-  const raw = (process.env.SERVER_WHITELIST || '').trim();
+  const raw = (process.env.SERVER_WHITELIST || "").trim();
   if (raw) {
-    return new Set(raw.split(',').map((s) => s.trim().replace(/^www\./i, '').toLowerCase()).filter(Boolean));
+    return new Set(
+      raw
+        .split(",")
+        .map((s) =>
+          s
+            .trim()
+            .replace(/^www\./i, "")
+            .toLowerCase(),
+        )
+        .filter(Boolean),
+    );
   }
   return new Set([
-    'imobiliare.ro',
-    'olx.ro',
-    'storia.ro',
-    'homezz.ro',
-    'publi24.ro',
-    'example.com',
+    "imobiliare.ro",
+    "olx.ro",
+    "storia.ro",
+    "homezz.ro",
+    "publi24.ro",
+    "example.com",
   ]);
 }
-

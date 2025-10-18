@@ -1,3 +1,5 @@
+import { getServerWhitelist } from "./config";
+
 type Extracted = {
   title?: string | null;
   price?: number | null;
@@ -10,8 +12,6 @@ type Extracted = {
 // Simple in-memory rate limiter per hostname: allow 1 request per 2 seconds by default
 const rateLimits: Record<string, { last: number }> = {};
 const RATE_WINDOW_MS = 2000;
-
-import { getServerWhitelist } from './config';
 
 function parseNumberFromText(s?: string | null) {
   if (!s) return null;
@@ -85,8 +85,8 @@ export async function maybeFetchServer(url: string) {
   try {
     const u = new URL(url);
     const host = u.hostname.replace(/^www\./, "").toLowerCase();
-  const whitelist = getServerWhitelist();
-  if (!whitelist.has(host)) return null;
+    const whitelist = getServerWhitelist();
+    if (!whitelist.has(host)) return null;
 
     const now = Date.now();
     const rl = rateLimits[host] || { last: 0 };
