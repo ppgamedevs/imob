@@ -7,7 +7,6 @@ import { ListingCard } from "@/components/listing-card";
 import RefreshButton from "@/components/refresh-button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { startAnalysis } from "@/lib/analysis";
 import { prisma } from "@/lib/db";
 import estimatePriceRange from "@/lib/ml/avm";
 
@@ -27,24 +26,7 @@ async function loadAnalysis(id: string) {
   });
 }
 
-// Server action to restart analysis (re-run extractor/normalizer)
-export async function restartAnalysis(formData: FormData) {
-  const id = String(formData.get("analysisId") ?? "");
-  if (!id) return;
-  const a = await prisma.analysis.findUnique({ where: { id } });
-  if (!a) return;
-  // trigger background analysis
-  await startAnalysis(id, a.sourceUrl);
-}
-
-function fmtEur(v: number | null | undefined) {
-  if (v == null) return "—";
-  try {
-    return `${Number(v).toLocaleString("ro-RO")} €`;
-  } catch {
-    return String(v);
-  }
-}
+// Restart is handled via client API at /api/analysis/restart; formatting helper removed (unused)
 
 export default async function ReportPage({ params }: Props) {
   const analysis = await loadAnalysis(params.id);
