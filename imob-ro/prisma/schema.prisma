@@ -191,6 +191,7 @@ model ScoreSnapshot {
   yieldGross     Float?
   yieldNet       Float?
   riskSeismic    Float?
+  riskSeismicUrl String?
   conditionScore Float?
 
   analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
