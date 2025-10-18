@@ -13,6 +13,7 @@ import { prisma } from "@/lib/db";
 import estimatePriceRange from "@/lib/ml/avm";
 import estimateTTS from "@/lib/ml/tts";
 import { computeYield, estimateRent, type YieldResult } from "@/lib/ml/yield";
+import { matchSeismic } from "@/lib/risk/seismic";
 
 import AvmCard from "./_components/AvmCard";
 
@@ -39,6 +40,7 @@ export default async function ReportPage({ params }: Props) {
   let yieldRes: YieldResult | null = null;
   const rentM2: number | null = null;
   const compsRentArr: number[] = [];
+  let seismic: { level: "RS1" | "RS2" | "none"; sourceUrl?: string | null } = { level: "none" };
 
   // compute AVM using area daily stats when possible
   let priceRange: { low: number; high: number; mid: number; conf: number } | null = null;
@@ -110,6 +112,13 @@ export default async function ReportPage({ params }: Props) {
           ? computeYield((actualPrice as number) ?? 0, rentPerMonth, capex)
           : null;
 
+        // seismic risk: try to match using coordinates or address
+        seismic = await matchSeismic(
+          extracted?.lat ?? f?.lat,
+          extracted?.lng ?? f?.lng,
+          extracted?.addressRaw ?? f?.address_raw ?? f?.address,
+        );
+
         await prisma.scoreSnapshot.upsert({
           where: { analysisId: analysis!.id },
           create: {
@@ -120,6 +129,7 @@ export default async function ReportPage({ params }: Props) {
             ttsBucket: tts.bucket,
             yieldGross: yieldRes?.yieldGross ?? null,
             yieldNet: yieldRes?.yieldNet ?? null,
+            riskSeismic: seismic.level === "RS1" ? 1 : seismic.level === "RS2" ? 2 : null,
           },
           update: {
             avmLow: priceRange.low,
@@ -128,6 +138,7 @@ export default async function ReportPage({ params }: Props) {
             ttsBucket: tts.bucket,
             yieldGross: yieldRes?.yieldGross ?? null,
             yieldNet: yieldRes?.yieldNet ?? null,
+            riskSeismic: seismic.level === "RS1" ? 1 : seismic.level === "RS2" ? 2 : null,
           },
         });
       } catch (e) {
@@ -363,6 +374,23 @@ export default async function ReportPage({ params }: Props) {
                           : "—"}
                       </div>
                     </div>
+                    {seismic.level !== "none" && (
+                      <div className="mt-3 flex items-center gap-3">
+                        <Badge variant="destructive">{seismic.level}</Badge>
+                        {seismic.sourceUrl ? (
+                          <a
+                            className="text-sm text-primary underline"
+                            href={seismic.sourceUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            verifică la sursă
+                          </a>
+                        ) : (
+                          <div className="text-sm text-muted-foreground">verifică la sursă</div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <Skeleton className="h-20 w-full" />
