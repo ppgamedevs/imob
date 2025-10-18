@@ -46,6 +46,35 @@ export async function startAnalysis(analysisId: string, url: string) {
             addressRaw: serverData.addressRaw || undefined,
           },
         });
+
+        // Immediately normalize and persist FeatureSnapshot.features
+        try {
+          const { default: normalizeExtracted } = await import("./normalize");
+          const normalized = await normalizeExtracted(serverData as any);
+          await prisma.featureSnapshot.upsert({
+            where: { analysisId },
+            create: { analysisId, features: normalized as any },
+            update: { features: normalized as any },
+          });
+        } catch (e) {
+          // swallow normalization errors to avoid blocking analysis flow
+          // eslint-disable-next-line no-console
+          console.warn("normalize or upsert feature snapshot failed", e);
+        }
+      }
+    } else {
+      // If a client provided extracted listing exists, normalize it too
+      try {
+        const { default: normalizeExtracted } = await import("./normalize");
+        const normalized = await normalizeExtracted(extracted as any);
+        await prisma.featureSnapshot.upsert({
+          where: { analysisId },
+          create: { analysisId, features: normalized as any },
+          update: { features: normalized as any },
+        });
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.warn("normalize or upsert feature snapshot failed", e);
       }
     }
 
