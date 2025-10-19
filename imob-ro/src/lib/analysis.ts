@@ -2,6 +2,7 @@
 import { prisma } from "./db";
 import { Extracted, maybeFetchServer } from "./extractors";
 import { updateFeatureSnapshot } from "./normalize-pipeline";
+import { applyAvmToAnalysis } from "./ml/apply-avm";
 
 // Helper: load analysis including snapshots for SSR
 export async function getAnalysis(id: string) {
@@ -86,6 +87,17 @@ export async function startAnalysis(analysisId: string, url: string) {
           });
           await updateFeatureSnapshot(analysisId);
           await prisma.analysis.update({ where: { id: analysisId }, data: { status: "scoring" } });
+
+          // apply AVM and persist score snapshot
+          try {
+            const fsnap = await prisma.featureSnapshot.findUnique({
+              where: { analysisId },
+              select: { features: true },
+            });
+            if (fsnap?.features) await applyAvmToAnalysis(analysisId, fsnap.features as any);
+          } catch (e) {
+            console.warn("applyAvmToAnalysis failed", e);
+          }
         } catch (err) {
           console.warn("updateFeatureSnapshot failed", err);
         }
@@ -99,6 +111,15 @@ export async function startAnalysis(analysisId: string, url: string) {
         });
         await updateFeatureSnapshot(analysisId);
         await prisma.analysis.update({ where: { id: analysisId }, data: { status: "scoring" } });
+        try {
+          const fsnap = await prisma.featureSnapshot.findUnique({
+            where: { analysisId },
+            select: { features: true },
+          });
+          if (fsnap?.features) await applyAvmToAnalysis(analysisId, fsnap.features as any);
+        } catch (e) {
+          console.warn("applyAvmToAnalysis failed", e);
+        }
       } catch (e) {
         console.warn("updateFeatureSnapshot failed", e);
       }
