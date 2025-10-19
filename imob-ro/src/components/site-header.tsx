@@ -26,8 +26,11 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:h-16">
         {/* Logo */}
-        <Link href="/" className="text-xl font-bold sm:text-2xl">
-          imob.ro
+        <Link href="/" className="flex items-center gap-3 text-lg font-semibold sm:text-2xl">
+          <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center text-primary font-bold">
+            iR
+          </div>
+          <span className="hidden sm:inline">imob.ro</span>
         </Link>
 
         {/* Desktop Navigation */}
@@ -44,7 +47,7 @@ export async function SiteHeader() {
         </NavigationMenu>
 
         {/* Right side - Auth + Theme Toggle + Mobile Menu */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {session?.user ? (
             <div className="hidden items-center gap-2 md:flex">
               <span className="text-sm text-muted-foreground">{session.user.email}</span>
@@ -66,6 +69,9 @@ export async function SiteHeader() {
           )}
 
           <ThemeToggle />
+          <Button variant="ghost" size="sm" asChild className="hidden md:inline-flex">
+            <Link href="/pricing">Upgrade</Link>
+          </Button>
 
           {/* Mobile Menu */}
           <Sheet>
