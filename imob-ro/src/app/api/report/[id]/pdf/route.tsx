@@ -3,8 +3,8 @@ import { renderToStream } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
 import React from "react";
 
-import { prisma } from "@/lib/db";
-import { ReportDoc } from "@/lib/pdf/reportDoc";
+import { prisma } from "../../../../../lib/db";
+import { ReportDoc } from "../../../../../lib/pdf/reportDoc";
 
 async function loadAnalysis(id: string) {
   return prisma.analysis.findUnique({
@@ -23,12 +23,13 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const f: Record<string, unknown> =
       (analysis.featureSnapshot?.features as Record<string, unknown>) ?? {};
 
-    const avm = analysis?.featureSnapshot?.avm ?? null;
-    const ttsBucket = analysis?.featureSnapshot?.ttsBucket ?? null;
-    const yieldNet = analysis?.featureSnapshot?.yieldNet ?? null;
-    const riskSeismic = analysis?.featureSnapshot?.riskSeismic ?? null;
+  const fsnap = analysis?.featureSnapshot as any;
+  const avm = fsnap?.avm ?? null;
+  const ttsBucket = fsnap?.ttsBucket ?? null;
+  const yieldNet = fsnap?.yieldNet ?? null;
+  const riskSeismic = fsnap?.riskSeismic ?? null;
 
-    const conditionScore = analysis?.featureSnapshot?.conditionScore ?? null;
+  const conditionScore = fsnap?.conditionScore ?? null;
 
     const docData = {
       address: extracted?.addressRaw ?? null,
