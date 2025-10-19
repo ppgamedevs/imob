@@ -16,6 +16,11 @@ model User {
   emailVerified DateTime?
   image         String?
   role          String    @default("user") // user | agency | admin
+  proTier       Boolean   @default(false)
+  stripeCustomerId String?
+  stripeSubscriptionId String?
+  stripeSubscriptionStatus String?
+  stripeSubscriptionCurrentPeriodEnd DateTime?
 
   accounts Account[]
   sessions Session[]
@@ -219,4 +224,38 @@ model AreaDaily {
   @@unique([areaSlug, date])
   @@index([areaSlug])
   @@index([date])
+}
+
+// Events aggregated per-area per-day to compute demandScore
+model AreaEvent {
+  id       String   @id @default(cuid())
+  areaSlug String
+  date     DateTime @db.Date
+  event    String   // view_report | save_report | share_pdf
+  count    Int      @default(0)
+
+  @@unique([areaSlug, date, event])
+  @@index([areaSlug])
+  @@index([date])
+}
+
+model SavedAnalysis {
+  id         String   @id @default(cuid())
+  userId     String
+  analysisId String
+  notes      String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([analysisId])
+}
+
+// track monthly generated reports per user for paywall enforcement
+model ReportUsage {
+  id        String   @id @default(cuid())
+  userId    String   @index
+  month     String   // YYYY-MM
+  count     Int      @default(0)
+
+  @@unique([userId, month])
 }

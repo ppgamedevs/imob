@@ -7,10 +7,13 @@ import React from "react";
 import { ListingCard } from "@/components/listing-card";
 import ReportPreview from "@/components/pdf/ReportPreview";
 import RefreshButton from "@/components/refresh-button";
+import AreaHeatmap from "@/components/ui/area-heatmap";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import Sparkline from "@/components/ui/sparkline";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import UpgradeBanner from "@/components/UpgradeBanner";
 import ConditionCard from "@/components/vision/ConditionCard";
 import { prisma } from "@/lib/db";
 import estimatePriceRange from "@/lib/ml/avm";
@@ -52,6 +55,7 @@ export default async function ReportPage({ params }: Props) {
       where: { areaSlug: String(f.area_slug) },
       orderBy: { date: "desc" },
     });
+    // latest area daily is represented by `ad` (most recent AreaDaily)
     const areaStats = {
       medianEurPerM2: ad?.medianEurM2 ?? 1500,
       count: ad?.supply ?? 1,
@@ -150,6 +154,14 @@ export default async function ReportPage({ params }: Props) {
     }
   }
 
+  // areaDaily for display (may be null)
+  const areaDailyForDisplay = f?.area_slug
+    ? await prisma.areaDaily.findFirst({
+        where: { areaSlug: String(f.area_slug) },
+        orderBy: { date: "desc" },
+      })
+    : null;
+
   const docData = {
     address: extracted?.addressRaw ?? null,
     price: extracted?.price ?? null,
@@ -162,11 +174,23 @@ export default async function ReportPage({ params }: Props) {
     photos: Array.isArray(extracted?.photos) ? (extracted?.photos as string[]) : null,
   };
 
+  // Query price history for sparkline
+  let priceHistory: number[] | null = null;
+  if (analysis?.sourceUrl) {
+    const ph = await prisma.priceHistory.findMany({
+      where: { sourceUrl: analysis.sourceUrl },
+      orderBy: { ts: "asc" },
+      take: 30,
+    });
+    if (ph && ph.length) priceHistory = ph.map((p) => p.price);
+  }
+
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Raport analiză</h1>
         <div className="flex gap-2">
+          <UpgradeBanner />
           {/* client-side refresh button with toast */}
           <RefreshButton analysisId={analysis?.id ?? ""} />
           {/* Report preview (Client) */}
@@ -266,6 +290,23 @@ export default async function ReportPage({ params }: Props) {
             {/* AVM card (interval) */}
             <AvmCard priceRange={priceRange} actualPrice={f?.price_eur} />
 
+            {/* Area interest heatmap */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="font-medium">Interes zonă</div>
+                  <div className="text-sm text-muted-foreground">recent</div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {areaDailyForDisplay ? (
+                  <AreaHeatmap score={areaDailyForDisplay.demandScore ?? 0} />
+                ) : (
+                  <Skeleton className="h-8 w-full" />
+                )}
+              </CardContent>
+            </Card>
+
             {/* Other metric cards (placeholders when missing) */}
             <Card>
               <CardHeader>
@@ -321,6 +362,23 @@ export default async function ReportPage({ params }: Props) {
                   </ul>
                 ) : (
                   <Skeleton className="h-20 w-full" />
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Price history sparkline */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="font-medium">Istoric preț</div>
+                  <div className="text-sm text-muted-foreground">30 zile</div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {priceHistory ? (
+                  <Sparkline values={priceHistory} />
+                ) : (
+                  <Skeleton className="h-8 w-full" />
                 )}
               </CardContent>
             </Card>

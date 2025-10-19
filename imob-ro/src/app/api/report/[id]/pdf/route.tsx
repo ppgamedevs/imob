@@ -3,6 +3,7 @@ import { renderToStream } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
 import React from "react";
 
+import { auth } from "../../../../../lib/auth";
 import { prisma } from "../../../../../lib/db";
 import { ReportDoc } from "../../../../../lib/pdf/reportDoc";
 
@@ -16,6 +17,41 @@ async function loadAnalysis(id: string) {
 export async function GET(req: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id;
+
+    // enforce paywall: require signin and limit 3 free reports/month per user unless proTier
+    const session = await auth();
+    if (!session?.user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+
+    const userId = session.user.id;
+    // compute month key
+    const now = new Date();
+    const monthKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
+
+    // fetch user record to check proTier (may need prisma generate locally to have typed field)
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  const userRaw = user as unknown as Record<string, unknown> | null;
+  const isPro = !!(userRaw && typeof userRaw["proTier"] === "boolean" && userRaw["proTier"] === true);
+
+    if (!isPro) {
+      // check usage
+      const usage = await prisma.reportUsage
+        .findUnique({ where: { userId_month: { userId, month: monthKey } } })
+        .catch(() => null);
+      const used = usage?.count ?? 0;
+      if (used >= 3) {
+        return NextResponse.json({ error: "quota_exceeded" }, { status: 402 });
+      }
+      // increment usage (create or update)
+      if (usage) {
+        await prisma.reportUsage.update({
+          where: { userId_month: { userId, month: monthKey } },
+          data: { count: used + 1 },
+        });
+      } else {
+        await prisma.reportUsage.create({ data: { userId, month: monthKey, count: 1 } });
+      }
+    }
+
     const analysis = await loadAnalysis(id);
     if (!analysis) return NextResponse.json({ error: "not found" }, { status: 404 });
 

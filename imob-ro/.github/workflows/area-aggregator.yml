@@ -1,0 +1,26 @@
+name: Area aggregator
+
+on:
+  schedule:
+    - cron: "0 1 * * *" # daily at 01:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  aggregate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install
+        run: pnpm install
+      - name: Run prisma migrate (deploy)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm --dir . prisma migrate deploy
+      - name: Run aggregator
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm --dir . ts-node ./scripts/area-aggregator.ts
