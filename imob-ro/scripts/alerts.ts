@@ -74,33 +74,37 @@ async function run() {
           }
         }
 
-      // investor alert: undervalued vs area AVM + yield threshold
-      try {
-        const scoreSnapshot = ar ? (ar["scoreSnapshot"] as Record<string, unknown> | undefined) : undefined;
-        const features = featureSnapshot ? (featureSnapshot["features"] as Record<string, unknown> | undefined) : undefined;
-        const avmLow = scoreSnapshot ? (scoreSnapshot["avmLow"] as unknown) : undefined;
-        const avmHigh = scoreSnapshot ? (scoreSnapshot["avmHigh"] as unknown) : undefined;
-        const yieldNet = scoreSnapshot ? (scoreSnapshot["yieldNet"] as unknown) : undefined;
-        const INVESTOR_YIELD = Number(process.env.INVESTOR_YIELD_THRESHOLD ?? 0.06);
-        if (
-          typeof extracted["price"] === "number" &&
-          typeof avmHigh === "number" &&
-          typeof yieldNet === "number"
-        ) {
-          const price = extracted["price"] as number;
-          const avmMid = (Number(avmLow ?? 0) + Number(avmHigh ?? 0)) / 2;
-          const undervalued = avmMid > 0 && price / avmMid < 0.9; // >10% undervalued
-          if (undervalued && Number(yieldNet) > INVESTOR_YIELD) {
-            await sendEmail(
-              s.userId,
-              "Alert investitor: oportunitate",
-              `<p>Proprietate subevaluate față de zonă și randament estimat ${(Number(yieldNet) * 100).toFixed(2)}% &gt; ${(INVESTOR_YIELD * 100).toFixed(2)}%</p>`,
-            );
+        // investor alert: undervalued vs area AVM + yield threshold
+        try {
+          const scoreSnapshot = ar
+            ? (ar["scoreSnapshot"] as Record<string, unknown> | undefined)
+            : undefined;
+          const features = featureSnapshot
+            ? (featureSnapshot["features"] as Record<string, unknown> | undefined)
+            : undefined;
+          const avmLow = scoreSnapshot ? (scoreSnapshot["avmLow"] as unknown) : undefined;
+          const avmHigh = scoreSnapshot ? (scoreSnapshot["avmHigh"] as unknown) : undefined;
+          const yieldNet = scoreSnapshot ? (scoreSnapshot["yieldNet"] as unknown) : undefined;
+          const INVESTOR_YIELD = Number(process.env.INVESTOR_YIELD_THRESHOLD ?? 0.06);
+          if (
+            typeof extracted["price"] === "number" &&
+            typeof avmHigh === "number" &&
+            typeof yieldNet === "number"
+          ) {
+            const price = extracted["price"] as number;
+            const avmMid = (Number(avmLow ?? 0) + Number(avmHigh ?? 0)) / 2;
+            const undervalued = avmMid > 0 && price / avmMid < 0.9; // >10% undervalued
+            if (undervalued && Number(yieldNet) > INVESTOR_YIELD) {
+              await sendEmail(
+                s.userId,
+                "Alert investitor: oportunitate",
+                `<p>Proprietate subevaluate față de zonă și randament estimat ${(Number(yieldNet) * 100).toFixed(2)}% &gt; ${(INVESTOR_YIELD * 100).toFixed(2)}%</p>`,
+              );
+            }
           }
+        } catch (e) {
+          // ignore investor alert failures
         }
-      } catch (e) {
-        // ignore investor alert failures
-      }
       }
     } catch {
       console.warn("alerts: failed for saved", s.id);

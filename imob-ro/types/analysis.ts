@@ -5,7 +5,7 @@ export type NormalizedFeatures = {
   priceEur?: number;
   areaM2?: number;
   rooms?: number;
-  level?: number | null;          // -1 parter, 0 mezanin, 1..n
+  level?: number | null; // -1 parter, 0 mezanin, 1..n
   floorsTotal?: number | null;
   yearBuilt?: number | null;
   distMetroM?: number | null;

@@ -10,7 +10,7 @@ import RefreshButton from "@/components/refresh-button";
 import ShareButton from "@/components/ShareButton";
 import AreaHeatmap from "@/components/ui/area-heatmap";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import Sparkline from "@/components/ui/sparkline";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -354,6 +354,45 @@ export default async function ReportPage({ params }: Props) {
                   <AreaHeatmap score={areaDailyForDisplay.demandScore ?? 0} />
                 ) : (
                   <Skeleton className="h-8 w-full" />
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Normalized features */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Detalii normalizate</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm">
+                {analysis?.featureSnapshot?.features ? (
+                  <ul className="space-y-1">
+                    <li>
+                      <b>Oraș:</b> {f?.city ?? "—"}
+                    </li>
+                    <li>
+                      <b>Suprafață:</b> {f?.areaM2 ? `${f.areaM2} m²` : "—"}
+                    </li>
+                    <li>
+                      <b>Preț (EUR):</b> {f?.priceEur ?? "—"}
+                    </li>
+                    <li>
+                      <b>Camere:</b> {f?.rooms ?? "—"}
+                    </li>
+                    <li>
+                      <b>Nivel:</b> {f?.level ?? "—"}
+                    </li>
+                    <li>
+                      <b>An construcție:</b> {f?.yearBuilt ?? "—"}
+                    </li>
+                    <li>
+                      <b>Distanță metrou:</b>
+                      <span className="ml-1">
+                        {f?.distMetroM != null ? `${Math.round(f.distMetroM)} m` : "—"}
+                      </span>
+                    </li>
+                  </ul>
+                ) : (
+                  <div className="h-4 w-40 animate-pulse rounded bg-muted" />
                 )}
               </CardContent>
             </Card>

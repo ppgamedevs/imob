@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from "./db";
 import { Extracted, maybeFetchServer } from "./extractors";
+import { updateFeatureSnapshot } from "./normalize-pipeline";
 
 // Helper: load analysis including snapshots for SSR
 export async function getAnalysis(id: string) {
@@ -33,7 +34,10 @@ export async function upsertAnalysisByUrl(sourceUrl: string, userId?: string | n
 export async function startAnalysis(analysisId: string, url: string) {
   // minimal placeholder: mark as started then completed after a short delay
   try {
-    await prisma.analysis.update({ where: { id: analysisId }, data: { status: "running" } });
+    await prisma.analysis.update({
+      where: { id: analysisId },
+      data: { status: "running" },
+    });
     console.log(`startAnalysis: ${analysisId} -> ${url}`);
 
     // Wait up to 5s for a client-pushed ExtractedListing
@@ -74,41 +78,36 @@ export async function startAnalysis(analysisId: string, url: string) {
           },
         });
 
-        // Immediately normalize and persist FeatureSnapshot.features
+        // Run the normalization pipeline and persist the snapshot
         try {
-          const { default: normalizeExtracted } = await import("./normalize");
-          // normalize accepts unknown-shaped objects
-          const normalized = await normalizeExtracted(serverData as unknown);
-          await prisma.featureSnapshot.upsert({
-            where: { analysisId },
-            create: { analysisId, features: normalized as any },
-            update: { features: normalized as any },
+          await prisma.analysis.update({
+            where: { id: analysisId },
+            data: { status: "normalizing" },
           });
+          await updateFeatureSnapshot(analysisId);
+          await prisma.analysis.update({ where: { id: analysisId }, data: { status: "scoring" } });
         } catch (err) {
-          // swallow normalization errors to avoid blocking analysis flow
-
-          console.warn("normalize or upsert feature snapshot failed", err);
+          console.warn("updateFeatureSnapshot failed", err);
         }
       }
     } else {
-      // If a client provided extracted listing exists, normalize it too
+      // If a client provided extracted listing exists, run the normalization pipeline
       try {
-        const { default: normalizeExtracted } = await import("./normalize");
-        const normalized = await normalizeExtracted(extracted as unknown);
-        await prisma.featureSnapshot.upsert({
-          where: { analysisId },
-          create: { analysisId, features: normalized as any },
-          update: { features: normalized as any },
+        await prisma.analysis.update({
+          where: { id: analysisId },
+          data: { status: "normalizing" },
         });
+        await updateFeatureSnapshot(analysisId);
+        await prisma.analysis.update({ where: { id: analysisId }, data: { status: "scoring" } });
       } catch (e) {
-        console.warn("normalize or upsert feature snapshot failed", e);
+        console.warn("updateFeatureSnapshot failed", e);
       }
     }
 
-    // Simulate finishing work
+    // Simulate finishing work: mark as done after short delay
     setTimeout(async () => {
       try {
-        await prisma.analysis.update({ where: { id: analysisId }, data: { status: "completed" } });
+        await prisma.analysis.update({ where: { id: analysisId }, data: { status: "done" } });
       } catch (e) {
         console.error("Error finishing analysis", analysisId, e);
         await prisma.analysis.update({ where: { id: analysisId }, data: { status: "failed" } });

@@ -17,7 +17,7 @@
     "prepare-extension": "node ./scripts/prepare-extension.js",
     "package-extension": "node ./scripts/package-extension.js",
     "package-extension2": "node ./scripts/package-extension.js",
-  "build:bookmarklet": "node scripts/build-bookmarklet.js",
+    "build:bookmarklet": "node scripts/build-bookmarklet.js",
     "test": "vitest"
   },
   "dependencies": {
