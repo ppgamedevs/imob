@@ -23,13 +23,24 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const f: Record<string, unknown> =
       (analysis.featureSnapshot?.features as Record<string, unknown>) ?? {};
 
-  const fsnap = analysis?.featureSnapshot as any;
-  const avm = fsnap?.avm ?? null;
-  const ttsBucket = fsnap?.ttsBucket ?? null;
-  const yieldNet = fsnap?.yieldNet ?? null;
-  const riskSeismic = fsnap?.riskSeismic ?? null;
+    // Minimal typed view over featureSnapshot to avoid `any` and allow property access
+    type FeatureSnapshotView = {
+      avm?: unknown;
+      ttsBucket?: string | null;
+      yieldNet?: number | null;
+      riskSeismic?: number | null;
+      conditionScore?: number | null;
+      comps?: Array<Record<string, unknown>> | null;
+      features?: Record<string, unknown> | null;
+    };
 
-  const conditionScore = fsnap?.conditionScore ?? null;
+    const fsnap = (analysis.featureSnapshot as FeatureSnapshotView) ?? ({} as FeatureSnapshotView);
+    const avm = fsnap.avm ?? null;
+    const ttsBucket = fsnap.ttsBucket ?? null;
+    const yieldNet = fsnap.yieldNet ?? null;
+    const riskSeismic = fsnap.riskSeismic ?? null;
+
+    const conditionScore = fsnap.conditionScore ?? null;
 
     const docData = {
       address: extracted?.addressRaw ?? null,
