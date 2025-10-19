@@ -37,25 +37,23 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     );
 
     if (!isPro) {
-      // check usage
+      // check usage via a local reference to avoid TS missing-property errors on PrismaClient
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const usage = await (prisma as any).reportUsage
-        .findUnique({ where: { userId_month: { userId, month: monthKey } } })
+      const reportUsage = (prisma as any).reportUsage as any;
+      const usage = await reportUsage
+        .findFirst({ where: { userId, month: monthKey } })
         .catch(() => null);
+
       const used = usage?.count ?? 0;
       if (used >= 3) {
         return NextResponse.json({ error: "quota_exceeded" }, { status: 402 });
       }
+
       // increment usage (create or update)
       if (usage) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (prisma as any).reportUsage.update({
-          where: { userId_month: { userId, month: monthKey } },
-          data: { count: used + 1 },
-        });
+        await reportUsage.update({ where: { id: usage.id }, data: { count: used + 1 } });
       } else {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (prisma as any).reportUsage.create({ data: { userId, month: monthKey, count: 1 } });
+        await reportUsage.create({ data: { userId, month: monthKey, count: 1 } });
       }
     }
 

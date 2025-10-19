@@ -21,9 +21,8 @@ export async function POST(req: Request) {
     const userId = session.user.id;
     const providedCustomerId = body?.customerId;
     if (providedCustomerId) {
-      // runtime access to prisma to avoid type errors until `prisma generate` is run
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (prisma as any).user.update({
+      // persist stripeCustomerId to user
+      await prisma.user.update({
         where: { id: userId },
         data: { stripeCustomerId: providedCustomerId },
       });

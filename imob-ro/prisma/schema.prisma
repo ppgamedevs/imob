@@ -260,3 +260,10 @@ model ReportUsage {
   @@unique([userId, month])
   @@index([userId])
 }
+
+model ShortLink {
+  id        String   @id @default(cuid())
+  slug      String   @unique
+  targetUrl String
+  createdAt DateTime @default(now())
+}

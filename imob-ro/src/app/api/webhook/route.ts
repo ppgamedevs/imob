@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
@@ -24,22 +25,24 @@ export async function POST(req: Request) {
 
       let user: { id: string } | null = null;
       if (customerId) {
-        // allow a temporary cast until prisma client is regenerated
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        user = await (prisma as any).user.findFirst({ where: { stripeCustomerId: customerId } });
+        // build where clause using Prisma types
+        const where: Prisma.UserWhereInput = {
+          stripeCustomerId: customerId,
+        } as Prisma.UserWhereInput;
+        user = await prisma.user.findFirst({ where });
       }
       if (!user && customerEmail) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        user = await (prisma as any).user.findUnique({ where: { email: customerEmail } });
+        user = await prisma.user.findUnique({ where: { email: customerEmail } });
       }
 
       if (user) {
-        // store basic customer info and mark proTier
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (prisma as any).user.update({
-          where: { id: user.id },
-          data: { proTier: true, stripeCustomerId: customerId ?? undefined },
-        });
+        // store basic customer info and mark proTier; build data using Prisma types
+        const data: Prisma.UserUpdateInput = { proTier: true } as Prisma.UserUpdateInput;
+        if (customerId) {
+          (data as unknown as Record<string, unknown>).stripeCustomerId = customerId;
+        }
+
+        await prisma.user.update({ where: { id: user.id }, data });
       }
     }
 

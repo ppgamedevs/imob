@@ -7,6 +7,7 @@ import React from "react";
 import { ListingCard } from "@/components/listing-card";
 import ReportPreview from "@/components/pdf/ReportPreview";
 import RefreshButton from "@/components/refresh-button";
+import ShareButton from "@/components/ShareButton";
 import AreaHeatmap from "@/components/ui/area-heatmap";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -174,6 +175,10 @@ export default async function ReportPage({ params }: Props) {
     photos: Array.isArray(extracted?.photos) ? (extracted?.photos as string[]) : null,
   };
 
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const canonicalUrl = `${base}/report/${analysis?.id ?? ""}`;
+
   // Query price history for sparkline
   let priceHistory: number[] | null = null;
   if (analysis?.sourceUrl) {
@@ -195,6 +200,7 @@ export default async function ReportPage({ params }: Props) {
           <RefreshButton analysisId={analysis?.id ?? ""} />
           {/* Report preview (Client) */}
           <ReportPreview data={docData} analysisId={analysis?.id} />
+          <ShareButton url={canonicalUrl} title={extracted?.title ?? "Raport analiză"} />
         </div>
       </div>
 
@@ -469,4 +475,37 @@ export default async function ReportPage({ params }: Props) {
       </div>
     </div>
   );
+}
+
+// metadata generator: set canonical, robots and og images for SEO
+export async function generateMetadata(props: any): Promise<any> {
+  // Next sometimes passes params as a Promise in PageProps typing; resolve defensively
+  const maybeParams = await Promise.resolve(props?.params);
+  const id = Array.isArray(maybeParams?.id) ? maybeParams.id[0] : maybeParams?.id;
+  const analysis = id
+    ? await prisma.analysis.findUnique({ where: { id }, include: { extractedListing: true } })
+    : null;
+  const isPrivate = analysis == null || analysis.status !== "completed";
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+
+  const canonical = `${base}/report/${id ?? ""}`;
+  const address = analysis?.extractedListing?.addressRaw ?? "";
+  const price = analysis?.extractedListing?.price
+    ? String(analysis!.extractedListing!.price) + " EUR"
+    : "";
+
+  const ogUrl = `${base}/api/og/report/${encodeURIComponent(id ?? "")}?address=${encodeURIComponent(
+    address,
+  )}&price=${encodeURIComponent(price)}`;
+
+  return {
+    title: analysis?.extractedListing?.title ?? "Raport analiză",
+    alternates: { canonical },
+    robots: isPrivate ? { index: false, follow: false } : { index: true, follow: true },
+    openGraph: {
+      title: analysis?.extractedListing?.title ?? "Raport analiză",
+      images: [{ url: ogUrl, width: 1200, height: 630 }],
+    },
+  };
 }
