@@ -170,7 +170,7 @@ export default async function ReportPage({ params }: Props) {
           {/* client-side refresh button with toast */}
           <RefreshButton analysisId={analysis?.id ?? ""} />
           {/* Report preview (Client) */}
-          <ReportPreview analysisId={analysis?.id} />
+          <ReportPreview data={docData} analysisId={analysis?.id} />
         </div>
       </div>
 

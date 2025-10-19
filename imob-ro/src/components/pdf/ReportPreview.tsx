@@ -4,7 +4,15 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-export default function ReportPreview({ analysisId }: { analysisId?: string }) {
+import { type ReportData } from "@/lib/pdf/reportDoc";
+
+export default function ReportPreview({
+  data,
+  analysisId,
+}: {
+  data?: ReportData;
+  analysisId?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -50,7 +58,13 @@ export default function ReportPreview({ analysisId }: { analysisId?: string }) {
       </DialogTrigger>
       <DialogContent className="max-w-4xl">
         <div className="flex items-center justify-between mb-4">
-          <div className="text-lg font-semibold">Previzualizare PDF</div>
+          <div>
+            <div className="text-lg font-semibold">Previzualizare PDF</div>
+            {data?.address && <div className="text-sm text-muted-foreground">{data.address}</div>}
+            {data?.price != null && (
+              <div className="text-sm text-muted-foreground">Preț: {data.price} EUR</div>
+            )}
+          </div>
           <div className="flex gap-2">
             <Button
               size="sm"
