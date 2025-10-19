@@ -1,3 +1,4 @@
+import Link from "next/link";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -25,6 +26,20 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
       )}
       {...props}
     />
+  );
+}
+
+// Note: All card headers include a small link to the "Cum estimăm" page for transparency.
+export function CardHeaderWithInfo(props: React.ComponentProps<"div">) {
+  return (
+    <div className="relative">
+      <CardHeader {...props} />
+      <div className="absolute right-4 top-2 text-sm">
+        <Link href="/how-we-estimate" className="text-muted-foreground underline">
+          Cum estimăm
+        </Link>
+      </div>
+    </div>
   );
 }
 

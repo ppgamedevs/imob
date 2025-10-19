@@ -28,13 +28,18 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     const monthKey = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, "0")}`;
 
     // fetch user record to check proTier (may need prisma generate locally to have typed field)
-  const user = await prisma.user.findUnique({ where: { id: userId } });
-  const userRaw = user as unknown as Record<string, unknown> | null;
-  const isPro = !!(userRaw && typeof userRaw["proTier"] === "boolean" && userRaw["proTier"] === true);
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const userRaw = user as unknown as Record<string, unknown> | null;
+    const isPro = !!(
+      userRaw &&
+      typeof userRaw["proTier"] === "boolean" &&
+      userRaw["proTier"] === true
+    );
 
     if (!isPro) {
       // check usage
-      const usage = await prisma.reportUsage
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const usage = await (prisma as any).reportUsage
         .findUnique({ where: { userId_month: { userId, month: monthKey } } })
         .catch(() => null);
       const used = usage?.count ?? 0;
@@ -43,12 +48,14 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       }
       // increment usage (create or update)
       if (usage) {
-        await prisma.reportUsage.update({
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (prisma as any).reportUsage.update({
           where: { userId_month: { userId, month: monthKey } },
           data: { count: used + 1 },
         });
       } else {
-        await prisma.reportUsage.create({ data: { userId, month: monthKey, count: 1 } });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (prisma as any).reportUsage.create({ data: { userId, month: monthKey, count: 1 } });
       }
     }
 
