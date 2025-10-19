@@ -153,6 +153,7 @@ model Analysis {
   extractedListing ExtractedListing?
   featureSnapshot  FeatureSnapshot?
   scoreSnapshot    ScoreSnapshot?
+  ttsLabel         TtsLabel?
 
   @@index([sourceUrl])
   @@index([userId])
@@ -266,4 +267,31 @@ model ShortLink {
   slug      String   @unique
   targetUrl String
   createdAt DateTime @default(now())
+}
+
+// Time-to-sell labels derived from Analysis sourceUrl availability / sold detection
+model TtsLabel {
+  id         String   @id @default(cuid())
+  analysisId String   @unique
+  days       Int
+  censored   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+}
+
+// Per-model calibration & evaluation metrics
+model ModelMetrics {
+  id         String   @id @default(cuid())
+  ts         DateTime @default(now())
+  modelName  String
+  mdape      Float
+  piCoverage Float   // fraction of true prices inside AVM prediction interval
+  sampleCount Int
+  details    Json?
+  createdAt  DateTime @default(now())
+
+  @@index([modelName, ts])
 }

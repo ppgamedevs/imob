@@ -1,0 +1,27 @@
+name: Compute model metrics
+
+on:
+  schedule:
+    - cron: '0 3 * * 0' # weekly on Sunday 03:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  compute-metrics:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Run model metrics
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: pnpm --dir . exec ts-node ./scripts/compute-model-metrics.ts
