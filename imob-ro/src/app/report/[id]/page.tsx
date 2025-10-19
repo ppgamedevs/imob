@@ -23,6 +23,7 @@ import { computeYield, estimateRent, type YieldResult } from "@/lib/ml/yield";
 import { matchSeismic } from "@/lib/risk/seismic";
 
 import AvmCard from "./_components/AvmCard";
+import { computePriceBadge } from "@/lib/price-badge";
 import FeedbackBanner from "@/components/FeedbackBanner";
 
 // keep params typing loose to satisfy Next.js PageProps constraints
@@ -128,12 +129,23 @@ export default async function ReportPage({ params }: Props) {
           extracted?.addressRaw ?? f?.address_raw ?? f?.address,
         );
 
+        const avmMidCalc = Math.round((priceRange.low + priceRange.high) / 2);
+        const askingPrice = extracted?.price ?? (f?.price_eur as number) ?? null;
+        const priceBadgeCalc = computePriceBadge(
+          askingPrice,
+          priceRange.low,
+          avmMidCalc,
+          priceRange.high,
+        );
+
         await prisma.scoreSnapshot.upsert({
           where: { analysisId: analysis!.id },
           create: {
             analysisId: analysis!.id,
             avmLow: priceRange.low,
             avmHigh: priceRange.high,
+            avmMid: avmMidCalc,
+            priceBadge: priceBadgeCalc,
             avmConf: priceRange.conf,
             ttsBucket: tts.bucket,
             yieldGross: yieldRes?.yieldGross ?? null,
@@ -143,6 +155,8 @@ export default async function ReportPage({ params }: Props) {
           update: {
             avmLow: priceRange.low,
             avmHigh: priceRange.high,
+            avmMid: avmMidCalc,
+            priceBadge: priceBadgeCalc,
             avmConf: priceRange.conf,
             ttsBucket: tts.bucket,
             yieldGross: yieldRes?.yieldGross ?? null,

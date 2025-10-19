@@ -148,7 +148,8 @@ model Analysis {
   userId       String?
   sourceUrl    String
   canonicalUrl String?
-  status       String // pending|completed|failed
+  status       String   @default("queued") // queued|extracting|normalizing|scoring|done|error
+  error        String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -160,6 +161,7 @@ model Analysis {
 
   @@index([sourceUrl])
   @@index([userId])
+  @@index([canonicalUrl])
 }
 
 model ExtractedListing {
@@ -176,8 +178,12 @@ model ExtractedListing {
   lat        Float?
   lng        Float?
   photos     Json?
+  sourceMeta Json?
+  floorRaw   String?
 
   analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([lat, lng])
 }
@@ -188,28 +194,37 @@ model FeatureSnapshot {
   features   Json // normalized features
 
   analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ScoreSnapshot {
   id             String @id @default(cuid())
   analysisId     String @unique
-  avmLow         Float
-  avmHigh        Float
-  avmConf        Float
-  ttsBucket      String
+  avmLow         Float?
+  avmHigh        Float?
+  avmMid         Float?
+  avmConf        Float?
+  priceBadge     String?
+  ttsBucket      String?
   yieldGross     Float?
   yieldNet       Float?
   riskSeismic    Float?
-  riskSeismicUrl String?
+  riskClass      String?
+  riskSource     String?
+  condition      String?
   conditionScore Float?
+  explain        Json?
 
   analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model PriceHistory {
   id        String   @id @default(cuid())
   sourceUrl String
-  ts        DateTime
+  ts        DateTime @default(now())
   price     Int
   currency  String
 
@@ -221,9 +236,10 @@ model AreaDaily {
   id          String   @id @default(cuid())
   areaSlug    String
   date        DateTime @db.Date
-  medianEurM2 Float
-  supply      Int
-  demandScore Float
+  medianEurM2 Float?
+  supply      Int?
+  demandScore Float?
+  stats       Json?
 
   @@unique([areaSlug, date])
   @@index([areaSlug])
