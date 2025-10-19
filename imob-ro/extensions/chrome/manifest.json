@@ -1,15 +1,14 @@
 {
   "manifest_version": 3,
-  "name": "YOUR_DOMAIN Extractor",
-  "description": "Analizează un link - injectează extractor și trimite datele către YOUR_DOMAIN",
-  "version": "0.1.0",
+  "name": "Imob Analyzer",
+  "version": "0.2.0",
+  "description": "Analyze any real-estate listing with one click.",
   "action": {
-    "default_title": "Analizează pe YOUR_DOMAIN",
-    "default_icon": "icon.svg"
+    "default_title": "Analizează",
+    "default_popup": "action.html"
   },
   "permissions": ["activeTab", "scripting"],
-  "host_permissions": ["http://localhost:3000/*", "https://YOUR_DOMAIN/*"],
-  "background": {
-    "service_worker": "background.js"
-  }
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "background.js" },
+  "icons": { "16": "icon.svg", "48": "icon.svg", "128": "icon.svg" }
 }
