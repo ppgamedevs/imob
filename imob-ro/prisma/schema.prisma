@@ -17,6 +17,7 @@ model User {
   image         String?
   role          String    @default("user") // user | agency | admin
   proTier       Boolean   @default(false)
+  freeCredits   Int       @default(0)
   stripeCustomerId String?
   stripeSubscriptionId String?
   stripeSubscriptionStatus String?
@@ -294,4 +295,17 @@ model ModelMetrics {
   createdAt  DateTime @default(now())
 
   @@index([modelName, ts])
+}
+
+model Feedback {
+  id         String   @id @default(cuid())
+  analysisId String
+  userId     String?
+  sold       Boolean
+  price      Int?
+  notes      String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([analysisId])
+  @@index([userId])
 }

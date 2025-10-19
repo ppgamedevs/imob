@@ -23,6 +23,7 @@ import { computeYield, estimateRent, type YieldResult } from "@/lib/ml/yield";
 import { matchSeismic } from "@/lib/risk/seismic";
 
 import AvmCard from "./_components/AvmCard";
+import FeedbackBanner from "@/components/FeedbackBanner";
 
 // keep params typing loose to satisfy Next.js PageProps constraints
 type Props = { params: any };
@@ -210,6 +211,14 @@ export default async function ReportPage({ params }: Props) {
           <h2 className="mb-4 text-lg font-medium">Informații anunț</h2>
           {extracted ? (
             <div>
+              {/* Active learning feedback banner for low-confidence AVM */}
+              {priceRange &&
+                (priceRange.conf < 0.4 ||
+                  (priceRange.high &&
+                    priceRange.low &&
+                    priceRange.high / priceRange.low > 1.25)) && (
+                  <FeedbackBanner analysisId={analysis!.id} />
+                )}
               <ListingCard
                 listing={{
                   id: extracted.id,

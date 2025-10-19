@@ -15,6 +15,7 @@ import "dotenv/config";
 import * as fs from "fs";
 import * as path from "path";
 import { prisma } from "../src/lib/db";
+import * as ml from "../src/lib/ml/retrain";
 
 function nowWeek() {
   const d = new Date();
@@ -158,8 +159,11 @@ async function run() {
 
   console.log(`AVM samples=${y_avm.length} TTS samples=${y_tts.length}`);
 
-  const avmModel = X_avm.length && X_avm[0] ? pseudoInverseSolve(X_avm, y_avm) : null;
-  const ttsModel = X_tts.length && X_tts[0] ? pseudoInverseSolve(X_tts, y_tts) : null;
+  // Attempt GBM training first
+  let avmModel: any = null;
+  let ttsModel: any = null;
+  if (X_avm.length) avmModel = (await ml.tryTrainGBM(X_avm, y_avm)) ?? (X_avm.length && X_avm[0] ? pseudoInverseSolve(X_avm, y_avm) : null);
+  if (X_tts.length) ttsModel = (await ml.tryTrainGBM(X_tts, y_tts)) ?? (X_tts.length && X_tts[0] ? pseudoInverseSolve(X_tts, y_tts) : null);
   // handle empty model results
   const avmModelSafe = avmModel ?? null;
   const ttsModelSafe = ttsModel ?? null;
@@ -168,14 +172,26 @@ async function run() {
   const avmPath = path.join(modelDir, `avm@${weekTag}.json`);
   const ttsPath = path.join(modelDir, `tts@${weekTag}.json`);
 
-  fs.writeFileSync(avmPath, JSON.stringify({ model: avmModelSafe, keys, createdAt: new Date().toISOString(), samples: y_avm.length }, null, 2));
-  fs.writeFileSync(ttsPath, JSON.stringify({ model: ttsModelSafe, keys, createdAt: new Date().toISOString(), samples: y_tts.length }, null, 2));
+  const avmArtifact = { model: avmModelSafe, keys, createdAt: new Date().toISOString(), samples: y_avm.length };
+  const ttsArtifact = { model: ttsModelSafe, keys, createdAt: new Date().toISOString(), samples: y_tts.length };
+  fs.writeFileSync(avmPath, JSON.stringify(avmArtifact, null, 2));
+  fs.writeFileSync(ttsPath, JSON.stringify(ttsArtifact, null, 2));
 
   // update latest cache
   const latestPath = path.join(modelDir, `latest.json`);
   fs.writeFileSync(latestPath, JSON.stringify({ avm: path.basename(avmPath), tts: path.basename(ttsPath), ts: new Date().toISOString() }, null, 2));
-  // invalidate marker
-  fs.writeFileSync(path.join(modelDir, `INVALIDATE`), new Date().toISOString());
+  // try upload to S3 if configured
+  try {
+    const avmKey = `models/${path.basename(avmPath)}`;
+    const ttsKey = `models/${path.basename(ttsPath)}`;
+    const avmUrl = await ml.uploadToS3IfConfigured(avmPath, avmKey);
+    const ttsUrl = await ml.uploadToS3IfConfigured(ttsPath, ttsKey);
+    const cachePayload = { avm: avmUrl ?? path.basename(avmPath), tts: ttsUrl ?? path.basename(ttsPath), ts: new Date().toISOString() };
+    await ml.updateCacheIfConfigured(cachePayload);
+    fs.writeFileSync(path.join(modelDir, `INVALIDATE`), new Date().toISOString());
+  } catch (err) {
+    // ignore upload/cache errors
+  }
 
   console.log("Saved models:", avmPath, ttsPath);
   await prisma.$disconnect();
