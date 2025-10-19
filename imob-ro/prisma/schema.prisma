@@ -253,9 +253,10 @@ model SavedAnalysis {
 // track monthly generated reports per user for paywall enforcement
 model ReportUsage {
   id        String   @id @default(cuid())
-  userId    String   @index
+  userId    String
   month     String   // YYYY-MM
   count     Int      @default(0)
 
   @@unique([userId, month])
+  @@index([userId])
 }
