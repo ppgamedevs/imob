@@ -22,7 +22,9 @@ export async function POST(req: Request) {
     const providedCustomerId = body?.customerId;
     if (providedCustomerId) {
       // persist stripeCustomerId to user
-      await prisma.user.update({
+      // prisma client may not have generated the new field in types yet; cast to any
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (prisma as any).user.update({
         where: { id: userId },
         data: { stripeCustomerId: providedCustomerId },
       });

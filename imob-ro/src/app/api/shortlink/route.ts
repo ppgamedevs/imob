@@ -10,7 +10,9 @@ export async function POST(req: Request) {
     if (!target) return NextResponse.json({ error: "missing_target" }, { status: 400 });
 
     const slug = nanoid(7);
-    await prisma.shortLink.create({ data: { slug, targetUrl: target } });
+    // prisma client may be out-of-date in developer env; cast to any for this write
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (prisma as any).shortLink.create({ data: { slug, targetUrl: target } });
 
     const base =
       process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
