@@ -13,7 +13,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", justifyContent: "space-between" },
 });
 
-export type ReportData = {
+export type ReportDocData = {
   address?: string | null;
   price?: number | null;
   avm?: { low?: number; high?: number; conf?: number } | null;
@@ -25,7 +25,10 @@ export type ReportData = {
   photos?: string[] | null;
 };
 
-export function ReportDoc({ data }: { data: ReportData }) {
+// Backwards-compatible alias used by other files
+export type ReportData = ReportDocData;
+
+export function ReportDoc({ data }: { data: ReportDocData }) {
   return (
     <Document>
       <Page size="A4" style={styles.page}>
