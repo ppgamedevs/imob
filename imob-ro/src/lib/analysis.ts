@@ -2,6 +2,30 @@
 import { prisma } from "./db";
 import { Extracted, maybeFetchServer } from "./extractors";
 
+// Helper: load analysis including snapshots for SSR
+export async function getAnalysis(id: string) {
+  return prisma.analysis.findUnique({
+    where: { id },
+    include: {
+      extractedListing: true,
+      featureSnapshot: true,
+      scoreSnapshot: true,
+    },
+  });
+}
+
+// Helper: reuse analysis for same URL in last 7 days, otherwise create queued
+export async function upsertAnalysisByUrl(sourceUrl: string, userId?: string | null) {
+  const recent = await prisma.analysis.findFirst({
+    where: { sourceUrl },
+    orderBy: { createdAt: "desc" },
+  });
+  if (recent && Date.now() - recent.createdAt.getTime() < 7 * 24 * 3600 * 1000) {
+    return recent;
+  }
+  return prisma.analysis.create({ data: { userId: userId ?? null, sourceUrl, status: "queued" } });
+}
+
 /**
  * Placeholder startAnalysis worker.
  * In production this would enqueue a job or trigger the analyzer.

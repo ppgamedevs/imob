@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
+import { normalizeUrl } from "@/lib/url";
 import { allowRequest, getBucketInfo } from "@/lib/rateLimiter";
 
 function isDisallowedDomain(urlStr: string) {
@@ -22,7 +24,6 @@ export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
   if (!allowRequest(ip)) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (prisma as any).apiAudit.create({
         data: {
           ip,
@@ -37,7 +38,6 @@ export async function POST(req: Request) {
   const originUrl = body?.originUrl;
   if (typeof originUrl === "string" && isDisallowedDomain(originUrl)) {
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (prisma as any).apiAudit.create({
         data: {
           ip,
@@ -53,19 +53,26 @@ export async function POST(req: Request) {
   if (!originUrl || !extracted)
     return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
 
+  const norm = normalizeUrl(originUrl as string);
+  if (!norm) return NextResponse.json({ ok: false, error: "invalid_url" }, { status: 400 });
+
   // Find an existing analysis for this URL (most recent)
   let analysis = await prisma.analysis.findFirst({
-    where: { sourceUrl: originUrl },
+    where: { sourceUrl: norm },
     orderBy: { createdAt: "desc" },
   });
 
   if (!analysis) {
-    analysis = await prisma.analysis.create({ data: { sourceUrl: originUrl, status: "queued" } });
+    analysis = await prisma.analysis.create({ data: { sourceUrl: norm, status: "queued" } });
   }
+
+  // Ensure photos is an array (JSON)
+  const photos = Array.isArray(extracted.photos) ? extracted.photos : [];
 
   // Upsert ExtractedListing for this analysis
   await prisma.extractedListing.upsert({
     where: { analysisId: analysis.id },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     create: {
       analysisId: analysis.id,
       title: extracted.title || undefined,
@@ -74,12 +81,15 @@ export async function POST(req: Request) {
       areaM2: extracted.areaM2 || undefined,
       rooms: extracted.rooms || undefined,
       floor: extracted.floor || undefined,
+      floorRaw: extracted.floorRaw || undefined,
       yearBuilt: extracted.yearBuilt || undefined,
       addressRaw: extracted.addressRaw || undefined,
       lat: extracted.lat || undefined,
       lng: extracted.lng || undefined,
-      photos: extracted.photos ? JSON.stringify(extracted.photos) : undefined,
-    },
+      photos: photos,
+      sourceMeta: extracted.sourceMeta || undefined,
+    } as any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     update: {
       title: extracted.title || undefined,
       price: extracted.price || undefined,
@@ -87,12 +97,14 @@ export async function POST(req: Request) {
       areaM2: extracted.areaM2 || undefined,
       rooms: extracted.rooms || undefined,
       floor: extracted.floor || undefined,
+      floorRaw: extracted.floorRaw || undefined,
       yearBuilt: extracted.yearBuilt || undefined,
       addressRaw: extracted.addressRaw || undefined,
       lat: extracted.lat || undefined,
       lng: extracted.lng || undefined,
-      photos: extracted.photos ? JSON.stringify(extracted.photos) : undefined,
-    },
+      photos: photos,
+      sourceMeta: extracted.sourceMeta || undefined,
+    } as any,
   });
 
   return NextResponse.json({ analysisId: analysis.id });

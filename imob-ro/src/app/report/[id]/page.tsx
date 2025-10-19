@@ -25,6 +25,7 @@ import { matchSeismic } from "@/lib/risk/seismic";
 import AvmCard from "./_components/AvmCard";
 import { computePriceBadge } from "@/lib/price-badge";
 import FeedbackBanner from "@/components/FeedbackBanner";
+import { Poller } from "./poller";
 
 // keep params typing loose to satisfy Next.js PageProps constraints
 type Props = { params: any };
@@ -140,6 +141,7 @@ export default async function ReportPage({ params }: Props) {
 
         await prisma.scoreSnapshot.upsert({
           where: { analysisId: analysis!.id },
+          // Cast create/update payloads to any because Prisma client types may be out-of-sync
           create: {
             analysisId: analysis!.id,
             avmLow: priceRange.low,
@@ -151,7 +153,7 @@ export default async function ReportPage({ params }: Props) {
             yieldGross: yieldRes?.yieldGross ?? null,
             yieldNet: yieldRes?.yieldNet ?? null,
             riskSeismic: seismic.level === "RS1" ? 1 : seismic.level === "RS2" ? 2 : null,
-          },
+          } as any,
           update: {
             avmLow: priceRange.low,
             avmHigh: priceRange.high,
@@ -162,7 +164,7 @@ export default async function ReportPage({ params }: Props) {
             yieldGross: yieldRes?.yieldGross ?? null,
             yieldNet: yieldRes?.yieldNet ?? null,
             riskSeismic: seismic.level === "RS1" ? 1 : seismic.level === "RS2" ? 2 : null,
-          },
+          } as any,
         });
         // compute a simple negotiability heuristic: short TTS + negative priceDelta -> higher chance
         // We'll persist negotiability in scoreSnapshot in future; for now compute locally
@@ -516,6 +518,7 @@ export default async function ReportPage({ params }: Props) {
           </div>
         </div>
       </div>
+      <Poller active={analysis?.status !== "done" && analysis?.status !== "error"} />
     </div>
   );
 }
