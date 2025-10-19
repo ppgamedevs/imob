@@ -85,8 +85,19 @@ export async function maybeFetchServer(url: string) {
   try {
     const u = new URL(url);
     const host = u.hostname.replace(/^www\./, "").toLowerCase();
+    // allow server scraping only when explicitly enabled
+    if (!process.env.ALLOW_SERVER_SCRAPE || process.env.ALLOW_SERVER_SCRAPE === "false") {
+      return null;
+    }
     const whitelist = getServerWhitelist();
     if (!whitelist.has(host)) return null;
+
+    // disallowed domains env (explicit blocklist) — quick check
+    const disallowed = (process.env.DISALLOWED_DOMAINS || "")
+      .split(",")
+      .map((s) => s.trim().toLowerCase())
+      .filter(Boolean);
+    if (disallowed.includes(host)) return null;
 
     const now = Date.now();
     const rl = rateLimits[host] || { last: 0 };
@@ -102,6 +113,8 @@ export async function maybeFetchServer(url: string) {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; imob-bot/1.0)" },
     });
     if (!res.ok) return null;
+    const contentType = res.headers.get("content-type") || "";
+    if (!contentType.includes("text/html")) return null;
     const html = await res.text();
     return extractGeneric(html);
   } catch {

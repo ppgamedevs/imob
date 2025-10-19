@@ -150,6 +150,9 @@ export default async function ReportPage({ params }: Props) {
             riskSeismic: seismic.level === "RS1" ? 1 : seismic.level === "RS2" ? 2 : null,
           },
         });
+        // compute a simple negotiability heuristic: short TTS + negative priceDelta -> higher chance
+        // We'll persist negotiability in scoreSnapshot in future; for now compute locally
+        // (no DB write to avoid schema churn)
       } catch (e) {
         console.warn("Failed to upsert ScoreSnapshot", e);
       }
@@ -174,7 +177,24 @@ export default async function ReportPage({ params }: Props) {
     conditionScore: (analysis?.featureSnapshot as any)?.conditionScore ?? null,
     comps: (f?.comps as any) ?? null,
     photos: Array.isArray(extracted?.photos) ? (extracted?.photos as string[]) : null,
+    negotiableProb: null as number | null,
+    time_to_metro_min: (f?.time_to_metro_min as number) ?? null,
   };
+
+  // compute negotiability heuristic
+  try {
+    const avmMid = priceRange ? priceRange.mid : null;
+    const actualPrice = (f?.price_eur as number) ?? (extracted?.price as number) ?? null;
+    const priceDelta = actualPrice != null && avmMid ? actualPrice / avmMid - 1 : 0;
+    const ttsBucket = (analysis?.featureSnapshot as any)?.ttsBucket ?? null;
+    // base prob: lower priceDelta -> higher chance; scale -0.2 -> +0.6 probability
+    let prob = Math.max(0, Math.min(1, 0.4 - priceDelta * 1.5));
+    if (ttsBucket === "<30") prob = Math.min(1, prob + 0.25);
+    if (ttsBucket === ">60") prob = Math.max(0, prob - 0.15);
+    docData.negotiableProb = Math.round(prob * 100) / 100;
+  } catch (e) {
+    docData.negotiableProb = null;
+  }
 
   const base =
     process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";

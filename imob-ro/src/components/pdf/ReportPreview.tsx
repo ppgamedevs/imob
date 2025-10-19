@@ -16,6 +16,8 @@ export default function ReportPreview({
   const [open, setOpen] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [agencyLogo, setAgencyLogo] = useState<string | null>(null);
+  const [brandColor, setBrandColor] = useState<string | null>(null);
   const urlRef = useRef<string | null>(null);
 
   const fetchPdf = useCallback(async () => {
@@ -67,7 +69,7 @@ export default function ReportPreview({
               <div className="text-sm text-muted-foreground">Preț: {data.price} EUR</div>
             )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
             <Button
               size="sm"
               onClick={async () => {
@@ -91,10 +93,54 @@ export default function ReportPreview({
             >
               Descarcă PDF
             </Button>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={async () => {
+                try {
+                  const params = new URLSearchParams();
+                  if (agencyLogo) params.set("agencyLogo", agencyLogo);
+                  if (brandColor) params.set("brandColor", brandColor);
+                  params.set("savePreset", "true");
+                  const url = `/api/report/${analysisId}/pdf?${params.toString()}`;
+                  const res = await fetch(url);
+                  if (!res.ok) throw new Error("failed to generate pdf");
+                  const blob = await res.blob();
+                  const aurl = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = aurl;
+                  a.download = `report-${analysisId}.pdf`;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  URL.revokeObjectURL(aurl);
+                  alert("PDF exportat și preset salvat.");
+                } catch (e) {
+                  console.error(e);
+                  alert("Nu s-a putut genera PDF-ul.");
+                }
+              }}
+            >
+              Exportă pentru client
+            </Button>
           </div>
         </div>
 
         <div style={{ height: "70vh" }}>
+          <div className="mb-3 flex gap-2">
+            <input
+              placeholder="Logo URL"
+              value={agencyLogo ?? ""}
+              onChange={(e) => setAgencyLogo(e.target.value)}
+              className="border px-2 py-1"
+            />
+            <input
+              placeholder="Brand color (hex)"
+              value={brandColor ?? ""}
+              onChange={(e) => setBrandColor(e.target.value)}
+              className="border px-2 py-1 w-28"
+            />
+          </div>
           {loading && <div>Se încarcă previzualizarea...</div>}
           {pdfUrl && (
             <iframe

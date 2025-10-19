@@ -21,7 +21,7 @@ function nowWeek() {
   const d = new Date();
   // ISO week YYYY-WW
   const onejan = new Date(d.getFullYear(), 0, 1);
-  const week = Math.ceil((((d.getTime() - onejan.getTime()) / 86400000) + onejan.getDay() + 1) / 7);
+  const week = Math.ceil(((d.getTime() - onejan.getTime()) / 86400000 + onejan.getDay() + 1) / 7);
   return `${d.getFullYear()}-${String(week).padStart(2, "0")}`;
 }
 
@@ -42,9 +42,12 @@ function transpose(a: number[][]) {
 }
 
 function matMul(A: number[][], B: number[][]): number[][] {
-  const m = A.length, p = A[0].length, n = B[0].length;
+  const m = A.length,
+    p = A[0].length,
+    n = B[0].length;
   const C: number[][] = Array.from({ length: m }, () => Array(n).fill(0));
-  for (let i = 0; i < m; i++) for (let k = 0; k < p; k++) for (let j = 0; j < n; j++) C[i][j] += A[i][k] * B[k][j];
+  for (let i = 0; i < m; i++)
+    for (let k = 0; k < p; k++) for (let j = 0; j < n; j++) C[i][j] += A[i][k] * B[k][j];
   return C;
 }
 
@@ -58,7 +61,10 @@ function pseudoInverseSolve(X: number[][], y: number[]) {
   // naive inverse using Gauss-Jordan (p small)
   const inv = invertMatrix(XtX);
   if (!inv) return null;
-  const Xty = matMul(Xt, y.map((v) => [v])); // p x 1
+  const Xty = matMul(
+    Xt,
+    y.map((v) => [v]),
+  ); // p x 1
   const wmat = matMul(inv, Xty); // p x 1
   return wmat.map((r) => r[0]);
 }
@@ -66,7 +72,9 @@ function pseudoInverseSolve(X: number[][], y: number[]) {
 function invertMatrix(A: number[][]): number[][] | null {
   const n = A.length;
   const M = A.map((r) => r.slice());
-  const I = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)));
+  const I = Array.from({ length: n }, (_, i) =>
+    Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)),
+  );
   for (let i = 0; i < n; i++) {
     // pivot
     let piv = i;
@@ -75,11 +83,18 @@ function invertMatrix(A: number[][]): number[][] | null {
     [M[i], M[piv]] = [M[piv], M[i]];
     [I[i], I[piv]] = [I[piv], I[i]];
     const div = M[i][i];
-    for (let j = 0; j < n; j++) { M[i][j] /= div; I[i][j] /= div; }
-    for (let r = 0; r < n; r++) if (r !== i) {
-      const factor = M[r][i];
-      for (let c = 0; c < n; c++) { M[r][c] -= factor * M[i][c]; I[r][c] -= factor * I[i][c]; }
+    for (let j = 0; j < n; j++) {
+      M[i][j] /= div;
+      I[i][j] /= div;
     }
+    for (let r = 0; r < n; r++)
+      if (r !== i) {
+        const factor = M[r][i];
+        for (let c = 0; c < n; c++) {
+          M[r][c] -= factor * M[i][c];
+          I[r][c] -= factor * I[i][c];
+        }
+      }
   }
   return I;
 }
@@ -105,14 +120,14 @@ async function run() {
   console.log("Feature keys:", keys.slice(0, 10));
 
   // Build dataset for AVM: require scoreSnapshot and non-censored ttsLabel and a priceHistory row before tts
-  const candidates: any[] = await prisma.$queryRaw`
+  const candidates: any[] = (await prisma.$queryRaw`
     SELECT a.id, a."sourceUrl" FROM "Analysis" a
     JOIN "ScoreSnapshot" s ON s."analysisId" = a.id
     JOIN "TtsLabel" t ON t."analysisId" = a.id
     WHERE t.censored = false AND a."sourceUrl" IS NOT NULL
     ORDER BY a."createdAt" DESC
     LIMIT 2000
-  ` as any[];
+  `) as any[];
 
   const X_avm: number[][] = [];
   const y_avm: number[] = [];
@@ -162,8 +177,14 @@ async function run() {
   // Attempt GBM training first
   let avmModel: any = null;
   let ttsModel: any = null;
-  if (X_avm.length) avmModel = (await ml.tryTrainGBM(X_avm, y_avm)) ?? (X_avm.length && X_avm[0] ? pseudoInverseSolve(X_avm, y_avm) : null);
-  if (X_tts.length) ttsModel = (await ml.tryTrainGBM(X_tts, y_tts)) ?? (X_tts.length && X_tts[0] ? pseudoInverseSolve(X_tts, y_tts) : null);
+  if (X_avm.length)
+    avmModel =
+      (await ml.tryTrainGBM(X_avm, y_avm)) ??
+      (X_avm.length && X_avm[0] ? pseudoInverseSolve(X_avm, y_avm) : null);
+  if (X_tts.length)
+    ttsModel =
+      (await ml.tryTrainGBM(X_tts, y_tts)) ??
+      (X_tts.length && X_tts[0] ? pseudoInverseSolve(X_tts, y_tts) : null);
   // handle empty model results
   const avmModelSafe = avmModel ?? null;
   const ttsModelSafe = ttsModel ?? null;
@@ -172,21 +193,42 @@ async function run() {
   const avmPath = path.join(modelDir, `avm@${weekTag}.json`);
   const ttsPath = path.join(modelDir, `tts@${weekTag}.json`);
 
-  const avmArtifact = { model: avmModelSafe, keys, createdAt: new Date().toISOString(), samples: y_avm.length };
-  const ttsArtifact = { model: ttsModelSafe, keys, createdAt: new Date().toISOString(), samples: y_tts.length };
+  const avmArtifact = {
+    model: avmModelSafe,
+    keys,
+    createdAt: new Date().toISOString(),
+    samples: y_avm.length,
+  };
+  const ttsArtifact = {
+    model: ttsModelSafe,
+    keys,
+    createdAt: new Date().toISOString(),
+    samples: y_tts.length,
+  };
   fs.writeFileSync(avmPath, JSON.stringify(avmArtifact, null, 2));
   fs.writeFileSync(ttsPath, JSON.stringify(ttsArtifact, null, 2));
 
   // update latest cache
   const latestPath = path.join(modelDir, `latest.json`);
-  fs.writeFileSync(latestPath, JSON.stringify({ avm: path.basename(avmPath), tts: path.basename(ttsPath), ts: new Date().toISOString() }, null, 2));
+  fs.writeFileSync(
+    latestPath,
+    JSON.stringify(
+      { avm: path.basename(avmPath), tts: path.basename(ttsPath), ts: new Date().toISOString() },
+      null,
+      2,
+    ),
+  );
   // try upload to S3 if configured
   try {
     const avmKey = `models/${path.basename(avmPath)}`;
     const ttsKey = `models/${path.basename(ttsPath)}`;
     const avmUrl = await ml.uploadToS3IfConfigured(avmPath, avmKey);
     const ttsUrl = await ml.uploadToS3IfConfigured(ttsPath, ttsKey);
-    const cachePayload = { avm: avmUrl ?? path.basename(avmPath), tts: ttsUrl ?? path.basename(ttsPath), ts: new Date().toISOString() };
+    const cachePayload = {
+      avm: avmUrl ?? path.basename(avmPath),
+      tts: ttsUrl ?? path.basename(ttsPath),
+      ts: new Date().toISOString(),
+    };
     await ml.updateCacheIfConfigured(cachePayload);
     fs.writeFileSync(path.join(modelDir, `INVALIDATE`), new Date().toISOString());
   } catch (err) {
@@ -197,4 +239,7 @@ async function run() {
   await prisma.$disconnect();
 }
 
-run().catch((e) => { console.error(e); process.exit(1); });
+run().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

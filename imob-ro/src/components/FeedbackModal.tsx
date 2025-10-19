@@ -4,7 +4,13 @@
 import React, { useState } from "react";
 import { toast } from "sonner";
 
-export default function FeedbackModal({ analysisId, onClose }: { analysisId: string; onClose?: () => void }) {
+export default function FeedbackModal({
+  analysisId,
+  onClose,
+}: {
+  analysisId: string;
+  onClose?: () => void;
+}) {
   const [sold, setSold] = useState<boolean | null>(null);
   const [price, setPrice] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
@@ -53,17 +59,29 @@ export default function FeedbackModal({ analysisId, onClose }: { analysisId: str
         </div>
         <div className="mb-3">
           <label className="block text-sm mb-1">Preț (opțional)</label>
-          <input value={price} onChange={(e) => setPrice(e.target.value)} className="w-full rounded border px-2 py-1" />
+          <input
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            className="w-full rounded border px-2 py-1"
+          />
         </div>
         <div className="mb-3">
           <label className="block text-sm mb-1">Note (opțional)</label>
-          <textarea value={notes} onChange={(e) => setNotes(e.target.value)} className="w-full rounded border px-2 py-1" />
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full rounded border px-2 py-1"
+          />
         </div>
         <div className="flex justify-end gap-2">
           <button className="px-3 py-1 rounded" onClick={onClose} disabled={loading}>
             Anulează
           </button>
-          <button className="px-3 py-1 rounded bg-primary text-white" onClick={submit} disabled={loading}>
+          <button
+            className="px-3 py-1 rounded bg-primary text-white"
+            onClick={submit}
+            disabled={loading}
+          >
             Trimite
           </button>
         </div>

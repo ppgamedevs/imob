@@ -16,7 +16,8 @@ export async function tryTrainGBM(X: number[][], y: number[], opts?: any): Promi
       const params = opts?.params ?? { max_depth: 4, eta: 0.3, objective: "reg:squarederror" };
       const dtrain = new xgb.DMatrix(X, y);
       const booster = xgb.train(params, dtrain, opts?.rounds ?? 50);
-      if (booster && typeof booster.getDump === "function") return { booster, dump: booster.getDump() };
+      if (booster && typeof booster.getDump === "function")
+        return { booster, dump: booster.getDump() };
       return booster;
     }
     return null;
@@ -34,7 +35,12 @@ export function saveArtifact(dir: string, name: string, artifact: ModelArtifact)
 
 export async function uploadToS3IfConfigured(filePath: string, key: string) {
   try {
-    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.S3_BUCKET) return null;
+    if (
+      !process.env.AWS_ACCESS_KEY_ID ||
+      !process.env.AWS_SECRET_ACCESS_KEY ||
+      !process.env.S3_BUCKET
+    )
+      return null;
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
     const client = new S3Client({ region: process.env.AWS_REGION ?? "us-east-1" });
@@ -55,7 +61,7 @@ export async function uploadToS3IfConfigured(filePath: string, key: string) {
 export async function updateCacheIfConfigured(payload: unknown) {
   try {
     if (!process.env.REDIS_URL) return null;
-  const IORedis = require("ioredis");
+    const IORedis = require("ioredis");
     const redis = new IORedis(process.env.REDIS_URL);
     const key = process.env.MODEL_CACHE_KEY ?? "models:latest";
     await redis.set(key, JSON.stringify(payload));

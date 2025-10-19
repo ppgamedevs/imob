@@ -50,7 +50,14 @@ async function run() {
 
   const errors: number[] = [];
   let covered = 0;
-  const details: Array<{ analysisId: string; price: number; avmLow: number; avmHigh: number; ape: number; covered: boolean }> = [];
+  const details: Array<{
+    analysisId: string;
+    price: number;
+    avmLow: number;
+    avmHigh: number;
+    ape: number;
+    covered: boolean;
+  }> = [];
 
   for (const c of candidates) {
     try {
@@ -83,9 +90,16 @@ async function run() {
       errors.push(ape);
       const inInterval = truePrice >= avmLow && truePrice <= avmHigh;
       if (inInterval) covered += 1;
-      details.push({ analysisId: c.id, price: truePrice, avmLow, avmHigh, ape, covered: inInterval });
+      details.push({
+        analysisId: c.id,
+        price: truePrice,
+        avmLow,
+        avmHigh,
+        ape,
+        covered: inInterval,
+      });
     } catch (err) {
-      console.warn('skipping candidate', c.id, err);
+      console.warn("skipping candidate", c.id, err);
     }
   }
 

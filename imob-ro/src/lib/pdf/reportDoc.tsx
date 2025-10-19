@@ -23,17 +23,28 @@ export type ReportDocData = {
   conditionScore?: number | null;
   comps?: Array<Record<string, unknown>> | null;
   photos?: string[] | null;
+  agencyLogo?: string | null;
+  brandColor?: string | null;
+  negotiableProb?: number | null; // 0..1 probability price will drop in 14 days
+  time_to_metro_min?: number | null;
 };
 
 // Backwards-compatible alias used by other files
 export type ReportData = ReportDocData;
 
 export function ReportDoc({ data }: { data: ReportDocData }) {
+  const negotiableText =
+    data.negotiableProb != null ? `${Math.round((data.negotiableProb ?? 0) * 100)}%` : "—";
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
-        <View style={styles.header}>
-          {data?.address && <Image src="/logo.png" style={styles.logo} />}
+        <View style={[styles.header, { backgroundColor: data.brandColor ?? undefined }]}>
+          {data?.agencyLogo ? (
+            <Image src={data.agencyLogo} style={styles.logo} />
+          ) : (
+            data?.address && <Image src="/logo.png" style={styles.logo} />
+          )}
           <View>
             <Text style={styles.title}>{data.address ?? "Adresa necunoscuta"}</Text>
             <Text>{`Preț: ${data.price ?? "—"} EUR`}</Text>
@@ -50,6 +61,16 @@ export function ReportDoc({ data }: { data: ReportDocData }) {
         <View style={styles.section}>
           <Text style={{ fontWeight: 700 }}>TTS</Text>
           <Text>{data.tts ?? "—"}</Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={{ fontWeight: 700 }}>Timp până la metrou</Text>
+          <Text>{data.time_to_metro_min != null ? `${data.time_to_metro_min} min` : "—"}</Text>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={{ fontWeight: 700 }}>Negociabil?</Text>
+          <Text>{negotiableText}</Text>
         </View>
 
         <View style={styles.section}>

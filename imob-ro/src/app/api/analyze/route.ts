@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { startAnalysis } from "@/lib/analysis";
 import { prisma } from "@/lib/db";
+import { allowRequest, getBucketInfo } from "@/lib/rateLimiter";
 
 function sanitizeUrl(input: unknown): string | null {
   if (typeof input !== "string") return null;
@@ -21,6 +22,27 @@ function sanitizeUrl(input: unknown): string | null {
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
+  // identify client by IP (X-Forwarded-For) or default
+  const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+  // rate limiting
+  if (!allowRequest(ip)) {
+    // record audit
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (prisma as any).apiAudit.create({
+        data: { ip, endpoint: "/api/analyze", action: "rate_limited", details: getBucketInfo(ip) },
+      });
+    } catch {}
+    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+  }
+
+  // record received
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (prisma as any).apiAudit.create({
+      data: { ip, endpoint: "/api/analyze", action: "request_received", details: body ?? {} },
+    });
+  } catch {}
   const rawUrl = sanitizeUrl(body?.url);
   if (!rawUrl) return NextResponse.json({ error: "invalid_url" }, { status: 400 });
 

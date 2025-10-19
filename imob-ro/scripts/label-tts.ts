@@ -26,7 +26,20 @@ function daysBetween(a: Date, b: Date) {
 function looksLikeSold(html: string) {
   const txt = html.toLowerCase();
   // Romanian and English common indicators
-  const soldTerms = ["vândut", "vândută", "vandut", "vanduta", "vindut", "vândută", "sold", "s-a-vândut", "s a vandut", "s-a vândut", "s a vândut", "accepted offer"];
+  const soldTerms = [
+    "vândut",
+    "vândută",
+    "vandut",
+    "vanduta",
+    "vindut",
+    "vândută",
+    "sold",
+    "s-a-vândut",
+    "s a vandut",
+    "s-a vândut",
+    "s a vândut",
+    "accepted offer",
+  ];
   return soldTerms.some((t) => txt.includes(t));
 }
 
@@ -48,7 +61,8 @@ async function detectStatusForUrl(url: string) {
     }
 
     // treat other non-2xx as inaccessible
-    if (status < 200 || status >= 300) return { state: "inaccessible", when: now, html: text } as const;
+    if (status < 200 || status >= 300)
+      return { state: "inaccessible", when: now, html: text } as const;
 
     return { state: "active", when: now, html: text } as const;
   } catch (err) {

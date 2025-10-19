@@ -53,6 +53,11 @@ export type NormalizedFeatures = {
   area_slug?: string | null;
   address_components?: Record<string, any> | null;
   photos?: string[] | null;
+  // commute attributes (meters and minutes)
+  dist_to_metro?: number | null; // meters
+  time_to_metro_min?: number | null; // minutes (walking)
+  dist_to_office?: number | null; // meters (optional office coord via env)
+  time_to_office_min?: number | null; // minutes
 };
 
 /**
@@ -88,6 +93,10 @@ export async function normalizeExtracted(ex: unknown): Promise<NormalizedFeature
     price_ron: null,
     area_slug: null,
     address_components: null,
+    dist_to_metro: null,
+    time_to_metro_min: null,
+    dist_to_office: null,
+    time_to_office_min: null,
   };
 
   // Normalize price/currency
@@ -128,6 +137,28 @@ export async function normalizeExtracted(ex: unknown): Promise<NormalizedFeature
 
       const err: any = e;
       console.warn("normalizeExtracted: geocode failed", err?.message ?? err);
+    }
+  }
+
+  // If we have coords, try to compute nearest metro station and walking time
+  if (out.lat != null && out.lng != null) {
+    try {
+      const metro = await findNearestMetro(out.lat, out.lng);
+      if (metro) {
+        out.dist_to_metro = metro.dist ?? null;
+        out.time_to_metro_min = metro.timeMin ?? null;
+      }
+
+      // Optional: compute time to configured office coord via env variables
+      const officeLat = process.env.OFFICE_LAT ? Number(process.env.OFFICE_LAT) : null;
+      const officeLng = process.env.OFFICE_LNG ? Number(process.env.OFFICE_LNG) : null;
+      if (officeLat && officeLng) {
+        const d = haversine(out.lat, out.lng, officeLat, officeLng);
+        out.dist_to_office = Math.round(d);
+        out.time_to_office_min = Math.round(d / 800); // driving/transport rough: 800 m/min ~ 48 km/h
+      }
+    } catch (e) {
+      // ignore failures
     }
   }
 
@@ -194,6 +225,54 @@ export async function normalizeAddress(addressRaw?: string | null): Promise<{
       areaSlug,
       components,
     };
+  } catch {
+    return null;
+  }
+}
+
+// basic haversine distance (meters)
+function haversine(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const toRad = (v: number) => (v * Math.PI) / 180;
+  const R = 6371000; // meters
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
+// Try to find nearest metro station using Mapbox dataset: we can query Mapbox places for "metrou" near the coordinates
+export async function findNearestMetro(
+  lat: number,
+  lng: number,
+): Promise<{ dist?: number; timeMin?: number } | null> {
+  if (!MAPBOX_TOKEN) return null;
+  try {
+    const q = encodeURIComponent("metrou");
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${q}.json?proximity=${lng},${lat}&access_token=${MAPBOX_TOKEN}&limit=5&language=ro,en`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const body = await res.json();
+    const features = body?.features ?? [];
+    if (!Array.isArray(features) || features.length === 0) return null;
+    // compute nearest
+    let best: any = null;
+    let bestDist = Number.POSITIVE_INFINITY;
+    for (const f of features) {
+      const center = f.center || null;
+      if (!center || center.length < 2) continue;
+      const [mlng, mlat] = center;
+      const d = haversine(lat, lng, mlat, mlng);
+      if (d < bestDist) {
+        bestDist = d;
+        best = f;
+      }
+    }
+    if (!best) return null;
+    // walking speed ~80 m/min
+    return { dist: Math.round(bestDist), timeMin: Math.round(bestDist / 80) };
   } catch {
     return null;
   }

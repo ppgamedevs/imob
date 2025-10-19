@@ -83,6 +83,12 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
     const conditionScore = fsnap.conditionScore ?? null;
 
+    // read branding params from query string
+    const url = new URL(req.url);
+    const agencyLogo = url.searchParams.get("agencyLogo");
+    const brandColor = url.searchParams.get("brandColor");
+    const savePreset = url.searchParams.get("savePreset") === "true";
+
     const docData = {
       address: extracted?.addressRaw ?? null,
       price: extracted?.price ?? null,
@@ -93,9 +99,29 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
       conditionScore: conditionScore ?? null,
       comps: (f.comps as Array<Record<string, unknown>>) ?? null,
       photos: Array.isArray(extracted?.photos) ? (extracted?.photos as string[]) : null,
+      agencyLogo: agencyLogo ?? null,
+      brandColor: brandColor ?? null,
     };
 
     const MyDoc = <ReportDoc data={docData} />;
+
+    // persist preset on user's record when requested and user role is agency
+    try {
+      if (savePreset && session?.user) {
+        const u = await prisma.user.findUnique({ where: { id: session.user.id } });
+        if (u && u.role === "agency") {
+          // prisma client types may be out-of-date until you run prisma generate after migrating
+          // use any cast here to avoid build-time type errors
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (prisma as any).user.update({
+            where: { id: session.user.id },
+            data: { agencyLogo: agencyLogo ?? null, brandColor: brandColor ?? null },
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("failed to save agency preset", err);
+    }
 
     // Render to buffer via stream
     const stream = await renderToStream(MyDoc);
