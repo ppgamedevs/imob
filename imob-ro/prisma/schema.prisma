@@ -341,3 +341,20 @@ model ApiAudit {
   @@index([endpoint, ts])
   @@index([userId])
 }
+
+model AlertRule {
+  id           String   @id @default(cuid())
+  userId       String
+  analysisId   String?
+  areaSlug     String?
+  type         String   // "PRICE_BELOW" | "UNDERPRICED" | "NEW_LISTINGS"
+  params       Json?
+  isActive     Boolean  @default(true)
+  lastFiredAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([userId])
+  @@index([analysisId])
+  @@index([areaSlug])
+}

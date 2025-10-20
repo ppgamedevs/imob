@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { prisma } from "@/lib/db";
-import type { NormalizedFeatures } from "@/types/analysis";
-import { estimateSeismic } from "./seismic";
 import type { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/db";
+import { estimateSeismic } from "./seismic";
+import type { NormalizedFeatures } from "@/types/analysis";
 
 export async function applySeismicToAnalysis(analysisId: string, features: NormalizedFeatures) {
-  const res = await estimateSeismic(features as any);
+  const res = await estimateSeismic(features as unknown);
 
   const explain: Prisma.JsonObject = {
     seismic: {

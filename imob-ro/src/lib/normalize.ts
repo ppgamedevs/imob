@@ -132,11 +132,8 @@ export async function normalizeExtracted(ex: unknown): Promise<NormalizedFeature
         out.area_slug = g.areaSlug ?? out.area_slug;
         out.address_components = g.components ?? out.address_components;
       }
-    } catch (e) {
+    } catch (_e) {
       // swallow geocode errors and continue
-
-      const err: any = e;
-      console.warn("normalizeExtracted: geocode failed", err?.message ?? err);
     }
   }
 
@@ -157,7 +154,7 @@ export async function normalizeExtracted(ex: unknown): Promise<NormalizedFeature
         out.dist_to_office = Math.round(d);
         out.time_to_office_min = Math.round(d / 800); // driving/transport rough: 800 m/min ~ 48 km/h
       }
-    } catch (e) {
+    } catch (_e) {
       // ignore failures
     }
   }
