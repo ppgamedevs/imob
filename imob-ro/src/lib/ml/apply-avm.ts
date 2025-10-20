@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Prisma } from "@prisma/client";
+
 import { prisma } from "@/lib/db";
 import { computePriceBadge } from "@/lib/price-badge";
 
@@ -12,22 +14,22 @@ export async function applyAvmToAnalysis(analysisId: string, features: any) {
   await prisma.scoreSnapshot.upsert({
     where: { analysisId },
     update: {
-      avmLow: res.low,
-      avmHigh: res.high,
-      avmMid: res.mid,
-      avmConf: res.conf,
+      avmLow: res.low ?? undefined,
+      avmHigh: res.high ?? undefined,
+      avmMid: res.mid ?? undefined,
+      avmConf: res.conf ?? undefined,
       priceBadge,
-      explain: { avm: res.explain },
-    },
+      explain: { avm: res.explain } as Prisma.JsonObject,
+    } as unknown as Prisma.ScoreSnapshotUpdateInput,
     create: {
       analysisId,
-      avmLow: res.low,
-      avmHigh: res.high,
-      avmMid: res.mid,
-      avmConf: res.conf,
+      avmLow: res.low ?? undefined,
+      avmHigh: res.high ?? undefined,
+      avmMid: res.mid ?? undefined,
+      avmConf: res.conf ?? undefined,
       priceBadge,
-      explain: { avm: res.explain },
-    },
+      explain: { avm: res.explain } as Prisma.JsonObject,
+    } as unknown as Prisma.ScoreSnapshotCreateInput,
   });
 
   return res;

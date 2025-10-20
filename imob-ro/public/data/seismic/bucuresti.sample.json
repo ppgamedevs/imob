@@ -1,0 +1,56 @@
+[
+  {
+    "id": "buc-0001",
+    "address": "Str. Știrbei Vodă 10",
+    "lat": 44.4409,
+    "lng": 26.082,
+    "rs_class": "RS1",
+    "source_url": "https://exemplu.gov.ro/rs1/123",
+    "updated_at": "2024-12-10"
+  },
+  {
+    "id": "buc-0002",
+    "address": "Bd. Regina Elisabeta 20",
+    "lat": 44.4359,
+    "lng": 26.0966,
+    "rs_class": "RS2",
+    "source_url": "https://exemplu.gov.ro/rs2/456",
+    "updated_at": "2024-12-10"
+  },
+  {
+    "id": "buc-0003",
+    "address": "Calea Victoriei 140",
+    "lat": 44.445,
+    "lng": 26.0947,
+    "rs_class": "RS3",
+    "source_url": "https://exemplu.gov.ro/rs3/789",
+    "updated_at": "2024-12-10"
+  },
+  {
+    "id": "buc-0004",
+    "address": "Bd. Dacia 70",
+    "lat": 44.4459,
+    "lng": 26.1067,
+    "rs_class": "RS4",
+    "source_url": "https://exemplu.gov.ro/rs4/101",
+    "updated_at": "2024-12-10"
+  },
+  {
+    "id": "buc-0005",
+    "address": "Str. Luterană 5",
+    "lat": 44.4398,
+    "lng": 26.0921,
+    "rs_class": "RS1",
+    "source_url": "https://exemplu.gov.ro/rs1/202",
+    "updated_at": "2024-12-10"
+  },
+  {
+    "id": "buc-0006",
+    "address": "Bd. Carol I 50",
+    "lat": 44.4395,
+    "lng": 26.109,
+    "rs_class": "None",
+    "source_url": "https://exemplu.gov.ro/none/303",
+    "updated_at": "2024-12-10"
+  }
+]

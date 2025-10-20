@@ -102,6 +102,13 @@ export async function startAnalysis(analysisId: string, url: string) {
               } catch (e) {
                 console.warn("applyTtsToAnalysis failed", e);
               }
+              try {
+                // yield depends on est rent and price; compute and persist
+                const { applyYieldToAnalysis } = await import("./ml/apply-yield");
+                await applyYieldToAnalysis(analysisId, fsnap.features as any);
+              } catch (e) {
+                console.warn("applyYieldToAnalysis failed", e);
+              }
             }
           } catch (e) {
             console.warn("applyAvmToAnalysis failed", e);
@@ -130,6 +137,24 @@ export async function startAnalysis(analysisId: string, url: string) {
               await applyTtsToAnalysis(analysisId, fsnap.features as any);
             } catch (e) {
               console.warn("applyTtsToAnalysis failed", e);
+            }
+            try {
+              const { applyYieldToAnalysis } = await import("./ml/apply-yield");
+              await applyYieldToAnalysis(analysisId, fsnap.features as any);
+              try {
+                const { applySeismicToAnalysis } = await import("./risk/apply-seismic");
+                await applySeismicToAnalysis(analysisId, fsnap.features as any);
+              } catch (e) {
+                console.warn("applySeismicToAnalysis failed", e);
+              }
+              try {
+                const { applySeismicToAnalysis } = await import("./risk/apply-seismic");
+                await applySeismicToAnalysis(analysisId, fsnap.features as any);
+              } catch (e) {
+                console.warn("applySeismicToAnalysis failed", e);
+              }
+            } catch (e) {
+              console.warn("applyYieldToAnalysis failed", e);
             }
           }
         } catch (e) {

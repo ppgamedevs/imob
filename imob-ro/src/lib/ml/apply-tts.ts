@@ -3,12 +3,14 @@ import type { NormalizedFeatures } from "@/types/analysis";
 
 import { estimateTTS } from "./tts";
 
+type ScoreLike = { avmMid?: number | null } | null;
+
 export async function applyTtsToAnalysis(analysisId: string, features: NormalizedFeatures) {
-  const scores = await prisma.scoreSnapshot.findUnique({ where: { analysisId } });
+  const scores = (await prisma.scoreSnapshot.findUnique({ where: { analysisId } })) as ScoreLike;
 
   const res = await estimateTTS({
-    // scores shape may lack avmMid; read if present
-    avmMid: scores?.avmMid ?? undefined,
+    // scores shape may lack avmMid; read defensively
+    avmMid: (scores as ScoreLike)?.avmMid ?? undefined,
     asking: features.priceEur ?? undefined,
     areaSlug: features.areaSlug ?? undefined,
     month: new Date().getMonth() + 1,

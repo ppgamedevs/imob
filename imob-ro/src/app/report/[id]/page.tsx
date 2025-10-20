@@ -208,7 +208,7 @@ export default async function ReportPage({ params }: Props) {
     if (ttsBucket === "<30") prob = Math.min(1, prob + 0.25);
     if (ttsBucket === "90+") prob = Math.max(0, prob - 0.15);
     docData.negotiableProb = Math.round(prob * 100) / 100;
-  } catch (_e) {
+  } catch {
     docData.negotiableProb = null;
   }
 
@@ -226,6 +226,27 @@ export default async function ReportPage({ params }: Props) {
     });
     if (ph && ph.length) priceHistory = ph.map((p) => p.price);
   }
+
+  const ss = analysis?.scoreSnapshot as any;
+  const estRent = ss?.estRent;
+  const yGross = ss?.yieldGross;
+  const yNet = ss?.yieldNet;
+  const rentExp = (ss?.explain as any)?.rent;
+  const rentAdjRooms = (rentExp?.adjustments?.rooms ?? 1) as number;
+  const rentAdjCondition = (rentExp?.adjustments?.condition ?? 1) as number;
+  const rentAdjMetro = (rentExp?.adjustments?.metro ?? 1) as number;
+  const rentAdjText = rentExp?.eurM2
+    ? `Bază: ${Math.round(rentExp.eurM2)} €/m² — ajustări: rooms ${rentAdjRooms.toFixed(2)}, cond ${rentAdjCondition.toFixed(2)}, metro ${rentAdjMetro.toFixed(2)}`
+    : null;
+
+  // Prefer persisted seismic info from ScoreSnapshot when available
+  const riskExplain = (ss?.explain as any)?.seismic ?? null;
+  const riskClass = ss?.riskClass ?? riskExplain?.riskClass ?? null;
+  const riskSource = ss?.riskSource ?? riskExplain?.source ?? riskExplain?.sourceUrl ?? null;
+  const riskConfidence =
+    typeof riskExplain?.confidence === "number" ? riskExplain.confidence : null;
+  const riskMethod = riskExplain?.method ?? null;
+  const riskNote = riskExplain?.note ?? null;
 
   return (
     <div className="container mx-auto py-8">
@@ -412,11 +433,11 @@ export default async function ReportPage({ params }: Props) {
                       {(analysis?.featureSnapshot as any)?.ttsBucket ?? "—"}
                     </div>
                     {/* show approximate days when available from scoreSnapshot.explain.tts.scoreDays */}
-                    {analysis?.scoreSnapshot?.explain &&
-                    (analysis.scoreSnapshot.explain as any).tts &&
-                    typeof (analysis.scoreSnapshot.explain as any).tts.scoreDays === "number" ? (
+                    {ss?.explain &&
+                    ss.explain?.tts &&
+                    typeof ss.explain.tts.scoreDays === "number" ? (
                       <div className="text-sm text-muted-foreground">
-                        ≈ {(analysis.scoreSnapshot.explain as any).tts.scoreDays} zile
+                        ≈ {ss.explain.tts.scoreDays} zile
                       </div>
                     ) : null}
                   </div>
@@ -430,11 +451,25 @@ export default async function ReportPage({ params }: Props) {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="font-medium">Randament</div>
-                  <div className="text-sm text-muted-foreground">{f?.yield_gross ?? "—"}</div>
+                  <div className="text-sm text-muted-foreground">{yGross ?? "—"}</div>
                 </div>
               </CardHeader>
               <CardContent>
-                {f ? <div>{f?.yield_gross ?? "—"}</div> : <Skeleton className="h-8 w-full" />}
+                {(yNet ?? yGross) ? (
+                  <div className="text-sm space-y-1">
+                    <p>
+                      {yNet != null ? <b>{(yNet * 100).toFixed(1)}%</b> : null}
+                      {yNet != null && yGross != null ? " net · " : null}
+                    </p>
+                    {yGross != null ? <p>{(yGross * 100).toFixed(1)}% brut</p> : null}
+                    {estRent ? <p>Chirie estimată: ~ {estRent} €/lună</p> : null}
+                    {rentAdjText ? (
+                      <p className="text-xs text-muted-foreground">{rentAdjText}</p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <Skeleton className="h-8 w-full" />
+                )}
               </CardContent>
             </Card>
 
@@ -547,22 +582,46 @@ export default async function ReportPage({ params }: Props) {
                           : "—"}
                       </div>
                     </div>
-                    {seismic.level !== "none" && (
-                      <div className="mt-3 flex items-center gap-3">
-                        <Badge variant="destructive">{seismic.level}</Badge>
-                        {seismic.sourceUrl ? (
-                          <a
-                            className="text-sm text-primary underline"
-                            href={seismic.sourceUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            verifică la sursă
-                          </a>
-                        ) : (
-                          <div className="text-sm text-muted-foreground">verifică la sursă</div>
-                        )}
+                    {riskClass ? (
+                      <div className="mt-3 flex flex-col gap-2">
+                        <div className="flex items-center gap-3">
+                          <Badge variant={riskClass === "RS1" ? "destructive" : "secondary"}>
+                            {riskClass}
+                          </Badge>
+                          {typeof riskConfidence === "number" ? (
+                            <div className="text-sm text-muted-foreground">
+                              {Math.round(riskConfidence * 100)}% încredere
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          {riskSource ? (
+                            <a
+                              className="text-sm text-primary underline"
+                              href={String(riskSource)}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              verifică la sursă
+                            </a>
+                          ) : (
+                            <div className="text-sm text-muted-foreground">verifică la sursă</div>
+                          )}
+
+                          {riskMethod ? (
+                            <div className="text-sm text-muted-foreground">
+                              metodă: {riskMethod}
+                            </div>
+                          ) : null}
+                        </div>
+
+                        {riskNote ? (
+                          <div className="text-xs text-muted-foreground">{riskNote}</div>
+                        ) : null}
                       </div>
+                    ) : (
+                      <div className="text-sm text-muted-foreground">—</div>
                     )}
                   </div>
                 ) : (
