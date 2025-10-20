@@ -1,7 +1,7 @@
 "use server";
 
-import { auth } from "@/lib/auth";
 import { createAlertRule } from "@/lib/alerts";
+import { auth } from "@/lib/auth";
 // AlertType intentionally not needed here to avoid unused-import linting
 
 export async function createPriceBelowAlert(analysisId: string, thresholdEur: number) {

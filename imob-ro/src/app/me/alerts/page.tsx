@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { auth } from "@/lib/auth";
-import { listAlertRules, disableAlertRule } from "@/lib/alerts";
 import React from "react";
+
+import { disableAlertRule, listAlertRules } from "@/lib/alerts";
+import { auth } from "@/lib/auth";
 
 export default async function AlertsPage() {
   const session = await auth();

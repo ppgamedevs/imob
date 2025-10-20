@@ -1,2 +1,2 @@
-// Intentionally empty placeholder; real implementation lives in route.tsx
+// route.ts is intentionally a placeholder. The actual implementation uses JSX and lives in route.tsx
 export {};

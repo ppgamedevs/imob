@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from "@/lib/db";
-import type { AlertType, AlertParams } from "@/types/alerts";
+import type { AlertParams, AlertType } from "@/types/alerts";
 
 export async function createAlertRule(args: {
   userId: string;

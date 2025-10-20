@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { checkAlertsNow, markFired } from "@/lib/alerts-checker";
 import { deliverNotifications } from "@/lib/notify";
 

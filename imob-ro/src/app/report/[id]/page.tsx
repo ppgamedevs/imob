@@ -1,6 +1,5 @@
 "use server";
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { Prisma } from "@prisma/client";
 import Image from "next/image";
 import React from "react";
 
@@ -18,17 +17,20 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import UpgradeBanner from "@/components/UpgradeBanner";
 import ConditionCard from "@/components/vision/ConditionCard";
 import { prisma } from "@/lib/db";
-import estimatePriceRange from "@/lib/ml/avm";
+import estimatePriceRange, { type AreaStats } from "@/lib/ml/avm";
 import estimateTTS from "@/lib/ml/tts";
 import { computeYield, estimateRent, type YieldResult } from "@/lib/ml/yield";
 import { computePriceBadge } from "@/lib/price-badge";
 import { matchSeismic } from "@/lib/risk/seismic";
+import type { ScoreExplain } from "@/types/score-explain";
 
 import AvmCard from "./_components/AvmCard";
+// Client PDF export actions
+import { PdfActions } from "./PdfActions.client";
 import { Poller } from "./poller";
 
 // keep params typing loose to satisfy Next.js PageProps constraints
-type Props = { params: any };
+type Props = { params: { id?: string | string[] } };
 async function loadAnalysis(id: string) {
   return prisma.analysis.findUnique({
     where: { id },
@@ -43,13 +45,14 @@ async function loadAnalysis(id: string) {
 // Restart is handled via client API at /api/analysis/restart; formatting helper removed (unused)
 
 export default async function ReportPage({ params }: Props) {
-  const analysis = await loadAnalysis(params.id);
+  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  if (!id) throw new Error("Missing report id");
+  const analysis = await loadAnalysis(id);
 
   const extracted = analysis?.extractedListing ?? null;
-  const features = (analysis?.featureSnapshot?.features ?? null) as any;
-  const f = features as any;
+  const f = (analysis?.featureSnapshot?.features ?? null) as unknown as Record<string, any> | null;
   let yieldRes: YieldResult | null = null;
-  const rentM2: number | null = null;
+  let rentM2: number | null = null;
   const compsRentArr: number[] = [];
   let seismic: { level: "RS1" | "RS2" | "none"; sourceUrl?: string | null } = { level: "none" };
 
@@ -61,11 +64,11 @@ export default async function ReportPage({ params }: Props) {
       orderBy: { date: "desc" },
     });
     // latest area daily is represented by `ad` (most recent AreaDaily)
-    const areaStats = {
+    const areaStats: AreaStats = {
       medianEurPerM2: ad?.medianEurM2 ?? 1500,
       count: ad?.supply ?? 1,
     };
-    priceRange = estimatePriceRange(f, areaStats as any) as any;
+    priceRange = estimatePriceRange(f, areaStats);
 
     // compute Time-to-Sell input values and persist ScoreSnapshot
     if (priceRange) {
@@ -89,7 +92,7 @@ export default async function ReportPage({ params }: Props) {
         });
         // Yield estimation: extract comps rent per m2 or compute from comps with price/area
         const comps = Array.isArray(f?.comps) ? f.comps : null;
-        const compsRentArr: number[] = [];
+        // reuse outer compsRentArr
         if (comps) {
           for (const c of comps) {
             // prefer explicit rent_m2 if present
@@ -106,7 +109,7 @@ export default async function ReportPage({ params }: Props) {
           }
         }
 
-        const rentM2 = estimateRent(f, compsRentArr.length ? compsRentArr : null);
+        rentM2 = estimateRent(f, compsRentArr.length ? compsRentArr : null);
         const areaM2 = (f?.area_m2 as number) ?? (extracted?.areaM2 as number) ?? null;
         const rentPerMonth = rentM2 && areaM2 ? rentM2 * areaM2 : null;
 
@@ -139,6 +142,9 @@ export default async function ReportPage({ params }: Props) {
           priceRange.high,
         );
 
+        // use Prisma JsonObject casts for explain-like fields when writing dynamic JSON
+        import type { Prisma } from "@prisma/client";
+
         await prisma.scoreSnapshot.upsert({
           where: { analysisId: analysis!.id },
           // Cast create/update payloads to any because Prisma client types may be out-of-sync
@@ -153,7 +159,7 @@ export default async function ReportPage({ params }: Props) {
             yieldGross: yieldRes?.yieldGross ?? null,
             yieldNet: yieldRes?.yieldNet ?? null,
             riskSeismic: seismic.level === "RS1" ? 1 : seismic.level === "RS2" ? 2 : null,
-          } as any,
+          } as Prisma.JsonObject,
           update: {
             avmLow: priceRange.low,
             avmHigh: priceRange.high,
@@ -164,7 +170,7 @@ export default async function ReportPage({ params }: Props) {
             yieldGross: yieldRes?.yieldGross ?? null,
             yieldNet: yieldRes?.yieldNet ?? null,
             riskSeismic: seismic.level === "RS1" ? 1 : seismic.level === "RS2" ? 2 : null,
-          } as any,
+          } as Prisma.JsonObject,
         });
         // compute a simple negotiability heuristic: short TTS + negative priceDelta -> higher chance
         // We'll persist negotiability in scoreSnapshot in future; for now compute locally
@@ -182,6 +188,13 @@ export default async function ReportPage({ params }: Props) {
         orderBy: { date: "desc" },
       })
     : null;
+
+  const fsnap = (analysis?.featureSnapshot ?? null) as {
+    ttsBucket?: string;
+    yieldNet?: number;
+    riskSeismic?: number;
+    conditionScore?: number;
+  } | null;
 
   const docData = {
     address: extracted?.addressRaw ?? null,
@@ -227,11 +240,11 @@ export default async function ReportPage({ params }: Props) {
     if (ph && ph.length) priceHistory = ph.map((p) => p.price);
   }
 
-  const ss = analysis?.scoreSnapshot as any;
-  const estRent = ss?.estRent;
-  const yGross = ss?.yieldGross;
-  const yNet = ss?.yieldNet;
-  const rentExp = (ss?.explain as any)?.rent;
+  const ss = analysis?.scoreSnapshot as unknown as { explain?: ScoreExplain } | undefined;
+  const estRent = ss?.estRent as number | undefined;
+  const yGross = ss?.yieldGross as number | undefined;
+  const yNet = ss?.yieldNet as number | undefined;
+  const rentExp = ss?.explain?.rent;
   const rentAdjRooms = (rentExp?.adjustments?.rooms ?? 1) as number;
   const rentAdjCondition = (rentExp?.adjustments?.condition ?? 1) as number;
   const rentAdjMetro = (rentExp?.adjustments?.metro ?? 1) as number;
@@ -240,7 +253,7 @@ export default async function ReportPage({ params }: Props) {
     : null;
 
   // Prefer persisted seismic info from ScoreSnapshot when available
-  const riskExplain = (ss?.explain as any)?.seismic ?? null;
+  const riskExplain = ss?.explain?.seismic ?? null;
   const riskClass = ss?.riskClass ?? riskExplain?.riskClass ?? null;
   const riskSource = ss?.riskSource ?? riskExplain?.source ?? riskExplain?.sourceUrl ?? null;
   const riskConfidence =
@@ -258,6 +271,8 @@ export default async function ReportPage({ params }: Props) {
           <RefreshButton analysisId={analysis?.id ?? ""} />
           {/* Report preview (Client) */}
           <ReportPreview data={docData} analysisId={analysis?.id} />
+          {/* PDF export actions */}
+          <PdfActions analysisId={analysis?.id ?? ""} />
           <ShareButton url={canonicalUrl} title={extracted?.title ?? "Raport analiză"} />
         </div>
       </div>
