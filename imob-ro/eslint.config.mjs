@@ -24,6 +24,10 @@ const eslintConfig = [
   {
     ignores: ["node_modules/**", ".next/**", "out/**", "build/**", "next-env.d.ts"],
   },
+  {
+    // ignore generated and CLI scripts that use require() or looser typing
+    ignores: ["dist-scripts/**", "scripts/**"],
+  },
 ];
 
 export default eslintConfig;

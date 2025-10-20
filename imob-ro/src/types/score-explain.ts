@@ -14,7 +14,7 @@ export type ExplainRent = {
   baseEurM2?: number;
   adjustments?: { rooms?: number; condition?: number; metro?: number; size?: number };
 };
-export type ExplainYield = { inputs?: Record<string, any>; annual?: Record<string, any> };
+export type ExplainYield = { inputs?: Record<string, unknown>; annual?: Record<string, unknown> };
 export type ScoreExplain = {
   avm?: ExplainAVM;
   tts?: ExplainTTS;

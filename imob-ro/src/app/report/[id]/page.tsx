@@ -1,5 +1,4 @@
 "use server";
-import type { Prisma } from "@prisma/client";
 import Image from "next/image";
 import React from "react";
 
@@ -20,8 +19,8 @@ import { prisma } from "@/lib/db";
 import estimatePriceRange, { type AreaStats } from "@/lib/ml/avm";
 import estimateTTS from "@/lib/ml/tts";
 import { computeYield, estimateRent, type YieldResult } from "@/lib/ml/yield";
-import { computePriceBadge } from "@/lib/price-badge";
 import { matchSeismic } from "@/lib/risk/seismic";
+import type { NormalizedFeatures } from "@/types/analysis";
 import type { ScoreExplain } from "@/types/score-explain";
 
 import AvmCard from "./_components/AvmCard";
@@ -29,8 +28,8 @@ import AvmCard from "./_components/AvmCard";
 import { PdfActions } from "./PdfActions.client";
 import { Poller } from "./poller";
 
-// keep params typing loose to satisfy Next.js PageProps constraints
-type Props = { params: { id?: string | string[] } };
+// Next.js 15: params is now a Promise
+type Props = { params: Promise<{ id?: string | string[] }> };
 async function loadAnalysis(id: string) {
   return prisma.analysis.findUnique({
     where: { id },
@@ -45,12 +44,13 @@ async function loadAnalysis(id: string) {
 // Restart is handled via client API at /api/analysis/restart; formatting helper removed (unused)
 
 export default async function ReportPage({ params }: Props) {
-  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const resolvedParams = await params;
+  const id = Array.isArray(resolvedParams.id) ? resolvedParams.id[0] : resolvedParams.id;
   if (!id) throw new Error("Missing report id");
   const analysis = await loadAnalysis(id);
 
   const extracted = analysis?.extractedListing ?? null;
-  const f = (analysis?.featureSnapshot?.features ?? null) as unknown as Record<string, any> | null;
+  const f = (analysis?.featureSnapshot?.features ?? null) as NormalizedFeatures | null;
   let yieldRes: YieldResult | null = null;
   let rentM2: number | null = null;
   const compsRentArr: number[] = [];
@@ -80,12 +80,15 @@ export default async function ReportPage({ params }: Props) {
 
         const avmMidCalc = Math.round((priceRange.low + priceRange.high) / 2);
         const askingPrice = actualPrice;
-        const areaM2Local = (f?.area_m2 as number) ?? (extracted?.areaM2 as number) ?? null;
-        const conditionScoreLocal = f?.condition_score ?? null;
+        const areaM2Local =
+          (typeof f?.areaM2 === "number" ? f.areaM2 : null) ??
+          (extracted?.areaM2 as number) ??
+          null;
+        const conditionScoreLocal = typeof f?.conditionScore === "number" ? f.conditionScore : null;
         const tts = await estimateTTS({
           avmMid: avmMidCalc,
           asking: askingPrice ?? undefined,
-          areaSlug: f?.area_slug ?? undefined,
+          areaSlug: typeof f?.areaSlug === "string" ? f.areaSlug : undefined,
           month: new Date().getMonth() + 1,
           areaM2: areaM2Local ?? undefined,
           conditionScore: conditionScoreLocal ?? undefined,
@@ -110,12 +113,15 @@ export default async function ReportPage({ params }: Props) {
         }
 
         rentM2 = estimateRent(f, compsRentArr.length ? compsRentArr : null);
-        const areaM2 = (f?.area_m2 as number) ?? (extracted?.areaM2 as number) ?? null;
+        const areaM2 =
+          (typeof f?.areaM2 === "number" ? f.areaM2 : null) ??
+          (extracted?.areaM2 as number) ??
+          null;
         const rentPerMonth = rentM2 && areaM2 ? rentM2 * areaM2 : null;
 
         // capex heuristic: map condition score or photo_condition to estimated one-time capex
         let capex = 0;
-        const cond = f?.condition_score ?? null;
+        const cond = typeof f?.conditionScore === "number" ? f.conditionScore : null;
         if (typeof cond === "number") {
           // cond: 0..1 (lower => worse) -> higher capex
           capex = Math.round((1 - cond) * 10000); // up to 10k
@@ -128,49 +134,39 @@ export default async function ReportPage({ params }: Props) {
 
         // seismic risk: try to match using coordinates or address
         seismic = await matchSeismic(
-          extracted?.lat ?? f?.lat,
-          extracted?.lng ?? f?.lng,
-          extracted?.addressRaw ?? f?.address_raw ?? f?.address,
+          extracted?.lat ?? (typeof f?.lat === "number" ? f.lat : null),
+          extracted?.lng ?? (typeof f?.lng === "number" ? f.lng : null),
+          extracted?.addressRaw ??
+            (typeof f?.address_raw === "string"
+              ? f.address_raw
+              : typeof f?.address === "string"
+                ? f.address
+                : null) ??
+            undefined,
         );
 
-        // avmMidCalc and askingPrice already computed above for TTS and scoring
-        // keep askingPrice for later usage (askingPrice is set earlier)
-        const priceBadgeCalc = computePriceBadge(
-          askingPrice,
-          priceRange.low,
-          avmMidCalc,
-          priceRange.high,
-        );
-
-        // use Prisma JsonObject casts for explain-like fields when writing dynamic JSON
-        import type { Prisma } from "@prisma/client";
-
+        // Persist computed scores in ScoreSnapshot
         await prisma.scoreSnapshot.upsert({
           where: { analysisId: analysis!.id },
-          // Cast create/update payloads to any because Prisma client types may be out-of-sync
           create: {
             analysisId: analysis!.id,
             avmLow: priceRange.low,
             avmHigh: priceRange.high,
-            avmMid: avmMidCalc,
-            priceBadge: priceBadgeCalc,
             avmConf: priceRange.conf,
             ttsBucket: tts.bucket,
             yieldGross: yieldRes?.yieldGross ?? null,
             yieldNet: yieldRes?.yieldNet ?? null,
             riskSeismic: seismic.level === "RS1" ? 1 : seismic.level === "RS2" ? 2 : null,
-          } as Prisma.JsonObject,
+          },
           update: {
             avmLow: priceRange.low,
             avmHigh: priceRange.high,
-            avmMid: avmMidCalc,
-            priceBadge: priceBadgeCalc,
             avmConf: priceRange.conf,
             ttsBucket: tts.bucket,
             yieldGross: yieldRes?.yieldGross ?? null,
             yieldNet: yieldRes?.yieldNet ?? null,
             riskSeismic: seismic.level === "RS1" ? 1 : seismic.level === "RS2" ? 2 : null,
-          } as Prisma.JsonObject,
+          },
         });
         // compute a simple negotiability heuristic: short TTS + negative priceDelta -> higher chance
         // We'll persist negotiability in scoreSnapshot in future; for now compute locally
@@ -189,33 +185,27 @@ export default async function ReportPage({ params }: Props) {
       })
     : null;
 
-  const fsnap = (analysis?.featureSnapshot ?? null) as {
-    ttsBucket?: string;
-    yieldNet?: number;
-    riskSeismic?: number;
-    conditionScore?: number;
-  } | null;
-
   const docData = {
     address: extracted?.addressRaw ?? null,
     price: extracted?.price ?? null,
     avm: priceRange ? { low: priceRange.low, high: priceRange.high, conf: priceRange.conf } : null,
-    tts: (analysis?.featureSnapshot as any)?.ttsBucket ?? null,
-    yieldNet: (analysis?.featureSnapshot as any)?.yieldNet ?? null,
-    riskSeismic: (analysis?.featureSnapshot as any)?.riskSeismic ?? null,
-    conditionScore: (analysis?.featureSnapshot as any)?.conditionScore ?? null,
-    comps: (f?.comps as any) ?? null,
+    tts: analysis?.scoreSnapshot?.ttsBucket ?? null,
+    yieldNet: analysis?.scoreSnapshot?.yieldNet ?? null,
+    riskSeismic: analysis?.scoreSnapshot?.riskSeismic ?? null,
+    conditionScore: analysis?.scoreSnapshot?.conditionScore ?? null,
+    comps: Array.isArray(f?.comps) ? (f!.comps as Array<Record<string, unknown>>) : null,
     photos: Array.isArray(extracted?.photos) ? (extracted?.photos as string[]) : null,
     negotiableProb: null as number | null,
-    time_to_metro_min: (f?.time_to_metro_min as number) ?? null,
+    time_to_metro_min: typeof f?.time_to_metro_min === "number" ? f.time_to_metro_min : null,
   };
 
   // compute negotiability heuristic
   try {
     const avmMid = priceRange ? priceRange.mid : null;
-    const actualPrice = (f?.price_eur as number) ?? (extracted?.price as number) ?? null;
+    const actualPrice =
+      (typeof f?.priceEur === "number" ? f.priceEur : null) ?? (extracted?.price as number) ?? null;
     const priceDelta = actualPrice != null && avmMid ? actualPrice / avmMid - 1 : 0;
-    const ttsBucket = (analysis?.featureSnapshot as any)?.ttsBucket ?? null;
+    const ttsBucket = analysis?.scoreSnapshot?.ttsBucket ?? null;
     // base prob: lower priceDelta -> higher chance; scale -0.2 -> +0.6 probability
     let prob = Math.max(0, Math.min(1, 0.4 - priceDelta * 1.5));
     if (ttsBucket === "<30") prob = Math.min(1, prob + 0.25);
@@ -240,10 +230,26 @@ export default async function ReportPage({ params }: Props) {
     if (ph && ph.length) priceHistory = ph.map((p) => p.price);
   }
 
-  const ss = analysis?.scoreSnapshot as unknown as { explain?: ScoreExplain } | undefined;
-  const estRent = ss?.estRent as number | undefined;
-  const yGross = ss?.yieldGross as number | undefined;
-  const yNet = ss?.yieldNet as number | undefined;
+  type ScoreSnapshotRow = {
+    explain?: ScoreExplain;
+    estRent?: number | null;
+    yieldGross?: number | null;
+    yieldNet?: number | null;
+    riskClass?: string | null;
+    riskSource?: string | null;
+  };
+
+  // helper: safely read string property from unknown snapshots/features
+  function getStringProp(obj: unknown, key: string): string | null {
+    if (!obj || typeof obj !== "object") return null;
+    const v = (obj as Record<string, unknown>)[key];
+    return typeof v === "string" ? v : null;
+  }
+
+  const ss = (analysis?.scoreSnapshot ?? null) as ScoreSnapshotRow | null;
+  const estRent = ss?.estRent ?? undefined;
+  const yGross = ss?.yieldGross ?? undefined;
+  const yNet = ss?.yieldNet ?? undefined;
   const rentExp = ss?.explain?.rent;
   const rentAdjRooms = (rentExp?.adjustments?.rooms ?? 1) as number;
   const rentAdjCondition = (rentExp?.adjustments?.condition ?? 1) as number;
@@ -255,7 +261,7 @@ export default async function ReportPage({ params }: Props) {
   // Prefer persisted seismic info from ScoreSnapshot when available
   const riskExplain = ss?.explain?.seismic ?? null;
   const riskClass = ss?.riskClass ?? riskExplain?.riskClass ?? null;
-  const riskSource = ss?.riskSource ?? riskExplain?.source ?? riskExplain?.sourceUrl ?? null;
+  const riskSource = ss?.riskSource ?? null;
   const riskConfidence =
     typeof riskExplain?.confidence === "number" ? riskExplain.confidence : null;
   const riskMethod = riskExplain?.method ?? null;
@@ -306,7 +312,7 @@ export default async function ReportPage({ params }: Props) {
               {/* Simple gallery if photos exist */}
               {Array.isArray(extracted.photos) && extracted.photos.length > 0 ? (
                 <div className="mt-4 grid grid-cols-3 gap-2">
-                  {extracted.photos.map((p: any, i: number) => (
+                  {extracted.photos.map((p: string | unknown, i: number) => (
                     <div
                       key={i}
                       className="relative h-24 w-full overflow-hidden rounded-md bg-muted hover:scale-105 transition-transform cursor-pointer"
@@ -375,7 +381,10 @@ export default async function ReportPage({ params }: Props) {
         <div className="col-span-4">
           <div className="flex flex-col gap-4">
             {/* AVM card (interval) */}
-            <AvmCard priceRange={priceRange} actualPrice={f?.price_eur} />
+            <AvmCard
+              priceRange={priceRange}
+              actualPrice={typeof f?.priceEur === "number" ? f.priceEur : undefined}
+            />
 
             {/* Area interest heatmap */}
             <Card>
@@ -412,7 +421,7 @@ export default async function ReportPage({ params }: Props) {
                       <b>Preț (EUR):</b> {f?.priceEur ?? "—"}
                     </li>
                     <li>
-                      <b>Camere:</b> {f?.rooms ?? "—"}
+                      <b>Camere:</b> {typeof f?.rooms === "number" ? f.rooms : "—"}
                     </li>
                     <li>
                       <b>Nivel:</b> {f?.level ?? "—"}
@@ -438,14 +447,18 @@ export default async function ReportPage({ params }: Props) {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="font-medium">Se vinde în</div>
-                  <div className="text-sm text-muted-foreground">{f?.sell_in_months ?? "—"}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {typeof f?.sell_in_months === "number" || typeof f?.sell_in_months === "string"
+                      ? String(f.sell_in_months)
+                      : "—"}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
                 {f ? (
                   <div className="flex items-center gap-2">
                     <div className="text-sm">
-                      {(analysis?.featureSnapshot as any)?.ttsBucket ?? "—"}
+                      {getStringProp(analysis?.featureSnapshot, "ttsBucket") ?? "—"}
                     </div>
                     {/* show approximate days when available from scoreSnapshot.explain.tts.scoreDays */}
                     {ss?.explain &&
@@ -492,15 +505,26 @@ export default async function ReportPage({ params }: Props) {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="font-medium">Risc seismic</div>
-                  <div className="text-sm text-muted-foreground">{f?.risk_seismic ?? "—"}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {typeof f?.risk_seismic === "string" ? f.risk_seismic : "—"}
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
-                {f ? <div>{f?.risk_seismic ?? "—"}</div> : <Skeleton className="h-8 w-full" />}
+                {f ? (
+                  <div>{typeof f?.risk_seismic === "string" ? f.risk_seismic : "—"}</div>
+                ) : (
+                  <Skeleton className="h-8 w-full" />
+                )}
               </CardContent>
             </Card>
 
-            <ConditionCard photos={extracted?.photos ?? (f?.photos as any) ?? null} />
+            <ConditionCard
+              photos={
+                (Array.isArray(extracted?.photos) ? (extracted!.photos as string[]) : null) ??
+                (Array.isArray(f?.photos) ? (f!.photos as string[]) : null)
+              }
+            />
 
             <Card>
               <CardHeader>
@@ -512,8 +536,14 @@ export default async function ReportPage({ params }: Props) {
               <CardContent>
                 {f?.comps ? (
                   <ul className="list-inside list-disc text-sm">
-                    {f.comps.map((c: any, i: number) => (
-                      <li key={i}>{c.title ?? c.address ?? JSON.stringify(c)}</li>
+                    {f.comps.map((c: Record<string, unknown>, i: number) => (
+                      <li key={i}>
+                        {typeof c["title"] === "string"
+                          ? (c["title"] as string)
+                          : typeof c["address"] === "string"
+                            ? (c["address"] as string)
+                            : JSON.stringify(c)}
+                      </li>
                     ))}
                   </ul>
                 ) : (
@@ -653,9 +683,13 @@ export default async function ReportPage({ params }: Props) {
 }
 
 // metadata generator: set canonical, robots and og images for SEO
-export async function generateMetadata(props: any): Promise<any> {
+export async function generateMetadata(
+  props: { params?: { id?: string | string[] } } | unknown,
+): Promise<Record<string, unknown>> {
   // Next sometimes passes params as a Promise in PageProps typing; resolve defensively
-  const maybeParams = await Promise.resolve(props?.params);
+  const maybeParams = await Promise.resolve(
+    (props as { params?: { id?: string | string[] } })?.params,
+  );
   const id = Array.isArray(maybeParams?.id) ? maybeParams.id[0] : maybeParams?.id;
   const analysis = id
     ? await prisma.analysis.findUnique({ where: { id }, include: { extractedListing: true } })

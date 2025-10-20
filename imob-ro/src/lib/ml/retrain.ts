@@ -18,7 +18,7 @@ export async function tryTrainGBM(X: number[][], y: number[], opts?: any): Promi
       return booster;
     }
     return null;
-  } catch (_err) {
+  } catch {
     return null;
   }
 }
@@ -50,7 +50,7 @@ export async function uploadToS3IfConfigured(filePath: string, key: string) {
     });
     await client.send(cmd);
     return `s3://${process.env.S3_BUCKET}/${key}`;
-  } catch (_err) {
+  } catch {
     return null;
   }
 }
@@ -64,7 +64,7 @@ export async function updateCacheIfConfigured(payload: unknown) {
     await redis.set(key, JSON.stringify(payload));
     await redis.quit();
     return key;
-  } catch (_err) {
+  } catch {
     return null;
   }
 }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 export type NormalizedFeatures = {
   areaSlug?: string | null;
   city?: string | null;
@@ -8,7 +7,7 @@ export type NormalizedFeatures = {
   distMetroM?: number | null;
   conditionScore?: number | null;
   priceEur?: number | null;
-  comps?: Array<Record<string, any>> | null;
+  comps?: Array<Record<string, unknown>> | null;
   photos?: string[] | null;
-  [key: string]: any;
+  [key: string]: unknown;
 };

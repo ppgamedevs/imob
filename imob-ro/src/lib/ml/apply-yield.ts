@@ -31,7 +31,15 @@ export async function applyYieldToAnalysis(analysisId: string, features: Normali
     await prisma.scoreSnapshot.upsert({
       where: { analysisId },
       update: { yieldGross: null, yieldNet: null },
-      create: { analysisId, yieldGross: null, yieldNet: null },
+      create: {
+        analysisId,
+        avmLow: 0,
+        avmHigh: 0,
+        avmConf: 0,
+        ttsBucket: "unknown",
+        yieldGross: null,
+        yieldNet: null,
+      },
     });
     return null;
   }
