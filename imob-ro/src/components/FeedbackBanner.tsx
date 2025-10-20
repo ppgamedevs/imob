@@ -1,7 +1,7 @@
-/* eslint-disable prettier/prettier */
 "use client";
 
 import React, { useState } from "react";
+
 import FeedbackModal from "./FeedbackModal";
 
 export default function FeedbackBanner({ analysisId }: { analysisId: string }) {

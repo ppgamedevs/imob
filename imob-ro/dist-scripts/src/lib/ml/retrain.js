@@ -11,7 +11,7 @@ async function tryTrainGBM(X, y, opts) {
   // Try to dynamically import xgboost-wasm or similar. If not available, return null.
   try {
     // dynamic require to avoid hard dependency at install time
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+
     const xgb = require("xgboost-wasm");
     if (!xgb) return null;
     // This block is illustrative — xgboost-wasm APIs differ; implement a best-effort wrapper
@@ -45,7 +45,7 @@ async function uploadToS3IfConfigured(filePath, key) {
       !process.env.S3_BUCKET
     )
       return null;
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+
     const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
     const client = new S3Client({ region: process.env.AWS_REGION ?? "us-east-1" });
     const body = fs.readFileSync(filePath);
@@ -66,7 +66,7 @@ async function updateCacheIfConfigured(payload) {
   // Update Redis if REDIS_URL provided
   try {
     if (!process.env.REDIS_URL) return null;
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+
     const IORedis = require("ioredis");
     const redis = new IORedis(process.env.REDIS_URL);
     const key = process.env.MODEL_CACHE_KEY ?? "models:latest";

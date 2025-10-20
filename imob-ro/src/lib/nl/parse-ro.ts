@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // Lightweight Romanian NL parser for property search queries.
 // Exports: parseRomanianQuery(text: string) => { filters, score, original }

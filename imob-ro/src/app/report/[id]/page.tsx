@@ -4,6 +4,7 @@
 import Image from "next/image";
 import React from "react";
 
+import FeedbackBanner from "@/components/FeedbackBanner";
 import { ListingCard } from "@/components/listing-card";
 import ReportPreview from "@/components/pdf/ReportPreview";
 import RefreshButton from "@/components/refresh-button";
@@ -20,11 +21,10 @@ import { prisma } from "@/lib/db";
 import estimatePriceRange from "@/lib/ml/avm";
 import estimateTTS from "@/lib/ml/tts";
 import { computeYield, estimateRent, type YieldResult } from "@/lib/ml/yield";
+import { computePriceBadge } from "@/lib/price-badge";
 import { matchSeismic } from "@/lib/risk/seismic";
 
 import AvmCard from "./_components/AvmCard";
-import { computePriceBadge } from "@/lib/price-badge";
-import FeedbackBanner from "@/components/FeedbackBanner";
 import { Poller } from "./poller";
 
 // keep params typing loose to satisfy Next.js PageProps constraints
@@ -35,6 +35,7 @@ async function loadAnalysis(id: string) {
     include: {
       extractedListing: true,
       featureSnapshot: true,
+      scoreSnapshot: true,
     },
   });
 }
@@ -71,22 +72,21 @@ export default async function ReportPage({ params }: Props) {
       try {
         const actualPrice = (f?.price_eur as number) ?? (extracted?.price as number) ?? null;
 
-        // priceDelta: relative difference (actual / avmMid - 1)
-        const avmMid = priceRange.mid ?? (priceRange.low + priceRange.high) / 2;
-        const priceDelta = actualPrice != null && avmMid ? actualPrice / avmMid - 1 : 0;
+        // compute some local values; note: priceDelta/demand/season used by server-side estimators
+        // avmMid available as avmMidCalc below; avoid unused var warning
 
-        // demandScore: prefer areaDaily.demandScore, fallback to a supply-derived heuristic or 0.5
-        const demandScore =
-          ad?.demandScore ??
-          (areaStats.count ? Math.max(0, Math.min(1, 1 - areaStats.count / 20)) : 0.5);
-
-        // season heuristic: spring/summer (Apr-Sep) => high, winter (Dec-Feb) => low
-        const month = new Date().getMonth();
-        let season: "high" | "low" | "neutral" = "neutral";
-        if (month >= 3 && month <= 8) season = "high";
-        if (month === 11 || month === 0 || month === 1) season = "low";
-
-        const tts = estimateTTS({ priceDelta, demandScore, season });
+        const avmMidCalc = Math.round((priceRange.low + priceRange.high) / 2);
+        const askingPrice = actualPrice;
+        const areaM2Local = (f?.area_m2 as number) ?? (extracted?.areaM2 as number) ?? null;
+        const conditionScoreLocal = f?.condition_score ?? null;
+        const tts = await estimateTTS({
+          avmMid: avmMidCalc,
+          asking: askingPrice ?? undefined,
+          areaSlug: f?.area_slug ?? undefined,
+          month: new Date().getMonth() + 1,
+          areaM2: areaM2Local ?? undefined,
+          conditionScore: conditionScoreLocal ?? undefined,
+        });
         // Yield estimation: extract comps rent per m2 or compute from comps with price/area
         const comps = Array.isArray(f?.comps) ? f.comps : null;
         const compsRentArr: number[] = [];
@@ -130,8 +130,8 @@ export default async function ReportPage({ params }: Props) {
           extracted?.addressRaw ?? f?.address_raw ?? f?.address,
         );
 
-        const avmMidCalc = Math.round((priceRange.low + priceRange.high) / 2);
-        const askingPrice = extracted?.price ?? (f?.price_eur as number) ?? null;
+        // avmMidCalc and askingPrice already computed above for TTS and scoring
+        // keep askingPrice for later usage (askingPrice is set earlier)
         const priceBadgeCalc = computePriceBadge(
           askingPrice,
           priceRange.low,
@@ -206,9 +206,9 @@ export default async function ReportPage({ params }: Props) {
     // base prob: lower priceDelta -> higher chance; scale -0.2 -> +0.6 probability
     let prob = Math.max(0, Math.min(1, 0.4 - priceDelta * 1.5));
     if (ttsBucket === "<30") prob = Math.min(1, prob + 0.25);
-    if (ttsBucket === ">60") prob = Math.max(0, prob - 0.15);
+    if (ttsBucket === "90+") prob = Math.max(0, prob - 0.15);
     docData.negotiableProb = Math.round(prob * 100) / 100;
-  } catch (e) {
+  } catch (_e) {
     docData.negotiableProb = null;
   }
 
@@ -406,7 +406,23 @@ export default async function ReportPage({ params }: Props) {
                 </div>
               </CardHeader>
               <CardContent>
-                {f ? <div>{f?.sell_in_months ?? "—"}</div> : <Skeleton className="h-8 w-full" />}
+                {f ? (
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm">
+                      {(analysis?.featureSnapshot as any)?.ttsBucket ?? "—"}
+                    </div>
+                    {/* show approximate days when available from scoreSnapshot.explain.tts.scoreDays */}
+                    {analysis?.scoreSnapshot?.explain &&
+                    (analysis.scoreSnapshot.explain as any).tts &&
+                    typeof (analysis.scoreSnapshot.explain as any).tts.scoreDays === "number" ? (
+                      <div className="text-sm text-muted-foreground">
+                        ≈ {(analysis.scoreSnapshot.explain as any).tts.scoreDays} zile
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <Skeleton className="h-8 w-full" />
+                )}
               </CardContent>
             </Card>
 

@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from "./db";
 import { Extracted, maybeFetchServer } from "./extractors";
-import { updateFeatureSnapshot } from "./normalize-pipeline";
 import { applyAvmToAnalysis } from "./ml/apply-avm";
+import { applyTtsToAnalysis } from "./ml/apply-tts";
+import { updateFeatureSnapshot } from "./normalize-pipeline";
 
 // Helper: load analysis including snapshots for SSR
 export async function getAnalysis(id: string) {
@@ -94,7 +95,14 @@ export async function startAnalysis(analysisId: string, url: string) {
               where: { analysisId },
               select: { features: true },
             });
-            if (fsnap?.features) await applyAvmToAnalysis(analysisId, fsnap.features as any);
+            if (fsnap?.features) {
+              await applyAvmToAnalysis(analysisId, fsnap.features as any);
+              try {
+                await applyTtsToAnalysis(analysisId, fsnap.features as any);
+              } catch (e) {
+                console.warn("applyTtsToAnalysis failed", e);
+              }
+            }
           } catch (e) {
             console.warn("applyAvmToAnalysis failed", e);
           }
@@ -116,7 +124,14 @@ export async function startAnalysis(analysisId: string, url: string) {
             where: { analysisId },
             select: { features: true },
           });
-          if (fsnap?.features) await applyAvmToAnalysis(analysisId, fsnap.features as any);
+          if (fsnap?.features) {
+            await applyAvmToAnalysis(analysisId, fsnap.features as any);
+            try {
+              await applyTtsToAnalysis(analysisId, fsnap.features as any);
+            } catch (e) {
+              console.warn("applyTtsToAnalysis failed", e);
+            }
+          }
         } catch (e) {
           console.warn("applyAvmToAnalysis failed", e);
         }

@@ -1,5 +1,3 @@
-/* eslint-disable prettier/prettier */
-
 export function computePriceBadge(
   asking?: number | null,
   low?: number | null,

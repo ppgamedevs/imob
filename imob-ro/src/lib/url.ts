@@ -1,5 +1,3 @@
-/* eslint-disable prettier/prettier */
-
 export function normalizeUrl(u: string | null | undefined) {
   if (!u) return null;
   try {

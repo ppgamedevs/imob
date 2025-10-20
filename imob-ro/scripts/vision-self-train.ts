@@ -12,10 +12,12 @@
 */
 
 import "dotenv/config";
+
 import * as fs from "fs";
 import * as path from "path";
+
 import { prisma } from "../src/lib/db";
-import { uploadToS3IfConfigured, artifactName } from "../src/lib/ml/retrain";
+import { artifactName, uploadToS3IfConfigured } from "../src/lib/ml/retrain";
 
 // Simple CLI parsing
 const argv = process.argv.slice(2);

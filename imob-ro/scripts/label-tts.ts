@@ -14,6 +14,7 @@
 */
 
 import "dotenv/config";
+
 import { prisma } from "../src/lib/db";
 
 const MAX_CENSOR = 120; // days

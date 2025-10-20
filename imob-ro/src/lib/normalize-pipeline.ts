@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { prisma } from "@/lib/db";
-import { geocodeAddress, reverseGeocode } from "@/lib/geocode/mapbox";
-import { nearestStationM, slugifyRo, gridSlug } from "@/lib/geo";
 import { toEur } from "@/lib/currency";
+import { prisma } from "@/lib/db";
+import { gridSlug, nearestStationM, slugifyRo } from "@/lib/geo";
+import { geocodeAddress, reverseGeocode } from "@/lib/geocode/mapbox";
 import normalizeModule from "@/lib/normalize";
+import { NormalizedFeaturesSchema } from "@/lib/schemas/normalized-features";
 
 const normalizeExtracted = (normalizeModule as any).default ?? (normalizeModule as any);
 const deriveLevelImported = (normalizeModule as any).deriveLevel ?? undefined;
@@ -82,11 +83,22 @@ export async function updateFeatureSnapshot(analysisId: string) {
 
   const features = { ...f, lat, lng, city, areaSlug, distMetroM };
 
-  await prisma.featureSnapshot.upsert({
-    where: { analysisId },
-    update: { features },
-    create: { analysisId, features },
-  });
+  // validate/sanitize using Zod schema when available; if validation fails, log and persist raw features
+  try {
+    const parsed = NormalizedFeaturesSchema.parse(features as any);
+    await prisma.featureSnapshot.upsert({
+      where: { analysisId },
+      update: { features: parsed as any },
+      create: { analysisId, features: parsed as any },
+    });
+  } catch (e) {
+    console.warn("Normalized features validation failed; persisting raw features", e);
+    await prisma.featureSnapshot.upsert({
+      where: { analysisId },
+      update: { features },
+      create: { analysisId, features },
+    });
+  }
 
   return features;
 }

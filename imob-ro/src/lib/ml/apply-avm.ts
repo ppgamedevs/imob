@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from "@/lib/db";
-import { estimateAvm } from "./avm";
 import { computePriceBadge } from "@/lib/price-badge";
+
+import { estimateAvm } from "./avm";
 
 export async function applyAvmToAnalysis(analysisId: string, features: any) {
   const res = await estimateAvm(features);

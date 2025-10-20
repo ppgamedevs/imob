@@ -12,8 +12,10 @@
 */
 
 import "dotenv/config";
+
 import * as fs from "fs";
 import * as path from "path";
+
 import { prisma } from "../src/lib/db";
 import * as ml from "../src/lib/ml/retrain";
 

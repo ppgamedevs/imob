@@ -22,8 +22,10 @@
 */
 
 import "dotenv/config";
-import { prisma } from "../src/lib/db";
+
 import { randomUUID } from "crypto";
+
+import { prisma } from "../src/lib/db";
 
 function median(nums: number[]) {
   if (!nums.length) return 0;

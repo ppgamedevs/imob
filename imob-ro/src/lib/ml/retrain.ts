@@ -1,5 +1,3 @@
-/* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-require-imports */
 import * as fs from "fs";
@@ -9,7 +7,6 @@ type ModelArtifact = { model: any | null; keys: string[]; createdAt: string; sam
 
 export async function tryTrainGBM(X: number[][], y: number[], opts?: any): Promise<any | null> {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const xgb = require("xgboost-wasm");
     if (!xgb) return null;
     if (typeof xgb.train === "function") {
@@ -41,7 +38,7 @@ export async function uploadToS3IfConfigured(filePath: string, key: string) {
       !process.env.S3_BUCKET
     )
       return null;
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+
     const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
     const client = new S3Client({ region: process.env.AWS_REGION ?? "us-east-1" });
     const body = fs.readFileSync(filePath);

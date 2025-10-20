@@ -2,8 +2,8 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
-import { normalizeUrl } from "@/lib/url";
 import { allowRequest, getBucketInfo } from "@/lib/rateLimiter";
+import { normalizeUrl } from "@/lib/url";
 
 function isDisallowedDomain(urlStr: string) {
   try {
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
   // Upsert ExtractedListing for this analysis
   await prisma.extractedListing.upsert({
     where: { analysisId: analysis.id },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     create: {
       analysisId: analysis.id,
       title: extracted.title || undefined,
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
       photos: photos,
       sourceMeta: extracted.sourceMeta || undefined,
     } as any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     update: {
       title: extracted.title || undefined,
       price: extracted.price || undefined,

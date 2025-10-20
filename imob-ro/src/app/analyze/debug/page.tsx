@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { prisma } from "@/lib/db";
 
 export default async function DebugAnalyze() {
