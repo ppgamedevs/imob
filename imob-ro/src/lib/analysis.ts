@@ -112,6 +112,12 @@ export async function startAnalysis(analysisId: string, url: string) {
                   try {
                     const { applyCompsToAnalysis } = await import("./comps/apply-comps");
                     await applyCompsToAnalysis(analysisId);
+                    try {
+                      const { applyQualityToAnalysis } = await import("./quality/apply-quality");
+                      await applyQualityToAnalysis(analysisId);
+                    } catch (e) {
+                      console.warn("applyQualityToAnalysis failed", e);
+                    }
                   } catch (e) {
                     console.warn("applyCompsToAnalysis failed", e);
                   }
@@ -159,6 +165,12 @@ export async function startAnalysis(analysisId: string, url: string) {
                 try {
                   const { applyCompsToAnalysis } = await import("./comps/apply-comps");
                   await applyCompsToAnalysis(analysisId);
+                  try {
+                    const { applyQualityToAnalysis } = await import("./quality/apply-quality");
+                    await applyQualityToAnalysis(analysisId);
+                  } catch (e) {
+                    console.warn("applyQualityToAnalysis failed", e);
+                  }
                 } catch (e) {
                   console.warn("applyCompsToAnalysis failed", e);
                 }

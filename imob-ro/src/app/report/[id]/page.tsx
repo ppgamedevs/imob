@@ -29,6 +29,7 @@ import CompsClientBlock from "./CompsClientBlock";
 // Client PDF export actions
 import { PdfActions } from "./PdfActions.client";
 import { Poller } from "./poller";
+import { QualityCard } from "./QualityCard";
 
 // Next.js 15: params is now a Promise
 type Props = { params: Promise<{ id?: string | string[] }> };
@@ -64,6 +65,9 @@ export default async function ReportPage({ params }: Props) {
   const compsStats = compsExplain?.eurM2 as
     | { median?: number; q1?: number; q3?: number }
     | undefined;
+
+  // Extract quality metrics from ScoreSnapshot.explain
+  const qualityDetail = scoreExplain?.quality as Record<string, unknown> | undefined;
 
   const extracted = analysis?.extractedListing ?? null;
   const f = (analysis?.featureSnapshot?.features ?? null) as NormalizedFeatures | null;
@@ -541,6 +545,9 @@ export default async function ReportPage({ params }: Props) {
                 (Array.isArray(f?.photos) ? (f!.photos as string[]) : null)
               }
             />
+
+            {/* Quality signals card */}
+            <QualityCard detail={qualityDetail} />
 
             {/* Comparables card with carousel + map */}
             <Card>
