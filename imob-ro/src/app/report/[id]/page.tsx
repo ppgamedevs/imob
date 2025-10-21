@@ -16,6 +16,7 @@ import Sparkline from "@/components/ui/sparkline";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import UpgradeBanner from "@/components/UpgradeBanner";
 import ConditionCard from "@/components/vision/ConditionCard";
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import estimatePriceRange, { type AreaStats } from "@/lib/ml/avm";
 import estimateTTS from "@/lib/ml/tts";
@@ -25,6 +26,8 @@ import type { NormalizedFeatures } from "@/types/analysis";
 import type { ScoreExplain } from "@/types/score-explain";
 
 import AvmCard from "./_components/AvmCard";
+import { decideClaim } from "./agent-actions";
+import { ClaimButton } from "./ClaimButton";
 import CompsClientBlock from "./CompsClientBlock";
 // Client PDF export actions
 import { PdfActions } from "./PdfActions.client";
@@ -288,6 +291,15 @@ export default async function ReportPage({ params }: Props) {
   const riskMethod = riskExplain?.method ?? null;
   const riskNote = riskExplain?.note ?? null;
 
+  // Fetch claims for owner (Day 16)
+  const session = await auth();
+  const claims = await prisma.listingClaim.findMany({
+    where: { analysisId: id },
+    include: { agent: true },
+    orderBy: { createdAt: "desc" },
+  });
+  const isOwner = session?.user?.id === analysis?.userId;
+
   return (
     <div className="container mx-auto py-8">
       <div className="mb-6 flex items-center justify-between">
@@ -302,6 +314,8 @@ export default async function ReportPage({ params }: Props) {
           <PdfActions analysisId={analysis?.id ?? ""} />
           {/* Public share link (Day 14) */}
           <ReportShareButton analysisId={analysis?.id ?? ""} />
+          {/* Claim listing (Day 16) */}
+          <ClaimButton analysisId={analysis?.id ?? ""} />
           <ShareButton url={canonicalUrl} title={extracted?.title ?? "Raport analiză"} />
         </div>
       </div>
@@ -721,6 +735,55 @@ export default async function ReportPage({ params }: Props) {
           </div>
         </div>
       </div>
+
+      {/* Claims management (Day 16) - visible only to owner */}
+      {isOwner && claims.length > 0 && (
+        <div className="mt-6 border rounded-xl p-4">
+          <div className="font-medium mb-3">Cereri de revendicare</div>
+          <div className="space-y-3">
+            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {claims.map((c: any) => (
+              <form
+                key={c.id}
+                action={async (formData) => {
+                  "use server";
+                  const decision = formData.get("d") as "approved" | "rejected";
+                  await decideClaim(c.id, decision);
+                }}
+                className="flex items-center justify-between gap-3 border rounded p-3"
+              >
+                <div className="text-sm">
+                  <div className="font-medium">
+                    {c.agent.fullName} · {c.agent.agencyName ?? "Agent independent"}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Status: {c.status} · {c.createdAt.toLocaleString("ro-RO")}
+                  </div>
+                </div>
+                {c.status === "pending" && (
+                  <div className="flex gap-2">
+                    <button
+                      name="d"
+                      value="approved"
+                      className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700"
+                    >
+                      Aprobă
+                    </button>
+                    <button
+                      name="d"
+                      value="rejected"
+                      className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+                    >
+                      Respinge
+                    </button>
+                  </div>
+                )}
+              </form>
+            ))}
+          </div>
+        </div>
+      )}
+
       <Poller active={analysis?.status !== "done" && analysis?.status !== "error"} />
     </div>
   );

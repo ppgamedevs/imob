@@ -1,79 +1,93 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
-import { sendEmail } from "@/lib/email";
 
 export const runtime = "nodejs";
 
-async function notifyOwner(
+async function resolveAssignee(analysisId: string) {
+  // agent aprobat?
+  const approved = await prisma.listingClaim.findFirst({
+    where: { analysisId, status: "approved" },
+    include: { agent: { include: { user: true } } },
+  });
+  if (approved?.agent?.userId) return approved.agent.userId;
+
+  // fallback: owner-ul analizei
+  const a = await prisma.analysis.findUnique({ where: { id: analysisId } });
+  return a?.userId ?? null;
+}
+
+async function notifyUser(
+  userId: string | null,
   analysisId: string,
-  payload: { name: string; email: string; phone?: string; message?: string },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload: any,
 ) {
-  try {
-    // Find the analysis owner
-    const analysis = await prisma.analysis.findUnique({
-      where: { id: analysisId },
-      include: { user: true },
-    });
+  // află emailul userului
+  if (!userId) return;
+  const u = await prisma.user.findUnique({ where: { id: userId } });
+  const to = u?.email;
+  if (!to) return;
 
-    const ownerEmail = analysis?.user?.email;
-    if (!ownerEmail) {
-      console.warn("No owner email found for analysis", analysisId);
-      return;
-    }
+  const body = `Lead nou pentru raport ${analysisId}
+Nume: ${payload.name}
+Email: ${payload.email}
+Telefon: ${payload.phone || "-"}
+Mesaj: ${payload.message || "-"}`;
 
-    // Compose email
-    const subject = "Lead nou pe raportul tău imobiliar";
-    const html = `
-      <h2>Ai primit un lead nou!</h2>
-      <p>Cineva este interesăt de proprietatea ta analizată.</p>
-      
-      <h3>Detalii contact:</h3>
-      <ul>
-        <li><strong>Nume:</strong> ${payload.name}</li>
-        <li><strong>Email:</strong> ${payload.email}</li>
-        <li><strong>Telefon:</strong> ${payload.phone || "—"}</li>
-      </ul>
-      
-      ${payload.message ? `<h3>Mesaj:</h3><p>${payload.message}</p>` : ""}
-      
-      <p style="margin-top: 20px; color: #666; font-size: 12px;">
-        Acest email a fost generat automat de platforma ${process.env.PDF_BRAND_NAME || "ImobIntel"}.
-      </p>
-    `;
-
-    await sendEmail(ownerEmail, subject, html);
-  } catch (error) {
-    console.error("Failed to notify owner:", error);
+  const key = process.env.RESEND_API_KEY;
+  if (key) {
+    await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        from: "Imob <leads@your-domain>",
+        to: [to],
+        subject: "Lead nou pe raport",
+        text: body,
+      }),
+    }).catch(() => {});
   }
 }
 
 export async function POST(req: Request) {
-  try {
-    const json = await req.json();
-    const { analysisId, name, email, phone, message } = json || {};
+  const json = await req.json();
+  const { analysisId, name, email, phone, message, source } = json || {};
+  if (!analysisId || !name || !email) return NextResponse.json({ ok: false }, { status: 400 });
 
-    // Validation
-    if (!analysisId || !name || !email) {
-      return NextResponse.json({ ok: false, error: "Missing required fields" }, { status: 400 });
-    }
+  const assignedTo = await resolveAssignee(analysisId);
 
-    // Log contact request to ReportUsage
-    await prisma.reportUsage.create({
+  // persistă lead
+  const lead = await prisma.lead.create({
+    data: {
+      analysisId,
+      assignedTo,
+      name,
+      email,
+      phone,
+      message,
+      source: source ?? "share",
+    },
+  });
+
+  // tracking best-effort
+  await prisma.reportUsage
+    .create({
       data: {
-        userId: "", // anonymous/public
+        userId: assignedTo ?? "",
         analysisId,
         action: "CONTACT_REQUEST",
-        meta: { name, email, phone: phone || "" },
-      },
-    });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        meta: { name, email, phone } as any,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any,
+    })
+    .catch(() => {});
 
-    // Send notification email to owner
-    await notifyOwner(analysisId, { name, email, phone, message });
+  await notifyUser(assignedTo, analysisId, { name, email, phone, message });
 
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    console.error("Lead API error:", error);
-    return NextResponse.json({ ok: false, error: "Internal error" }, { status: 500 });
-  }
+  return NextResponse.json({ ok: true, id: lead.id });
 }
