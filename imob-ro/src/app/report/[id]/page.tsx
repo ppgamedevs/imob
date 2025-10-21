@@ -30,6 +30,7 @@ import CompsClientBlock from "./CompsClientBlock";
 import { PdfActions } from "./PdfActions.client";
 import { Poller } from "./poller";
 import { QualityCard } from "./QualityCard";
+import { ReportShareButton } from "./ReportShareButton";
 
 // Next.js 15: params is now a Promise
 type Props = { params: Promise<{ id?: string | string[] }> };
@@ -299,6 +300,8 @@ export default async function ReportPage({ params }: Props) {
           <ReportPreview data={docData} analysisId={analysis?.id} />
           {/* PDF export actions */}
           <PdfActions analysisId={analysis?.id ?? ""} />
+          {/* Public share link (Day 14) */}
+          <ReportShareButton analysisId={analysis?.id ?? ""} />
           <ShareButton url={canonicalUrl} title={extracted?.title ?? "Raport analiză"} />
         </div>
       </div>

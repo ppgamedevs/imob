@@ -159,6 +159,7 @@ model Analysis {
   scoreSnapshot    ScoreSnapshot?
   ttsLabel         TtsLabel?
   compMatches      CompMatch[]
+  shortLinks       ShortLink[]
 
   @@index([sourceUrl])
   @@index([userId])
@@ -272,21 +273,39 @@ model SavedAnalysis {
 }
 
 // track monthly generated reports per user for paywall enforcement
+// ALSO: track individual actions for lead capture & share analytics
 model ReportUsage {
-  id        String   @id @default(cuid())
-  userId    String
-  month     String   // YYYY-MM
-  count     Int      @default(0)
+  id         String   @id @default(cuid())
+  userId     String   // can be "" for public/anonymous actions
+  analysisId String
+  action     String   // VIEW_SHARE, CONTACT_REQUEST, DOWNLOAD_PDF, SAVE_REPORT, or GENERATE_REPORT (paywall)
+  meta       Json     @default("{}")
+  createdAt  DateTime @default(now())
+  
+  // Legacy fields for paywall (keep for backward compat)
+  month      String?  // YYYY-MM
+  count      Int?     @default(0)
 
-  @@unique([userId, month])
   @@index([userId])
+  @@index([analysisId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model ShortLink {
-  id        String   @id @default(cuid())
-  slug      String   @unique
-  targetUrl String
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  slug       String   @unique
+  targetUrl  String?  // optional - can construct dynamically from analysisId
+  analysisId String
+  userId     String   // owner who created the share link
+  meta       Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 // Time-to-sell labels derived from Analysis sourceUrl availability / sold detection
