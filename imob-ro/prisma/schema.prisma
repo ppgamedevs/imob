@@ -461,3 +461,79 @@ model Lead {
   @@index([analysisId])
   @@index([assignedTo])
 }
+
+// Day 17 - Import & Crawl v1
+model ImportBatch {
+  id          String   @id @default(cuid())
+  userId      String
+  source      String   // "csv" | "paste" | "seed"
+  filename    String?
+  total       Int      @default(0)
+  accepted    Int      @default(0)
+  skipped     Int      @default(0)
+  createdAt   DateTime @default(now())
+  items       ImportItem[]
+
+  @@index([userId, createdAt])
+}
+
+model ImportItem {
+  id          String   @id @default(cuid())
+  batchId     String
+  url         String
+  normalized  String
+  status      String   @default("queued") // queued|scheduled|analyzed|skipped|error
+  reason      String?
+  analysisId  String?
+  createdAt   DateTime @default(now())
+
+  batch       ImportBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+
+  @@index([normalized])
+  @@index([status, createdAt])
+  @@unique([batchId, normalized])
+}
+
+model CrawlJob {
+  id          String   @id @default(cuid())
+  url         String
+  normalized  String   @unique
+  domain      String
+  status      String   @default("queued") // queued|fetching|done|error
+  tries       Int      @default(0)
+  lastError   String?
+  scheduledAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  analysisId  String?
+
+  @@index([status, scheduledAt])
+  @@index([domain, status])
+}
+
+// Day 18 - Extractor Profiles v1
+model ExtractorProfile {
+  id          String   @id @default(cuid())
+  domain      String   @unique
+  active      Boolean  @default(true)
+  // JSON با config: { selectors, attrMaps, transforms, notes }
+  rules       Json
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([active])
+}
+
+model ExtractLog {
+  id          String   @id @default(cuid())
+  url         String
+  domain      String
+  profileId   String?
+  ok          Boolean
+  error       String?
+  fields      Json?
+  createdAt   DateTime @default(now())
+
+  @@index([domain, createdAt])
+  @@index([profileId, createdAt])
+}
