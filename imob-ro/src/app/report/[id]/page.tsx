@@ -1,8 +1,8 @@
 "use server";
 import Image from "next/image";
 import React from "react";
-// Report page with AVM, TTS, Yield, and Risk analysis
 
+// Report page with AVM, TTS, Yield, and Risk analysis
 import FeedbackBanner from "@/components/FeedbackBanner";
 import { ListingCard } from "@/components/listing-card";
 import ReportPreview from "@/components/pdf/ReportPreview";
@@ -10,7 +10,7 @@ import RefreshButton from "@/components/refresh-button";
 import ShareButton from "@/components/ShareButton";
 import AreaHeatmap from "@/components/ui/area-heatmap";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import Sparkline from "@/components/ui/sparkline";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -25,6 +25,7 @@ import type { NormalizedFeatures } from "@/types/analysis";
 import type { ScoreExplain } from "@/types/score-explain";
 
 import AvmCard from "./_components/AvmCard";
+import CompsClientBlock from "./CompsClientBlock";
 // Client PDF export actions
 import { PdfActions } from "./PdfActions.client";
 import { Poller } from "./poller";
@@ -49,6 +50,20 @@ export default async function ReportPage({ params }: Props) {
   const id = Array.isArray(resolvedParams.id) ? resolvedParams.id[0] : resolvedParams.id;
   if (!id) throw new Error("Missing report id");
   const analysis = await loadAnalysis(id);
+
+  // Load comparables from CompMatch table
+  const comps = await prisma.compMatch.findMany({
+    where: { analysisId: id },
+    orderBy: { score: "desc" },
+    take: 12,
+  });
+
+  // Extract comps stats from ScoreSnapshot.explain
+  const scoreExplain = analysis?.scoreSnapshot?.explain as Record<string, unknown> | null;
+  const compsExplain = scoreExplain?.comps as Record<string, unknown> | undefined;
+  const compsStats = compsExplain?.eurM2 as
+    | { median?: number; q1?: number; q3?: number }
+    | undefined;
 
   const extracted = analysis?.extractedListing ?? null;
   const f = (analysis?.featureSnapshot?.features ?? null) as NormalizedFeatures | null;
@@ -527,26 +542,44 @@ export default async function ReportPage({ params }: Props) {
               }
             />
 
+            {/* Comparables card with carousel + map */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="font-medium">Comps</div>
-                  <div className="text-sm text-muted-foreground">{f?.comps?.length ?? "—"}</div>
-                </div>
+                <CardTitle>Comparabile</CardTitle>
+                <CardDescription>
+                  {comps.length ? `${comps.length} rezultate` : "—"}
+                  {compsStats?.median ? (
+                    <>
+                      {" · "}
+                      med: {Math.round(compsStats.median)} €/m²
+                      {compsStats.q1 != null && compsStats.q3 != null
+                        ? ` (IQR ${Math.round(compsStats.q1)}–${Math.round(compsStats.q3)})`
+                        : ""}
+                    </>
+                  ) : null}
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                {f?.comps ? (
-                  <ul className="list-inside list-disc text-sm">
-                    {f.comps.map((c: Record<string, unknown>, i: number) => (
-                      <li key={i}>
-                        {typeof c["title"] === "string"
-                          ? (c["title"] as string)
-                          : typeof c["address"] === "string"
-                            ? (c["address"] as string)
-                            : JSON.stringify(c)}
-                      </li>
-                    ))}
-                  </ul>
+                {comps.length ? (
+                  <CompsClientBlock
+                    comps={comps.map((c: (typeof comps)[number]) => ({
+                      id: c.id,
+                      title: c.title,
+                      photo: c.photo,
+                      sourceUrl: c.sourceUrl,
+                      priceEur: c.priceEur,
+                      areaM2: c.areaM2,
+                      eurM2: c.eurM2,
+                      distanceM: c.distanceM,
+                      score: c.score,
+                      lat: c.lat,
+                      lng: c.lng,
+                    }))}
+                    center={{
+                      lat: typeof f?.lat === "number" ? f.lat : null,
+                      lng: typeof f?.lng === "number" ? f.lng : null,
+                    }}
+                  />
                 ) : (
                   <Skeleton className="h-20 w-full" />
                 )}

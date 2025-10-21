@@ -106,6 +106,18 @@ export async function startAnalysis(analysisId: string, url: string) {
                 // yield depends on est rent and price; compute and persist
                 const { applyYieldToAnalysis } = await import("./ml/apply-yield");
                 await applyYieldToAnalysis(analysisId, fsnap.features as any);
+                try {
+                  const { applySeismicToAnalysis } = await import("./risk/apply-seismic");
+                  await applySeismicToAnalysis(analysisId, fsnap.features as any);
+                  try {
+                    const { applyCompsToAnalysis } = await import("./comps/apply-comps");
+                    await applyCompsToAnalysis(analysisId);
+                  } catch (e) {
+                    console.warn("applyCompsToAnalysis failed", e);
+                  }
+                } catch (e) {
+                  console.warn("applySeismicToAnalysis failed", e);
+                }
               } catch (e) {
                 console.warn("applyYieldToAnalysis failed", e);
               }
@@ -144,12 +156,12 @@ export async function startAnalysis(analysisId: string, url: string) {
               try {
                 const { applySeismicToAnalysis } = await import("./risk/apply-seismic");
                 await applySeismicToAnalysis(analysisId, fsnap.features as any);
-              } catch (e) {
-                console.warn("applySeismicToAnalysis failed", e);
-              }
-              try {
-                const { applySeismicToAnalysis } = await import("./risk/apply-seismic");
-                await applySeismicToAnalysis(analysisId, fsnap.features as any);
+                try {
+                  const { applyCompsToAnalysis } = await import("./comps/apply-comps");
+                  await applyCompsToAnalysis(analysisId);
+                } catch (e) {
+                  console.warn("applyCompsToAnalysis failed", e);
+                }
               } catch (e) {
                 console.warn("applySeismicToAnalysis failed", e);
               }

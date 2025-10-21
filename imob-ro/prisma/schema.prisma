@@ -158,6 +158,7 @@ model Analysis {
   featureSnapshot  FeatureSnapshot?
   scoreSnapshot    ScoreSnapshot?
   ttsLabel         TtsLabel?
+  compMatches      CompMatch[]
 
   @@index([sourceUrl])
   @@index([userId])
@@ -357,4 +358,28 @@ model AlertRule {
   @@index([userId])
   @@index([analysisId])
   @@index([areaSlug])
+}
+
+model CompMatch {
+  id         String   @id @default(cuid())
+  analysisId String
+  compId     String?
+  sourceUrl  String?
+  title      String?
+  photo      String?
+  lat        Float?
+  lng        Float?
+  distanceM  Int?
+  priceEur   Int?
+  areaM2     Float?
+  rooms      Float?
+  yearBuilt  Int?
+  eurM2      Float?
+  score      Float?
+  createdAt  DateTime @default(now())
+
+  Analysis   Analysis @relation(fields: [analysisId], references: [id])
+
+  @@index([analysisId])
+  @@index([eurM2])
 }
