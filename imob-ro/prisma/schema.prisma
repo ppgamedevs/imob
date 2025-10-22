@@ -505,19 +505,24 @@ model ImportItem {
   @@unique([batchId, normalized])
 }
 
+// Day 17 - Import & Crawl v1 (extended Day 25 for discovery + details)
 model CrawlJob {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   url         String
-  normalized  String   @unique
+  normalized  String    @unique
   domain      String
-  status      String   @default("queued") // queued|fetching|done|error
-  tries       Int      @default(0)
+  kind        String    @default("detail") // "discover" | "detail"
+  status      String    @default("queued") // queued|running|fetching|done|error
+  priority    Int       @default(0)
+  tries       Int       @default(0)
   lastError   String?
-  scheduledAt DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  scheduledAt DateTime  @default(now())
+  lockedAt    DateTime?
+  doneAt      DateTime?
+  updatedAt   DateTime  @updatedAt
   analysisId  String?
 
-  @@index([status, scheduledAt])
+  @@index([status, priority, scheduledAt])
   @@index([domain, status])
 }
 
@@ -699,4 +704,37 @@ model UsageCounter {
 
   @@unique([userId, periodStart, kind])
   @@index([userId, kind])
+}
+
+// Day 25 - Crawler & Refresh v1
+model ListingSource {
+  id         String   @id @default(cuid())
+  domain     String   @unique
+  enabled    Boolean  @default(true)
+  minDelayMs Int      @default(2000) // throttling per host
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model FetchLog {
+  id         String   @id @default(cuid())
+  url        String
+  domain     String
+  statusCode Int?
+  etag       String?
+  lastMod    String?
+  bytes      Int?
+  error      String?
+  fetchedAt  DateTime @default(now())
+
+  @@index([domain, fetchedAt])
+  @@index([url])
+}
+
+model UrlCache {
+  url       String   @id
+  etag      String?
+  lastMod   String?
+  updatedAt DateTime @updatedAt
 }
