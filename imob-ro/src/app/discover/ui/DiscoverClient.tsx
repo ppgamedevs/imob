@@ -21,6 +21,7 @@ type Item = {
   priceBadge?: string | null;
   lat?: number | null;
   lng?: number | null;
+  groupId?: string | null;
 };
 
 export function DiscoverClient() {
@@ -77,6 +78,22 @@ export function DiscoverClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nextCursor]);
 
+  // Group by groupId (Day 19 - collapse duplicates)
+  const grouped = useMemo(() => {
+    const map = new Map<string, Item[]>();
+    for (const it of items) {
+      const key = it.groupId || it.id;
+      const arr = map.get(key) || [];
+      arr.push(it);
+      map.set(key, arr);
+    }
+    // Keep only representative + count
+    return Array.from(map.values()).map((g) => {
+      const rep = g[0];
+      return { ...rep, dupCount: g.length - 1 };
+    });
+  }, [items]);
+
   const center = useMemo(() => {
     const pts = items.filter((i) => i.lat && i.lng);
     if (!pts.length) return { lat: 44.437, lng: 26.102 };
@@ -89,7 +106,7 @@ export function DiscoverClient() {
     <div className="grid md:grid-cols-[360px,1fr] gap-4">
       <div className="space-y-3">
         <FiltersBar value={params} onChange={setParams} />
-        <ResultsList items={items} onHover={setHoverId} loading={loading} />
+        <ResultsList items={grouped} onHover={setHoverId} loading={loading} />
         <div ref={guardRef} />
       </div>
       <div className="sticky top-4 h-[70vh]">

@@ -28,6 +28,11 @@ export type PdfReportData = {
   yieldNet?: number | null;
   riskClass?: string | null;
   riskSource?: string | null;
+  // Day 20: Provenance
+  trustScore?: number | null;
+  trustBadge?: string | null;
+  trustReasons?: { plus?: string[]; minus?: string[] } | null;
+  events?: Array<{ kind: string; happenedAt: Date; payload?: unknown }>;
 };
 
 export async function loadPdfReportData(analysisId: string): Promise<PdfReportData | null> {
@@ -37,6 +42,8 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
       extractedListing: true,
       featureSnapshot: true,
       scoreSnapshot: true,
+      trustSnapshot: true,
+      provenanceEvents: { orderBy: { happenedAt: "asc" }, take: 8 },
     },
   });
   if (!a) return null;
@@ -64,6 +71,16 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
   const riskSource =
     typeof ssRecord?.riskSource === "string" ? (ssRecord.riskSource as string) : null;
 
+  // Day 20: Trust + Events
+  const trustScore = a.trustSnapshot?.score ?? null;
+  const trustBadge = a.trustSnapshot?.badge ?? null;
+  const trustReasons = (a.trustSnapshot?.reasons as { plus?: string[]; minus?: string[] }) ?? null;
+  const events = a.provenanceEvents?.map((e) => ({
+    kind: e.kind,
+    happenedAt: e.happenedAt,
+    payload: e.payload,
+  }));
+
   return {
     id: a.id,
     url: a.sourceUrl,
@@ -89,5 +106,9 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     yieldNet: yieldNet,
     riskClass: riskClass,
     riskSource: riskSource,
+    trustScore,
+    trustBadge,
+    trustReasons,
+    events,
   };
 }

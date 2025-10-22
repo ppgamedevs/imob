@@ -34,6 +34,7 @@ import { PdfActions } from "./PdfActions.client";
 import { Poller } from "./poller";
 import { QualityCard } from "./QualityCard";
 import { ReportShareButton } from "./ReportShareButton";
+import { TrustCard } from "./TrustCard";
 
 // Next.js 15: params is now a Promise
 type Props = { params: Promise<{ id?: string | string[] }> };
@@ -60,6 +61,27 @@ export default async function ReportPage({ params }: Props) {
   const comps = await prisma.compMatch.findMany({
     where: { analysisId: id },
     orderBy: { score: "desc" },
+    take: 12,
+  });
+
+  // Load duplicate siblings (Day 19)
+  const siblings = analysis?.groupId
+    ? await prisma.analysis.findMany({
+        where: { groupId: analysis.groupId, id: { not: analysis.id } },
+        include: { extractedListing: true },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+      })
+    : [];
+
+  // Load trust snapshot & provenance events (Day 20)
+  const trust = await prisma.trustSnapshot.findUnique({
+    where: { analysisId: id },
+  });
+
+  const events = await prisma.provenanceEvent.findMany({
+    where: { analysisId: id },
+    orderBy: { happenedAt: "asc" },
     take: 12,
   });
 
@@ -732,6 +754,37 @@ export default async function ReportPage({ params }: Props) {
                 )}
               </CardContent>
             </Card>
+
+            {/* Trust Score (Day 20) */}
+            {trust ? (
+              <TrustCard
+                score={trust.score}
+                badge={trust.badge}
+                reasons={trust.reasons as { plus?: string[]; minus?: string[] }}
+              />
+            ) : null}
+
+            {/* Timeline (Day 20) */}
+            {events.length > 0 ? (
+              <div className="rounded-xl border p-3 text-sm">
+                <div className="mb-1 font-medium">Timeline</div>
+                <ul className="space-y-1">
+                  {events.map((e) => (
+                    <li key={e.id} className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(e.happenedAt).toLocaleDateString("ro-RO")}
+                      </span>
+                      <span>· {e.kind}</span>
+                      {typeof e.payload === "object" && e.payload && "domain" in e.payload ? (
+                        <span className="text-xs text-muted-foreground">
+                          ({(e.payload as { domain?: string }).domain})
+                        </span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
@@ -780,6 +833,38 @@ export default async function ReportPage({ params }: Props) {
                 )}
               </form>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Possible duplicates (Day 19) */}
+      {siblings.length > 0 && (
+        <div className="mt-6 border rounded-xl p-3">
+          <div className="font-medium mb-2">Posibile duplicate ({siblings.length})</div>
+          <div className="grid md:grid-cols-3 gap-2 text-sm">
+            {siblings.map((s) => {
+              const photos = Array.isArray(s.extractedListing?.photos)
+                ? (s.extractedListing?.photos as string[])
+                : [];
+              return (
+                <a
+                  key={s.id}
+                  href={s.sourceUrl || `/report/${s.id}`}
+                  target={s.sourceUrl ? "_blank" : "_self"}
+                  rel={s.sourceUrl ? "noopener noreferrer" : undefined}
+                  className="border rounded-lg p-2 hover:shadow transition-shadow"
+                >
+                  {photos[0] ? (
+                    <img src={photos[0]} className="h-24 w-full object-cover rounded" alt="" />
+                  ) : (
+                    <div className="h-24 bg-muted rounded" />
+                  )}
+                  <div className="mt-1 line-clamp-1">
+                    {s.extractedListing?.title ?? s.sourceUrl}
+                  </div>
+                </a>
+              );
+            })}
           </div>
         </div>
       )}

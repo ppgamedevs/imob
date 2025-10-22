@@ -22,7 +22,12 @@ export async function discoverSearch(raw: URLSearchParams) {
   const list = await prisma.analysis.findMany({
     where,
     orderBy: { createdAt: "desc" },
-    include: { featureSnapshot: true, scoreSnapshot: true, extractedListing: true },
+    include: {
+      featureSnapshot: true,
+      scoreSnapshot: true,
+      extractedListing: true,
+      trustSnapshot: true,
+    },
     take: take + 1,
     ...(cursor ? { skip: 1, cursor } : {}),
   });
@@ -39,6 +44,13 @@ export async function discoverSearch(raw: URLSearchParams) {
       const priceEur = n(f?.priceEur);
       const areaM2 = n(f?.areaM2);
       const eurm2 = priceEur && areaM2 ? priceEur / areaM2 : undefined;
+
+      // Extract trust data
+      const trustScore = a.trustSnapshot?.score ?? null;
+      const trustBadge = a.trustSnapshot?.badge ?? null;
+      const trustReasons = (a.trustSnapshot?.reasons as { minus?: string[] }) ?? null;
+      const flags = trustReasons?.minus ?? [];
+
       return {
         id: a.id,
         url: a.sourceUrl || null,
@@ -58,6 +70,10 @@ export async function discoverSearch(raw: URLSearchParams) {
         avmMid: n(s?.avmMid),
         lat: n(f?.lat),
         lng: n(f?.lng),
+        groupId: a.groupId || null,
+        trustScore,
+        trustBadge,
+        flags,
       };
     })
     // Bucharest-only (dacă city e setat)

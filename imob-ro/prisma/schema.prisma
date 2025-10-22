@@ -151,6 +151,7 @@ model Analysis {
   canonicalUrl String?
   status       String   @default("queued") // queued|extracting|normalizing|scoring|done|error
   error        String?
+  groupId      String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -163,10 +164,16 @@ model Analysis {
   shortLinks       ShortLink[]
   claims           ListingClaim[]
   leads            Lead[]
+  group            DedupGroup?       @relation(fields: [groupId], references: [id])
+  sights           Sight[]
+  photoAssets      PhotoAsset[]
+  provenanceEvents ProvenanceEvent[]
+  trustSnapshot    TrustSnapshot?
 
   @@index([sourceUrl])
   @@index([userId])
   @@index([canonicalUrl])
+  @@index([groupId])
 }
 
 model ExtractedListing {
@@ -536,4 +543,95 @@ model ExtractLog {
 
   @@index([domain, createdAt])
   @@index([profileId, createdAt])
+}
+
+// Day 19 - De-dup & Merge v1
+model DedupGroup {
+  id          String    @id @default(cuid())
+  signature   String    @unique
+  city        String?
+  areaSlug    String?
+  centroidLat Float?
+  centroidLng Float?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  analyses    Analysis[]
+  edges       DedupEdge[]
+
+  @@index([city, areaSlug])
+}
+
+model DedupEdge {
+  id           String   @id @default(cuid())
+  groupId      String
+  analysisId   String
+  score        Float
+  reason       Json
+  createdAt    DateTime @default(now())
+
+  group        DedupGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, analysisId])
+  @@index([groupId])
+}
+
+// Day 20 - Provenance & Fraud-Shield v1
+model Sight {
+  id          String   @id @default(cuid())
+  analysisId  String
+  groupId     String?
+  sourceUrl   String
+  domain      String
+  title       String?
+  priceEur    Int?
+  areaM2      Int?
+  rooms       Float?
+  contact     String?
+  seenAt      DateTime @default(now())
+
+  analysis    Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId, seenAt])
+  @@index([domain, seenAt])
+}
+
+model PhotoAsset {
+  id          String   @id @default(cuid())
+  analysisId  String
+  src         String
+  width       Int?
+  height      Int?
+  phash       String?
+  createdAt   DateTime @default(now())
+
+  analysis    Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId])
+  @@index([phash])
+}
+
+model ProvenanceEvent {
+  id          String   @id @default(cuid())
+  analysisId  String
+  kind        String
+  payload     Json
+  happenedAt  DateTime @default(now())
+
+  analysis    Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@index([analysisId, happenedAt])
+  @@index([kind, happenedAt])
+}
+
+model TrustSnapshot {
+  id          String   @id @default(cuid())
+  analysisId  String   @unique
+  score       Int
+  badge       String
+  reasons     Json
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  analysis    Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
 }

@@ -80,6 +80,15 @@ export async function startAnalysis(analysisId: string, url: string) {
           },
         });
 
+        // Day 20: Log provenance (Sight + PhotoAssets)
+        try {
+          const { logSight, logPhotoAssets } = await import("./provenance/ingest");
+          await logSight(analysisId, url);
+          await logPhotoAssets(analysisId);
+        } catch (e) {
+          console.warn("provenance ingestion failed", e);
+        }
+
         // Run the normalization pipeline and persist the snapshot
         try {
           await prisma.analysis.update({
@@ -115,6 +124,37 @@ export async function startAnalysis(analysisId: string, url: string) {
                     try {
                       const { applyQualityToAnalysis } = await import("./quality/apply-quality");
                       await applyQualityToAnalysis(analysisId);
+                      // Day 19: Attach to dedup group after all analysis complete
+                      try {
+                        const { attachToGroup } = await import("./dedup/group");
+                        await attachToGroup(analysisId);
+                      } catch (e) {
+                        console.warn("attachToGroup failed", e);
+                      }
+                      // Day 20: Build provenance timeline + trust score
+                      try {
+                        const { rebuildProvenance } = await import("./provenance/build-events");
+                        const { findReusedPhotos } = await import("./provenance/photo-reuse");
+                        const { computeTrustScore } = await import("./provenance/trust");
+
+                        await rebuildProvenance(analysisId);
+
+                        // Check for photo reuse
+                        const reused = await findReusedPhotos(analysisId);
+                        if (reused.length > 0) {
+                          await prisma.provenanceEvent.create({
+                            data: {
+                              analysisId,
+                              kind: "PHOTO_REUSED",
+                              payload: { matches: reused } as never,
+                            },
+                          });
+                        }
+
+                        await computeTrustScore(analysisId);
+                      } catch (e) {
+                        console.warn("provenance computation failed", e);
+                      }
                     } catch (e) {
                       console.warn("applyQualityToAnalysis failed", e);
                     }
@@ -137,6 +177,15 @@ export async function startAnalysis(analysisId: string, url: string) {
       }
     } else {
       // If a client provided extracted listing exists, run the normalization pipeline
+      // Day 20: Log provenance first (Sight + PhotoAssets)
+      try {
+        const { logSight, logPhotoAssets } = await import("./provenance/ingest");
+        await logSight(analysisId, url);
+        await logPhotoAssets(analysisId);
+      } catch (e) {
+        console.warn("provenance ingestion failed", e);
+      }
+
       try {
         await prisma.analysis.update({
           where: { id: analysisId },
@@ -168,6 +217,37 @@ export async function startAnalysis(analysisId: string, url: string) {
                   try {
                     const { applyQualityToAnalysis } = await import("./quality/apply-quality");
                     await applyQualityToAnalysis(analysisId);
+                    // Day 19: Attach to dedup group after all analysis complete
+                    try {
+                      const { attachToGroup } = await import("./dedup/group");
+                      await attachToGroup(analysisId);
+                    } catch (e) {
+                      console.warn("attachToGroup failed", e);
+                    }
+                    // Day 20: Build provenance timeline + trust score
+                    try {
+                      const { rebuildProvenance } = await import("./provenance/build-events");
+                      const { findReusedPhotos } = await import("./provenance/photo-reuse");
+                      const { computeTrustScore } = await import("./provenance/trust");
+
+                      await rebuildProvenance(analysisId);
+
+                      // Check for photo reuse
+                      const reused = await findReusedPhotos(analysisId);
+                      if (reused.length > 0) {
+                        await prisma.provenanceEvent.create({
+                          data: {
+                            analysisId,
+                            kind: "PHOTO_REUSED",
+                            payload: { matches: reused } as never,
+                          },
+                        });
+                      }
+
+                      await computeTrustScore(analysisId);
+                    } catch (e) {
+                      console.warn("provenance computation failed", e);
+                    }
                   } catch (e) {
                     console.warn("applyQualityToAnalysis failed", e);
                   }

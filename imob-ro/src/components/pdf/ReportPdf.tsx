@@ -16,6 +16,7 @@ export type PdfSections = {
   yield: boolean;
   risk: boolean;
   gallery: boolean;
+  provenance: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -123,6 +124,49 @@ export default function ReportPdf(props: {
             </View>
           </>
         )}
+
+        {sections.provenance && (data.trustScore != null || data.events?.length) ? (
+          <>
+            <Text style={styles.h2}>Proveniență & Încredere</Text>
+            {data.trustScore != null && (
+              <View style={styles.row}>
+                <View style={styles.stat}>
+                  <Text>Trust Score</Text>
+                  <Text>
+                    {data.trustBadge} · {data.trustScore}/100
+                  </Text>
+                </View>
+              </View>
+            )}
+            {data.trustReasons?.minus && data.trustReasons.minus.length > 0 && (
+              <View style={{ marginTop: 8 }}>
+                <Text style={{ fontSize: 10, color: "#dc2626" }}>
+                  ⚠ Red flags: {data.trustReasons.minus.join(" · ")}
+                </Text>
+              </View>
+            )}
+            {data.trustReasons?.plus && data.trustReasons.plus.length > 0 && (
+              <View style={{ marginTop: 4 }}>
+                <Text style={{ fontSize: 9, color: "#666" }}>
+                  + {data.trustReasons.plus.join(" · ")}
+                </Text>
+              </View>
+            )}
+            {data.events && data.events.length > 0 && (
+              <View style={{ marginTop: 12 }}>
+                <Text style={{ fontSize: 10, marginBottom: 6 }}>Timeline:</Text>
+                {data.events.slice(0, 6).map((e, i) => (
+                  <View key={i} style={{ flexDirection: "row", gap: 6, marginBottom: 3 }}>
+                    <Text style={styles.small}>
+                      {new Date(e.happenedAt).toLocaleDateString("ro-RO")}
+                    </Text>
+                    <Text style={{ fontSize: 9 }}>· {e.kind}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </>
+        ) : null}
 
         {sections.gallery && data.photos?.length ? (
           <>

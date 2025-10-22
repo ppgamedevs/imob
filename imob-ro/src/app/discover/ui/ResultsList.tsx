@@ -36,12 +36,29 @@ export function ResultsList({
           ) : (
             <div className="h-20 w-28 rounded bg-muted" />
           )}
-          <div className="text-sm">
-            <div className="font-medium line-clamp-1">{x.title || "Anunț"}</div>
+          <div className="text-sm flex-1">
+            <div className="font-medium line-clamp-1 flex items-center gap-2">
+              {x.title || "Anunț"}
+              {x.dupCount > 0 && (
+                <span className="text-[11px] px-1.5 py-0.5 bg-muted rounded">
+                  +{x.dupCount} surse
+                </span>
+              )}
+            </div>
             <div className="text-xs text-muted-foreground">{x.areaSlug || "București"}</div>
             <div className="mt-1">
               {x.priceEur?.toLocaleString("ro-RO")} € · {x.areaM2} m² · {x.rooms ?? "?"} cam ·{" "}
               {x.yearBuilt ?? "—"}
+              {x.trustBadge ? (
+                <span className="ml-1 text-[11px] px-1.5 py-0.5 rounded bg-muted">
+                  {x.trustBadge}
+                </span>
+              ) : null}
+              {x.flags && x.flags.length > 0 ? (
+                <span className="ml-1 text-[11px] px-1.5 py-0.5 rounded bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
+                  ⚠ {x.flags.length}
+                </span>
+              ) : null}
             </div>
             <div className="text-xs text-muted-foreground">
               {x.eurm2 ? `${Math.round(x.eurm2)} €/m²` : "—"} ·{" "}
