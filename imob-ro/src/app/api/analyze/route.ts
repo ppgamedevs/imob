@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { startAnalysis } from "@/lib/analysis";
+import { auth } from "@/lib/auth";
+import { canUse, incUsage } from "@/lib/billing/entitlements";
 import { prisma } from "@/lib/db";
 import { allowRequest, getBucketInfo } from "@/lib/rateLimiter";
 
@@ -22,6 +24,25 @@ function sanitizeUrl(input: unknown): string | null {
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
+
+  // Day 23 - Check entitlement for authenticated users
+  const session = await auth();
+  if (session?.user?.id) {
+    const check = await canUse(session.user.id, "analyze");
+    if (!check.allowed) {
+      return NextResponse.json(
+        {
+          error: "limit_reached",
+          plan: check.plan,
+          used: check.used,
+          max: check.max,
+          message: `${check.plan === "free" ? "Free plan" : "Pro plan"} limit reached: ${check.used}/${check.max} analize this month`,
+        },
+        { status: 402 }, // Payment Required
+      );
+    }
+  }
+
   // identify client by IP (X-Forwarded-For) or default
   const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
   // rate limiting
@@ -59,7 +80,18 @@ export async function POST(req: Request) {
   if (existing) return NextResponse.json({ id: existing.id, reused: true });
 
   // create new analysis with queued status
-  const analysis = await prisma.analysis.create({ data: { sourceUrl: rawUrl, status: "queued" } });
+  const analysis = await prisma.analysis.create({
+    data: {
+      sourceUrl: rawUrl,
+      status: "queued",
+      userId: session?.user?.id || null,
+    },
+  });
+
+  // Day 23 - Increment usage counter for authenticated users
+  if (session?.user?.id) {
+    await incUsage(session.user.id, "analyze", 1);
+  }
 
   // Launch background processing (don't await)
   void Promise.allSettled([startAnalysis(analysis.id, rawUrl)]).catch((e) => console.error(e));

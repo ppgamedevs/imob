@@ -303,19 +303,23 @@ model ReportUsage {
 }
 
 model ShortLink {
-  id         String   @id @default(cuid())
-  slug       String   @unique
-  targetUrl  String?  // optional - can construct dynamically from analysisId
+  id         String    @id @default(cuid())
+  slug       String    @unique
+  targetUrl  String?   // optional - can construct dynamically from analysisId
   analysisId String
-  userId     String   // owner who created the share link
-  meta       Json     @default("{}")
-  createdAt  DateTime @default(now())
+  userId     String    // owner who created the share link
+  meta       Json      @default("{}")
+  options    Json      @default("{}") // { scrub, watermark, hideSource, hidePrice, brand, color }
+  enabled    Boolean   @default(true)
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
 
   analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
 
   @@index([analysisId])
   @@index([userId])
   @@index([createdAt])
+  @@index([enabled])
 }
 
 // Time-to-sell labels derived from Analysis sourceUrl availability / sold detection
@@ -634,4 +638,65 @@ model TrustSnapshot {
   updatedAt   DateTime @updatedAt
 
   analysis    Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+}
+
+model ShareEvent {
+  id         String   @id @default(cuid())
+  slug       String
+  analysisId String
+  ts         DateTime @default(now())
+  referrer   String?
+  ua         String?
+  ipHash     String?
+
+  @@index([slug, ts])
+  @@index([analysisId, ts])
+}
+
+model ShareDaily {
+  id      String   @id @default(cuid())
+  slug    String
+  date    DateTime // 00:00 UTC
+  views   Int      @default(0)
+  uniques Int      @default(0)
+
+  @@unique([slug, date])
+  @@index([slug, date])
+}
+
+// Day 23 - Billing & Paywall v1
+model Plan {
+  id          String   @id @default(cuid())
+  code        String   @unique // "free" | "pro"
+  name        String
+  priceCents  Int      // lunar
+  currency    String   @default("EUR")
+  stripePrice String?  // price_***
+  features    Json
+  createdAt   DateTime @default(now())
+}
+
+model Subscription {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  planCode     String    // "free" | "pro"
+  status       String    // "active" | "trialing" | "past_due" | "canceled"
+  stripeSubId  String?
+  renewsAt     DateTime?
+  cancelAt     DateTime?
+  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime  @default(now())
+
+  @@index([planCode, status])
+}
+
+model UsageCounter {
+  id          String   @id @default(cuid())
+  userId      String
+  periodStart DateTime // început lună UTC
+  kind        String   // "analyze" | "pdf" | "share"
+  count       Int      @default(0)
+
+  @@unique([userId, periodStart, kind])
+  @@index([userId, kind])
 }

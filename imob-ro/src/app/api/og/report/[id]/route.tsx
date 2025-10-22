@@ -1,44 +1,74 @@
 import { ImageResponse } from "next/og";
 
+import { prisma } from "@/lib/db";
+
 export const runtime = "edge";
 
-export default async function GET(req: Request, { params }: { params: { id: string } }) {
+export default async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const url = new URL(req.url);
-    const address = url.searchParams.get("address") || "Adresă necunoscută";
-    const price = url.searchParams.get("price") || "—";
+    const resolvedParams = await params;
+    const a = await prisma.analysis.findUnique({
+      where: { id: resolvedParams.id },
+      include: {
+        extractedListing: true,
+        featureSnapshot: true,
+        scoreSnapshot: true,
+        trustSnapshot: true,
+      },
+    });
+
+    if (!a) {
+      return new Response("Not found", { status: 404 });
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const f: any = a.featureSnapshot?.features ?? {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const s: any = a.scoreSnapshot ?? {};
+
+    const title = a.extractedListing?.title ?? "Analiză ImobIntel";
+    const price = f.priceEur ? `${f.priceEur.toLocaleString("ro-RO")} €` : "—";
+    const badge = s.priceBadge ?? "";
+    const tts = s.ttsBucket ? `~${s.ttsBucket} zile` : "—";
+    const yieldVal = s.yieldNet ? `${(s.yieldNet * 100).toFixed(1)}%` : "—";
+    const trust = a.trustSnapshot?.badge ?? s.trust ?? "—";
 
     return new ImageResponse(
       (
         <div
           style={{
-            height: "100%",
-            width: "100%",
             display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-            padding: 48,
+            width: "1200px",
+            height: "630px",
             background: "linear-gradient(135deg,#0f172a 0%,#111827 100%)",
             color: "white",
-            fontFamily:
-              'Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial',
+            padding: "48px",
+            fontSize: 36,
+            fontFamily: "system-ui, sans-serif",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div style={{ fontSize: 36, fontWeight: 700 }}>imob.ro</div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 24, opacity: 0.9 }}>Raport</div>
-              <div style={{ fontSize: 18, opacity: 0.7 }}>{params.id}</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "16px", flex: 1 }}>
+            <div style={{ fontSize: 20, opacity: 0.7 }}>ImobIntel • Analiză</div>
+            <div style={{ fontWeight: 700, fontSize: 44, maxWidth: 900, lineHeight: 1.2 }}>
+              {title}
             </div>
-          </div>
-
-          <div style={{ marginTop: 36 }}>
-            <div style={{ fontSize: 48, fontWeight: 800, lineHeight: 1 }}>{price}</div>
-            <div style={{ marginTop: 8, fontSize: 28 }}>{address}</div>
-          </div>
-
-          <div style={{ position: "absolute", bottom: 28, left: 48, fontSize: 14, opacity: 0.8 }}>
-            estimări automate • nu constituie consultanță
+            <div style={{ fontSize: 28 }}>
+              Preț: {price} {badge && `· ${badge}`}
+            </div>
+            <div style={{ fontSize: 24, opacity: 0.8, display: "flex", gap: "24px" }}>
+              <span>TTS: {tts}</span>
+              <span>Yield: {yieldVal}</span>
+              <span>Trust: {trust}</span>
+            </div>
+            <div
+              style={{
+                marginTop: "auto",
+                fontSize: 14,
+                opacity: 0.6,
+              }}
+            >
+              estimări automate • nu constituie consultanță
+            </div>
           </div>
         </div>
       ),
@@ -49,6 +79,6 @@ export default async function GET(req: Request, { params }: { params: { id: stri
     );
   } catch (err) {
     console.error(err);
-    return new Response("", { status: 500 });
+    return new Response("Error", { status: 500 });
   }
 }

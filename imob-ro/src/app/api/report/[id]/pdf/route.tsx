@@ -2,6 +2,8 @@ import { renderToStream } from "@react-pdf/renderer";
 import { NextResponse } from "next/server";
 
 import ReportPdf from "@/components/pdf/ReportPdf";
+import { auth } from "@/lib/auth";
+import { canUse, incUsage } from "@/lib/billing/entitlements";
 import { loadPdfReportData } from "@/lib/pdf/map-report";
 
 function bool(q: URLSearchParams, key: string, def = true) {
@@ -13,6 +15,24 @@ function bool(q: URLSearchParams, key: string, def = true) {
 export const runtime = "nodejs";
 
 export async function GET(req: Request, { params }: { params: { id: string } }) {
+  // Day 23 - Check PDF generation limit
+  const session = await auth();
+  if (session?.user?.id) {
+    const check = await canUse(session.user.id, "pdf");
+    if (!check.allowed) {
+      return NextResponse.json(
+        {
+          error: "limit_reached",
+          plan: check.plan,
+          used: check.used,
+          max: check.max,
+          message: `${check.plan === "free" ? "Free plan" : "Pro plan"} limit reached: ${check.used}/${check.max} PDF reports this month`,
+        },
+        { status: 402 },
+      );
+    }
+  }
+
   const data = await loadPdfReportData(params.id);
   if (!data) return NextResponse.json({ ok: false, error: "not_found" }, { status: 404 });
 
@@ -36,6 +56,11 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
 
   const pdf = <ReportPdf data={data} brand={brand} sections={sections} />;
   const stream = await renderToStream(pdf);
+
+  // Day 23 - Increment PDF usage counter
+  if (session?.user?.id) {
+    await incUsage(session.user.id, "pdf", 1);
+  }
 
   // renderToStream returns an async iterable/stream-like value; NextResponse accepts a Readable stream.
   return new NextResponse(stream as unknown as ReadableStream, {

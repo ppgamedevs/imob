@@ -11,7 +11,9 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Badge } from "@/components/ui/badge";
 import { auth, signOut } from "@/lib/auth";
+import { getSubscription } from "@/lib/billing/entitlements";
 
 const navLinks = [
   { href: "/", label: "Acasă" },
@@ -21,6 +23,7 @@ const navLinks = [
 
 export async function SiteHeader() {
   const session = await auth();
+  const subscription = session?.user?.id ? await getSubscription(session.user.id) : null;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -50,7 +53,15 @@ export async function SiteHeader() {
         <div className="flex items-center gap-3">
           {session?.user ? (
             <div className="hidden items-center gap-2 md:flex">
-              <span className="text-sm text-muted-foreground">{session.user.email}</span>
+              {/* Day 23 - Plan Badge */}
+              {subscription && (
+                <Badge variant={subscription.planCode === "pro" ? "default" : "secondary"}>
+                  {subscription.planCode.toUpperCase()}
+                </Badge>
+              )}
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/account">Cont</Link>
+              </Button>
               <form
                 action={async () => {
                   "use server";
@@ -69,9 +80,11 @@ export async function SiteHeader() {
           )}
 
           <ThemeToggle />
-          <Button variant="ghost" size="sm" asChild className="hidden md:inline-flex">
-            <Link href="/pricing">Upgrade</Link>
-          </Button>
+          {subscription?.planCode !== "pro" && (
+            <Button variant="ghost" size="sm" asChild className="hidden md:inline-flex">
+              <Link href="/pricing">Upgrade</Link>
+            </Button>
+          )}
 
           {/* Mobile Menu */}
           <Sheet>
