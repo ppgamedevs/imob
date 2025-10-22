@@ -390,7 +390,8 @@ export default async function ReportPage({ params }: Props) {
                 </span>
                 {groupSnapshot.priceMin && groupSnapshot.priceMax && (
                   <Badge variant="secondary">
-                    {groupSnapshot.priceMin.toLocaleString()} – {groupSnapshot.priceMax.toLocaleString()} €
+                    {groupSnapshot.priceMin.toLocaleString()} –{" "}
+                    {groupSnapshot.priceMax.toLocaleString()} €
                   </Badge>
                 )}
               </div>

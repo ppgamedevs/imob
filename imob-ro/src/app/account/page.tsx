@@ -5,11 +5,11 @@
 
 import { redirect } from "next/navigation";
 
-import { auth } from "@/lib/auth";
-import { getPlanLimits, getSubscription, getUsage } from "@/lib/billing/entitlements";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { auth } from "@/lib/auth";
+import { getPlanLimits, getSubscription, getUsage } from "@/lib/billing/entitlements";
 
 import ManageSubscriptionButton from "./ManageSubscriptionButton";
 

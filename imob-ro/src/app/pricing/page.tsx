@@ -5,9 +5,10 @@
 
 import React from "react";
 
-import CheckoutButton from "../../components/CheckoutButton";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import CheckoutButton from "../../components/CheckoutButton";
 
 export default function PricingPage() {
   return (

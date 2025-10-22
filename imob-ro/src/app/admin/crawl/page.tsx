@@ -3,8 +3,8 @@
  * Shows crawler job statistics and recent errors
  */
 
-import { prisma } from "@/lib/db";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { prisma } from "@/lib/db";
 
 export default async function CrawlAdminPage() {
   const [queued, running, errorJobs, recentFetches] = await Promise.all([
@@ -22,9 +22,6 @@ export default async function CrawlAdminPage() {
   ]);
 
   const successCount = recentFetches.filter((f) => f.statusCode && f.statusCode < 400).length;
-  const errorCount = recentFetches.filter(
-    (f) => f.error || (f.statusCode && f.statusCode >= 400),
-  ).length;
 
   return (
     <div className="container mx-auto p-6 max-w-6xl space-y-6">

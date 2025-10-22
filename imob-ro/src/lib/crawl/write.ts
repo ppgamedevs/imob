@@ -4,8 +4,8 @@
  * Reuses existing pipeline (startAnalysis from Day 2)
  */
 
-import { prisma } from "@/lib/db";
 import { startAnalysis } from "@/lib/analysis";
+import { prisma } from "@/lib/db";
 
 /**
  * Upsert Analysis and extracted data from crawler

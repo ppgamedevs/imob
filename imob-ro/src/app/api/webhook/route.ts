@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Day 23 - Stripe Webhook v2
  * Handles subscription lifecycle events with signature verification

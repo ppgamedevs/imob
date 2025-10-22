@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Day 26 - GroupSnapshot Builder
  * Computes canonical "current" state of a dedup group
