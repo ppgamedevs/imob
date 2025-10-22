@@ -74,6 +74,43 @@ export default async function ReportPage({ params }: Props) {
       })
     : [];
 
+  // Load group snapshot for multi-source display (Day 26)
+  const groupSnapshot = analysis?.groupId
+    ? await prisma.groupSnapshot
+        .findFirst({
+          where: { groupId: analysis.groupId },
+          orderBy: { createdAt: "desc" },
+        })
+        .catch(() => null)
+    : null;
+
+  const groupSources = analysis?.groupId
+    ? await prisma.analysis
+        .findMany({
+          where: { groupId: analysis.groupId },
+          select: { sourceUrl: true, createdAt: true, id: true },
+        })
+        .then((analyses) =>
+          analyses.map((a) => {
+            let domain = "unknown";
+            try {
+              if (a.sourceUrl) {
+                const url = new URL(a.sourceUrl);
+                domain = url.hostname.replace(/^www\./, "");
+              }
+            } catch {
+              // ignore
+            }
+            return {
+              url: a.sourceUrl ?? "",
+              domain,
+              createdAt: a.createdAt,
+            };
+          }),
+        )
+        .catch(() => [])
+    : [];
+
   // Load trust snapshot & provenance events (Day 20)
   const trust = await prisma.trustSnapshot.findUnique({
     where: { analysisId: id },
@@ -341,6 +378,53 @@ export default async function ReportPage({ params }: Props) {
           <ShareButton url={canonicalUrl} title={extracted?.title ?? "Raport analiză"} />
         </div>
       </div>
+
+      {/* Multi-source card (Day 26) */}
+      {groupSnapshot && groupSources.length > 1 && (
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-lg">
+                  Apare pe {groupSnapshot.sources ?? groupSources.length} site-uri
+                </span>
+                {groupSnapshot.priceMin && groupSnapshot.priceMax && (
+                  <Badge variant="secondary">
+                    {groupSnapshot.priceMin.toLocaleString()} – {groupSnapshot.priceMax.toLocaleString()} €
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {((groupSnapshot.domains as string[]) ?? []).map((d) => (
+                <Badge key={d} variant="outline" className="text-xs">
+                  {d}
+                </Badge>
+              ))}
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {groupSources.slice(0, 4).map((s, i) => (
+                <span key={i}>
+                  <a
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-primary"
+                  >
+                    {s.domain}
+                  </a>
+                  {i < Math.min(3, groupSources.length - 1) && " • "}
+                </span>
+              ))}
+              {groupSources.length > 4 && (
+                <span className="text-muted-foreground ml-2">
+                  +{groupSources.length - 4} altele
+                </span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-12 gap-6">
         {/* Left column: listing info */}

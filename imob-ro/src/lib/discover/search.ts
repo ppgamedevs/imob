@@ -27,6 +27,14 @@ export async function discoverSearch(raw: URLSearchParams) {
       scoreSnapshot: true,
       extractedListing: true,
       trustSnapshot: true,
+      group: {
+        include: {
+          snapshots: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+        },
+      },
     },
     take: take + 1,
     ...(cursor ? { skip: 1, cursor } : {}),
@@ -51,6 +59,12 @@ export async function discoverSearch(raw: URLSearchParams) {
       const trustReasons = (a.trustSnapshot?.reasons as { minus?: string[] }) ?? null;
       const flags = trustReasons?.minus ?? [];
 
+      // Get source count from group snapshot (Day 26)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const groupSnapshot = (a.group as any)?.snapshots?.[0];
+      const sourceCount = groupSnapshot?.sources ?? null;
+      const dupCount = sourceCount && sourceCount > 1 ? sourceCount - 1 : 0;
+
       return {
         id: a.id,
         url: a.sourceUrl || null,
@@ -74,6 +88,7 @@ export async function discoverSearch(raw: URLSearchParams) {
         trustScore,
         trustBadge,
         flags,
+        dupCount,
       };
     })
     // Bucharest-only (dacă city e setat)
@@ -94,8 +109,18 @@ export async function discoverSearch(raw: URLSearchParams) {
     .filter((r) => p.eurm2Max == null || (r.eurm2 ?? 0) <= p.eurm2Max!)
     .filter((r) => !p.underpriced || r.priceBadge === "Underpriced");
 
-  const hasNext = rows.length > take;
-  const items = rows.slice(0, take);
+  // Day 26: Collapse by groupId (show 1 per group, pick most recent)
+  const grouped = new Map<string, (typeof rows)[0]>();
+  for (const r of rows) {
+    const key = r.groupId || r.id; // Use groupId if available, else unique per item
+    if (!grouped.has(key)) {
+      grouped.set(key, r);
+    }
+  }
+  const collapsed = Array.from(grouped.values());
+
+  const hasNext = collapsed.length > take;
+  const items = collapsed.slice(0, take);
   const nextCursor = hasNext ? items[items.length - 1]?.id : null;
 
   return { ok: true as const, items, nextCursor };

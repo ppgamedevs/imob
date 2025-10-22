@@ -2,6 +2,7 @@
 import { prisma } from "@/lib/db";
 
 import { canonicalSignature, fuzzyScore } from "./similarity";
+import { rebuildGroupSnapshot } from "./snapshot";
 
 export async function attachToGroup(analysisId: string) {
   const a = await prisma.analysis.findUnique({
@@ -42,6 +43,7 @@ export async function attachToGroup(analysisId: string) {
       update: { score: 1, reason: { type: "signature" } as any },
       create: { groupId: g.id, analysisId: a.id, score: 1, reason: { type: "signature" } as any },
     });
+    await rebuildGroupSnapshot(g.id).catch((e) => console.warn("snapshot failed", e));
     return;
   }
 
@@ -78,6 +80,7 @@ export async function attachToGroup(analysisId: string) {
         reason: best.reasons as any,
       },
     });
+    await rebuildGroupSnapshot(best.groupId).catch((e) => console.warn("snapshot failed", e));
     return;
   }
 
@@ -95,4 +98,5 @@ export async function attachToGroup(analysisId: string) {
   await prisma.dedupEdge.create({
     data: { groupId: g.id, analysisId: a.id, score: 0.5, reason: { type: "adhoc" } as any },
   });
+  await rebuildGroupSnapshot(g.id).catch((e) => console.warn("snapshot failed", e));
 }

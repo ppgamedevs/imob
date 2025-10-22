@@ -562,11 +562,13 @@ model DedupGroup {
   areaSlug    String?
   centroidLat Float?
   centroidLng Float?
+  itemCount   Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   analyses    Analysis[]
   edges       DedupEdge[]
+  snapshots   GroupSnapshot[]
 
   @@index([city, areaSlug])
 }
@@ -583,6 +585,32 @@ model DedupEdge {
 
   @@unique([groupId, analysisId])
   @@index([groupId])
+}
+
+model GroupSnapshot {
+  id          String   @id @default(cuid())
+  groupId     String
+  // Canonical "current" state
+  title       String?
+  priceEur    Int?
+  areaM2      Int?
+  rooms       Float?
+  floorRaw    String?
+  yearBuilt   Int?
+  lat         Float?
+  lng         Float?
+  photo       String?
+  // Derived aggregates
+  domains     Json      // string[]
+  priceMin    Int?
+  priceMax    Int?
+  sources     Int?      // count distinct domains
+  explain     Json      // { picked: analysisId, sampleCount: N }
+  createdAt   DateTime  @default(now())
+
+  group       DedupGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId, createdAt])
 }
 
 // Day 20 - Provenance & Fraud-Shield v1
