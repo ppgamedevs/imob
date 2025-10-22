@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 /**
  * Privacy-preserving IP hash (keeps only /24 prefix, hashed).
