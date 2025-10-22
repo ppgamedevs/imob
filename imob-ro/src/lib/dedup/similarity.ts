@@ -51,7 +51,7 @@ export function distanceM(lat1: number, lng1: number, lat2: number, lng2: number
 // Composite fuzzy score for identifying same property across sources
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function fuzzyScore(a: any, b: any) {
-  // Weighted: title 35%, geo 35%, area 15%, price 15%
+  // Weighted: title 25%, geo 25%, photo 20%, contact 15%, area 10%, price 5%
   let s = 0;
   const reasons: any = {};
 
@@ -60,7 +60,7 @@ export function fuzzyScore(a: any, b: any) {
   const tb = (b.extracted?.title || b.features?.features?.addressRaw || "") as string;
   const ts = jaccard(ta, tb);
   if (ts > 0) {
-    s += ts * 0.35;
+    s += ts * 0.25;
     reasons.title = ts;
   }
 
@@ -72,8 +72,41 @@ export function fuzzyScore(a: any, b: any) {
   if (la != null && lb != null && loa != null && lob != null) {
     const d = distanceM(la, loa, lb, lob);
     const gs = d <= 60 ? 1 : d <= 120 ? 0.6 : d <= 250 ? 0.3 : 0;
-    s += gs * 0.35;
+    s += gs * 0.25;
     reasons.geo = { meters: Math.round(d), score: gs };
+  }
+
+  // Photo similarity (pHash matching)
+  const photosA = a.photos || [];
+  const photosB = b.photos || [];
+  if (photosA.length > 0 && photosB.length > 0) {
+    const hashesA = photosA.map((p: any) => p.phash).filter(Boolean);
+    const hashesB = photosB.map((p: any) => p.phash).filter(Boolean);
+    if (hashesA.length > 0 && hashesB.length > 0) {
+      // Count matching hashes
+      const matches = hashesA.filter((h: string) => hashesB.includes(h)).length;
+      const maxPossible = Math.min(hashesA.length, hashesB.length);
+      const photoScore = matches / maxPossible;
+      s += photoScore * 0.2;
+      reasons.photo = { matches, total: maxPossible, score: photoScore };
+    }
+  }
+
+  // Contact similarity (phone/email)
+  const contactA = a.sight?.contact || a.extracted?.sourceMeta?.contact || null;
+  const contactB = b.sight?.contact || b.extracted?.sourceMeta?.contact || null;
+  if (contactA && contactB) {
+    // Normalize: remove spaces, dashes, parentheses from phone numbers
+    const normA = contactA.replace(/[\s\-()]/g, "").toLowerCase();
+    const normB = contactB.replace(/[\s\-()]/g, "").toLowerCase();
+    if (normA === normB) {
+      s += 1 * 0.15;
+      reasons.contact = { match: true, score: 1 };
+    } else if (normA.includes(normB) || normB.includes(normA)) {
+      // Partial match (one contains the other)
+      s += 0.5 * 0.15;
+      reasons.contact = { match: "partial", score: 0.5 };
+    }
   }
 
   // Area m² similarity
@@ -82,7 +115,7 @@ export function fuzzyScore(a: any, b: any) {
   if (ma && mb) {
     const rel = Math.abs(ma - mb) / Math.max(ma, mb);
     const ms = rel <= 0.05 ? 1 : rel <= 0.1 ? 0.5 : 0;
-    s += ms * 0.15;
+    s += ms * 0.1;
     reasons.area = { rel, score: ms };
   }
 
@@ -92,7 +125,7 @@ export function fuzzyScore(a: any, b: any) {
   if (pa && pb) {
     const rel = Math.abs(pa - pb) / Math.max(pa, pb);
     const ps = rel <= 0.07 ? 1 : rel <= 0.12 ? 0.5 : 0;
-    s += ps * 0.15;
+    s += ps * 0.05;
     reasons.price = { rel, score: ps };
   }
 

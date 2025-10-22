@@ -556,15 +556,16 @@ model ExtractLog {
 
 // Day 19 - De-dup & Merge v1
 model DedupGroup {
-  id          String    @id @default(cuid())
-  signature   String    @unique
-  city        String?
-  areaSlug    String?
-  centroidLat Float?
-  centroidLng Float?
-  itemCount   Int       @default(0)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id           String    @id @default(cuid())
+  signature    String    @unique
+  city         String?
+  areaSlug     String?
+  centroidLat  Float?
+  centroidLng  Float?
+  canonicalUrl String?
+  itemCount    Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
   analyses    Analysis[]
   edges       DedupEdge[]

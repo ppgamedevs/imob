@@ -112,6 +112,7 @@ export async function rebuildGroupSnapshot(groupId: string) {
       itemCount: edges.length,
       centroidLat: canonical.lat ?? undefined,
       centroidLng: canonical.lng ?? undefined,
+      canonicalUrl: canonical.sourceUrl ?? undefined,
     },
   });
 }

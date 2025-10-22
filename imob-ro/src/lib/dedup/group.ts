@@ -7,7 +7,13 @@ import { rebuildGroupSnapshot } from "./snapshot";
 export async function attachToGroup(analysisId: string) {
   const a = await prisma.analysis.findUnique({
     where: { id: analysisId },
-    include: { featureSnapshot: true, extractedListing: true, scoreSnapshot: true },
+    include: {
+      featureSnapshot: true,
+      extractedListing: true,
+      scoreSnapshot: true,
+      photoAssets: true,
+      sights: { take: 1, orderBy: { seenAt: "desc" } },
+    },
   });
   if (!a) return;
 
@@ -54,7 +60,13 @@ export async function attachToGroup(analysisId: string) {
       groupId: { not: null },
       createdAt: { gte: new Date(Date.now() - 1000 * 60 * 60 * 24 * 45) }, // 45 days
     },
-    include: { featureSnapshot: true, extractedListing: true, scoreSnapshot: true },
+    include: {
+      featureSnapshot: true,
+      extractedListing: true,
+      scoreSnapshot: true,
+      photoAssets: true,
+      sights: { take: 1, orderBy: { seenAt: "desc" } },
+    },
     take: 80,
     orderBy: { createdAt: "desc" },
   });
@@ -62,8 +74,18 @@ export async function attachToGroup(analysisId: string) {
   let best: { id: string; groupId: string; score: number; reasons: any } | null = null;
   for (const c of candidates) {
     const { score, reasons } = fuzzyScore(
-      { features: a.featureSnapshot, extracted: a.extractedListing },
-      { features: c.featureSnapshot, extracted: c.extractedListing },
+      {
+        features: a.featureSnapshot,
+        extracted: a.extractedListing,
+        photos: a.photoAssets,
+        sight: a.sights?.[0],
+      },
+      {
+        features: c.featureSnapshot,
+        extracted: c.extractedListing,
+        photos: c.photoAssets,
+        sight: c.sights?.[0],
+      },
     );
     if (!best || score > best.score) best = { id: c.id, groupId: c.groupId!, score, reasons };
   }

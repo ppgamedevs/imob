@@ -1,0 +1,209 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { prisma } from "@/lib/db";
+
+export default async function AdminGroupDetailPage({ params }: { params: { id: string } }) {
+  const group = await prisma.dedupGroup.findUnique({
+    where: { id: params.id },
+    include: {
+      analyses: {
+        include: {
+          featureSnapshot: true,
+          extractedListing: true,
+          scoreSnapshot: true,
+        },
+        orderBy: { createdAt: "desc" },
+      },
+      snapshots: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+      },
+    },
+  });
+
+  if (!group) notFound();
+
+  const members = group.analyses.map((a) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const f = (a.featureSnapshot as any)?.features ?? {};
+    const e = a.extractedListing;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const score = (a.scoreSnapshot as any)?.trustScore ?? null;
+
+    let domain = "unknown";
+    try {
+      if (a.sourceUrl) {
+        const url = new URL(a.sourceUrl);
+        domain = url.hostname.replace(/^www\./, "");
+      }
+    } catch {
+      // ignore
+    }
+
+    return {
+      id: a.id,
+      sourceUrl: a.sourceUrl,
+      domain,
+      title: e?.title ?? "Untitled",
+      priceEur: f.priceEur ?? null,
+      areaM2: f.areaM2 ?? null,
+      rooms: f.rooms ?? null,
+      trustScore: score,
+      createdAt: a.createdAt,
+      isCanonical: group.canonicalUrl === a.sourceUrl,
+    };
+  });
+
+  const snapshot = group.snapshots[0];
+
+  return (
+    <div className="container mx-auto py-8 max-w-6xl">
+      <div className="mb-6">
+        <Link href="/admin/groups">
+          <Button variant="outline" size="sm">
+            ← Back to Groups
+          </Button>
+        </Link>
+      </div>
+
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Group Details</h1>
+        <p className="text-muted-foreground font-mono text-sm">ID: {group.id}</p>
+      </div>
+
+      {/* Group Info */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle>Group Info</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <div className="text-sm text-muted-foreground">Members</div>
+              <div className="text-2xl font-bold">{group.itemCount}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">City</div>
+              <div className="text-lg">{group.city ?? "—"}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Area</div>
+              <div className="text-lg">{group.areaSlug ?? "—"}</div>
+            </div>
+            <div>
+              <div className="text-sm text-muted-foreground">Signature</div>
+              <div className="text-xs font-mono">{group.signature.slice(0, 30)}...</div>
+            </div>
+          </div>
+
+          {snapshot && (
+            <div className="mt-4 pt-4 border-t">
+              <div className="text-sm font-medium mb-2">Canonical Snapshot</div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Price: </span>
+                  {snapshot.priceEur ? `${snapshot.priceEur.toLocaleString()} €` : "—"}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Range: </span>
+                  {snapshot.priceMin && snapshot.priceMax
+                    ? `${snapshot.priceMin.toLocaleString()}–${snapshot.priceMax.toLocaleString()} €`
+                    : "—"}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Area: </span>
+                  {snapshot.areaM2 ? `${snapshot.areaM2} m²` : "—"}
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Sources: </span>
+                  {snapshot.sources ?? "—"}
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Members List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Members ({members.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {members.map((member) => (
+              <div
+                key={member.id}
+                className="border rounded p-4 hover:bg-accent/50 transition-colors"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      {member.isCanonical && <Badge variant="default">Canonical</Badge>}
+                      <Badge variant="outline">{member.domain}</Badge>
+                      {member.trustScore !== null && (
+                        <Badge variant="secondary">{member.trustScore}/100</Badge>
+                      )}
+                    </div>
+
+                    <div className="text-sm font-medium mb-1 truncate">{member.title}</div>
+
+                    <div className="flex gap-4 text-sm text-muted-foreground">
+                      {member.priceEur && <span>{member.priceEur.toLocaleString()} €</span>}
+                      {member.areaM2 && <span>{member.areaM2} m²</span>}
+                      {member.rooms && <span>{member.rooms} cam</span>}
+                    </div>
+
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Added: {new Date(member.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <Link href={`/report/${member.id}`} target="_blank">
+                      <Button variant="outline" size="sm">
+                        View Report
+                      </Button>
+                    </Link>
+
+                    {member.sourceUrl && (
+                      <a href={member.sourceUrl} target="_blank" rel="noopener noreferrer">
+                        <Button variant="ghost" size="sm" className="w-full">
+                          View Source
+                        </Button>
+                      </a>
+                    )}
+
+                    {!member.isCanonical && (
+                      <form action="/api/admin/groups/set-canonical" method="POST">
+                        <input type="hidden" name="groupId" value={group.id} />
+                        <input type="hidden" name="sourceUrl" value={member.sourceUrl ?? ""} />
+                        <Button variant="secondary" size="sm" type="submit" className="w-full">
+                          Set Canonical
+                        </Button>
+                      </form>
+                    )}
+
+                    {members.length > 1 && (
+                      <form action="/api/admin/groups/split" method="POST">
+                        <input type="hidden" name="groupId" value={group.id} />
+                        <input type="hidden" name="analysisId" value={member.id} />
+                        <Button variant="destructive" size="sm" type="submit" className="w-full">
+                          Split Out
+                        </Button>
+                      </form>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

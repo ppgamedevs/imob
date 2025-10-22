@@ -84,6 +84,13 @@ export default async function ReportPage({ params }: Props) {
         .catch(() => null)
     : null;
 
+  const dedupGroup = analysis?.groupId
+    ? await prisma.dedupGroup.findUnique({
+        where: { id: analysis.groupId },
+        select: { canonicalUrl: true },
+      })
+    : null;
+
   const groupSources = analysis?.groupId
     ? await prisma.analysis
         .findMany({
@@ -105,6 +112,7 @@ export default async function ReportPage({ params }: Props) {
               url: a.sourceUrl ?? "",
               domain,
               createdAt: a.createdAt,
+              isCanonical: dedupGroup?.canonicalUrl === a.sourceUrl,
             };
           }),
         )
@@ -414,6 +422,11 @@ export default async function ReportPage({ params }: Props) {
                   >
                     {s.domain}
                   </a>
+                  {s.isCanonical && (
+                    <Badge variant="default" className="ml-1.5 text-xs">
+                      Recomandat
+                    </Badge>
+                  )}
                   {i < Math.min(3, groupSources.length - 1) && " • "}
                 </span>
               ))}
