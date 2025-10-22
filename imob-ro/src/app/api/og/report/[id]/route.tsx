@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 import { prisma } from "@/lib/db";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 export default async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
