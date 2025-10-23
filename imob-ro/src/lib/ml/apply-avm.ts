@@ -1,41 +1,39 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Prisma } from "@prisma/client";
 
-import { buildFeatureVector, getDefaultZoneData } from "@/lib/avm/features";
-import { predictRidge } from "@/lib/avm/model";
-import { getLatestModel } from "@/lib/avm/store";
 import { prisma } from "@/lib/db";
 import { computePriceBadge } from "@/lib/price-badge";
+import { buildFeatureVector } from "@/lib/avm/features";
+import { predictRidge } from "@/lib/avm/model";
+import { getLatestModel } from "@/lib/avm/store";
 
 import { estimateAvm } from "./avm";
 
 /**
- * Load zone data for ML model
+ * Load zone data for feature extraction
  */
 async function loadZoneData(areaSlug: string | null | undefined) {
-  if (!areaSlug) return getDefaultZoneData();
+  if (!areaSlug) {
+    return { medianEurM2: null, supply: null, demandScore: null };
+  }
 
   const latest = await prisma.areaDaily.findFirst({
     where: { areaSlug },
     orderBy: { date: "desc" },
-    select: {
-      medianEurM2: true,
-      supply: true,
-      demandScore: true,
-    },
+    select: { medianEurM2: true, supply: true, demandScore: true },
   });
 
-  if (!latest) return getDefaultZoneData();
-
   return {
-    medianEurM2: latest.medianEurM2 ?? 1800,
-    supply: latest.supply ?? 100,
-    demand: latest.demandScore ?? 0.5,
+    medianEurM2: latest?.medianEurM2 ?? null,
+    supply: latest?.supply ?? null,
+    demandScore: latest?.demandScore ?? null,
   };
 }
 
 export async function applyAvmToAnalysis(analysisId: string, features: any) {
   let res;
+
+  // Day 33: Feature flag to switch between ML and heuristic AVM
   const useML = process.env.AVM_MODEL === "ml";
 
   if (useML) {
@@ -45,11 +43,12 @@ export async function applyAvmToAnalysis(analysisId: string, features: any) {
     if (model) {
       try {
         // Build feature vector
-        const zoneData = await loadZoneData(features.areaSlug);
-        const x = buildFeatureVector(features, zoneData);
+        const areaSlug = features?.areaSlug || features?.area_slug;
+        const zoneData = await loadZoneData(areaSlug);
+        const featureVector = buildFeatureVector(features, zoneData);
 
         // Predict with ML model
-        const pred = predictRidge(model.weights, x);
+        const pred = predictRidge(model.weights, featureVector);
 
         res = {
           low: Math.round(pred.lower80),
@@ -63,25 +62,20 @@ export async function applyAvmToAnalysis(analysisId: string, features: any) {
             testMape: model.metrics.testMape,
           },
         };
-
-        console.log(`[AVM] ML prediction for ${analysisId}: ${res.mid} [${res.low}, ${res.high}]`);
-      } catch (error) {
-        console.error(`[AVM] ML prediction failed for ${analysisId}:`, error);
-        // Fallback to heuristic
+      } catch (error: any) {
+        console.error("[AVM] ML prediction failed, falling back to heuristic:", error.message);
+        // Fallback to heuristic if ML fails
         res = await estimateAvm(features);
-        res.explain.fallback = "ml-error";
-        res.explain.error = error instanceof Error ? error.message : String(error);
+        res.explain = { ...res.explain, fallback: "ml-error", error: error.message };
       }
     } else {
-      // No model available, fallback to heuristic
+      // No ML model available, fallback to heuristic
       res = await estimateAvm(features);
-      res.explain.fallback = "no-ml-model";
-      console.warn(`[AVM] No ML model available for ${analysisId}, using heuristic`);
+      res.explain = { ...res.explain, fallback: "no-ml-model" };
     }
   } else {
-    // Use heuristic (default)
+    // Use heuristic model (default)
     res = await estimateAvm(features);
-    res.explain.model = "heuristic-v1";
   }
 
   const asking = features?.priceEur ?? null;

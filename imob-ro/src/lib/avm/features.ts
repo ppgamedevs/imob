@@ -1,111 +1,127 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * AVM v2 Feature Engineering
- * Builds numeric feature vectors from FeatureSnapshot for ML models.
+ * Day 33: Feature extraction for ML-based AVM
+ * Builds numeric feature vector from FeatureSnapshot for ridge regression
  */
 
-export type ZoneData = {
-  medianEurM2: number;
-  supply: number;
-  demand: number;
-};
+const AREA_HASH_BUCKETS = 100;
 
 /**
- * Simple string hash function for area encoding
- * Maps string to integer for one-hot bucketing
+ * Simple string hash function for one-hot encoding areas
  */
-export function hashString(str: string): number {
+function hashString(s: string): number {
   let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
+  for (let i = 0; i < s.length; i++) {
+    hash = (hash << 5) - hash + s.charCodeAt(i);
     hash = hash & hash; // Convert to 32bit integer
   }
   return Math.abs(hash);
 }
 
 /**
- * Normalize numeric value to [0, 1] range
- * Handles null/undefined by returning defaultValue
+ * Normalize value to [0, 1] range given typical min/max
  */
-export function normalize(
-  value: number | null | undefined,
-  min: number,
-  max: number,
-  defaultValue = 0.5,
-): number {
-  if (value == null) return defaultValue;
-  if (max === min) return defaultValue;
-  const normalized = (value - min) / (max - min);
-  return Math.max(0, Math.min(1, normalized)); // Clamp to [0, 1]
+function normalize(value: number | null | undefined, min: number, max: number): number {
+  if (value == null || isNaN(value)) return 0.5; // Default middle value
+  const clamped = Math.max(min, Math.min(max, value));
+  if (max === min) return 0.5;
+  return (clamped - min) / (max - min);
 }
 
 /**
- * Build feature vector from normalized features and zone data
- * Returns array of ~110 numeric values for ML model input
- *
- * Feature structure:
- * - [0-99]: One-hot encoded area (100 buckets)
- * - [100]: Normalized area (m²)
- * - [101]: Normalized rooms
- * - [102]: Normalized year built
- * - [103]: Normalized distance to metro
- * - [104]: Condition score (already 0-1)
- * - [105]: Normalized zone median €/m²
- * - [106]: Normalized zone supply
- * - [107]: Normalized zone demand
- * - [108]: Floor level (normalized)
- * - [109]: Has balcony (0/1)
+ * Safe number conversion
  */
-export function buildFeatureVector(
-  features: {
-    areaSlug?: string | null;
-    areaM2?: number | null;
-    rooms?: number | null;
-    yearBuilt?: number | null;
-    distMetroM?: number | null;
-    conditionScore?: number | null;
-    level?: number | null;
-    hasBalcony?: boolean | null;
-  },
-  zoneData: ZoneData,
-): number[] {
+function toNumber(val: any, defaultVal = 0): number {
+  if (val == null) return defaultVal;
+  const n = Number(val);
+  return isNaN(n) ? defaultVal : n;
+}
+
+/**
+ * Zone data structure (from loadZone or AreaDaily)
+ */
+export type ZoneData = {
+  medianEurM2?: number | null;
+  supply?: number | null;
+  demandScore?: number | null;
+};
+
+/**
+ * Build feature vector for ML model
+ * Returns array of ~110 features:
+ * - 100 one-hot encoded area buckets
+ * - 5 normalized property features
+ * - 3 zone market context features
+ */
+export function buildFeatureVector(features: any, zoneData: ZoneData = {}): number[] {
   const vector: number[] = [];
 
-  // 1. One-hot encoding for area (100 buckets to reduce dimensionality)
-  const areaHash = features.areaSlug ? hashString(features.areaSlug) % 100 : 0;
-  for (let i = 0; i < 100; i++) {
+  // 1. One-hot encoding for area (100 buckets)
+  const areaSlug = features?.areaSlug || features?.area_slug || "";
+  const areaHash = areaSlug ? hashString(areaSlug) % AREA_HASH_BUCKETS : 0;
+
+  for (let i = 0; i < AREA_HASH_BUCKETS; i++) {
     vector.push(i === areaHash ? 1 : 0);
   }
 
-  // 2. Numeric features (normalized to [0, 1])
+  // 2. Normalized property features
+  const areaM2 = toNumber(features?.areaM2 || features?.area_m2);
+  const rooms = toNumber(features?.rooms || features?.room_count);
+  const yearBuilt = toNumber(features?.yearBuilt || features?.year_built);
+  const distMetroM = toNumber(features?.distMetroM || features?.dist_metro_m);
+  const conditionScore = toNumber(features?.conditionScore || features?.condition_score, 0.5);
+
   vector.push(
-    // Property characteristics
-    normalize(features.areaM2, 20, 200, 0.4), // Typical range: 20-200 m²
-    normalize(features.rooms, 1, 5, 0.5), // Typical: 1-5 rooms
-    normalize(features.yearBuilt, 1950, 2024, 0.6), // Built after 1950
-    normalize(features.distMetroM, 0, 2000, 0.5), // Within 2km
-    features.conditionScore ?? 0.5, // Already 0-1
-
-    // Zone market data
-    normalize(zoneData.medianEurM2, 1000, 3000, 0.6), // Bucharest range
-    normalize(zoneData.supply, 0, 500, 0.3), // Supply count
-    normalize(zoneData.demand, 0, 1, 0.5), // Demand score
-
-    // Additional features
-    normalize(features.level, -1, 10, 0.4), // Floor: basement to 10th
-    features.hasBalcony ? 1 : 0, // Binary feature
+    normalize(areaM2, 20, 200), // Typical range: 20-200 m²
+    normalize(rooms, 1, 5), // 1-5 rooms
+    normalize(yearBuilt, 1950, 2024), // Built between 1950-2024
+    normalize(distMetroM, 0, 2000), // 0-2000m from metro
+    normalize(conditionScore, 0, 1), // Already 0-1 but ensure it
   );
 
-  return vector; // Total: 110 features
+  // 3. Zone market context features
+  const medianEurM2 = toNumber(zoneData.medianEurM2);
+  const supply = toNumber(zoneData.supply);
+  const demandScore = toNumber(zoneData.demandScore, 0.5);
+
+  vector.push(
+    normalize(medianEurM2, 1000, 3000), // Typical Bucharest range: 1000-3000 €/m²
+    normalize(supply, 0, 500), // Supply count 0-500
+    normalize(demandScore, 0, 1), // Demand score 0-1
+  );
+
+  return vector;
 }
 
 /**
- * Get default zone data when real data unavailable
+ * Get expected feature vector length (for validation)
  */
-export function getDefaultZoneData(): ZoneData {
-  return {
-    medianEurM2: 1800, // Bucharest average
-    supply: 100,
-    demand: 0.5,
-  };
+export function getFeatureVectorLength(): number {
+  return AREA_HASH_BUCKETS + 5 + 3; // 108 total features
+}
+
+/**
+ * Feature names for debugging/interpretation
+ */
+export function getFeatureNames(): string[] {
+  const names: string[] = [];
+
+  // Area buckets
+  for (let i = 0; i < AREA_HASH_BUCKETS; i++) {
+    names.push(`area_hash_${i}`);
+  }
+
+  // Property features
+  names.push(
+    "area_m2_norm",
+    "rooms_norm",
+    "year_built_norm",
+    "dist_metro_m_norm",
+    "condition_score_norm",
+  );
+
+  // Zone features
+  names.push("zone_median_eur_m2_norm", "zone_supply_norm", "zone_demand_score_norm");
+
+  return names;
 }

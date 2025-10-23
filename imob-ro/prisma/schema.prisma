@@ -258,7 +258,7 @@ model AreaDaily {
   @@index([date])
 }
 
-// ML model snapshots for AVM, TTS, Rent predictions
+// Day 33: ML model persistence with versioning
 model ModelSnapshot {
   id        String   @id @default(cuid())
   kind      String   // "avm", "tts", "rent"

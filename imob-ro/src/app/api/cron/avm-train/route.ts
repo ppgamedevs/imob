@@ -1,67 +1,61 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
- * AVM v2 Training Cron
- * Trains ridge regression model on last 90 days of analysis data
- * Schedule: Nightly at 2 AM UTC
+ * Day 33: AVM Training Cron Endpoint
+ * Trains ridge regression model nightly on 90-day historical data
+ * GET /api/cron/avm-train
  */
 
 import { NextResponse } from "next/server";
-
-import { buildFeatureVector, getDefaultZoneData } from "@/lib/avm/features";
-import { evaluateRidge, trainRidge } from "@/lib/avm/model";
-import { getLatestModel, saveModel } from "@/lib/avm/store";
 import { prisma } from "@/lib/db";
-
-type TrainingPair = {
-  x: number[];
-  y: number;
-};
+import { buildFeatureVector } from "@/lib/avm/features";
+import { trainRidge, evaluateModel } from "@/lib/avm/model";
+import { saveModel, getLatestModel } from "@/lib/avm/store";
 
 /**
- * Shuffle array in place (Fisher-Yates)
+ * Shuffle array using Fisher-Yates algorithm
  */
 function shuffle<T>(array: T[]): T[] {
-  const arr = [...array];
-  for (let i = arr.length - 1; i > 0; i--) {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  return arr;
+  return shuffled;
 }
 
 /**
- * Load zone data for area
+ * Load zone data for a given area slug
  */
 async function loadZoneData(areaSlug: string | null | undefined) {
-  if (!areaSlug) return getDefaultZoneData();
+  if (!areaSlug) {
+    return { medianEurM2: null, supply: null, demandScore: null };
+  }
 
   const latest = await prisma.areaDaily.findFirst({
     where: { areaSlug },
     orderBy: { date: "desc" },
-    select: {
-      medianEurM2: true,
-      supply: true,
-      demandScore: true,
-    },
+    select: { medianEurM2: true, supply: true, demandScore: true },
   });
 
-  if (!latest) return getDefaultZoneData();
-
   return {
-    medianEurM2: latest.medianEurM2 ?? 1800,
-    supply: latest.supply ?? 100,
-    demand: latest.demandScore ?? 0.5,
+    medianEurM2: latest?.medianEurM2 ?? null,
+    supply: latest?.supply ?? null,
+    demandScore: latest?.demandScore ?? null,
   };
 }
 
 export async function GET() {
   try {
-    // 1. Load training data (last 90 days)
+    const startTime = Date.now();
+
+    // 1. Pull last 90 days of completed analyses with features
     const cutoffDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
 
     const analyses = await prisma.analysis.findMany({
       where: {
         status: "done",
         createdAt: { gte: cutoffDate },
+        featureSnapshot: { isNot: null },
       },
       include: {
         featureSnapshot: true,
@@ -71,205 +65,169 @@ export async function GET() {
               where: { status: "done" },
               orderBy: { createdAt: "desc" },
               take: 1,
-              include: {
-                scoreSnapshot: true,
-              },
+              include: { scoreSnapshot: true },
             },
           },
         },
       },
-      take: 10000, // Limit to prevent memory issues
+      take: 10000, // Limit to avoid overwhelming query
     });
 
-    console.log(`[AVM Training] Loaded ${analyses.length} analyses from last 90 days`);
+    console.log(`[AVM-Train] Found ${analyses.length} analyses in last 90 days`);
 
-    // 2. Build feature matrix X and target vector y
-    const pairs: TrainingPair[] = [];
-    const skipped = { noFeatures: 0, noTarget: 0, invalidFeatures: 0 };
+    // 2. Build training pairs (features, target)
+    const pairs: Array<{ x: number[]; y: number }> = [];
 
-    for (const a of analyses) {
-      if (!a.featureSnapshot) {
-        skipped.noFeatures++;
-        continue;
-      }
+    for (const analysis of analyses) {
+      const features = analysis.featureSnapshot?.features as any;
+      if (!features) continue;
 
-      const features = a.featureSnapshot.features as {
-        areaSlug?: string;
-        areaM2?: number;
-        rooms?: number;
-        yearBuilt?: number;
-        distMetroM?: number;
-        conditionScore?: number;
-        level?: number;
-        hasBalcony?: boolean;
-        priceEur?: number;
-      };
+      // Target: actual priceEur (asking price)
+      // Fallback: group median estimate × area (if no price available)
+      let target = features.priceEur || features.price_eur;
 
-      // Determine target: asking price OR group median proxy
-      let target = features.priceEur;
       if (!target || target <= 0) {
-        // Try group median proxy
-        const groupAnalysis = a.group?.analyses?.[0];
-        const groupAvmMid = groupAnalysis?.scoreSnapshot?.avmMid;
-        if (groupAvmMid && features.areaM2) {
-          target = groupAvmMid; // Use existing AVM estimate as proxy
-        }
-      }
+        // Try to use group's existing AVM estimate as proxy
+        const groupAnalysis = analysis.group?.analyses?.[0];
+        const avmMid = groupAnalysis?.scoreSnapshot?.avmMid;
+        const areaM2 = features.areaM2 || features.area_m2;
 
-      if (!target || target <= 0 || target > 10_000_000) {
-        skipped.noTarget++;
-        continue;
+        if (avmMid && areaM2 && areaM2 > 0) {
+          target = avmMid;
+        } else {
+          continue; // Skip if no valid target
+        }
       }
 
       // Build feature vector
-      try {
-        const zoneData = await loadZoneData(features.areaSlug);
-        const x = buildFeatureVector(features, zoneData);
+      const areaSlug = features.areaSlug || features.area_slug;
+      const zoneData = await loadZoneData(areaSlug);
+      const featureVector = buildFeatureVector(features, zoneData);
 
-        if (x.length !== 110) {
-          skipped.invalidFeatures++;
-          continue;
-        }
-
-        // Validate features are numeric
-        if (x.some((val) => isNaN(val) || !isFinite(val))) {
-          skipped.invalidFeatures++;
-          continue;
-        }
-
-        pairs.push({ x, y: target });
-      } catch {
-        skipped.invalidFeatures++;
+      // Validate feature vector
+      if (featureVector.length !== 108) {
+        console.warn(`[AVM-Train] Invalid feature vector length: ${featureVector.length}`);
         continue;
       }
+
+      // Validate target (remove extreme outliers)
+      if (target < 10000 || target > 1000000) {
+        continue; // Unrealistic prices for Bucharest
+      }
+
+      pairs.push({ x: featureVector, y: target });
     }
 
-    console.log(
-      `[AVM Training] Built ${pairs.length} training pairs (skipped: ${JSON.stringify(skipped)})`,
-    );
+    console.log(`[AVM-Train] Built ${pairs.length} valid training pairs`);
 
-    // Check minimum samples
+    // 3. Check minimum data requirement
     if (pairs.length < 1000) {
-      return NextResponse.json(
-        {
-          error: "Insufficient training data",
-          samples: pairs.length,
-          required: 1000,
-          skipped,
-        },
-        { status: 400 },
-      );
+      return NextResponse.json({
+        error: "Insufficient training data",
+        samples: pairs.length,
+        required: 1000,
+      });
     }
 
-    // 3. Split 80/20 train/test
+    // 4. Split 80/20 train/test
     const shuffled = shuffle(pairs);
-    const splitIdx = Math.floor(shuffled.length * 0.8);
-    const trainPairs = shuffled.slice(0, splitIdx);
-    const testPairs = shuffled.slice(splitIdx);
+    const splitIndex = Math.floor(shuffled.length * 0.8);
+    const trainPairs = shuffled.slice(0, splitIndex);
+    const testPairs = shuffled.slice(splitIndex);
 
-    const trainX = trainPairs.map((p) => p.x);
-    const trainY = trainPairs.map((p) => p.y);
-    const testX = testPairs.map((p) => p.x);
-    const testY = testPairs.map((p) => p.y);
+    const X_train = trainPairs.map((p) => p.x);
+    const y_train = trainPairs.map((p) => p.y);
+    const X_test = testPairs.map((p) => p.x);
+    const y_test = testPairs.map((p) => p.y);
 
-    console.log(`[AVM Training] Split: ${trainPairs.length} train, ${testPairs.length} test`);
+    console.log(`[AVM-Train] Train: ${X_train.length}, Test: ${X_test.length}`);
 
-    // 4. Train ridge regression
-    const startTime = Date.now();
-    const model = trainRidge(trainX, trainY, 1.0); // λ = 1.0
-    const trainTime = Date.now() - startTime;
-
-    console.log(
-      `[AVM Training] Trained in ${trainTime}ms - Train MAE: ${model.mae.toFixed(0)}, MAPE: ${model.mape.toFixed(2)}%`,
-    );
-
-    // 5. Evaluate on test set
-    const testMetrics = evaluateRidge(model, testX, testY);
+    // 5. Train ridge regression
+    const lambda = 1.0; // Regularization strength
+    const { model, metrics: trainMetrics } = trainRidge(X_train, y_train, lambda);
 
     console.log(
-      `[AVM Training] Test MAE: ${testMetrics.mae.toFixed(0)}, MAPE: ${testMetrics.mape.toFixed(2)}%, Coverage: ${(testMetrics.coverage80 * 100).toFixed(1)}%`,
+      `[AVM-Train] Training complete - MAE: ${trainMetrics.mae.toFixed(0)}, MAPE: ${trainMetrics.mape.toFixed(2)}%`,
     );
 
-    // 6. Check if model is better than previous
+    // 6. Evaluate on test set
+    const testMetrics = evaluateModel(model, X_test, y_test);
+
+    console.log(
+      `[AVM-Train] Test metrics - MAE: ${testMetrics.mae.toFixed(0)}, MAPE: ${testMetrics.mape.toFixed(2)}%, Coverage: ${(testMetrics.coverage80 * 100).toFixed(1)}%`,
+    );
+
+    // 7. Check if better than previous model
     const prevModel = await getLatestModel("avm");
-    const shouldSave =
-      !prevModel || testMetrics.mae < ((prevModel.metrics.testMae as number) ?? Infinity);
+    const prevTestMae = prevModel?.metrics?.testMae ?? Infinity;
 
-    if (shouldSave) {
-      const saved = await saveModel("avm", model, {
-        mae: model.mae,
-        mape: model.mape,
-        rmse: model.rmse,
+    let saved = false;
+    let version = prevModel?.version ?? 0;
+
+    if (testMetrics.mae < prevTestMae || !prevModel) {
+      // Save new model
+      const stored = await saveModel("avm", model, {
+        ...trainMetrics,
         testMae: testMetrics.mae,
         testMape: testMetrics.mape,
+        testRmse: testMetrics.rmse,
         coverage80: testMetrics.coverage80,
-        samples: pairs.length,
-        trainSamples: trainPairs.length,
-        testSamples: testPairs.length,
+        trainSamples: X_train.length,
+        testSamples: X_test.length,
+        lambda,
       });
 
-      console.log(`[AVM Training] Saved model version ${saved.version}`);
+      saved = true;
+      version = stored.version;
 
-      return NextResponse.json({
-        success: true,
-        saved: true,
-        version: saved.version,
-        metrics: {
-          trainMae: model.mae,
-          trainMape: model.mape,
-          testMae: testMetrics.mae,
-          testMape: testMetrics.mape,
-          coverage80: testMetrics.coverage80,
-        },
-        samples: {
-          total: pairs.length,
-          train: trainPairs.length,
-          test: testPairs.length,
-        },
-        trainTime,
-        improvement:
-          prevModel && prevModel.metrics.testMae
-            ? (
-                (((prevModel.metrics.testMae as number) - testMetrics.mae) /
-                  (prevModel.metrics.testMae as number)) *
-                100
-              ).toFixed(1) + "%"
-            : "N/A",
-      });
+      console.log(
+        `[AVM-Train] Model v${version} saved (MAE improved: ${prevTestMae.toFixed(0)} → ${testMetrics.mae.toFixed(0)})`,
+      );
     } else {
       console.log(
-        `[AVM Training] Model not saved - test MAE ${testMetrics.mae.toFixed(0)} >= previous ${prevModel?.metrics.testMae}`,
+        `[AVM-Train] Model not saved (MAE did not improve: ${testMetrics.mae.toFixed(0)} >= ${prevTestMae.toFixed(0)})`,
       );
-
-      return NextResponse.json({
-        success: true,
-        saved: false,
-        reason: "No improvement over previous model",
-        metrics: {
-          trainMae: model.mae,
-          trainMape: model.mape,
-          testMae: testMetrics.mae,
-          testMape: testMetrics.mape,
-          coverage80: testMetrics.coverage80,
-        },
-        previous: {
-          version: prevModel?.version,
-          testMae: prevModel?.metrics.testMae,
-        },
-        samples: {
-          total: pairs.length,
-          train: trainPairs.length,
-          test: testPairs.length,
-        },
-        trainTime,
-      });
     }
-  } catch (error) {
-    console.error("[AVM Training] Error:", error);
+
+    const duration = Date.now() - startTime;
+
+    return NextResponse.json({
+      success: true,
+      trained: true,
+      saved,
+      version,
+      duration: `${(duration / 1000).toFixed(1)}s`,
+      data: {
+        samples: pairs.length,
+        trainSamples: X_train.length,
+        testSamples: X_test.length,
+      },
+      train: {
+        mae: Math.round(trainMetrics.mae),
+        mape: parseFloat(trainMetrics.mape.toFixed(2)),
+        rmse: Math.round(trainMetrics.rmse),
+      },
+      test: {
+        mae: Math.round(testMetrics.mae),
+        mape: parseFloat(testMetrics.mape.toFixed(2)),
+        rmse: Math.round(testMetrics.rmse),
+        coverage80: parseFloat((testMetrics.coverage80 * 100).toFixed(1)),
+      },
+      previous: prevModel
+        ? {
+            version: prevModel.version,
+            testMae: Math.round(prevModel.metrics.testMae ?? 0),
+          }
+        : null,
+    });
+  } catch (error: any) {
+    console.error("[AVM-Train] Error:", error);
+
     return NextResponse.json(
       {
-        error: "Training failed",
-        message: error instanceof Error ? error.message : String(error),
+        success: false,
+        error: error.message || "Training failed",
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
       },
       { status: 500 },
     );
