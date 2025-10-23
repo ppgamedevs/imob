@@ -36,16 +36,19 @@ export default async function ComparePage({ params }: ComparePageProps) {
 
   const groupIds = compareSet.groupIds.split(",").filter(Boolean);
 
-  // Fetch groups with canonical analysis
+  // Fetch groups with canonical analysis (via analyses relation)
   const groups = await prisma.dedupGroup.findMany({
     where: { id: { in: groupIds } },
     include: {
-      canonicalAnalysis: {
+      analyses: {
+        where: { status: "done" },
         include: {
           featureSnapshot: true,
           scoreSnapshot: true,
           extractedListing: true,
         },
+        orderBy: { createdAt: "desc" },
+        take: 1,
       },
       snapshots: {
         orderBy: { createdAt: "desc" },
@@ -65,14 +68,16 @@ export default async function ComparePage({ params }: ComparePageProps) {
 
   // Helper to extract features
   function getFeatures(group: (typeof groups)[0]) {
-    const f = (group.canonicalAnalysis?.featureSnapshot?.features ?? {}) as any;
-    const s = group.canonicalAnalysis?.scoreSnapshot as any;
-    const photos = Array.isArray(group.canonicalAnalysis?.extractedListing?.photos)
-      ? (group.canonicalAnalysis?.extractedListing?.photos as string[])
+    // Use first analysis from the group (ordered by createdAt desc)
+    const analysis = group.analyses[0];
+    const f = (analysis?.featureSnapshot?.features ?? {}) as any;
+    const s = analysis?.scoreSnapshot as any;
+    const photos = Array.isArray(analysis?.extractedListing?.photos)
+      ? (analysis?.extractedListing?.photos as string[])
       : [];
 
     return {
-      title: group.canonicalAnalysis?.extractedListing?.title ?? "N/A",
+      title: analysis?.extractedListing?.title ?? "N/A",
       photo: photos[0] ?? null,
       priceEur: f?.priceEur ?? null,
       areaM2: f?.areaM2 ?? null,
