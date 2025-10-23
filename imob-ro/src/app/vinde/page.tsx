@@ -12,7 +12,12 @@ export const metadata: Metadata = {
   },
 };
 
-export default function VindePage({ searchParams }: { searchParams: { areaSlug?: string } }) {
+export default async function VindePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ areaSlug?: string }>;
+}) {
+  const { areaSlug } = await searchParams;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -81,7 +86,7 @@ export default function VindePage({ searchParams }: { searchParams: { areaSlug?:
         </div>
 
         {/* Wizard */}
-        <OwnerWizard initialArea={searchParams.areaSlug} />
+        <OwnerWizard initialArea={areaSlug} />
 
         {/* Trust signals */}
         <div className="mt-12 text-center">

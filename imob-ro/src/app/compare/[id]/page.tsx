@@ -12,10 +12,11 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 type ComparePageProps = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export default async function ComparePage({ params }: ComparePageProps) {
+  const { id } = await params;
   const session = await auth();
   if (!session?.user?.id) {
     return (
@@ -58,7 +59,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
     data: {
       userId: session.user.id,
       kind: "compare_open",
-      meta: { compareId: params.id, count: groups.length } as any,
+      meta: { compareId: id, count: groups.length } as any,
     },
   });
 

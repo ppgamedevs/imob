@@ -12,10 +12,10 @@ export const metadata = {
 export default async function AdminGroupsPage({
   searchParams,
 }: {
-  searchParams: { city?: string; minSize?: string };
+  searchParams: Promise<{ city?: string; minSize?: string }>;
 }) {
-  const city = searchParams.city ?? undefined;
-  const minSize = searchParams.minSize ? parseInt(searchParams.minSize) : 2;
+  const { city, minSize: minSizeParam } = await searchParams;
+  const minSize = minSizeParam ? parseInt(minSizeParam) : 2;
 
   // Fetch groups with member count
   const groups = await prisma.dedupGroup.findMany({
@@ -89,7 +89,7 @@ export default async function AdminGroupsPage({
                 className="border rounded px-3 py-1"
                 value={city ?? ""}
                 onChange={(e) => {
-                  const params = new URLSearchParams(searchParams);
+                  const params = new URLSearchParams({ city: city ?? "", minSize: minSizeParam ?? "" });
                   if (e.target.value) {
                     params.set("city", e.target.value);
                   } else {
@@ -114,7 +114,7 @@ export default async function AdminGroupsPage({
                 className="border rounded px-3 py-1 w-20"
                 value={minSize}
                 onChange={(e) => {
-                  const params = new URLSearchParams(searchParams);
+                  const params = new URLSearchParams({ city: city ?? "", minSize: minSizeParam ?? "" });
                   params.set("minSize", e.target.value);
                   window.location.href = `/admin/groups?${params.toString()}`;
                 }}

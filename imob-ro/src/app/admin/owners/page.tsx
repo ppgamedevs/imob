@@ -14,9 +14,10 @@ export const metadata = {
 export default async function AdminOwnersPage({
   searchParams,
 }: {
-  searchParams: { status?: string };
+  searchParams: Promise<{ status?: string }>;
 }) {
-  const statusFilter = searchParams.status ?? undefined;
+  const { status } = await searchParams;
+  const statusFilter = status ?? undefined;
 
   const leads = await prisma.ownerLead.findMany({
     where: statusFilter ? { status: statusFilter } : {},

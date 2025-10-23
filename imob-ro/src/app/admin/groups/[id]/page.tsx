@@ -6,9 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
 
-export default async function AdminGroupDetailPage({ params }: { params: { id: string } }) {
+export default async function AdminGroupDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
   const group = await prisma.dedupGroup.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       analyses: {
         include: {

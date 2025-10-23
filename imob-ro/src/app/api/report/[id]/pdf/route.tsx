@@ -14,7 +14,11 @@ function bool(q: URLSearchParams, key: string, def = true) {
 
 export const runtime = "nodejs";
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   // Day 23 - Check PDF generation limit
   const session = await auth();
   if (session?.user?.id) {
@@ -33,7 +37,8 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
     }
   }
 
-  const data = await loadPdfReportData(params.id);
+  // Load data for PDF generation
+  const data = await loadPdfReportData(id);
   if (!data) return NextResponse.json({ ok: false, error: "not_found" }, { status: 404 });
 
   const url = new URL(req.url);
@@ -66,8 +71,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   return new NextResponse(stream as unknown as ReadableStream, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="report-${params.id}.pdf"`,
-      "Cache-Control": "no-store",
+      "Content-Disposition": `inline; filename="report-${id}.pdf"`,
     },
   });
 }

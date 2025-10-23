@@ -4,9 +4,13 @@ import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   const lead = await prisma.ownerLead.findUnique({
-    where: { id: params.id },
+    where: { id },
   });
 
   if (!lead) {
