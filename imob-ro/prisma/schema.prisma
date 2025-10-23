@@ -815,3 +815,50 @@ model OwnerLeadEvent {
 
   @@index([leadId, ts])
 }
+
+// ========================================
+// Day 29: Buyer Portal Models
+// ========================================
+
+model SavedSearch {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String?
+  queryJson   Json      // SavedQuery schema validated (filters + sort + budget)
+  lastRunAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([userId, updatedAt])
+}
+
+model WatchItem {
+  id          String   @id @default(cuid())
+  userId      String
+  groupId     String
+  createdAt   DateTime  @default(now())
+  note        String?
+  
+  @@unique([userId, groupId])
+  @@index([userId, createdAt])
+}
+
+model CompareSet {
+  id          String   @id @default(cuid())
+  userId      String
+  groupIds    String   // CSV v1 (rapid); v2 -> Json
+  createdAt   DateTime  @default(now())
+  name        String?
+  
+  @@index([userId, createdAt])
+}
+
+model BuyerEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  kind      String   // "saved_search_run" | "watch_price_drop" | "compare_open" | "mortgage_calc"
+  meta      Json?
+  ts        DateTime @default(now())
+  
+  @@index([userId, ts])
+}

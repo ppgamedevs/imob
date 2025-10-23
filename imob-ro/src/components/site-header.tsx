@@ -15,12 +15,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { auth, signOut } from "@/lib/auth";
 import { getSubscription } from "@/lib/billing/entitlements";
 
-const navLinks = [
-  { href: "/", label: "Acasă" },
-  { href: "/search", label: "Căutare" },
-  { href: "/vinde", label: "Vinde locuința" },
-  { href: "/dashboard", label: "Dashboard" },
-];
+  const navLinks = [
+    { href: "/", label: "Acasă" },
+    { href: "/search", label: "Căutare" },
+    { href: "/discover", label: "Discover" },
+    { href: "/me/buyer", label: "Portal Cumpărător" },
+    { href: "/dashboard", label: "Dashboard" },
+    { href: "/vinde", label: "Vinde locuința" },
+  ];
 
 export async function SiteHeader() {
   const session = await auth();
