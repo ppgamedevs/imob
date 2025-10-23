@@ -767,3 +767,51 @@ model UrlCache {
   lastMod   String?
   updatedAt DateTime @updatedAt
 }
+
+// Day 28 - Owner Pricing Wizard & Lead Magnet
+model OwnerLead {
+  id          String   @id @default(cuid())
+  userId      String?  // if logged in
+  email       String?
+  phone       String?
+  // owner input (normalized, 100% voluntary)
+  city        String   @default("București")
+  areaSlug    String?
+  addressHint String?
+  lat         Float?
+  lng         Float?
+  rooms       Float?
+  areaM2      Float?
+  yearBuilt   Int?
+  conditionScore Float?  // if checked "needs/ok/modern"
+  notes       String?
+  // calculations
+  avmLow      Int?
+  avmMid      Int?
+  avmHigh     Int?
+  ttsBucket   String?
+  estRent     Int?
+  yieldNet    Float?
+  priceSuggested Int?
+  // funnel states
+  status      String   @default("new") // new|contacted|won|lost
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  events      OwnerLeadEvent[]
+
+  @@index([status, createdAt])
+  @@index([city, areaSlug])
+}
+
+model OwnerLeadEvent {
+  id        String   @id @default(cuid())
+  leadId    String
+  kind      String   // view|submit|calc|pdf|share
+  meta      Json?
+  ts        DateTime @default(now())
+
+  lead      OwnerLead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId, ts])
+}

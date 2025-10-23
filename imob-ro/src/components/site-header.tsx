@@ -18,6 +18,7 @@ import { getSubscription } from "@/lib/billing/entitlements";
 const navLinks = [
   { href: "/", label: "Acasă" },
   { href: "/search", label: "Căutare" },
+  { href: "/vinde", label: "Vinde locuința" },
   { href: "/dashboard", label: "Dashboard" },
 ];
 
