@@ -23,22 +23,22 @@ function isDisallowedDomain(urlStr: string) {
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const ip = getClientIp(req);
-  
+
   // Enhanced rate limiting: 30 requests/minute for analyze endpoint
-  if (!allowRequest(ip, 'analyze')) {
+  if (!allowRequest(ip, "analyze")) {
     try {
       await (prisma as any).apiAudit.create({
         data: {
           ip,
           endpoint: "/api/analyze/client-push",
           action: "rate_limited",
-          details: { limitType: 'analyze' },
+          details: { limitType: "analyze" },
         },
       });
     } catch {}
-    return createRateLimitResponse(ip, 'analyze');
+    return createRateLimitResponse(ip, "analyze");
   }
-  
+
   const originUrl = body?.originUrl;
   if (typeof originUrl === "string" && isDisallowedDomain(originUrl)) {
     try {
@@ -65,19 +65,19 @@ export async function POST(req: Request) {
 
   // Check for existing analysis with same content hash (idempotency)
   const existingByHash = await prisma.analysis.findFirst({
-    where: { 
+    where: {
       contentHash,
-      status: { in: ['done', 'extracting', 'normalizing', 'scoring'] } // Skip failed/queued
+      status: { in: ["done", "extracting", "normalizing", "scoring"] }, // Skip failed/queued
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
   });
 
   if (existingByHash) {
     // Content already processed, return existing analysis ID
-    return NextResponse.json({ 
-      analysisId: existingByHash.id, 
+    return NextResponse.json({
+      analysisId: existingByHash.id,
       cached: true,
-      reason: 'duplicate_content'
+      reason: "duplicate_content",
     });
   }
 
@@ -88,23 +88,23 @@ export async function POST(req: Request) {
   });
 
   if (!analysis) {
-    analysis = await prisma.analysis.create({ 
-      data: { 
-        sourceUrl: norm, 
+    analysis = await prisma.analysis.create({
+      data: {
+        sourceUrl: norm,
         canonicalUrl: norm, // Set canonical URL to normalized URL initially
         contentHash,
-        status: "queued" 
-      } 
+        status: "queued",
+      },
     });
   } else {
     // Update content hash on existing analysis
     analysis = await prisma.analysis.update({
       where: { id: analysis.id },
-      data: { 
+      data: {
         contentHash,
         canonicalUrl: norm,
-        updatedAt: new Date()
-      }
+        updatedAt: new Date(),
+      },
     });
   }
 

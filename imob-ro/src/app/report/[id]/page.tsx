@@ -47,6 +47,7 @@ async function loadAnalysis(id: string) {
       extractedListing: true,
       featureSnapshot: true,
       scoreSnapshot: true,
+      group: true, // Include group for areaSlug
     },
   });
 }
@@ -69,10 +70,7 @@ export default async function ReportPage({ params }: Props) {
   // Load tile data for area intelligence (Day 34)
   let tileData: TileCell | null = null;
   if (analysis?.extractedListing?.lat && analysis?.extractedListing?.lng) {
-    tileData = await getNearestCell(
-      analysis.extractedListing.lat,
-      analysis.extractedListing.lng
-    );
+    tileData = await getNearestCell(analysis.extractedListing.lat, analysis.extractedListing.lng);
   }
 
   // Load duplicate siblings (Day 19)
@@ -578,22 +576,30 @@ export default async function ReportPage({ params }: Props) {
                     <div className="text-sm space-y-1 text-muted-foreground">
                       <div className="flex justify-between">
                         <span>Metro:</span>
-                        <span className="font-medium text-foreground">{tileData.nearestMetro} ({Math.round(tileData.distMetroM)}m)</span>
+                        <span className="font-medium text-foreground">
+                          {tileData.nearestMetro} ({Math.round(tileData.distMetroM)}m)
+                        </span>
                       </div>
                       {(tileData.poiCounts.schools > 0 || tileData.poiCounts.supermarkets > 0) && (
                         <div className="flex justify-between">
                           <span>Facilități:</span>
                           <span className="font-medium text-foreground">
-                            {tileData.poiCounts.schools > 0 && `${tileData.poiCounts.schools} școli`}
-                            {tileData.poiCounts.schools > 0 && tileData.poiCounts.supermarkets > 0 && ', '}
-                            {tileData.poiCounts.supermarkets > 0 && `${tileData.poiCounts.supermarkets} magazine`}
+                            {tileData.poiCounts.schools > 0 &&
+                              `${tileData.poiCounts.schools} școli`}
+                            {tileData.poiCounts.schools > 0 &&
+                              tileData.poiCounts.supermarkets > 0 &&
+                              ", "}
+                            {tileData.poiCounts.supermarkets > 0 &&
+                              `${tileData.poiCounts.supermarkets} magazine`}
                           </span>
                         </div>
                       )}
                       {tileData.medianEurM2 && (
                         <div className="flex justify-between">
                           <span>Zonă avg:</span>
-                          <span className="font-medium text-foreground">€{tileData.medianEurM2}/m²</span>
+                          <span className="font-medium text-foreground">
+                            €{tileData.medianEurM2}/m²
+                          </span>
                         </div>
                       )}
                     </div>

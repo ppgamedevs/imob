@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
             "Access-Control-Allow-Methods": "GET",
             "Access-Control-Allow-Headers": "x-api-key",
           },
-        }
+        },
       );
     }
 
@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
           headers: {
             "Access-Control-Allow-Origin": "*",
           },
-        }
+        },
       );
     }
 
@@ -96,7 +96,7 @@ export async function GET(req: NextRequest) {
           headers: {
             "Access-Control-Allow-Origin": "*",
           },
-        }
+        },
       );
     }
 
@@ -132,7 +132,7 @@ export async function GET(req: NextRequest) {
           headers: {
             "Access-Control-Allow-Origin": "*",
           },
-        }
+        },
       );
     }
 
@@ -174,7 +174,7 @@ export async function GET(req: NextRequest) {
         headers: {
           "Access-Control-Allow-Origin": "*",
         },
-      }
+      },
     );
   }
 }

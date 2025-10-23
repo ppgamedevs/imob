@@ -121,7 +121,7 @@ export async function GET() {
       });
 
       // Trigger analysis pipeline (normalize → score)
-      await startAnalysis(analysis.id);
+      await startAnalysis(analysis.id, norm);
 
       // Mark job as done
       await markDone({

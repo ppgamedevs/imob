@@ -1,12 +1,12 @@
 /**
  * Day 34: Build Area Intelligence Tiles
- * 
+ *
  * Generates precomputed 250m grid tiles over Bucharest with:
  * - Distance to nearest metro station
  * - POI counts (schools, supermarkets, parks, restaurants)
  * - Weighted median €/m² from AreaDaily
  * - Composite intelligence score
- * 
+ *
  * Output: JSON tiles in public/data/tiles/bucharest-z14/
  */
 
@@ -22,7 +22,7 @@ const prisma = new PrismaClient();
 const BUCHAREST_BOUNDS = {
   north: 44.55,
   south: 44.35,
-  west: 26.00,
+  west: 26.0,
   east: 26.25,
 };
 
@@ -76,19 +76,10 @@ function generateGridCells(): Array<{ lat: number; lng: number }> {
   // Calculate step size in degrees (approximate)
   const latStep = CELL_SIZE_M / 111320; // 1 degree lat ≈ 111.32 km
   const avgLat = (BUCHAREST_BOUNDS.north + BUCHAREST_BOUNDS.south) / 2;
-  const lngStep =
-    CELL_SIZE_M / (111320 * Math.cos((avgLat * Math.PI) / 180));
+  const lngStep = CELL_SIZE_M / (111320 * Math.cos((avgLat * Math.PI) / 180));
 
-  for (
-    let lat = BUCHAREST_BOUNDS.south;
-    lat < BUCHAREST_BOUNDS.north;
-    lat += latStep
-  ) {
-    for (
-      let lng = BUCHAREST_BOUNDS.west;
-      lng < BUCHAREST_BOUNDS.east;
-      lng += lngStep
-    ) {
+  for (let lat = BUCHAREST_BOUNDS.south; lat < BUCHAREST_BOUNDS.north; lat += latStep) {
+    for (let lng = BUCHAREST_BOUNDS.west; lng < BUCHAREST_BOUNDS.east; lng += lngStep) {
       // Use cell center
       cells.push({ lat: lat + latStep / 2, lng: lng + lngStep / 2 });
     }
@@ -105,7 +96,7 @@ function countPOIsNearCell(
   cellLat: number,
   cellLng: number,
   pois: POI[],
-  radius = POI_RADIUS_M
+  radius = POI_RADIUS_M,
 ): GridCell["poiCounts"] {
   const counts = {
     schools: 0,
@@ -117,7 +108,7 @@ function countPOIsNearCell(
   for (const poi of pois) {
     const dist = haversineM(cellLat, cellLng, poi.lat, poi.lng);
     if (dist <= radius) {
-      counts[poi.type + "s" as keyof typeof counts]++;
+      counts[(poi.type + "s") as keyof typeof counts]++;
     }
   }
 
@@ -126,14 +117,11 @@ function countPOIsNearCell(
 
 /**
  * Get weighted median price for cell from AreaDaily
- * 
+ *
  * For v1: Use simple average of recent area prices
  * Future: Weight by proximity to cell and recency
  */
-async function getWeightedMedianEurM2(
-  cellLat: number,
-  cellLng: number
-): Promise<number | null> {
+async function getWeightedMedianEurM2(cellLat: number, cellLng: number): Promise<number | null> {
   // Get recent AreaDaily records (last 30 days)
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
@@ -171,7 +159,7 @@ async function getWeightedMedianEurM2(
 
 /**
  * Calculate intelligence score for cell (0-1 scale)
- * 
+ *
  * Formula:
  * - Metro proximity: 30% (closer = better)
  * - POI density: 40% (more amenities = better)
@@ -219,17 +207,11 @@ function calculateIntelligenceScore(cell: {
 /**
  * Convert lat/lng to tile coordinates (Web Mercator)
  */
-function latLngToTile(
-  lat: number,
-  lng: number,
-  zoom: number
-): { x: number; y: number } {
+function latLngToTile(lat: number, lng: number, zoom: number): { x: number; y: number } {
   const n = Math.pow(2, zoom);
   const x = Math.floor(((lng + 180) / 360) * n);
   const latRad = (lat * Math.PI) / 180;
-  const y = Math.floor(
-    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n
-  );
+  const y = Math.floor(((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n);
   return { x, y };
 }
 
@@ -239,7 +221,7 @@ function latLngToTile(
 function tileToBounds(
   x: number,
   y: number,
-  zoom: number
+  zoom: number,
 ): { north: number; south: number; east: number; west: number } {
   const n = Math.pow(2, zoom);
   const west = (x / n) * 360 - 180;
@@ -368,19 +350,13 @@ export async function buildAreaTiles() {
   console.log(`[Tiles] Grouped into ${Object.keys(tiles).length} tiles`);
 
   // 6. Write tiles to disk
-  const outDir = path.join(
-    process.cwd(),
-    "public/data/tiles/bucharest-z14"
-  );
+  const outDir = path.join(process.cwd(), "public/data/tiles/bucharest-z14");
   await fs.mkdir(outDir, { recursive: true });
 
   console.log(`[Tiles] Writing tiles to ${outDir}...`);
   let tileCount = 0;
   for (const [key, tile] of Object.entries(tiles)) {
-    await fs.writeFile(
-      path.join(outDir, `${key}.json`),
-      JSON.stringify(tile, null, 2)
-    );
+    await fs.writeFile(path.join(outDir, `${key}.json`), JSON.stringify(tile, null, 2));
     tileCount++;
   }
 
@@ -397,25 +373,23 @@ export async function buildAreaTiles() {
     pois: poiSummary,
     stats: {
       avgIntelligenceScore:
-        processedCells.reduce((sum, c) => sum + c.intelligenceScore, 0) /
-        processedCells.length,
+        processedCells.reduce((sum, c) => sum + c.intelligenceScore, 0) / processedCells.length,
       minDistMetroM: Math.min(...processedCells.map((c) => c.distMetroM)),
       maxDistMetroM: Math.max(...processedCells.map((c) => c.distMetroM)),
       avgDistMetroM:
-        processedCells.reduce((sum, c) => sum + c.distMetroM, 0) /
-        processedCells.length,
+        processedCells.reduce((sum, c) => sum + c.distMetroM, 0) / processedCells.length,
       globalMedianEurM2,
     },
   };
 
   await fs.writeFile(
     path.join(process.cwd(), "public/data/tiles/metadata.json"),
-    JSON.stringify(metadata, null, 2)
+    JSON.stringify(metadata, null, 2),
   );
 
   const duration = ((Date.now() - startTime) / 1000).toFixed(2);
   console.log(
-    `[Tiles] ✓ Generated ${tileCount} tiles with ${processedCells.length} cells in ${duration}s`
+    `[Tiles] ✓ Generated ${tileCount} tiles with ${processedCells.length} cells in ${duration}s`,
   );
   console.log(`[Tiles] Metadata:`, metadata.stats);
 

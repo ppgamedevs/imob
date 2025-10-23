@@ -1,7 +1,7 @@
 /**
  * rank.ts
  * Personalized recommendation ranking engine
- * 
+ *
  * Scoring factors (weighted):
  * - areaMatch (3.0): Property in user's preferred areas
  * - priceInBand (2.0): Property within user's price band
@@ -10,7 +10,7 @@
  * - highYield (1.0): Property has net yield >= 6%
  * - metroProximity (0.5): Property close to metro
  * - roomMatch (1.5): Property matches user's room preferences
- * 
+ *
  * Candidates: Last 7 days DedupGroups with valid analysis
  */
 
@@ -101,7 +101,7 @@ function scoreCandidate(
     minPrice: number | null;
     maxPrice: number | null;
     rooms: Record<string, number> | null;
-  }
+  },
 ): ScoredCandidate {
   const { groupId, analysisId, analysis } = candidate;
   const breakdown = {
@@ -121,7 +121,7 @@ function scoreCandidate(
   if (userTaste.areas && userTaste.areas.length > 0 && analysis.group) {
     const topAreas = userTaste.areas.slice(0, TOP_AREAS_TO_MATCH);
     const totalScore = topAreas.reduce((sum, a) => sum + a.score, 0);
-    
+
     // Check if property's area matches any top area
     const propertyArea = analysis.group.areaSlug;
     if (propertyArea) {
@@ -144,9 +144,10 @@ function scoreCandidate(
         breakdown.priceInBand = WEIGHTS.priceInBand;
       } else {
         // Property outside band: decay based on distance
-        const distance = priceEur < userTaste.minPrice
-          ? userTaste.minPrice - priceEur
-          : priceEur - userTaste.maxPrice;
+        const distance =
+          priceEur < userTaste.minPrice
+            ? userTaste.minPrice - priceEur
+            : priceEur - userTaste.maxPrice;
         const normalizedDistance = distance / range;
         const scoreVal = Math.max(0, 1 - normalizedDistance);
         breakdown.priceInBand = scoreVal * WEIGHTS.priceInBand;
@@ -189,10 +190,7 @@ function scoreCandidate(
     const roomScore = userTaste.rooms[roomKey];
     if (roomScore) {
       // Normalize room scores
-      const totalRoomScore = Object.values(userTaste.rooms).reduce(
-        (sum, s) => sum + s,
-        0
-      );
+      const totalRoomScore = Object.values(userTaste.rooms).reduce((sum, s) => sum + s, 0);
       const normalizedRoomScore = roomScore / totalRoomScore;
       breakdown.roomMatch = normalizedRoomScore * WEIGHTS.roomMatch;
     }
@@ -211,15 +209,12 @@ function scoreCandidate(
 
 /**
  * Get personalized recommendations for a user
- * 
+ *
  * @param userId - User ID
  * @param limit - Number of recommendations to return (default: 10)
  * @returns Array of Analysis records with scores
  */
-export async function getPersonalizedRecommendations(
-  userId: string,
-  limit: number = 10
-) {
+export async function getPersonalizedRecommendations(userId: string, limit: number = 10) {
   // Get user taste
   const taste = await prisma.userTaste.findUnique({
     where: { userId },
@@ -240,7 +235,7 @@ export async function getPersonalizedRecommendations(
       minPrice: taste.minPrice,
       maxPrice: taste.maxPrice,
       rooms: (taste.rooms as Record<string, number> | null) || null,
-    })
+    }),
   );
 
   // Sort by score descending
@@ -266,16 +261,14 @@ export async function getPersonalizedRecommendations(
 
   // Sort analyses by score order
   const analysisMap = new Map(analyses.map((a) => [a.id, a]));
-  const sorted = topScored
-    .map((s) => analysisMap.get(s.analysisId))
-    .filter((a) => a !== undefined);
+  const sorted = topScored.map((s) => analysisMap.get(s.analysisId)).filter((a) => a !== undefined);
 
   return sorted;
 }
 
 /**
  * Get generic recommendations (fallback for users without taste profile)
- * 
+ *
  * @param limit - Number of recommendations to return
  * @returns Array of Analysis records
  */
@@ -308,7 +301,7 @@ export async function getGenericRecommendations(limit: number = 10) {
   const goodDeals = analyses.filter((a) => {
     const score = a.scoreSnapshot;
     if (!score) return false;
-    
+
     const underpriced = score.priceBadge === "underpriced";
     const fastTTS = score.ttsBucket === "fast";
     return underpriced || fastTTS;

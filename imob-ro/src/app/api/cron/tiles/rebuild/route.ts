@@ -1,9 +1,9 @@
 /**
  * Day 34: Tile Rebuild Cron Endpoint
- * 
+ *
  * Endpoint: /api/cron/tiles/rebuild
  * Schedule: Weekly (Sundays at 3 AM UTC)
- * 
+ *
  * Regenerates all area intelligence tiles with latest data
  */
 
@@ -13,20 +13,20 @@ import { clearTileCache } from "@/lib/tiles/loader";
 
 export async function GET() {
   const startTime = Date.now();
-  
+
   try {
     console.log("[Cron] Starting tile rebuild...");
-    
+
     // Run tile generation
     const metadata = await buildAreaTiles();
-    
+
     // Clear tile cache to force reload of new tiles
     clearTileCache();
-    
+
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    
+
     console.log(`[Cron] Tile rebuild completed in ${duration}s`);
-    
+
     return NextResponse.json({
       success: true,
       message: "Tiles rebuilt successfully",
@@ -38,14 +38,14 @@ export async function GET() {
     });
   } catch (error: any) {
     console.error("[Cron] Tile rebuild failed:", error);
-    
+
     return NextResponse.json(
       {
         success: false,
         error: error.message,
         duration: `${((Date.now() - startTime) / 1000).toFixed(2)}s`,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

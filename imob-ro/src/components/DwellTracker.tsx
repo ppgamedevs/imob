@@ -2,7 +2,7 @@
 
 /**
  * DwellTracker - Client component to track dwell time on property pages
- * 
+ *
  * Tracks time spent on page and sends event if user dwells >= 15 seconds
  * Uses navigator.sendBeacon for reliable non-blocking tracking
  */

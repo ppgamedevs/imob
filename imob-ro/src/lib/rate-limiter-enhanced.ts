@@ -2,7 +2,7 @@
  * Enhanced rate limiting with per-endpoint controls and proper 429 responses
  */
 
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 type Bucket = { tokens: number; lastRefill: number };
 
@@ -15,19 +15,19 @@ interface RateLimitConfig {
 
 // Rate limit configurations per endpoint type
 export const RATE_LIMITS: Record<string, RateLimitConfig> = {
-  'analyze': {
+  analyze: {
     windowMs: 60_000, // 1 minute
     maxRequests: 30, // 30 requests per minute per IP
   },
-  'public-api': {
+  "public-api": {
     windowMs: 60_000, // 1 minute
     maxRequests: 60, // 60 requests per minute (will be overridden by API key rate limit)
   },
-  'crawler-domain': {
+  "crawler-domain": {
     windowMs: 1_000, // 1 second
     maxRequests: 1, // 1 request per second per domain
   },
-  'default': {
+  default: {
     windowMs: 60_000, // 1 minute
     maxRequests: 100, // 100 requests per minute
   },
@@ -38,7 +38,7 @@ export const RATE_LIMITS: Record<string, RateLimitConfig> = {
  */
 export function allowRequest(
   key: string,
-  limitType: keyof typeof RATE_LIMITS = 'default'
+  limitType: keyof typeof RATE_LIMITS = "default",
 ): boolean {
   const config = RATE_LIMITS[limitType] || RATE_LIMITS.default;
   const now = Date.now();
@@ -66,7 +66,7 @@ export function allowRequest(
 /**
  * Get bucket info for debugging
  */
-export function getBucketInfo(key: string, limitType: keyof typeof RATE_LIMITS = 'default') {
+export function getBucketInfo(key: string, limitType: keyof typeof RATE_LIMITS = "default") {
   const config = RATE_LIMITS[limitType] || RATE_LIMITS.default;
   const b = buckets[key] || { tokens: config.maxRequests, lastRefill: Date.now() };
   return {
@@ -80,10 +80,13 @@ export function getBucketInfo(key: string, limitType: keyof typeof RATE_LIMITS =
 /**
  * Calculate Retry-After header value in seconds
  */
-export function getRetryAfter(key: string, limitType: keyof typeof RATE_LIMITS = 'default'): number {
+export function getRetryAfter(
+  key: string,
+  limitType: keyof typeof RATE_LIMITS = "default",
+): number {
   const config = RATE_LIMITS[limitType] || RATE_LIMITS.default;
   const b = buckets[key];
-  
+
   if (!b) {
     return Math.ceil(config.windowMs / 1000);
   }
@@ -101,15 +104,15 @@ export function getRetryAfter(key: string, limitType: keyof typeof RATE_LIMITS =
  */
 export function createRateLimitResponse(
   key: string,
-  limitType: keyof typeof RATE_LIMITS = 'default'
+  limitType: keyof typeof RATE_LIMITS = "default",
 ): NextResponse {
   const retryAfter = getRetryAfter(key, limitType);
   const bucketInfo = getBucketInfo(key, limitType);
 
   return NextResponse.json(
     {
-      error: 'rate_limit_exceeded',
-      message: 'Too many requests. Please try again later.',
+      error: "rate_limit_exceeded",
+      message: "Too many requests. Please try again later.",
       retryAfter,
       limit: bucketInfo.max,
       windowMs: bucketInfo.windowMs,
@@ -117,14 +120,12 @@ export function createRateLimitResponse(
     {
       status: 429,
       headers: {
-        'Retry-After': retryAfter.toString(),
-        'X-RateLimit-Limit': bucketInfo.max.toString(),
-        'X-RateLimit-Remaining': Math.max(0, Math.floor(bucketInfo.tokens)).toString(),
-        'X-RateLimit-Reset': new Date(
-          bucketInfo.lastRefill + bucketInfo.windowMs
-        ).toISOString(),
+        "Retry-After": retryAfter.toString(),
+        "X-RateLimit-Limit": bucketInfo.max.toString(),
+        "X-RateLimit-Remaining": Math.max(0, Math.floor(bucketInfo.tokens)).toString(),
+        "X-RateLimit-Reset": new Date(bucketInfo.lastRefill + bucketInfo.windowMs).toISOString(),
       },
-    }
+    },
   );
 }
 
@@ -133,9 +134,9 @@ export function createRateLimitResponse(
  */
 export function getClientIp(req: Request): string {
   return (
-    req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    req.headers.get('x-real-ip') ||
-    'unknown'
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown"
   );
 }
 
@@ -155,7 +156,7 @@ export class CrawlerRateLimiter {
     }
 
     // Check rate limit (1 req/sec per domain)
-    return allowRequest(`crawler:${domain}`, 'crawler-domain');
+    return allowRequest(`crawler:${domain}`, "crawler-domain");
   }
 
   static startCrawl(domain: string): void {

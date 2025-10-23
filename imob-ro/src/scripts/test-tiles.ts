@@ -19,7 +19,7 @@ async function testTileSystem() {
 
   for (const test of testCases) {
     console.log(`\n=== ${test.name} (${test.lat}, ${test.lng}) ===`);
-    
+
     const start = Date.now();
     const cell = await getNearestCell(test.lat, test.lng);
     const duration = Date.now() - start;
@@ -29,9 +29,11 @@ async function testTileSystem() {
       console.log(`  Location: ${cell.lat.toFixed(6)}, ${cell.lng.toFixed(6)}`);
       console.log(`  Intelligence Score: ${cell.intelligenceScore}`);
       console.log(`  Metro: ${cell.nearestMetro} (${cell.distMetroM}m)`);
-      console.log(`  POIs: ${cell.poiCounts.schools} schools, ${cell.poiCounts.supermarkets} supermarkets, ${cell.poiCounts.restaurants} restaurants, ${cell.poiCounts.parks} parks`);
+      console.log(
+        `  POIs: ${cell.poiCounts.schools} schools, ${cell.poiCounts.supermarkets} supermarkets, ${cell.poiCounts.restaurants} restaurants, ${cell.poiCounts.parks} parks`,
+      );
       console.log(`  Median €/m²: ${cell.medianEurM2 ?? "N/A"}`);
-      
+
       // Validate intelligence score range
       if (cell.intelligenceScore < 0 || cell.intelligenceScore > 1) {
         console.error(`  ⚠️  Intelligence score out of range: ${cell.intelligenceScore}`);

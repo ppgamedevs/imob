@@ -10,10 +10,7 @@ import { validateApiKey, trackApiUsage } from "@/lib/api/validate-key";
 
 export const runtime = "nodejs";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ slug: string }> }
-) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ slug: string }> }) {
   const startTime = Date.now();
   const { slug } = await params;
 
@@ -38,7 +35,7 @@ export async function GET(
             "Access-Control-Allow-Methods": "GET",
             "Access-Control-Allow-Headers": "x-api-key",
           },
-        }
+        },
       );
     }
 
@@ -64,7 +61,7 @@ export async function GET(
           headers: {
             "Access-Control-Allow-Origin": "*",
           },
-        }
+        },
       );
     }
 
@@ -91,12 +88,9 @@ export async function GET(
 
     // Extract stats from latest AreaDaily
     const stats = (latest?.stats as any) ?? {};
-    const rentEurM2 =
-      typeof stats.rentEurM2 === "number" ? stats.rentEurM2 : null;
-    const yieldNet =
-      typeof stats.yieldNet === "number" ? stats.yieldNet : null;
-    const ttsMedianDays =
-      typeof stats.ttsMedianDays === "number" ? stats.ttsMedianDays : null;
+    const rentEurM2 = typeof stats.rentEurM2 === "number" ? stats.rentEurM2 : null;
+    const yieldNet = typeof stats.yieldNet === "number" ? stats.yieldNet : null;
+    const ttsMedianDays = typeof stats.ttsMedianDays === "number" ? stats.ttsMedianDays : null;
     const demandScore = latest?.demandScore ?? null;
     const supply = latest?.supply ?? null;
 
@@ -142,7 +136,7 @@ export async function GET(
         headers: {
           "Access-Control-Allow-Origin": "*",
         },
-      }
+      },
     );
   }
 }

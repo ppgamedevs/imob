@@ -2,7 +2,7 @@
  * Content hashing utilities for deduplication
  */
 
-import crypto from 'crypto';
+import crypto from "crypto";
 
 export interface ExtractedContent {
   title?: string | null;
@@ -44,15 +44,15 @@ export function generateContentHash(content: ExtractedContent): string {
   const contentString = JSON.stringify(normalizedContent, Object.keys(normalizedContent).sort());
 
   // Generate SHA256 hash
-  return crypto.createHash('sha256').update(contentString).digest('hex');
+  return crypto.createHash("sha256").update(contentString).digest("hex");
 }
 
 /**
  * Normalize string for comparison (lowercase, trim, remove extra whitespace)
  */
 function normalizeString(str: string | null | undefined): string | null {
-  if (!str || typeof str !== 'string') return null;
-  return str.toLowerCase().trim().replace(/\s+/g, ' ');
+  if (!str || typeof str !== "string") return null;
+  return str.toLowerCase().trim().replace(/\s+/g, " ");
 }
 
 /**

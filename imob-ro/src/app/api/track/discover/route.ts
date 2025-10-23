@@ -1,6 +1,6 @@
 /**
  * /api/track/discover - Track discover card click events
- * 
+ *
  * Logs BuyerEvent when user clicks on a property card
  * Updates user taste with lower weight (0.5x)
  */
@@ -53,9 +53,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Error tracking discover:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

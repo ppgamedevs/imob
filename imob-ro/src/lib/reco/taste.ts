@@ -1,24 +1,25 @@
 /**
  * taste.ts
  * User taste tracking with decay for personalized recommendations
- * 
+ *
  * Tracks:
  * - Area preferences (Sector 1, Sector 2, etc.) with scores
  * - Price band (min/max EUR)
  * - Room count preferences (1, 2, 3, etc.)
  * - Property types (apartment, house, etc.)
- * 
+ *
  * Event weights:
  * - view_property: 1.0
  * - dwell_property (>15s): 3.0
  * - add_to_watch: 5.0
  * - discover_card_click: 0.5
  * - search_filters: 2.0
- * 
+ *
  * Decay: 7-day half-life (0.5^(daysSince/7))
  */
 
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 
 // Event weights for taste updates
 export const EVENT_WEIGHTS = {
@@ -36,19 +37,19 @@ export interface TasteUpdate {
   userId: string;
   eventKind: EventKind;
   meta: {
-    areaSlug?: string;      // e.g. "sector-1"
-    priceEur?: number;      // Property price in EUR
-    rooms?: number;         // Number of rooms
-    type?: string;          // e.g. "apartment", "house"
+    areaSlug?: string; // e.g. "sector-1"
+    priceEur?: number; // Property price in EUR
+    rooms?: number; // Number of rooms
+    type?: string; // e.g. "apartment", "house"
   };
-  eventTs?: Date;           // Event timestamp (default: now)
+  eventTs?: Date; // Event timestamp (default: now)
 }
 
 // Area preference entry
 interface AreaEntry {
   slug: string;
   score: number;
-  ts: string;   // ISO timestamp
+  ts: string; // ISO timestamp
 }
 
 // Get decay factor based on event age
@@ -61,13 +62,13 @@ function getDecayFactor(eventTs: Date): number {
 
 /**
  * Update user taste profile based on an event
- * 
+ *
  * @param update - Taste update with userId, event kind, and property metadata
  * @returns Updated UserTaste record
  */
 export async function updateUserTaste(update: TasteUpdate) {
   const { userId, eventKind, meta, eventTs = new Date() } = update;
-  
+
   // Get event weight
   const eventWeight = EVENT_WEIGHTS[eventKind];
   if (!eventWeight) {
@@ -88,11 +89,11 @@ export async function updateUserTaste(update: TasteUpdate) {
     taste = await prisma.userTaste.create({
       data: {
         userId,
-        areas: null,
+        areas: Prisma.JsonNull,
         minPrice: null,
         maxPrice: null,
-        rooms: null,
-        types: null,
+        rooms: Prisma.JsonNull,
+        types: Prisma.JsonNull,
       },
     });
   }
@@ -152,11 +153,17 @@ export async function updateUserTaste(update: TasteUpdate) {
   const updated = await prisma.userTaste.update({
     where: { userId },
     data: {
-      areas: areas.length > 0 ? areas : null,
+      areas: areas.length > 0 ? (areas as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
       minPrice,
       maxPrice,
-      rooms: Object.keys(rooms).length > 0 ? rooms : null,
-      types: Object.keys(types).length > 0 ? types : null,
+      rooms:
+        Object.keys(rooms).length > 0
+          ? (rooms as unknown as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
+      types:
+        Object.keys(types).length > 0
+          ? (types as unknown as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
     },
   });
 
@@ -166,12 +173,12 @@ export async function updateUserTaste(update: TasteUpdate) {
 /**
  * Decay all user taste profiles (run weekly via cron)
  * Applies 7-day half-life decay to all scores
- * 
+ *
  * @returns Stats { usersProcessed, areasDecayed }
  */
 export async function decayAllTastes() {
   const allTastes = await prisma.userTaste.findMany();
-  
+
   let usersProcessed = 0;
   let areasDecayed = 0;
 
@@ -234,9 +241,15 @@ export async function decayAllTastes() {
       await prisma.userTaste.update({
         where: { id: taste.id },
         data: {
-          areas: areas.length > 0 ? areas : null,
-          rooms: Object.keys(rooms).length > 0 ? rooms : null,
-          types: Object.keys(types).length > 0 ? types : null,
+          areas: areas.length > 0 ? (areas as unknown as Prisma.InputJsonValue) : Prisma.JsonNull,
+          rooms:
+            Object.keys(rooms).length > 0
+              ? (rooms as unknown as Prisma.InputJsonValue)
+              : Prisma.JsonNull,
+          types:
+            Object.keys(types).length > 0
+              ? (types as unknown as Prisma.InputJsonValue)
+              : Prisma.JsonNull,
         },
       });
       usersProcessed++;

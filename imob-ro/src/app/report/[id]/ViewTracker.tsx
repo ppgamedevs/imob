@@ -17,13 +17,7 @@ interface ViewTrackerProps {
   rooms?: number | null;
 }
 
-export function ViewTracker({
-  groupId,
-  analysisId,
-  areaSlug,
-  priceEur,
-  rooms,
-}: ViewTrackerProps) {
+export function ViewTracker({ groupId, analysisId, areaSlug, priceEur, rooms }: ViewTrackerProps) {
   const trackedRef = useRef(false);
 
   useEffect(() => {

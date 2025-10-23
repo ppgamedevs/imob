@@ -1,6 +1,6 @@
 /**
  * /api/track/dwell - Track dwell time events
- * 
+ *
  * Logs BuyerEvent when user spends >= 15s on a property page
  * Updates user taste with higher weight (3.0x)
  */
@@ -59,9 +59,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, tracked: true });
   } catch (error) {
     console.error("Error tracking dwell:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

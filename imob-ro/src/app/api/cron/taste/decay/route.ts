@@ -1,6 +1,6 @@
 /**
  * /api/cron/taste/decay - Weekly taste decay job
- * 
+ *
  * Applies 7-day half-life decay to all user taste profiles
  * Should be called weekly via cron
  */
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     // Verify cron secret
     const authHeader = req.headers.get("authorization");
     const expectedSecret = process.env.CRON_SECRET || "dev-secret";
-    
+
     if (authHeader !== `Bearer ${expectedSecret}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -27,9 +27,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("Error in taste decay cron:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

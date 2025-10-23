@@ -18,9 +18,7 @@ export interface ValidatedApiKey {
  * Validate API key from request headers
  * Returns null if invalid/expired/rate-limited
  */
-export async function validateApiKey(
-  req: Request
-): Promise<ValidatedApiKey | null> {
+export async function validateApiKey(req: Request): Promise<ValidatedApiKey | null> {
   const key = req.headers.get("x-api-key");
   if (!key) return null;
 
@@ -106,7 +104,5 @@ export async function trackApiUsage(params: {
 export function generateApiKey(): string {
   const array = new Uint8Array(32);
   crypto.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join(
-    ""
-  );
+  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
 }
