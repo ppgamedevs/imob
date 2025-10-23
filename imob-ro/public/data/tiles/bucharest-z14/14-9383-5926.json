@@ -1,0 +1,704 @@
+{
+  "zoom": 14,
+  "x": 9383,
+  "y": 5926,
+  "bounds": {
+    "north": 44.496505331093466,
+    "south": 44.48083027856261,
+    "east": 26.19140625,
+    "west": 26.16943359375
+  },
+  "center": {
+    "lat": 44.48866780482804,
+    "lng": 26.180419921875
+  },
+  "cellSize": 250,
+  "cells": [
+    {
+      "lat": 44.481378,
+      "lng": 26.171455,
+      "distMetroM": 4391,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.481378,
+      "lng": 26.174601,
+      "distMetroM": 4627,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.481378,
+      "lng": 26.177747,
+      "distMetroM": 4864,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.481378,
+      "lng": 26.180892,
+      "distMetroM": 5102,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.481378,
+      "lng": 26.184038,
+      "distMetroM": 5342,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.481378,
+      "lng": 26.187184,
+      "distMetroM": 5582,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.481378,
+      "lng": 26.19033,
+      "distMetroM": 5823,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.483624,
+      "lng": 26.171455,
+      "distMetroM": 4313,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.483624,
+      "lng": 26.174601,
+      "distMetroM": 4553,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.483624,
+      "lng": 26.177747,
+      "distMetroM": 4794,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.483624,
+      "lng": 26.180892,
+      "distMetroM": 5036,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.483624,
+      "lng": 26.184038,
+      "distMetroM": 5278,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.483624,
+      "lng": 26.187184,
+      "distMetroM": 5521,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.483624,
+      "lng": 26.19033,
+      "distMetroM": 5765,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.48587,
+      "lng": 26.171455,
+      "distMetroM": 4249,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.48587,
+      "lng": 26.174601,
+      "distMetroM": 4493,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.48587,
+      "lng": 26.177747,
+      "distMetroM": 4737,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.48587,
+      "lng": 26.180892,
+      "distMetroM": 4981,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.48587,
+      "lng": 26.184038,
+      "distMetroM": 5226,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.48587,
+      "lng": 26.187184,
+      "distMetroM": 5472,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.48587,
+      "lng": 26.19033,
+      "distMetroM": 5717,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.488115,
+      "lng": 26.171455,
+      "distMetroM": 4199,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.488115,
+      "lng": 26.174601,
+      "distMetroM": 4445,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.488115,
+      "lng": 26.177747,
+      "distMetroM": 4692,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.488115,
+      "lng": 26.180892,
+      "distMetroM": 4939,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.488115,
+      "lng": 26.184038,
+      "distMetroM": 5186,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.488115,
+      "lng": 26.187184,
+      "distMetroM": 5433,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.488115,
+      "lng": 26.19033,
+      "distMetroM": 5680,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.490361,
+      "lng": 26.171455,
+      "distMetroM": 4164,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.490361,
+      "lng": 26.174601,
+      "distMetroM": 4412,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.490361,
+      "lng": 26.177747,
+      "distMetroM": 4660,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.490361,
+      "lng": 26.180892,
+      "distMetroM": 4908,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.490361,
+      "lng": 26.184038,
+      "distMetroM": 5157,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.490361,
+      "lng": 26.187184,
+      "distMetroM": 5405,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.490361,
+      "lng": 26.19033,
+      "distMetroM": 5654,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.492607,
+      "lng": 26.171455,
+      "distMetroM": 4143,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.492607,
+      "lng": 26.174601,
+      "distMetroM": 4392,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.492607,
+      "lng": 26.177747,
+      "distMetroM": 4641,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.492607,
+      "lng": 26.180892,
+      "distMetroM": 4890,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.492607,
+      "lng": 26.184038,
+      "distMetroM": 5140,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.492607,
+      "lng": 26.187184,
+      "distMetroM": 5389,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.492607,
+      "lng": 26.19033,
+      "distMetroM": 5638,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.494853,
+      "lng": 26.171455,
+      "distMetroM": 4137,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.494853,
+      "lng": 26.174601,
+      "distMetroM": 4386,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.494853,
+      "lng": 26.177747,
+      "distMetroM": 4636,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.494853,
+      "lng": 26.180892,
+      "distMetroM": 4885,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.494853,
+      "lng": 26.184038,
+      "distMetroM": 5135,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.494853,
+      "lng": 26.187184,
+      "distMetroM": 5384,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.494853,
+      "lng": 26.19033,
+      "distMetroM": 5634,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    }
+  ]
+}

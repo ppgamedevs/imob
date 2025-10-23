@@ -1,0 +1,704 @@
+{
+  "zoom": 14,
+  "x": 9376,
+  "y": 5927,
+  "bounds": {
+    "north": 44.48083027856261,
+    "south": 44.465151013519616,
+    "east": 26.03759765625,
+    "west": 26.015625
+  },
+  "center": {
+    "lat": 44.47299064604111,
+    "lng": 26.026611328125
+  },
+  "cellSize": 250,
+  "cells": [
+    {
+      "lat": 44.465658,
+      "lng": 26.017303,
+      "distMetroM": 2562,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.465658,
+      "lng": 26.020449,
+      "distMetroM": 2319,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.465658,
+      "lng": 26.023595,
+      "distMetroM": 2078,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.465658,
+      "lng": 26.026741,
+      "distMetroM": 1839,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.465658,
+      "lng": 26.029887,
+      "distMetroM": 1603,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.465658,
+      "lng": 26.033033,
+      "distMetroM": 1372,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.465658,
+      "lng": 26.036178,
+      "distMetroM": 1149,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.467903,
+      "lng": 26.017303,
+      "distMetroM": 2628,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.467903,
+      "lng": 26.020449,
+      "distMetroM": 2392,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.467903,
+      "lng": 26.023595,
+      "distMetroM": 2159,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.467903,
+      "lng": 26.026741,
+      "distMetroM": 1930,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.467903,
+      "lng": 26.029887,
+      "distMetroM": 1707,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.467903,
+      "lng": 26.033033,
+      "distMetroM": 1492,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.467903,
+      "lng": 26.036178,
+      "distMetroM": 1289,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.470149,
+      "lng": 26.017303,
+      "distMetroM": 2716,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.470149,
+      "lng": 26.020449,
+      "distMetroM": 2488,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.470149,
+      "lng": 26.023595,
+      "distMetroM": 2265,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.470149,
+      "lng": 26.026741,
+      "distMetroM": 2047,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.470149,
+      "lng": 26.029887,
+      "distMetroM": 1839,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.470149,
+      "lng": 26.033033,
+      "distMetroM": 1641,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.470149,
+      "lng": 26.036178,
+      "distMetroM": 1460,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.472395,
+      "lng": 26.017303,
+      "distMetroM": 2823,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.472395,
+      "lng": 26.020449,
+      "distMetroM": 2604,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.472395,
+      "lng": 26.023595,
+      "distMetroM": 2392,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.472395,
+      "lng": 26.026741,
+      "distMetroM": 2187,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.472395,
+      "lng": 26.029887,
+      "distMetroM": 1993,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.472395,
+      "lng": 26.033033,
+      "distMetroM": 1813,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.472395,
+      "lng": 26.036178,
+      "distMetroM": 1650,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.474641,
+      "lng": 26.017303,
+      "distMetroM": 2947,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.474641,
+      "lng": 26.020449,
+      "distMetroM": 2738,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.474641,
+      "lng": 26.023595,
+      "distMetroM": 2537,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.474641,
+      "lng": 26.026741,
+      "distMetroM": 2346,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.474641,
+      "lng": 26.029887,
+      "distMetroM": 2166,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.474641,
+      "lng": 26.033033,
+      "distMetroM": 2001,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.474641,
+      "lng": 26.036178,
+      "distMetroM": 1855,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.476886,
+      "lng": 26.017303,
+      "distMetroM": 3087,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.476886,
+      "lng": 26.020449,
+      "distMetroM": 2888,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.476886,
+      "lng": 26.023595,
+      "distMetroM": 2698,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.476886,
+      "lng": 26.026741,
+      "distMetroM": 2519,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.476886,
+      "lng": 26.029887,
+      "distMetroM": 2352,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.476886,
+      "lng": 26.033033,
+      "distMetroM": 2201,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.476886,
+      "lng": 26.036178,
+      "distMetroM": 2069,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.479132,
+      "lng": 26.017303,
+      "distMetroM": 3239,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.479132,
+      "lng": 26.020449,
+      "distMetroM": 3051,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.479132,
+      "lng": 26.023595,
+      "distMetroM": 2872,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.479132,
+      "lng": 26.026741,
+      "distMetroM": 2704,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.479132,
+      "lng": 26.029887,
+      "distMetroM": 2549,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.479132,
+      "lng": 26.033033,
+      "distMetroM": 2411,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.479132,
+      "lng": 26.036178,
+      "distMetroM": 2291,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    }
+  ]
+}

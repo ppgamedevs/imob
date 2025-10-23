@@ -1,0 +1,214 @@
+{
+  "zoom": 14,
+  "x": 9380,
+  "y": 5935,
+  "bounds": {
+    "north": 44.35527821160296,
+    "south": 44.33956524809713,
+    "east": 26.12548828125,
+    "west": 26.103515625
+  },
+  "center": {
+    "lat": 44.34742172985004,
+    "lng": 26.114501953125
+  },
+  "cellSize": 250,
+  "cells": [
+    {
+      "lat": 44.351123,
+      "lng": 26.10539,
+      "distMetroM": 6958,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.351123,
+      "lng": 26.108535,
+      "distMetroM": 6962,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.351123,
+      "lng": 26.111681,
+      "distMetroM": 6975,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.351123,
+      "lng": 26.114827,
+      "distMetroM": 6997,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.351123,
+      "lng": 26.117973,
+      "distMetroM": 7027,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.351123,
+      "lng": 26.121119,
+      "distMetroM": 7067,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.351123,
+      "lng": 26.124265,
+      "distMetroM": 7115,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.353369,
+      "lng": 26.10539,
+      "distMetroM": 6709,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.353369,
+      "lng": 26.108535,
+      "distMetroM": 6713,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.353369,
+      "lng": 26.111681,
+      "distMetroM": 6726,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.353369,
+      "lng": 26.114827,
+      "distMetroM": 6748,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.353369,
+      "lng": 26.117973,
+      "distMetroM": 6780,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.353369,
+      "lng": 26.121119,
+      "distMetroM": 6821,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.353369,
+      "lng": 26.124265,
+      "distMetroM": 6871,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    }
+  ]
+}

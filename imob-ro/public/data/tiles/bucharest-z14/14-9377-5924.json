@@ -1,0 +1,704 @@
+{
+  "zoom": 14,
+  "x": 9377,
+  "y": 5924,
+  "bounds": {
+    "north": 44.5278427984555,
+    "south": 44.51217617107106,
+    "east": 26.0595703125,
+    "west": 26.03759765625
+  },
+  "center": {
+    "lat": 44.52000948476328,
+    "lng": 26.048583984375
+  },
+  "cellSize": 250,
+  "cells": [
+    {
+      "lat": 44.512819,
+      "lng": 26.039324,
+      "distMetroM": 5855,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.512819,
+      "lng": 26.04247,
+      "distMetroM": 5828,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.512819,
+      "lng": 26.045616,
+      "distMetroM": 5673,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.512819,
+      "lng": 26.048762,
+      "distMetroM": 5478,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.512819,
+      "lng": 26.051908,
+      "distMetroM": 5287,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.512819,
+      "lng": 26.055054,
+      "distMetroM": 5101,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.512819,
+      "lng": 26.0582,
+      "distMetroM": 4920,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.515065,
+      "lng": 26.039324,
+      "distMetroM": 6103,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.515065,
+      "lng": 26.04247,
+      "distMetroM": 6023,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.515065,
+      "lng": 26.045616,
+      "distMetroM": 5829,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.515065,
+      "lng": 26.048762,
+      "distMetroM": 5639,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.515065,
+      "lng": 26.051908,
+      "distMetroM": 5453,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.515065,
+      "lng": 26.055054,
+      "distMetroM": 5273,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.515065,
+      "lng": 26.0582,
+      "distMetroM": 5099,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.51731,
+      "lng": 26.039324,
+      "distMetroM": 6351,
+      "nearestMetro": "Crângași",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.51731,
+      "lng": 26.04247,
+      "distMetroM": 6180,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.51731,
+      "lng": 26.045616,
+      "distMetroM": 5991,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.51731,
+      "lng": 26.048762,
+      "distMetroM": 5806,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.51731,
+      "lng": 26.051908,
+      "distMetroM": 5626,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.51731,
+      "lng": 26.055054,
+      "distMetroM": 5452,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.51731,
+      "lng": 26.0582,
+      "distMetroM": 5283,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.519556,
+      "lng": 26.039324,
+      "distMetroM": 6532,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.519556,
+      "lng": 26.04247,
+      "distMetroM": 6343,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.519556,
+      "lng": 26.045616,
+      "distMetroM": 6159,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.519556,
+      "lng": 26.048762,
+      "distMetroM": 5979,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.519556,
+      "lng": 26.051908,
+      "distMetroM": 5804,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.519556,
+      "lng": 26.055054,
+      "distMetroM": 5636,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.519556,
+      "lng": 26.0582,
+      "distMetroM": 5473,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.521802,
+      "lng": 26.039324,
+      "distMetroM": 6695,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.521802,
+      "lng": 26.04247,
+      "distMetroM": 6511,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.521802,
+      "lng": 26.045616,
+      "distMetroM": 6332,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.521802,
+      "lng": 26.048762,
+      "distMetroM": 6157,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.521802,
+      "lng": 26.051908,
+      "distMetroM": 5988,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.521802,
+      "lng": 26.055054,
+      "distMetroM": 5824,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.521802,
+      "lng": 26.0582,
+      "distMetroM": 5667,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.524048,
+      "lng": 26.039324,
+      "distMetroM": 6864,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.524048,
+      "lng": 26.04247,
+      "distMetroM": 6685,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.524048,
+      "lng": 26.045616,
+      "distMetroM": 6510,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.524048,
+      "lng": 26.048762,
+      "distMetroM": 6340,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.524048,
+      "lng": 26.051908,
+      "distMetroM": 6176,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.524048,
+      "lng": 26.055054,
+      "distMetroM": 6018,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.524048,
+      "lng": 26.0582,
+      "distMetroM": 5848,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.526294,
+      "lng": 26.039324,
+      "distMetroM": 7038,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.526294,
+      "lng": 26.04247,
+      "distMetroM": 6863,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.526294,
+      "lng": 26.045616,
+      "distMetroM": 6693,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.526294,
+      "lng": 26.048762,
+      "distMetroM": 6528,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.526294,
+      "lng": 26.051908,
+      "distMetroM": 6369,
+      "nearestMetro": "Aurel Vlaicu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.526294,
+      "lng": 26.055054,
+      "distMetroM": 6195,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.526294,
+      "lng": 26.0582,
+      "distMetroM": 5991,
+      "nearestMetro": "Pipera",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    }
+  ]
+}

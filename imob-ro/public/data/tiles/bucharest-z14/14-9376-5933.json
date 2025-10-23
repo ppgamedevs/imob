@@ -1,0 +1,704 @@
+{
+  "zoom": 14,
+  "x": 9376,
+  "y": 5933,
+  "bounds": {
+    "north": 44.38669150215205,
+    "south": 44.37098696297171,
+    "east": 26.03759765625,
+    "west": 26.015625
+  },
+  "center": {
+    "lat": 44.37883923256188,
+    "lng": 26.026611328125
+  },
+  "cellSize": 250,
+  "cells": [
+    {
+      "lat": 44.371335,
+      "lng": 26.017303,
+      "distMetroM": 7197,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.371335,
+      "lng": 26.020449,
+      "distMetroM": 7237,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.371335,
+      "lng": 26.023595,
+      "distMetroM": 7285,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.371335,
+      "lng": 26.026741,
+      "distMetroM": 7341,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.371335,
+      "lng": 26.029887,
+      "distMetroM": 7383,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.371335,
+      "lng": 26.033033,
+      "distMetroM": 7379,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.371335,
+      "lng": 26.036178,
+      "distMetroM": 7254,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.373581,
+      "lng": 26.017303,
+      "distMetroM": 6950,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.373581,
+      "lng": 26.020449,
+      "distMetroM": 6991,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.373581,
+      "lng": 26.023595,
+      "distMetroM": 7041,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.373581,
+      "lng": 26.026741,
+      "distMetroM": 7099,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.373581,
+      "lng": 26.029887,
+      "distMetroM": 7134,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.373581,
+      "lng": 26.033033,
+      "distMetroM": 7130,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.373581,
+      "lng": 26.036178,
+      "distMetroM": 7094,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.375826,
+      "lng": 26.017303,
+      "distMetroM": 6703,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.375826,
+      "lng": 26.020449,
+      "distMetroM": 6746,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.375826,
+      "lng": 26.023595,
+      "distMetroM": 6798,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.375826,
+      "lng": 26.026741,
+      "distMetroM": 6858,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.375826,
+      "lng": 26.029887,
+      "distMetroM": 6884,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.375826,
+      "lng": 26.033033,
+      "distMetroM": 6880,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.375826,
+      "lng": 26.036178,
+      "distMetroM": 6885,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.378072,
+      "lng": 26.017303,
+      "distMetroM": 6456,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.378072,
+      "lng": 26.020449,
+      "distMetroM": 6501,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.378072,
+      "lng": 26.023595,
+      "distMetroM": 6554,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.378072,
+      "lng": 26.026741,
+      "distMetroM": 6617,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.378072,
+      "lng": 26.029887,
+      "distMetroM": 6635,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.378072,
+      "lng": 26.033033,
+      "distMetroM": 6630,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.378072,
+      "lng": 26.036178,
+      "distMetroM": 6635,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.380318,
+      "lng": 26.017303,
+      "distMetroM": 6210,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.380318,
+      "lng": 26.020449,
+      "distMetroM": 6256,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.380318,
+      "lng": 26.023595,
+      "distMetroM": 6312,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.380318,
+      "lng": 26.026741,
+      "distMetroM": 6377,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.380318,
+      "lng": 26.029887,
+      "distMetroM": 6385,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.380318,
+      "lng": 26.033033,
+      "distMetroM": 6381,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.380318,
+      "lng": 26.036178,
+      "distMetroM": 6386,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.382564,
+      "lng": 26.017303,
+      "distMetroM": 5964,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.382564,
+      "lng": 26.020449,
+      "distMetroM": 6012,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.382564,
+      "lng": 26.023595,
+      "distMetroM": 6070,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.382564,
+      "lng": 26.026741,
+      "distMetroM": 6137,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.382564,
+      "lng": 26.029887,
+      "distMetroM": 6136,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.382564,
+      "lng": 26.033033,
+      "distMetroM": 6131,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.382564,
+      "lng": 26.036178,
+      "distMetroM": 6136,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.38481,
+      "lng": 26.017303,
+      "distMetroM": 5718,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.38481,
+      "lng": 26.020449,
+      "distMetroM": 5768,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.38481,
+      "lng": 26.023595,
+      "distMetroM": 5828,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.38481,
+      "lng": 26.026741,
+      "distMetroM": 5899,
+      "nearestMetro": "Gorjului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.38481,
+      "lng": 26.029887,
+      "distMetroM": 5886,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.38481,
+      "lng": 26.033033,
+      "distMetroM": 5881,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.38481,
+      "lng": 26.036178,
+      "distMetroM": 5887,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    }
+  ]
+}

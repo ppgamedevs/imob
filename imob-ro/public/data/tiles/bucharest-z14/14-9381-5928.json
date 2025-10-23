@@ -1,0 +1,704 @@
+{
+  "zoom": 14,
+  "x": 9381,
+  "y": 5928,
+  "bounds": {
+    "north": 44.465151013519616,
+    "south": 44.449467536006935,
+    "east": 26.1474609375,
+    "west": 26.12548828125
+  },
+  "center": {
+    "lat": 44.457309274763276,
+    "lng": 26.136474609375
+  },
+  "cellSize": 250,
+  "cells": [
+    {
+      "lat": 44.449937,
+      "lng": 26.127411,
+      "distMetroM": 252,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.35
+    },
+    {
+      "lat": 44.449937,
+      "lng": 26.130557,
+      "distMetroM": 86,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.35
+    },
+    {
+      "lat": 44.449937,
+      "lng": 26.133703,
+      "distMetroM": 276,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.35
+    },
+    {
+      "lat": 44.449937,
+      "lng": 26.136849,
+      "distMetroM": 519,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.449937,
+      "lng": 26.139995,
+      "distMetroM": 766,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.449937,
+      "lng": 26.143141,
+      "distMetroM": 1015,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.449937,
+      "lng": 26.146287,
+      "distMetroM": 1264,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.452183,
+      "lng": 26.127411,
+      "distMetroM": 289,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.35
+    },
+    {
+      "lat": 44.452183,
+      "lng": 26.130557,
+      "distMetroM": 165,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.35
+    },
+    {
+      "lat": 44.452183,
+      "lng": 26.133703,
+      "distMetroM": 310,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.452183,
+      "lng": 26.136849,
+      "distMetroM": 538,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.452183,
+      "lng": 26.139995,
+      "distMetroM": 779,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.452183,
+      "lng": 26.143141,
+      "distMetroM": 1025,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.452183,
+      "lng": 26.146287,
+      "distMetroM": 1272,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.454429,
+      "lng": 26.127411,
+      "distMetroM": 478,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.454429,
+      "lng": 26.130557,
+      "distMetroM": 415,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.454429,
+      "lng": 26.133703,
+      "distMetroM": 491,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.454429,
+      "lng": 26.136849,
+      "distMetroM": 659,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.454429,
+      "lng": 26.139995,
+      "distMetroM": 867,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.454429,
+      "lng": 26.143141,
+      "distMetroM": 1093,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.454429,
+      "lng": 26.146287,
+      "distMetroM": 1327,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.456674,
+      "lng": 26.127411,
+      "distMetroM": 705,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.456674,
+      "lng": 26.130557,
+      "distMetroM": 664,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.456674,
+      "lng": 26.133703,
+      "distMetroM": 714,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.456674,
+      "lng": 26.136849,
+      "distMetroM": 839,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.456674,
+      "lng": 26.139995,
+      "distMetroM": 1011,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.456674,
+      "lng": 26.143141,
+      "distMetroM": 1210,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.456674,
+      "lng": 26.146287,
+      "distMetroM": 1425,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.45892,
+      "lng": 26.127411,
+      "distMetroM": 944,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.45892,
+      "lng": 26.130557,
+      "distMetroM": 914,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.45892,
+      "lng": 26.133703,
+      "distMetroM": 951,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.45892,
+      "lng": 26.136849,
+      "distMetroM": 1048,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.45892,
+      "lng": 26.139995,
+      "distMetroM": 1190,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.45892,
+      "lng": 26.143141,
+      "distMetroM": 1363,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.45892,
+      "lng": 26.146287,
+      "distMetroM": 1557,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.461166,
+      "lng": 26.127411,
+      "distMetroM": 1188,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.461166,
+      "lng": 26.130557,
+      "distMetroM": 1164,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.461166,
+      "lng": 26.133703,
+      "distMetroM": 1193,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.461166,
+      "lng": 26.136849,
+      "distMetroM": 1271,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.461166,
+      "lng": 26.139995,
+      "distMetroM": 1391,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.461166,
+      "lng": 26.143141,
+      "distMetroM": 1542,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.461166,
+      "lng": 26.146287,
+      "distMetroM": 1716,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.463412,
+      "lng": 26.127411,
+      "distMetroM": 1433,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.463412,
+      "lng": 26.130557,
+      "distMetroM": 1414,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.463412,
+      "lng": 26.133703,
+      "distMetroM": 1438,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.463412,
+      "lng": 26.136849,
+      "distMetroM": 1503,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.463412,
+      "lng": 26.139995,
+      "distMetroM": 1606,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.463412,
+      "lng": 26.143141,
+      "distMetroM": 1738,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.463412,
+      "lng": 26.146287,
+      "distMetroM": 1894,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    }
+  ]
+}

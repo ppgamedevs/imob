@@ -1,0 +1,704 @@
+{
+  "zoom": 14,
+  "x": 9377,
+  "y": 5929,
+  "bounds": {
+    "north": 44.449467536006935,
+    "south": 44.433779846068234,
+    "east": 26.0595703125,
+    "west": 26.03759765625
+  },
+  "center": {
+    "lat": 44.441623691037584,
+    "lng": 26.048583984375
+  },
+  "cellSize": 250,
+  "cells": [
+    {
+      "lat": 44.434217,
+      "lng": 26.039324,
+      "distMetroM": 640,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.04247,
+      "distMetroM": 853,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.045616,
+      "distMetroM": 996,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.048762,
+      "distMetroM": 792,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.051908,
+      "distMetroM": 622,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.055054,
+      "distMetroM": 521,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.0582,
+      "distMetroM": 529,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.33
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.039324,
+      "distMetroM": 528,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.04247,
+      "distMetroM": 772,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.045616,
+      "distMetroM": 895,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.048762,
+      "distMetroM": 660,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.051908,
+      "distMetroM": 441,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.31
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.055054,
+      "distMetroM": 281,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.45
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.0582,
+      "distMetroM": 297,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.47
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.039324,
+      "distMetroM": 522,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.04247,
+      "distMetroM": 768,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.045616,
+      "distMetroM": 856,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.048762,
+      "distMetroM": 606,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.051908,
+      "distMetroM": 357,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.35
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.055054,
+      "distMetroM": 107,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.45
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.0582,
+      "distMetroM": 143,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.51
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.039324,
+      "distMetroM": 625,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.04247,
+      "distMetroM": 842,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.045616,
+      "distMetroM": 889,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.048762,
+      "distMetroM": 652,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.051908,
+      "distMetroM": 430,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.31
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.055054,
+      "distMetroM": 262,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.49
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.0582,
+      "distMetroM": 279,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.49
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.039324,
+      "distMetroM": 796,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.04247,
+      "distMetroM": 975,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.045616,
+      "distMetroM": 986,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.048762,
+      "distMetroM": 779,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.051908,
+      "distMetroM": 605,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.055054,
+      "distMetroM": 501,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.33
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.0582,
+      "distMetroM": 304,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.33
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.039324,
+      "distMetroM": 1001,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.04247,
+      "distMetroM": 1149,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.045616,
+      "distMetroM": 1131,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.048762,
+      "distMetroM": 956,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.051908,
+      "distMetroM": 749,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.055054,
+      "distMetroM": 501,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.0582,
+      "distMetroM": 256,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.39
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.039324,
+      "distMetroM": 1222,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.04247,
+      "distMetroM": 1346,
+      "nearestMetro": "Lujerului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.045616,
+      "distMetroM": 1286,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.048762,
+      "distMetroM": 1046,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.051908,
+      "distMetroM": 812,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.055054,
+      "distMetroM": 591,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.0582,
+      "distMetroM": 405,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    }
+  ]
+}

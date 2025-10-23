@@ -1,0 +1,255 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1024, 44.4350] },
+      "properties": { "type": "school", "name": "Școala Gimnazială Universitate" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1032, 44.4274] },
+      "properties": { "type": "supermarket", "name": "Mega Image Unirii" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0941, 44.4482] },
+      "properties": { "type": "supermarket", "name": "Carrefour Victoriei" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1015, 44.4360] },
+      "properties": { "type": "school", "name": "Colegiul Național Sfântul Sava" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0970, 44.4450] },
+      "properties": { "type": "park", "name": "Parcul Cișmigiu" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0696, 44.4358] },
+      "properties": { "type": "park", "name": "Parcul Eroilor" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0564, 44.4388] },
+      "properties": { "type": "school", "name": "Universitatea Politehnica București" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0580, 44.4395] },
+      "properties": { "type": "supermarket", "name": "Kaufland Politehnica" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0748, 44.4295] },
+      "properties": { "type": "restaurant", "name": "Restaurant Eroilor" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1045, 44.4255] },
+      "properties": { "type": "restaurant", "name": "Caru' cu Bere" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1010, 44.4330] },
+      "properties": { "type": "restaurant", "name": "Restaurant Universitate" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0950, 44.4470] },
+      "properties": { "type": "school", "name": "Liceul Teoretic Ion Luca Caragiale" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1020, 44.4400] },
+      "properties": { "type": "supermarket", "name": "Profi Bulevardul Regina Elisabeta" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1060, 44.4280] },
+      "properties": { "type": "restaurant", "name": "La Mama" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0850, 44.4380] },
+      "properties": { "type": "park", "name": "Parcul Izvor" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1193, 44.4946] },
+      "properties": { "type": "supermarket", "name": "Auchan Pipera" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1200, 44.4935] },
+      "properties": { "type": "school", "name": "Școala Gimnazială Pipera" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1180, 44.4920] },
+      "properties": { "type": "restaurant", "name": "Restaurant Pipera Plaza" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1150, 44.4900] },
+      "properties": { "type": "park", "name": "Parcul Bordei" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0620, 44.4370] },
+      "properties": { "type": "restaurant", "name": "Restaurant Campus Politehnica" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1078, 44.4322] },
+      "properties": { "type": "school", "name": "Colegiul Național Carol I" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1140, 44.4305] },
+      "properties": { "type": "supermarket", "name": "Lidl Mihai Bravu" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1250, 44.4350] },
+      "properties": { "type": "park", "name": "Parcul Tineretului" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0900, 44.4500] },
+      "properties": { "type": "restaurant", "name": "Restaurant Romana" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0920, 44.4520] },
+      "properties": { "type": "supermarket", "name": "Mega Image Romana" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0910, 44.4490] },
+      "properties": { "type": "school", "name": "Liceul Gheorghe Lazăr" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1580, 44.4560] },
+      "properties": { "type": "supermarket", "name": "Carrefour Obor" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1570, 44.4550] },
+      "properties": { "type": "restaurant", "name": "Restaurant Obor" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1590, 44.4570] },
+      "properties": { "type": "school", "name": "Școala Gimnazială Obor" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1300, 44.4380] },
+      "properties": { "type": "park", "name": "Parcul IOR" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0730, 44.4310] },
+      "properties": { "type": "supermarket", "name": "Kaufland Eroilor" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0780, 44.4268] },
+      "properties": { "type": "school", "name": "Școala Gimnazială Eroilor" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0830, 44.4220] },
+      "properties": { "type": "restaurant", "name": "Restaurant Eroii Revoluției" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1100, 44.4600] },
+      "properties": { "type": "park", "name": "Parcul Herăstrău" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0600, 44.4420] },
+      "properties": { "type": "park", "name": "Parcul Politehnica" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0650, 44.4350] },
+      "properties": { "type": "restaurant", "name": "Restaurant Grozăvești" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0670, 44.4365] },
+      "properties": { "type": "supermarket", "name": "Mega Image Grozăvești" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0640, 44.4340] },
+      "properties": { "type": "school", "name": "Școala de Arhitectură" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1050, 44.4500] },
+      "properties": { "type": "restaurant", "name": "Restaurant Aviatorilor" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1070, 44.4520] },
+      "properties": { "type": "supermarket", "name": "Carrefour Aviatorilor" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1040, 44.4480] },
+      "properties": { "type": "school", "name": "Liceul Teoretic Zoia Kosmodemyanskaya" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1200, 44.4400] },
+      "properties": { "type": "supermarket", "name": "Lidl Dristor" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1180, 44.4380] },
+      "properties": { "type": "school", "name": "Școala Gimnazială Dristor" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1220, 44.4420] },
+      "properties": { "type": "restaurant", "name": "Restaurant Dristor Kebab" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0800, 44.4250] },
+      "properties": { "type": "park", "name": "Grădina Botanică" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1000, 44.4290] },
+      "properties": { "type": "restaurant", "name": "Restaurant Palatul Parlamentului" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0980, 44.4300] },
+      "properties": { "type": "supermarket", "name": "Profi Izvor" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0960, 44.4280] },
+      "properties": { "type": "school", "name": "Școala Gimnazială Izvor" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.1350, 44.4450] },
+      "properties": { "type": "park", "name": "Parcul Titan" }
+    },
+    {
+      "type": "Feature",
+      "geometry": { "type": "Point", "coordinates": [26.0880, 44.4420] },
+      "properties": { "type": "restaurant", "name": "Restaurant Athenee Palace" }
+    }
+  ]
+}

@@ -1,0 +1,508 @@
+{
+  "zoom": 14,
+  "x": 9386,
+  "y": 5927,
+  "bounds": {
+    "north": 44.48083027856261,
+    "south": 44.465151013519616,
+    "east": 26.25732421875,
+    "west": 26.2353515625
+  },
+  "center": {
+    "lat": 44.47299064604111,
+    "lng": 26.246337890625
+  },
+  "cellSize": 250,
+  "cells": [
+    {
+      "lat": 44.465658,
+      "lng": 26.23752,
+      "distMetroM": 6388,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.465658,
+      "lng": 26.240666,
+      "distMetroM": 6465,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.465658,
+      "lng": 26.243812,
+      "distMetroM": 6550,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.465658,
+      "lng": 26.246958,
+      "distMetroM": 6645,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.465658,
+      "lng": 26.250104,
+      "distMetroM": 6746,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.467903,
+      "lng": 26.23752,
+      "distMetroM": 6627,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.467903,
+      "lng": 26.240666,
+      "distMetroM": 6701,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.467903,
+      "lng": 26.243812,
+      "distMetroM": 6784,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.467903,
+      "lng": 26.246958,
+      "distMetroM": 6875,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.467903,
+      "lng": 26.250104,
+      "distMetroM": 6973,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.470149,
+      "lng": 26.23752,
+      "distMetroM": 6867,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.470149,
+      "lng": 26.240666,
+      "distMetroM": 6939,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.470149,
+      "lng": 26.243812,
+      "distMetroM": 7019,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.470149,
+      "lng": 26.246958,
+      "distMetroM": 7107,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.470149,
+      "lng": 26.250104,
+      "distMetroM": 7202,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.472395,
+      "lng": 26.23752,
+      "distMetroM": 7108,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.472395,
+      "lng": 26.240666,
+      "distMetroM": 7177,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.472395,
+      "lng": 26.243812,
+      "distMetroM": 7254,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.472395,
+      "lng": 26.246958,
+      "distMetroM": 7339,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.472395,
+      "lng": 26.250104,
+      "distMetroM": 7432,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.474641,
+      "lng": 26.23752,
+      "distMetroM": 7349,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.474641,
+      "lng": 26.240666,
+      "distMetroM": 7416,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.474641,
+      "lng": 26.243812,
+      "distMetroM": 7491,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.474641,
+      "lng": 26.246958,
+      "distMetroM": 7573,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.474641,
+      "lng": 26.250104,
+      "distMetroM": 7663,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.476886,
+      "lng": 26.23752,
+      "distMetroM": 7591,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.476886,
+      "lng": 26.240666,
+      "distMetroM": 7656,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.476886,
+      "lng": 26.243812,
+      "distMetroM": 7728,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.476886,
+      "lng": 26.246958,
+      "distMetroM": 7808,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.476886,
+      "lng": 26.250104,
+      "distMetroM": 7895,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.479132,
+      "lng": 26.23752,
+      "distMetroM": 7833,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.479132,
+      "lng": 26.240666,
+      "distMetroM": 7896,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.479132,
+      "lng": 26.243812,
+      "distMetroM": 7966,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.479132,
+      "lng": 26.246958,
+      "distMetroM": 8044,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.479132,
+      "lng": 26.250104,
+      "distMetroM": 8128,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    }
+  ]
+}

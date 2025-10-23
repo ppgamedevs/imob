@@ -1,0 +1,704 @@
+{
+  "zoom": 14,
+  "x": 9378,
+  "y": 5930,
+  "bounds": {
+    "north": 44.433779846068234,
+    "south": 44.41808794374846,
+    "east": 26.08154296875,
+    "west": 26.0595703125
+  },
+  "center": {
+    "lat": 44.42593389490835,
+    "lng": 26.070556640625
+  },
+  "cellSize": 250,
+  "cells": [
+    {
+      "lat": 44.418496,
+      "lng": 26.061346,
+      "distMetroM": 2033,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.418496,
+      "lng": 26.064492,
+      "distMetroM": 1966,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.418496,
+      "lng": 26.067638,
+      "distMetroM": 1930,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.418496,
+      "lng": 26.070784,
+      "distMetroM": 1926,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.418496,
+      "lng": 26.07393,
+      "distMetroM": 1918,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.418496,
+      "lng": 26.077076,
+      "distMetroM": 1777,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.418496,
+      "lng": 26.080222,
+      "distMetroM": 1663,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.07
+    },
+    {
+      "lat": 44.420742,
+      "lng": 26.061346,
+      "distMetroM": 1798,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.420742,
+      "lng": 26.064492,
+      "distMetroM": 1723,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.420742,
+      "lng": 26.067638,
+      "distMetroM": 1682,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.420742,
+      "lng": 26.070784,
+      "distMetroM": 1677,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.420742,
+      "lng": 26.07393,
+      "distMetroM": 1709,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.420742,
+      "lng": 26.077076,
+      "distMetroM": 1569,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.07
+    },
+    {
+      "lat": 44.420742,
+      "lng": 26.080222,
+      "distMetroM": 1437,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.16
+    },
+    {
+      "lat": 44.422988,
+      "lng": 26.061346,
+      "distMetroM": 1568,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.422988,
+      "lng": 26.064492,
+      "distMetroM": 1481,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.422988,
+      "lng": 26.067638,
+      "distMetroM": 1433,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.422988,
+      "lng": 26.070784,
+      "distMetroM": 1428,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.422988,
+      "lng": 26.07393,
+      "distMetroM": 1466,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.422988,
+      "lng": 26.077076,
+      "distMetroM": 1374,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.22
+    },
+    {
+      "lat": 44.422988,
+      "lng": 26.080222,
+      "distMetroM": 1221,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.22
+    },
+    {
+      "lat": 44.425234,
+      "lng": 26.061346,
+      "distMetroM": 1345,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.425234,
+      "lng": 26.064492,
+      "distMetroM": 1243,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.425234,
+      "lng": 26.067638,
+      "distMetroM": 1185,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.425234,
+      "lng": 26.070784,
+      "distMetroM": 1179,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.425234,
+      "lng": 26.07393,
+      "distMetroM": 1224,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.22
+    },
+    {
+      "lat": 44.425234,
+      "lng": 26.077076,
+      "distMetroM": 1199,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.2
+    },
+    {
+      "lat": 44.425234,
+      "lng": 26.080222,
+      "distMetroM": 1021,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.22
+    },
+    {
+      "lat": 44.427479,
+      "lng": 26.061346,
+      "distMetroM": 1134,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.427479,
+      "lng": 26.064492,
+      "distMetroM": 1010,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.427479,
+      "lng": 26.067638,
+      "distMetroM": 938,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.427479,
+      "lng": 26.070784,
+      "distMetroM": 930,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.21
+    },
+    {
+      "lat": 44.427479,
+      "lng": 26.07393,
+      "distMetroM": 987,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.27
+    },
+    {
+      "lat": 44.427479,
+      "lng": 26.077076,
+      "distMetroM": 1055,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.22
+    },
+    {
+      "lat": 44.427479,
+      "lng": 26.080222,
+      "distMetroM": 847,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.27
+    },
+    {
+      "lat": 44.429725,
+      "lng": 26.061346,
+      "distMetroM": 941,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.429725,
+      "lng": 26.064492,
+      "distMetroM": 788,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.21
+    },
+    {
+      "lat": 44.429725,
+      "lng": 26.067638,
+      "distMetroM": 693,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.19
+    },
+    {
+      "lat": 44.429725,
+      "lng": 26.070784,
+      "distMetroM": 682,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.21
+    },
+    {
+      "lat": 44.429725,
+      "lng": 26.07393,
+      "distMetroM": 758,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.27
+    },
+    {
+      "lat": 44.429725,
+      "lng": 26.077076,
+      "distMetroM": 899,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.27
+    },
+    {
+      "lat": 44.429725,
+      "lng": 26.080222,
+      "distMetroM": 720,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.23
+    },
+    {
+      "lat": 44.431971,
+      "lng": 26.061346,
+      "distMetroM": 782,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.23
+    },
+    {
+      "lat": 44.431971,
+      "lng": 26.064492,
+      "distMetroM": 588,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.33
+    },
+    {
+      "lat": 44.431971,
+      "lng": 26.067638,
+      "distMetroM": 453,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.41
+    },
+    {
+      "lat": 44.431971,
+      "lng": 26.070784,
+      "distMetroM": 436,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.35
+    },
+    {
+      "lat": 44.431971,
+      "lng": 26.07393,
+      "distMetroM": 547,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.31
+    },
+    {
+      "lat": 44.431971,
+      "lng": 26.077076,
+      "distMetroM": 731,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.21
+    },
+    {
+      "lat": 44.431971,
+      "lng": 26.080222,
+      "distMetroM": 666,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    }
+  ]
+}

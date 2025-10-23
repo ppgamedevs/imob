@@ -1,0 +1,704 @@
+{
+  "zoom": 14,
+  "x": 9379,
+  "y": 5930,
+  "bounds": {
+    "north": 44.433779846068234,
+    "south": 44.41808794374846,
+    "east": 26.103515625,
+    "west": 26.08154296875
+  },
+  "center": {
+    "lat": 44.42593389490835,
+    "lng": 26.092529296875
+  },
+  "cellSize": 250,
+  "cells": [
+    {
+      "lat": 44.418496,
+      "lng": 26.083368,
+      "distMetroM": 1579,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.07
+    },
+    {
+      "lat": 44.418496,
+      "lng": 26.086514,
+      "distMetroM": 1533,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.07
+    },
+    {
+      "lat": 44.418496,
+      "lng": 26.08966,
+      "distMetroM": 1374,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.418496,
+      "lng": 26.092806,
+      "distMetroM": 1148,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.418496,
+      "lng": 26.095952,
+      "distMetroM": 934,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.418496,
+      "lng": 26.099098,
+      "distMetroM": 742,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.418496,
+      "lng": 26.102244,
+      "distMetroM": 596,
+      "nearestMetro": "Tineretului",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.420742,
+      "lng": 26.083368,
+      "distMetroM": 1340,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.12
+    },
+    {
+      "lat": 44.420742,
+      "lng": 26.086514,
+      "distMetroM": 1285,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.12
+    },
+    {
+      "lat": 44.420742,
+      "lng": 26.08966,
+      "distMetroM": 1277,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.420742,
+      "lng": 26.092806,
+      "distMetroM": 1109,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.420742,
+      "lng": 26.095952,
+      "distMetroM": 938,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.420742,
+      "lng": 26.099098,
+      "distMetroM": 809,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.420742,
+      "lng": 26.102244,
+      "distMetroM": 744,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.422988,
+      "lng": 26.083368,
+      "distMetroM": 1105,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.16
+    },
+    {
+      "lat": 44.422988,
+      "lng": 26.086514,
+      "distMetroM": 1038,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.12
+    },
+    {
+      "lat": 44.422988,
+      "lng": 26.08966,
+      "distMetroM": 1028,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.422988,
+      "lng": 26.092806,
+      "distMetroM": 960,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.422988,
+      "lng": 26.095952,
+      "distMetroM": 756,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.422988,
+      "lng": 26.099098,
+      "distMetroM": 589,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.422988,
+      "lng": 26.102244,
+      "distMetroM": 496,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.31
+    },
+    {
+      "lat": 44.425234,
+      "lng": 26.083368,
+      "distMetroM": 879,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.27
+    },
+    {
+      "lat": 44.425234,
+      "lng": 26.086514,
+      "distMetroM": 792,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.17
+    },
+    {
+      "lat": 44.425234,
+      "lng": 26.08966,
+      "distMetroM": 779,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.425234,
+      "lng": 26.092806,
+      "distMetroM": 844,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.21
+    },
+    {
+      "lat": 44.425234,
+      "lng": 26.095952,
+      "distMetroM": 624,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.21
+    },
+    {
+      "lat": 44.425234,
+      "lng": 26.099098,
+      "distMetroM": 405,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 2,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.39
+    },
+    {
+      "lat": 44.425234,
+      "lng": 26.102244,
+      "distMetroM": 253,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 3,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.45
+    },
+    {
+      "lat": 44.427479,
+      "lng": 26.083368,
+      "distMetroM": 669,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.427479,
+      "lng": 26.086514,
+      "distMetroM": 550,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.427479,
+      "lng": 26.08966,
+      "distMetroM": 532,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.427479,
+      "lng": 26.092806,
+      "distMetroM": 622,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.427479,
+      "lng": 26.095952,
+      "distMetroM": 576,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.37
+    },
+    {
+      "lat": 44.427479,
+      "lng": 26.099098,
+      "distMetroM": 326,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 2,
+        "restaurants": 2,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.43
+    },
+    {
+      "lat": 44.427479,
+      "lng": 26.102244,
+      "distMetroM": 76,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 2,
+        "restaurants": 3,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.55
+    },
+    {
+      "lat": 44.429725,
+      "lng": 26.083368,
+      "distMetroM": 498,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.429725,
+      "lng": 26.086514,
+      "distMetroM": 321,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.429725,
+      "lng": 26.08966,
+      "distMetroM": 288,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.35
+    },
+    {
+      "lat": 44.429725,
+      "lng": 26.092806,
+      "distMetroM": 433,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.35
+    },
+    {
+      "lat": 44.429725,
+      "lng": 26.095952,
+      "distMetroM": 631,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.27
+    },
+    {
+      "lat": 44.429725,
+      "lng": 26.099098,
+      "distMetroM": 416,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 2,
+        "restaurants": 2,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.43
+    },
+    {
+      "lat": 44.429725,
+      "lng": 26.102244,
+      "distMetroM": 269,
+      "nearestMetro": "Piața Unirii",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 2,
+        "restaurants": 3,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.49
+    },
+    {
+      "lat": 44.431971,
+      "lng": 26.083368,
+      "distMetroM": 416,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.431971,
+      "lng": 26.086514,
+      "distMetroM": 168,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.35
+    },
+    {
+      "lat": 44.431971,
+      "lng": 26.08966,
+      "distMetroM": 88,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.35
+    },
+    {
+      "lat": 44.431971,
+      "lng": 26.092806,
+      "distMetroM": 335,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.29
+    },
+    {
+      "lat": 44.431971,
+      "lng": 26.095952,
+      "distMetroM": 584,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 2,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.39
+    },
+    {
+      "lat": 44.431971,
+      "lng": 26.099098,
+      "distMetroM": 427,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 2,
+        "supermarkets": 1,
+        "restaurants": 2,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.45
+    },
+    {
+      "lat": 44.431971,
+      "lng": 26.102244,
+      "distMetroM": 337,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 3,
+        "supermarkets": 1,
+        "restaurants": 2,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.51
+    }
+  ]
+}

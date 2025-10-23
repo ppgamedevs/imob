@@ -1,0 +1,704 @@
+{
+  "zoom": 14,
+  "x": 9384,
+  "y": 5928,
+  "bounds": {
+    "north": 44.465151013519616,
+    "south": 44.449467536006935,
+    "east": 26.21337890625,
+    "west": 26.19140625
+  },
+  "center": {
+    "lat": 44.457309274763276,
+    "lng": 26.202392578125
+  },
+  "cellSize": 250,
+  "cells": [
+    {
+      "lat": 44.449937,
+      "lng": 26.193476,
+      "distMetroM": 3618,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.449937,
+      "lng": 26.196622,
+      "distMetroM": 3749,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.449937,
+      "lng": 26.199768,
+      "distMetroM": 3893,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.449937,
+      "lng": 26.202914,
+      "distMetroM": 4046,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.449937,
+      "lng": 26.20606,
+      "distMetroM": 4209,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.449937,
+      "lng": 26.209206,
+      "distMetroM": 4380,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.449937,
+      "lng": 26.212352,
+      "distMetroM": 4365,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.452183,
+      "lng": 26.193476,
+      "distMetroM": 3836,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.452183,
+      "lng": 26.196622,
+      "distMetroM": 3960,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.452183,
+      "lng": 26.199768,
+      "distMetroM": 4096,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.452183,
+      "lng": 26.202914,
+      "distMetroM": 4242,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.452183,
+      "lng": 26.20606,
+      "distMetroM": 4398,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.452183,
+      "lng": 26.209206,
+      "distMetroM": 4562,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.452183,
+      "lng": 26.212352,
+      "distMetroM": 4615,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.454429,
+      "lng": 26.193476,
+      "distMetroM": 4057,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.454429,
+      "lng": 26.196622,
+      "distMetroM": 4175,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.454429,
+      "lng": 26.199768,
+      "distMetroM": 4304,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.454429,
+      "lng": 26.202914,
+      "distMetroM": 4444,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.454429,
+      "lng": 26.20606,
+      "distMetroM": 4592,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.454429,
+      "lng": 26.209206,
+      "distMetroM": 4750,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.454429,
+      "lng": 26.212352,
+      "distMetroM": 4864,
+      "nearestMetro": "1 Decembrie 1918",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.456674,
+      "lng": 26.193476,
+      "distMetroM": 4282,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.456674,
+      "lng": 26.196622,
+      "distMetroM": 4394,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.456674,
+      "lng": 26.199768,
+      "distMetroM": 4517,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.456674,
+      "lng": 26.202914,
+      "distMetroM": 4650,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.456674,
+      "lng": 26.20606,
+      "distMetroM": 4792,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.456674,
+      "lng": 26.209206,
+      "distMetroM": 4943,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.456674,
+      "lng": 26.212352,
+      "distMetroM": 5102,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.45892,
+      "lng": 26.193476,
+      "distMetroM": 4509,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.45892,
+      "lng": 26.196622,
+      "distMetroM": 4616,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.45892,
+      "lng": 26.199768,
+      "distMetroM": 4733,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.45892,
+      "lng": 26.202914,
+      "distMetroM": 4860,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.45892,
+      "lng": 26.20606,
+      "distMetroM": 4996,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.45892,
+      "lng": 26.209206,
+      "distMetroM": 5141,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.45892,
+      "lng": 26.212352,
+      "distMetroM": 5294,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.461166,
+      "lng": 26.193476,
+      "distMetroM": 4739,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.461166,
+      "lng": 26.196622,
+      "distMetroM": 4840,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.461166,
+      "lng": 26.199768,
+      "distMetroM": 4952,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.461166,
+      "lng": 26.202914,
+      "distMetroM": 5074,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.461166,
+      "lng": 26.20606,
+      "distMetroM": 5204,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.461166,
+      "lng": 26.209206,
+      "distMetroM": 5344,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.461166,
+      "lng": 26.212352,
+      "distMetroM": 5491,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.463412,
+      "lng": 26.193476,
+      "distMetroM": 4971,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.463412,
+      "lng": 26.196622,
+      "distMetroM": 5067,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.463412,
+      "lng": 26.199768,
+      "distMetroM": 5174,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.463412,
+      "lng": 26.202914,
+      "distMetroM": 5291,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.463412,
+      "lng": 26.20606,
+      "distMetroM": 5416,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.463412,
+      "lng": 26.209206,
+      "distMetroM": 5550,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.463412,
+      "lng": 26.212352,
+      "distMetroM": 5692,
+      "nearestMetro": "Titan",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    }
+  ]
+}

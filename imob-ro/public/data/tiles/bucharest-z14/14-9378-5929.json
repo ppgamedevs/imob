@@ -1,0 +1,704 @@
+{
+  "zoom": 14,
+  "x": 9378,
+  "y": 5929,
+  "bounds": {
+    "north": 44.449467536006935,
+    "south": 44.433779846068234,
+    "east": 26.08154296875,
+    "west": 26.0595703125
+  },
+  "center": {
+    "lat": 44.441623691037584,
+    "lng": 26.070556640625
+  },
+  "cellSize": 250,
+  "cells": [
+    {
+      "lat": 44.434217,
+      "lng": 26.061346,
+      "distMetroM": 643,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 2,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.064492,
+      "distMetroM": 442,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 2,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.43
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.067638,
+      "distMetroM": 235,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.51
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.070784,
+      "distMetroM": 200,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 2,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.49
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.07393,
+      "distMetroM": 386,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.33
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.077076,
+      "distMetroM": 619,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.19
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.080222,
+      "distMetroM": 702,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.061346,
+      "distMetroM": 471,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 2,
+        "supermarkets": 2,
+        "restaurants": 2,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.49
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.064492,
+      "distMetroM": 412,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 2,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.43
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.067638,
+      "distMetroM": 172,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 2,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.53
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.070784,
+      "distMetroM": 119,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.45
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.07393,
+      "distMetroM": 352,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.29
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.077076,
+      "distMetroM": 598,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.080222,
+      "distMetroM": 817,
+      "nearestMetro": "Izvor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.19
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.061346,
+      "distMetroM": 393,
+      "nearestMetro": "Politehnica",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.41
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.064492,
+      "distMetroM": 519,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 2,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.33
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.067638,
+      "distMetroM": 359,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 2,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.37
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.070784,
+      "distMetroM": 337,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.33
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.07393,
+      "distMetroM": 472,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.29
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.077076,
+      "distMetroM": 676,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.080222,
+      "distMetroM": 903,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.19
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.061346,
+      "distMetroM": 428,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.41
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.064492,
+      "distMetroM": 497,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.31
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.067638,
+      "distMetroM": 594,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.29
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.070784,
+      "distMetroM": 581,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.07393,
+      "distMetroM": 668,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.077076,
+      "distMetroM": 825,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.080222,
+      "distMetroM": 1020,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.061346,
+      "distMetroM": 178,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.43
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.064492,
+      "distMetroM": 310,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.29
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.067638,
+      "distMetroM": 534,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.070784,
+      "distMetroM": 774,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.07393,
+      "distMetroM": 892,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.077076,
+      "distMetroM": 1015,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.080222,
+      "distMetroM": 1178,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.061346,
+      "distMetroM": 72,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.39
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.064492,
+      "distMetroM": 263,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.35
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.067638,
+      "distMetroM": 508,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.070784,
+      "distMetroM": 756,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.07393,
+      "distMetroM": 1005,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.077076,
+      "distMetroM": 1226,
+      "nearestMetro": "Eroilor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.080222,
+      "distMetroM": 1143,
+      "nearestMetro": "Piața Victoriei",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.061346,
+      "distMetroM": 322,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.064492,
+      "distMetroM": 409,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.067638,
+      "distMetroM": 597,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.070784,
+      "distMetroM": 819,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.07393,
+      "distMetroM": 1053,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.077076,
+      "distMetroM": 1293,
+      "nearestMetro": "Grozăvești",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.080222,
+      "distMetroM": 1103,
+      "nearestMetro": "Piața Victoriei",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    }
+  ]
+}

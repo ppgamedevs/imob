@@ -1,0 +1,704 @@
+{
+  "zoom": 14,
+  "x": 9380,
+  "y": 5929,
+  "bounds": {
+    "north": 44.449467536006935,
+    "south": 44.433779846068234,
+    "east": 26.12548828125,
+    "west": 26.103515625
+  },
+  "center": {
+    "lat": 44.441623691037584,
+    "lng": 26.114501953125
+  },
+  "cellSize": 250,
+  "cells": [
+    {
+      "lat": 44.434217,
+      "lng": 26.10539,
+      "distMetroM": 253,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 3,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.55
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.108535,
+      "distMetroM": 495,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 2,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.37
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.111681,
+      "distMetroM": 742,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.114827,
+      "distMetroM": 991,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.117973,
+      "distMetroM": 1240,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.16
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.121119,
+      "distMetroM": 1489,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.2
+    },
+    {
+      "lat": 44.434217,
+      "lng": 26.124265,
+      "distMetroM": 1738,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.09
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.10539,
+      "distMetroM": 288,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 2,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.51
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.108535,
+      "distMetroM": 514,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.31
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.111681,
+      "distMetroM": 755,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.114827,
+      "distMetroM": 1000,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.16
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.117973,
+      "distMetroM": 1247,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.2
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.121119,
+      "distMetroM": 1495,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 1
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.24
+    },
+    {
+      "lat": 44.436462,
+      "lng": 26.124265,
+      "distMetroM": 1656,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 2
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.13
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.10539,
+      "distMetroM": 476,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 2,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.41
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.108535,
+      "distMetroM": 638,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.111681,
+      "distMetroM": 844,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.114827,
+      "distMetroM": 1069,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.2
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.117973,
+      "distMetroM": 1303,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.22
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.121119,
+      "distMetroM": 1523,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.17
+    },
+    {
+      "lat": 44.438708,
+      "lng": 26.124265,
+      "distMetroM": 1420,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 2
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.24
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.10539,
+      "distMetroM": 703,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.19
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.108535,
+      "distMetroM": 822,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.111681,
+      "distMetroM": 991,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.114827,
+      "distMetroM": 1188,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.2
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.117973,
+      "distMetroM": 1403,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.22
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.121119,
+      "distMetroM": 1310,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.22
+    },
+    {
+      "lat": 44.440954,
+      "lng": 26.124265,
+      "distMetroM": 1188,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.16
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.10539,
+      "distMetroM": 942,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.19
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.108535,
+      "distMetroM": 1034,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.111681,
+      "distMetroM": 1172,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.114827,
+      "distMetroM": 1343,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.117973,
+      "distMetroM": 1292,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.16
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.121119,
+      "distMetroM": 1113,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.16
+    },
+    {
+      "lat": 44.4432,
+      "lng": 26.124265,
+      "distMetroM": 966,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.21
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.10539,
+      "distMetroM": 947,
+      "nearestMetro": "Piața Victoriei",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.21
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.108535,
+      "distMetroM": 1186,
+      "nearestMetro": "Piața Victoriei",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.16
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.111681,
+      "distMetroM": 1376,
+      "nearestMetro": "Universitate",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.114827,
+      "distMetroM": 1367,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.117973,
+      "distMetroM": 1146,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.12
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.121119,
+      "distMetroM": 940,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.17
+    },
+    {
+      "lat": 44.445446,
+      "lng": 26.124265,
+      "distMetroM": 761,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.17
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.10539,
+      "distMetroM": 898,
+      "nearestMetro": "Piața Victoriei",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.27
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.108535,
+      "distMetroM": 1147,
+      "nearestMetro": "Piața Victoriei",
+      "poiCounts": {
+        "schools": 1,
+        "supermarkets": 1,
+        "restaurants": 1,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.22
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.111681,
+      "distMetroM": 1397,
+      "nearestMetro": "Piața Victoriei",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.114827,
+      "distMetroM": 1281,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.117973,
+      "distMetroM": 1042,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.121119,
+      "distMetroM": 809,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.447691,
+      "lng": 26.124265,
+      "distMetroM": 591,
+      "nearestMetro": "Obor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    }
+  ]
+}

@@ -1,0 +1,704 @@
+{
+  "zoom": 14,
+  "x": 9382,
+  "y": 5931,
+  "bounds": {
+    "north": 44.41808794374846,
+    "south": 44.402391829093915,
+    "east": 26.16943359375,
+    "west": 26.1474609375
+  },
+  "center": {
+    "lat": 44.41023988642119,
+    "lng": 26.158447265625
+  },
+  "cellSize": 250,
+  "cells": [
+    {
+      "lat": 44.402776,
+      "lng": 26.149433,
+      "distMetroM": 1791,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.402776,
+      "lng": 26.152579,
+      "distMetroM": 1580,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.402776,
+      "lng": 26.155725,
+      "distMetroM": 1383,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.402776,
+      "lng": 26.158871,
+      "distMetroM": 1204,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.402776,
+      "lng": 26.162017,
+      "distMetroM": 1056,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.402776,
+      "lng": 26.165163,
+      "distMetroM": 951,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.402776,
+      "lng": 26.168309,
+      "distMetroM": 905,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.405022,
+      "lng": 26.149433,
+      "distMetroM": 1679,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.405022,
+      "lng": 26.152579,
+      "distMetroM": 1452,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.405022,
+      "lng": 26.155725,
+      "distMetroM": 1234,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.405022,
+      "lng": 26.158871,
+      "distMetroM": 1031,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.405022,
+      "lng": 26.162017,
+      "distMetroM": 852,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.405022,
+      "lng": 26.165163,
+      "distMetroM": 718,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.405022,
+      "lng": 26.168309,
+      "distMetroM": 655,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.407267,
+      "lng": 26.149433,
+      "distMetroM": 1598,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.05
+    },
+    {
+      "lat": 44.407267,
+      "lng": 26.152579,
+      "distMetroM": 1358,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.407267,
+      "lng": 26.155725,
+      "distMetroM": 1122,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.407267,
+      "lng": 26.158871,
+      "distMetroM": 893,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.407267,
+      "lng": 26.162017,
+      "distMetroM": 680,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.407267,
+      "lng": 26.165163,
+      "distMetroM": 501,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.407267,
+      "lng": 26.168309,
+      "distMetroM": 407,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.409513,
+      "lng": 26.149433,
+      "distMetroM": 1384,
+      "nearestMetro": "Dristor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.409513,
+      "lng": 26.152579,
+      "distMetroM": 1306,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.409513,
+      "lng": 26.155725,
+      "distMetroM": 1058,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.409513,
+      "lng": 26.158871,
+      "distMetroM": 811,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.409513,
+      "lng": 26.162017,
+      "distMetroM": 568,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.409513,
+      "lng": 26.165163,
+      "distMetroM": 335,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.409513,
+      "lng": 26.168309,
+      "distMetroM": 161,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.35
+    },
+    {
+      "lat": 44.411759,
+      "lng": 26.149433,
+      "distMetroM": 1177,
+      "nearestMetro": "Dristor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.411759,
+      "lng": 26.152579,
+      "distMetroM": 1300,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.411759,
+      "lng": 26.155725,
+      "distMetroM": 1051,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.411759,
+      "lng": 26.158871,
+      "distMetroM": 802,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.411759,
+      "lng": 26.162017,
+      "distMetroM": 555,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.411759,
+      "lng": 26.165163,
+      "distMetroM": 312,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.411759,
+      "lng": 26.168309,
+      "distMetroM": 106,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.35
+    },
+    {
+      "lat": 44.414005,
+      "lng": 26.149433,
+      "distMetroM": 989,
+      "nearestMetro": "Dristor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.414005,
+      "lng": 26.152579,
+      "distMetroM": 1181,
+      "nearestMetro": "Dristor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.414005,
+      "lng": 26.155725,
+      "distMetroM": 1102,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.414005,
+      "lng": 26.158871,
+      "distMetroM": 868,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.414005,
+      "lng": 26.162017,
+      "distMetroM": 647,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.414005,
+      "lng": 26.165163,
+      "distMetroM": 455,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.414005,
+      "lng": 26.168309,
+      "distMetroM": 348,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    },
+    {
+      "lat": 44.41625,
+      "lng": 26.149433,
+      "distMetroM": 834,
+      "nearestMetro": "Dristor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.41625,
+      "lng": 26.152579,
+      "distMetroM": 1055,
+      "nearestMetro": "Dristor",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.41625,
+      "lng": 26.155725,
+      "distMetroM": 1204,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.1
+    },
+    {
+      "lat": 44.41625,
+      "lng": 26.158871,
+      "distMetroM": 994,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.41625,
+      "lng": 26.162017,
+      "distMetroM": 808,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.41625,
+      "lng": 26.165163,
+      "distMetroM": 665,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.15
+    },
+    {
+      "lat": 44.41625,
+      "lng": 26.168309,
+      "distMetroM": 597,
+      "nearestMetro": "Nicolae Grigorescu",
+      "poiCounts": {
+        "schools": 0,
+        "supermarkets": 0,
+        "restaurants": 0,
+        "parks": 0
+      },
+      "medianEurM2": null,
+      "intelligenceScore": 0.25
+    }
+  ]
+}

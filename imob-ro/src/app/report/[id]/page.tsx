@@ -20,6 +20,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import estimatePriceRange, { type AreaStats } from "@/lib/ml/avm";
 import estimateTTS from "@/lib/ml/tts";
+import { getNearestCell, type TileCell } from "@/lib/tiles/loader";
 import { computeYield, estimateRent, type YieldResult } from "@/lib/ml/yield";
 import { matchSeismic } from "@/lib/risk/seismic";
 import type { NormalizedFeatures } from "@/types/analysis";
@@ -63,6 +64,15 @@ export default async function ReportPage({ params }: Props) {
     orderBy: { score: "desc" },
     take: 12,
   });
+
+  // Load tile data for area intelligence (Day 34)
+  let tileData: TileCell | null = null;
+  if (analysis?.extractedListing?.lat && analysis?.extractedListing?.lng) {
+    tileData = await getNearestCell(
+      analysis.extractedListing.lat,
+      analysis.extractedListing.lng
+    );
+  }
 
   // Load duplicate siblings (Day 19)
   const siblings = analysis?.groupId
@@ -552,7 +562,33 @@ export default async function ReportPage({ params }: Props) {
                 </div>
               </CardHeader>
               <CardContent>
-                {areaDailyForDisplay ? (
+                {tileData ? (
+                  <div className="space-y-3">
+                    <AreaHeatmap score={tileData.intelligenceScore} />
+                    <div className="text-sm space-y-1 text-muted-foreground">
+                      <div className="flex justify-between">
+                        <span>Metro:</span>
+                        <span className="font-medium text-foreground">{tileData.nearestMetro} ({Math.round(tileData.distMetroM)}m)</span>
+                      </div>
+                      {(tileData.poiCounts.schools > 0 || tileData.poiCounts.supermarkets > 0) && (
+                        <div className="flex justify-between">
+                          <span>Facilități:</span>
+                          <span className="font-medium text-foreground">
+                            {tileData.poiCounts.schools > 0 && `${tileData.poiCounts.schools} școli`}
+                            {tileData.poiCounts.schools > 0 && tileData.poiCounts.supermarkets > 0 && ', '}
+                            {tileData.poiCounts.supermarkets > 0 && `${tileData.poiCounts.supermarkets} magazine`}
+                          </span>
+                        </div>
+                      )}
+                      {tileData.medianEurM2 && (
+                        <div className="flex justify-between">
+                          <span>Zonă avg:</span>
+                          <span className="font-medium text-foreground">€{tileData.medianEurM2}/m²</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : areaDailyForDisplay ? (
                   <AreaHeatmap score={areaDailyForDisplay.demandScore ?? 0} />
                 ) : (
                   <Skeleton className="h-8 w-full" />

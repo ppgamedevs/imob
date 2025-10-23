@@ -1,0 +1,28 @@
+{
+  "generated": "2025-10-23T14:15:42.538Z",
+  "version": "1.0",
+  "city": "Bucharest",
+  "zoom": 14,
+  "cellSize": 250,
+  "bounds": {
+    "north": 44.55,
+    "south": 44.35,
+    "west": 26,
+    "east": 26.25
+  },
+  "tileCount": 168,
+  "cellCount": 7200,
+  "pois": {
+    "schools": 13,
+    "supermarkets": 13,
+    "restaurants": 14,
+    "parks": 10
+  },
+  "stats": {
+    "avgIntelligenceScore": 0.07520972222222316,
+    "minDistMetroM": 36,
+    "maxDistMetroM": 12119,
+    "avgDistMetroM": 4097.402083333333,
+    "globalMedianEurM2": null
+  }
+}
