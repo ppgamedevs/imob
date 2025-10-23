@@ -874,9 +874,32 @@ model CompareSet {
 model BuyerEvent {
   id        String   @id @default(cuid())
   userId    String
-  kind      String   // "saved_search_run" | "watch_price_drop" | "compare_open" | "mortgage_calc"
+  kind      String   // "saved_search_run" | "watch_price_drop" | "compare_open" | "mortgage_calc" | "view_property" | "dwell_property" | "add_to_watch" | "discover_card_click" | "search_filters"
   meta      Json?
   ts        DateTime @default(now())
   
   @@index([userId, ts])
+}
+
+model UserTaste {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  
+  // Area preferences: [{slug: "bucuresti-sector-1", score: 0.8, ts: "2025-10-23T..."}]
+  areas       Json?
+  
+  // Price band preferences (EUR)
+  minPrice    Int?
+  maxPrice    Int?
+  
+  // Room preferences: {1: 0.1, 2: 0.5, 3: 0.8, 4: 0.2}
+  rooms       Json?
+  
+  // Property type preferences: {apartment: 0.9, house: 0.2}
+  types       Json?
+  
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
 }

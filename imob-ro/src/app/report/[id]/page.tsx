@@ -36,6 +36,7 @@ import { Poller } from "./poller";
 import { QualityCard } from "./QualityCard";
 import { ReportShareButton } from "./ReportShareButton";
 import { TrustCard } from "./TrustCard";
+import { ViewTracker } from "./ViewTracker";
 
 // Next.js 15: params is now a Promise
 type Props = { params: Promise<{ id?: string | string[] }> };
@@ -379,6 +380,15 @@ export default async function ReportPage({ params }: Props) {
 
   return (
     <div className="container mx-auto py-8">
+      {/* Track view event and dwell time (Day 35) */}
+      <ViewTracker
+        groupId={analysis?.groupId ?? null}
+        analysisId={analysis?.id ?? ""}
+        areaSlug={analysis?.group?.areaSlug ?? null}
+        priceEur={extracted?.price ?? null}
+        rooms={extracted?.rooms ?? null}
+      />
+
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Raport analiză</h1>
         <div className="flex gap-2">

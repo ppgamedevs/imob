@@ -5,6 +5,7 @@
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getPersonalizedRecommendations } from "@/lib/reco/rank";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -76,28 +77,8 @@ export default async function BuyerPortalPage() {
     take: 3,
   });
 
-  // Get recommendations (simple heuristic: underpriced + fast TTS)
-  const recommendations = await prisma.analysis.findMany({
-    where: {
-      // Basic filters - can be enhanced with user preferences
-    },
-    include: {
-      featureSnapshot: true,
-      scoreSnapshot: true,
-      extractedListing: true,
-      group: true,
-    },
-    orderBy: { createdAt: "desc" },
-    take: 6,
-  });
-
-  // Filter recommendations: underpriced + fast TTS
-  const goodDeals = recommendations.filter((a) => {
-    const s = a.scoreSnapshot as any;
-    const underpriced = s?.value?.priceBadge === "underpriced";
-    const fastTTS = s?.tts?.bucket === "fast";
-    return underpriced || fastTTS;
-  });
+  // Get personalized recommendations (Day 35)
+  const goodDeals = await getPersonalizedRecommendations(session.user.id, 6);
 
   return (
     <div className="container py-8 space-y-8">
@@ -219,30 +200,29 @@ export default async function BuyerPortalPage() {
       {/* Recommendations */}
       <Card>
         <CardHeader>
-          <CardTitle>Recommended for You</CardTitle>
+          <CardTitle>Recomandate pentru tine</CardTitle>
           <p className="text-sm text-muted-foreground">
-            Properties with great value or fast selling potential
+            Proprietăți personalizate bazate pe preferințele și comportamentul tău
           </p>
         </CardHeader>
         <CardContent>
           {goodDeals.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              No recommendations available at this time.
+              Începe să navighezi prin proprietăți pentru a primi recomandări personalizate!
             </p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {goodDeals.slice(0, 6).map((a) => {
-                const f = (a.featureSnapshot?.features ?? {}) as any;
-                const s = a.scoreSnapshot as any;
+                const s = a.scoreSnapshot;
                 const photos = Array.isArray(a.extractedListing?.photos)
                   ? (a.extractedListing?.photos as string[])
                   : [];
 
-                const priceEur = f?.priceEur ?? null;
-                const areaM2 = f?.areaM2 ?? null;
+                const priceEur = a.extractedListing?.price ?? null;
+                const areaM2 = a.extractedListing?.areaM2 ?? null;
                 const eurM2 = priceEur && areaM2 ? Math.round(priceEur / areaM2) : null;
-                const priceBadge = s?.value?.priceBadge ?? null;
-                const ttsBucket = s?.tts?.bucket ?? null;
+                const priceBadge = s?.priceBadge ?? null;
+                const ttsBucket = s?.ttsBucket ?? null;
 
                 return (
                   <Link key={a.id} href={`/group/${a.group?.id ?? a.id}`}>
