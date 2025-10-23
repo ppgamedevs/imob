@@ -6,7 +6,8 @@
 import { ImageResponse } from "next/og";
 import { prisma } from "@/lib/db";
 
-export const runtime = "edge";
+// Use Node.js runtime instead of Edge to avoid 1MB size limit
+export const runtime = "nodejs";
 
 export async function GET(req: Request) {
   try {
