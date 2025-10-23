@@ -2,8 +2,9 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
-import { allowRequest, getBucketInfo } from "@/lib/rateLimiter";
+import { allowRequest, getClientIp, createRateLimitResponse } from "@/lib/rate-limiter-enhanced";
 import { normalizeUrl } from "@/lib/url";
+import { generateContentHash } from "@/lib/content-hash";
 
 function isDisallowedDomain(urlStr: string) {
   try {
@@ -21,20 +22,23 @@ function isDisallowedDomain(urlStr: string) {
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
-  const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
-  if (!allowRequest(ip)) {
+  const ip = getClientIp(req);
+  
+  // Enhanced rate limiting: 30 requests/minute for analyze endpoint
+  if (!allowRequest(ip, 'analyze')) {
     try {
       await (prisma as any).apiAudit.create({
         data: {
           ip,
           endpoint: "/api/analyze/client-push",
           action: "rate_limited",
-          details: getBucketInfo(ip),
+          details: { limitType: 'analyze' },
         },
       });
     } catch {}
-    return NextResponse.json({ error: "rate_limited" }, { status: 429 });
+    return createRateLimitResponse(ip, 'analyze');
   }
+  
   const originUrl = body?.originUrl;
   if (typeof originUrl === "string" && isDisallowedDomain(originUrl)) {
     try {
@@ -56,6 +60,27 @@ export async function POST(req: Request) {
   const norm = normalizeUrl(originUrl as string);
   if (!norm) return NextResponse.json({ ok: false, error: "invalid_url" }, { status: 400 });
 
+  // Generate content hash for deduplication
+  const contentHash = generateContentHash(extracted);
+
+  // Check for existing analysis with same content hash (idempotency)
+  const existingByHash = await prisma.analysis.findFirst({
+    where: { 
+      contentHash,
+      status: { in: ['done', 'extracting', 'normalizing', 'scoring'] } // Skip failed/queued
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+
+  if (existingByHash) {
+    // Content already processed, return existing analysis ID
+    return NextResponse.json({ 
+      analysisId: existingByHash.id, 
+      cached: true,
+      reason: 'duplicate_content'
+    });
+  }
+
   // Find an existing analysis for this URL (most recent)
   let analysis = await prisma.analysis.findFirst({
     where: { sourceUrl: norm },
@@ -63,7 +88,24 @@ export async function POST(req: Request) {
   });
 
   if (!analysis) {
-    analysis = await prisma.analysis.create({ data: { sourceUrl: norm, status: "queued" } });
+    analysis = await prisma.analysis.create({ 
+      data: { 
+        sourceUrl: norm, 
+        canonicalUrl: norm, // Set canonical URL to normalized URL initially
+        contentHash,
+        status: "queued" 
+      } 
+    });
+  } else {
+    // Update content hash on existing analysis
+    analysis = await prisma.analysis.update({
+      where: { id: analysis.id },
+      data: { 
+        contentHash,
+        canonicalUrl: norm,
+        updatedAt: new Date()
+      }
+    });
   }
 
   // Ensure photos is an array (JSON)
@@ -107,5 +149,5 @@ export async function POST(req: Request) {
     } as any,
   });
 
-  return NextResponse.json({ analysisId: analysis.id });
+  return NextResponse.json({ analysisId: analysis.id, cached: false });
 }

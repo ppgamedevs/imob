@@ -150,6 +150,7 @@ model Analysis {
   userId       String?
   sourceUrl    String
   canonicalUrl String?
+  contentHash  String?  // SHA256 hash of extracted content for dedup
   status       String   @default("queued") // queued|extracting|normalizing|scoring|done|error
   error        String?
   groupId      String?
@@ -175,6 +176,8 @@ model Analysis {
   @@index([userId])
   @@index([canonicalUrl])
   @@index([groupId])
+  @@index([createdAt])
+  @@index([contentHash])
 }
 
 model ExtractedListing {
@@ -198,6 +201,7 @@ model ExtractedListing {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@index([analysisId])
   @@index([lat, lng])
 }
 
