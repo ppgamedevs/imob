@@ -34,7 +34,7 @@ export function WatchlistCard({ item }: WatchlistCardProps) {
     }
   };
 
-  const analysis = item.group?.canonicalAnalysis;
+  const analysis = item.group?.analyses?.[0];
   const f = (analysis?.featureSnapshot?.features ?? {}) as any;
   const s = analysis?.scoreSnapshot as any;
   const photos = Array.isArray(analysis?.extractedListing?.photos)

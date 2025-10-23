@@ -72,11 +72,14 @@ export async function listWatchItemsAction() {
             orderBy: { createdAt: "desc" },
             take: 2, // Latest 2 to detect price changes
           },
-          canonicalAnalysis: {
+          analyses: {
+            where: { status: "done" },
             include: {
               featureSnapshot: true,
               extractedListing: true,
             },
+            orderBy: { createdAt: "desc" },
+            take: 1,
           },
         },
       },

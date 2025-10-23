@@ -54,12 +54,15 @@ export default async function BuyerPortalPage() {
             orderBy: { createdAt: "desc" },
             take: 2,
           },
-          canonicalAnalysis: {
+          analyses: {
+            where: { status: "done" },
             include: {
               featureSnapshot: true,
               scoreSnapshot: true,
               extractedListing: true,
             },
+            orderBy: { createdAt: "desc" },
+            take: 1,
           },
         },
       },
