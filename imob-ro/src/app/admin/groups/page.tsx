@@ -89,7 +89,10 @@ export default async function AdminGroupsPage({
                 className="border rounded px-3 py-1"
                 value={city ?? ""}
                 onChange={(e) => {
-                  const params = new URLSearchParams({ city: city ?? "", minSize: minSizeParam ?? "" });
+                  const params = new URLSearchParams({
+                    city: city ?? "",
+                    minSize: minSizeParam ?? "",
+                  });
                   if (e.target.value) {
                     params.set("city", e.target.value);
                   } else {
@@ -114,7 +117,10 @@ export default async function AdminGroupsPage({
                 className="border rounded px-3 py-1 w-20"
                 value={minSize}
                 onChange={(e) => {
-                  const params = new URLSearchParams({ city: city ?? "", minSize: minSizeParam ?? "" });
+                  const params = new URLSearchParams({
+                    city: city ?? "",
+                    minSize: minSizeParam ?? "",
+                  });
                   params.set("minSize", e.target.value);
                   window.location.href = `/admin/groups?${params.toString()}`;
                 }}

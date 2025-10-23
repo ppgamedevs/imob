@@ -10,11 +10,7 @@ export const metadata = {
   title: "Raport Evaluare Proprietate",
 };
 
-export default async function OwnerReportPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function OwnerReportPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const lead = await prisma.ownerLead.findUnique({
     where: { id },

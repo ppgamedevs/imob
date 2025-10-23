@@ -14,10 +14,7 @@ function bool(q: URLSearchParams, key: string, def = true) {
 
 export const runtime = "nodejs";
 
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   // Day 23 - Check PDF generation limit
   const session = await auth();
