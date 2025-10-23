@@ -1,11 +1,11 @@
 {
   "crons": [
     {
-      "path": "/api/cron/crawl/seed",
+      "path": "/api/cron/crawl-seed",
       "schedule": "0 * * * *"
     },
     {
-      "path": "/api/cron/crawl/run",
+      "path": "/api/cron/crawl-tick",
       "schedule": "*/5 * * * *"
     },
     {
@@ -13,7 +13,7 @@
       "schedule": "*/15 * * * *"
     },
     {
-      "path": "/api/cron/group-rebuild",
+      "path": "/api/cron/provenance-tick",
       "schedule": "0 * * * *"
     },
     {
@@ -25,8 +25,16 @@
       "schedule": "0 3 * * 0"
     },
     {
-      "path": "/api/cron/sitemap/revalidate",
+      "path": "/api/cron/revalidate-zones",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/taste/decay",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/saved-search",
+      "schedule": "0 6 * * *"
     }
   ]
 }
