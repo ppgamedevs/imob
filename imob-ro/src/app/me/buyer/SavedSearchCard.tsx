@@ -69,12 +69,7 @@ export function SavedSearchCard({ search }: SavedSearchCardProps) {
               Run Search
             </Button>
           </Link>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleDelete}
-            disabled={deleting}
-          >
+          <Button variant="ghost" size="sm" onClick={handleDelete} disabled={deleting}>
             {deleting ? "..." : "Delete"}
           </Button>
         </div>

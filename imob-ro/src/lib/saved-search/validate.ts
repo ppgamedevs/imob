@@ -31,14 +31,7 @@ export const SavedQuerySchema = z.object({
 
   // Sort
   sort: z
-    .enum([
-      "new",
-      "price_asc",
-      "price_desc",
-      "eurm2_asc",
-      "eurm2_desc",
-      "yield_desc",
-    ])
+    .enum(["new", "price_asc", "price_desc", "eurm2_asc", "eurm2_desc", "yield_desc"])
     .optional(),
 
   // Budget

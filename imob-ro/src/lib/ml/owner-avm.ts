@@ -99,9 +99,7 @@ async function getAreaMedianEurM2(areaSlug?: string | null, city?: string | null
 /**
  * Estimate AVM from owner-provided features
  */
-export async function estimateAVMFromFeatures(
-  features: OwnerFeatures,
-): Promise<AvmEstimate> {
+export async function estimateAVMFromFeatures(features: OwnerFeatures): Promise<AvmEstimate> {
   const { areaSlug, city, areaM2, level, yearBuilt, distMetroM, conditionScore } = features;
 
   const medEurM2 = await getAreaMedianEurM2(areaSlug, city);

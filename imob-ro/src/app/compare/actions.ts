@@ -9,10 +9,7 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
-export async function createCompareSetAction(
-  groupIds: string[],
-  name?: string
-) {
+export async function createCompareSetAction(groupIds: string[], name?: string) {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error("Authentication required");

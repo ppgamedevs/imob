@@ -34,8 +34,7 @@ export function mortgageCalc(i: MortgageInput): MortgageResult {
   const n = (i.years ?? 30) * 12;
 
   // Calculate monthly P&I using amortization formula
-  const monthly =
-    r === 0 ? principal / n : (principal * r) / (1 - Math.pow(1 + r, -n));
+  const monthly = r === 0 ? principal / n : (principal * r) / (1 - Math.pow(1 + r, -n));
 
   // Monthly fixed costs
   const tax = Math.round(((i.taxPct ?? 0) / 12) * i.price);
@@ -66,7 +65,7 @@ export function maxAffordablePrice(
   ratePct = 7,
   downPct = 0.15,
   dtiMax = 0.4,
-  years = 30
+  years = 30,
 ): number {
   const maxMonthly = incomeNet * dtiMax;
   const r = ratePct / 100 / 12;

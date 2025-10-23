@@ -50,8 +50,7 @@ export default async function OwnerReportPage({ params }: { params: { id: string
   });
   recommendations.push({
     title: "Descriere completă",
-    description:
-      "Include toate detaliile: poziție ferestre, boxă, parcare, acces metrou, magazine",
+    description: "Include toate detaliile: poziție ferestre, boxă, parcare, acces metrou, magazine",
   });
 
   return (
@@ -67,9 +66,7 @@ export default async function OwnerReportPage({ params }: { params: { id: string
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Raport Evaluare Proprietate</h1>
         <p className="text-muted-foreground">
-          {lead.areaSlug && (
-            <span className="capitalize">{lead.areaSlug.replace(/-/g, " ")}</span>
-          )}
+          {lead.areaSlug && <span className="capitalize">{lead.areaSlug.replace(/-/g, " ")}</span>}
           {lead.areaSlug && lead.addressHint && " • "}
           {lead.addressHint}
         </p>
@@ -98,8 +95,8 @@ export default async function OwnerReportPage({ params }: { params: { id: string
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Bazat pe analiza pieței pentru zona ta. Acest preț maximizează șansele de
-              vânzare rapidă la valoare de piață.
+              Bazat pe analiza pieței pentru zona ta. Acest preț maximizează șansele de vânzare
+              rapidă la valoare de piață.
             </p>
           </CardContent>
         </Card>
@@ -130,9 +127,8 @@ export default async function OwnerReportPage({ params }: { params: { id: string
             </div>
             <div className="mt-4 p-3 bg-muted rounded-lg">
               <p className="text-xs text-muted-foreground">
-                Intervalul AVM reprezintă unde se încadrează majoritatea apartamentelor
-                similare din zona ta. Evaluarea este bazată pe suprafață, an construcție,
-                zonă și stare.
+                Intervalul AVM reprezintă unde se încadrează majoritatea apartamentelor similare din
+                zona ta. Evaluarea este bazată pe suprafață, an construcție, zonă și stare.
               </p>
             </div>
           </CardContent>
@@ -165,15 +161,11 @@ export default async function OwnerReportPage({ params }: { params: { id: string
               <div className="space-y-2">
                 <div>
                   <div className="text-sm text-muted-foreground">Chirie estimată</div>
-                  <div className="text-xl font-bold">
-                    {lead.estRent.toLocaleString()} € / lună
-                  </div>
+                  <div className="text-xl font-bold">{lead.estRent.toLocaleString()} € / lună</div>
                 </div>
                 <div>
                   <div className="text-sm text-muted-foreground">Randament net anual</div>
-                  <div className="text-xl font-bold">
-                    {(lead.yieldNet * 100).toFixed(1)}%
-                  </div>
+                  <div className="text-xl font-bold">{(lead.yieldNet * 100).toFixed(1)}%</div>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-3">
@@ -270,10 +262,9 @@ export default async function OwnerReportPage({ params }: { params: { id: string
       <div className="mt-8 p-4 bg-muted rounded-lg text-xs text-muted-foreground">
         <p>
           <strong>Notă:</strong> Evaluarea este realizată automat pe baza datelor de piață
-          disponibile și nu constituie consultanță financiară sau imobiliară profesională.
-          Prețul final de vânzare poate varia în funcție de condiții specifice pieței,
-          negociere și factori individuali. Pentru o evaluare oficială, consultă un expert
-          evaluat autorizat.
+          disponibile și nu constituie consultanță financiară sau imobiliară profesională. Prețul
+          final de vânzare poate varia în funcție de condiții specifice pieței, negociere și factori
+          individuali. Pentru o evaluare oficială, consultă un expert evaluat autorizat.
         </p>
       </div>
     </div>

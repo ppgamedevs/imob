@@ -101,21 +101,14 @@ export default async function BuyerPortalPage() {
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold">Buyer Portal</h1>
-        <p className="text-muted-foreground">
-          Manage your searches, favorites, and comparisons
-        </p>
+        <p className="text-muted-foreground">Manage your searches, favorites, and comparisons</p>
       </div>
 
       {/* Quick Actions */}
       <div className="flex flex-wrap gap-4">
         <Link href="/discover">
           <Button size="lg">
-            <svg
-              className="mr-2 h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -128,12 +121,7 @@ export default async function BuyerPortalPage() {
         </Link>
         <Link href="/search">
           <Button size="lg" variant="outline">
-            <svg
-              className="mr-2 h-5 w-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -209,10 +197,13 @@ export default async function BuyerPortalPage() {
                       <div>
                         <p className="font-medium">{c.name || "Untitled Comparison"}</p>
                         <p className="text-sm text-muted-foreground">
-                          {groupIds.length} properties • {new Date(c.createdAt).toLocaleDateString()}
+                          {groupIds.length} properties •{" "}
+                          {new Date(c.createdAt).toLocaleDateString()}
                         </p>
                       </div>
-                      <Button variant="ghost" size="sm">View</Button>
+                      <Button variant="ghost" size="sm">
+                        View
+                      </Button>
                     </div>
                   </Link>
                 );
@@ -265,9 +256,7 @@ export default async function BuyerPortalPage() {
                           {priceBadge === "underpriced" && (
                             <Badge variant="default">Underpriced</Badge>
                           )}
-                          {ttsBucket === "fast" && (
-                            <Badge variant="secondary">Fast TTS</Badge>
-                          )}
+                          {ttsBucket === "fast" && <Badge variant="secondary">Fast TTS</Badge>}
                         </div>
                         <p className="font-semibold text-lg">
                           {priceEur ? `${priceEur.toLocaleString()} €` : "Price N/A"}

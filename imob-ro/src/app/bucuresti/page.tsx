@@ -54,7 +54,7 @@ export default async function BucharestPage() {
         demandScore: latest?.demandScore ?? null,
         change30d,
       };
-    })
+    }),
   );
 
   // Sort by supply (most active zones)
@@ -65,7 +65,8 @@ export default async function BucharestPage() {
 
   // City-wide averages
   const cityMedian =
-    areaData.reduce((sum, a) => sum + (a.medianEurM2 ?? 0), 0) / areaData.filter((a) => a.medianEurM2).length;
+    areaData.reduce((sum, a) => sum + (a.medianEurM2 ?? 0), 0) /
+    areaData.filter((a) => a.medianEurM2).length;
   const citySupply = areaData.reduce((sum, a) => sum + (a.supply ?? 0), 0);
 
   // Best value zones (lowest €/m²)
@@ -84,9 +85,7 @@ export default async function BucharestPage() {
     <div className="container mx-auto max-w-7xl p-4 md:p-6 space-y-8">
       {/* Hero */}
       <div className="space-y-2">
-        <h1 className="text-3xl md:text-4xl font-bold">
-          Piața imobiliară București
-        </h1>
+        <h1 className="text-3xl md:text-4xl font-bold">Piața imobiliară București</h1>
         <p className="text-muted-foreground text-lg">
           Statistici actualizate zilnic · {areaData.length} zone monitorizate
         </p>
@@ -101,9 +100,7 @@ export default async function BucharestPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">
-              {Math.round(cityMedian).toLocaleString()} €/m²
-            </p>
+            <p className="text-3xl font-bold">{Math.round(cityMedian).toLocaleString()} €/m²</p>
           </CardContent>
         </Card>
 
@@ -134,9 +131,7 @@ export default async function BucharestPage() {
       <Card>
         <CardHeader>
           <CardTitle>Top zone după activitate</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Cele mai multe oferte active
-          </p>
+          <p className="text-sm text-muted-foreground">Cele mai multe oferte active</p>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -147,20 +142,15 @@ export default async function BucharestPage() {
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="font-semibold">{zone.name}</h3>
                       {zone.change30d !== null && (
-                        <Badge
-                          variant={zone.change30d > 0 ? "default" : "secondary"}
-                        >
-                          {zone.change30d > 0 ? "↑" : "↓"}{" "}
-                          {Math.abs(zone.change30d).toFixed(1)}%
+                        <Badge variant={zone.change30d > 0 ? "default" : "secondary"}>
+                          {zone.change30d > 0 ? "↑" : "↓"} {Math.abs(zone.change30d).toFixed(1)}%
                         </Badge>
                       )}
                     </div>
                     <p className="text-2xl font-bold text-primary">
                       {zone.medianEurM2?.toLocaleString()} €/m²
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      {zone.supply} oferte active
-                    </p>
+                    <p className="text-sm text-muted-foreground">{zone.supply} oferte active</p>
                   </CardContent>
                 </Card>
               </Link>
@@ -173,9 +163,7 @@ export default async function BucharestPage() {
       <Card>
         <CardHeader>
           <CardTitle>Cele mai accesibile zone</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Preț/m² sub media orașului
-          </p>
+          <p className="text-sm text-muted-foreground">Preț/m² sub media orașului</p>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -184,19 +172,12 @@ export default async function BucharestPage() {
                 <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                   <div>
                     <p className="font-medium">{zone.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {zone.supply} oferte
-                    </p>
+                    <p className="text-sm text-muted-foreground">{zone.supply} oferte</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-bold">
-                      {zone.medianEurM2?.toLocaleString()} €/m²
-                    </p>
+                    <p className="text-xl font-bold">{zone.medianEurM2?.toLocaleString()} €/m²</p>
                     <Badge variant="secondary">
-                      {Math.round(
-                        ((zone.medianEurM2 ?? 0) / cityMedian - 1) * 100
-                      )}
-                      % vs oraș
+                      {Math.round(((zone.medianEurM2 ?? 0) / cityMedian - 1) * 100)}% vs oraș
                     </Badge>
                   </div>
                 </div>
@@ -211,9 +192,7 @@ export default async function BucharestPage() {
         <Card>
           <CardHeader>
             <CardTitle>Zone în creștere</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Creșteri de preț în ultimele 30 zile
-            </p>
+            <p className="text-sm text-muted-foreground">Creșteri de preț în ultimele 30 zile</p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -223,13 +202,9 @@ export default async function BucharestPage() {
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between mb-2">
                         <h3 className="font-semibold">{zone.name}</h3>
-                        <Badge variant="default">
-                          ↑ {zone.change30d?.toFixed(1)}%
-                        </Badge>
+                        <Badge variant="default">↑ {zone.change30d?.toFixed(1)}%</Badge>
                       </div>
-                      <p className="text-xl font-bold">
-                        {zone.medianEurM2?.toLocaleString()} €/m²
-                      </p>
+                      <p className="text-xl font-bold">{zone.medianEurM2?.toLocaleString()} €/m²</p>
                     </CardContent>
                   </Card>
                 </Link>

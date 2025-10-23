@@ -51,7 +51,7 @@ export async function GET() {
       }),
       {
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   } catch (err) {
     return new Response(
@@ -62,7 +62,7 @@ export async function GET() {
       {
         status: 500,
         headers: { "Content-Type": "application/json" },
-      }
+      },
     );
   }
 }

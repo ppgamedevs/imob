@@ -60,27 +60,15 @@ export function ComparablePropertyCard({
       )}
 
       <Link href={`/group/${groupId}`}>
-        {photo && (
-          <img
-            src={photo}
-            alt={title}
-            className="w-full h-48 object-cover"
-          />
-        )}
+        {photo && <img src={photo} alt={title} className="w-full h-48 object-cover" />}
       </Link>
 
       <CardContent className="p-4 space-y-2">
         <div className="flex flex-wrap gap-2 mb-2">
-          {priceBadge === "underpriced" && (
-            <Badge variant="default">Underpriced</Badge>
-          )}
-          {ttsBucket === "fast" && (
-            <Badge variant="secondary">Fast TTS</Badge>
-          )}
+          {priceBadge === "underpriced" && <Badge variant="default">Underpriced</Badge>}
+          {ttsBucket === "fast" && <Badge variant="secondary">Fast TTS</Badge>}
           {yieldNet && yieldNet > 0.05 && (
-            <Badge variant="outline">
-              {(yieldNet * 100).toFixed(1)}% Yield
-            </Badge>
+            <Badge variant="outline">{(yieldNet * 100).toFixed(1)}% Yield</Badge>
           )}
         </div>
 
@@ -90,11 +78,7 @@ export function ComparablePropertyCard({
           </p>
         </Link>
 
-        {eurM2 && (
-          <p className="text-sm text-muted-foreground">
-            {eurM2.toLocaleString()} €/m²
-          </p>
-        )}
+        {eurM2 && <p className="text-sm text-muted-foreground">{eurM2.toLocaleString()} €/m²</p>}
 
         <div className="text-sm text-muted-foreground">
           {rooms && `${rooms} rooms`}

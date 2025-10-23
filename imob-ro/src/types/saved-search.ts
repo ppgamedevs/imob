@@ -28,13 +28,7 @@ export type SavedQuery = {
   keywords?: string[]; // title/description search
 
   // Sorting
-  sort?:
-    | "new"
-    | "price_asc"
-    | "price_desc"
-    | "eurm2_asc"
-    | "eurm2_desc"
-    | "yield_desc";
+  sort?: "new" | "price_asc" | "price_desc" | "eurm2_asc" | "eurm2_desc" | "yield_desc";
 
   // Affordability
   budget?: {

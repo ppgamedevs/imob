@@ -93,9 +93,7 @@ export default function OwnerWizard({ initialArea }: { initialArea?: string }) {
             />
           ))}
         </div>
-        <p className="text-sm text-muted-foreground text-center">
-          Pasul {step} din 3
-        </p>
+        <p className="text-sm text-muted-foreground text-center">Pasul {step} din 3</p>
       </div>
 
       {/* Step 1: Location */}
@@ -129,9 +127,7 @@ export default function OwnerWizard({ initialArea }: { initialArea?: string }) {
                 value={addressHint}
                 onChange={(e) => setAddressHint(e.target.value)}
               />
-              <p className="text-xs text-muted-foreground mt-1">
-                Nu publicăm adresa exactă
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Nu publicăm adresa exactă</p>
             </div>
 
             <Button onClick={() => setStep(2)} className="w-full">
@@ -269,11 +265,7 @@ export default function OwnerWizard({ initialArea }: { initialArea?: string }) {
               <Button variant="outline" onClick={() => setStep(2)} className="flex-1">
                 Înapoi
               </Button>
-              <Button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="flex-1"
-              >
+              <Button onClick={handleSubmit} disabled={loading} className="flex-1">
                 {loading ? "Se calculează..." : "Calculează preț recomandat"}
               </Button>
             </div>

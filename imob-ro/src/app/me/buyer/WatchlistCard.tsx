@@ -70,17 +70,9 @@ export function WatchlistCard({ item }: WatchlistCardProps) {
             {priceEur ? `${priceEur.toLocaleString()} €` : "Price N/A"}
           </p>
         </Link>
-        {eurM2 && (
-          <p className="text-sm text-muted-foreground">
-            {eurM2.toLocaleString()} €/m²
-          </p>
-        )}
-        <p className="text-sm line-clamp-2">
-          {analysis?.extractedListing?.title ?? "No title"}
-        </p>
-        {item.note && (
-          <p className="text-xs text-muted-foreground italic">{item.note}</p>
-        )}
+        {eurM2 && <p className="text-sm text-muted-foreground">{eurM2.toLocaleString()} €/m²</p>}
+        <p className="text-sm line-clamp-2">{analysis?.extractedListing?.title ?? "No title"}</p>
+        {item.note && <p className="text-xs text-muted-foreground italic">{item.note}</p>}
         <Button
           variant="outline"
           size="sm"

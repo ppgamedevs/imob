@@ -29,7 +29,7 @@ export function BuyerToolbar({
 
   const handleSaveSearch = async () => {
     if (!currentQuery) return;
-    
+
     const name = prompt("Name for this search (optional):");
     if (name === null) return; // User cancelled
 
@@ -71,18 +71,8 @@ export function BuyerToolbar({
   return (
     <div className="flex items-center gap-3 flex-wrap">
       {currentQuery && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleSaveSearch}
-          disabled={saving}
-        >
-          <svg
-            className="mr-2 h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
+        <Button variant="outline" size="sm" onClick={handleSaveSearch} disabled={saving}>
+          <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -103,12 +93,7 @@ export function BuyerToolbar({
             onClick={handleCompare}
             disabled={comparing || selectedGroupIds.length < 2}
           >
-            <svg
-              className="mr-2 h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -119,11 +104,7 @@ export function BuyerToolbar({
             {comparing ? "Creating..." : "Compare"}
           </Button>
           {onSelectionChange && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onSelectionChange([])}
-            >
+            <Button variant="ghost" size="sm" onClick={() => onSelectionChange([])}>
               Clear
             </Button>
           )}

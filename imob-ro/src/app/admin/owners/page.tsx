@@ -29,9 +29,7 @@ export default async function AdminOwnersPage({
     _count: true,
   });
 
-  const statusCounts = Object.fromEntries(
-    stats.map((s) => [s.status, s._count]),
-  );
+  const statusCounts = Object.fromEntries(stats.map((s) => [s.status, s._count]));
 
   async function handleStatusUpdate(formData: FormData) {
     "use server";

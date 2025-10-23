@@ -71,7 +71,7 @@ export async function loadZone(slug: string): Promise<ZoneData | null> {
   // Latest KPIs
   const today = daily[daily.length - 1];
   const prev30 = daily.length >= 30 ? daily[daily.length - 30] : null;
-  
+
   // Calculate 30-day change
   const pricePerSqmChange30d =
     today && prev30 && prev30.pricePerSqm && today.pricePerSqm

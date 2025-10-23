@@ -89,8 +89,7 @@ export async function calcOwnerLead(leadId: string) {
   });
 
   // Yield calculation
-  const yieldNet =
-    rent?.rentEur && mid ? computeNetYield(rent.rentEur, mid) : null;
+  const yieldNet = rent?.rentEur && mid ? computeNetYield(rent.rentEur, mid) : null;
 
   // Price suggestion
   const priceSuggested = suggestListPrice(mid, conf, tts?.bucket);
@@ -132,11 +131,7 @@ function computeNetYield(rentEur: number, priceEur: number) {
   return (annual - opex) / priceEur;
 }
 
-function suggestListPrice(
-  mid: number | null,
-  conf?: number,
-  bucket?: string,
-): number | null {
+function suggestListPrice(mid: number | null, conf?: number, bucket?: string): number | null {
   if (!mid) return null;
 
   const bump = Math.min(0.015, (conf ?? 0.7) * 0.01);

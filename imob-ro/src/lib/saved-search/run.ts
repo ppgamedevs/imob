@@ -47,9 +47,7 @@ export async function runSavedSearch(userId: string, queryJson: any) {
       const calc = mortgageCalc({
         price: item.priceEur,
         downPct: q.budget?.mortgage?.downPct ?? 0.15,
-        ratePct: q.budget?.mortgage?.maxRate
-          ? q.budget.mortgage.maxRate * 100
-          : 7,
+        ratePct: q.budget?.mortgage?.maxRate ? q.budget.mortgage.maxRate * 100 : 7,
         years: 30,
         incomeNet: q.budget?.cash ?? undefined,
         dtiMax: 0.4,

@@ -94,30 +94,35 @@ export default async function ComparePage({ params }: ComparePageProps) {
   const properties = groups.map(getFeatures);
 
   // Determine winners
-  const bestValue = properties.reduce((best, p, i) =>
-    p.eurM2 && (!best || (properties[best].eurM2 && p.eurM2 < properties[best].eurM2!))
-      ? i
-      : best
-  , 0);
+  const bestValue = properties.reduce(
+    (best, p, i) =>
+      p.eurM2 && (!best || (properties[best].eurM2 && p.eurM2 < properties[best].eurM2!))
+        ? i
+        : best,
+    0,
+  );
 
-  const fastestSell = properties.reduce((best, p, i) =>
-    p.ttsDays && (!best || (properties[best].ttsDays && p.ttsDays < properties[best].ttsDays!))
-      ? i
-      : best
-  , 0);
+  const fastestSell = properties.reduce(
+    (best, p, i) =>
+      p.ttsDays && (!best || (properties[best].ttsDays && p.ttsDays < properties[best].ttsDays!))
+        ? i
+        : best,
+    0,
+  );
 
-  const bestYield = properties.reduce((best, p, i) =>
-    p.yieldNet && (!best || (properties[best].yieldNet && p.yieldNet < properties[best].yieldNet!))
-      ? i
-      : best
-  , 0);
+  const bestYield = properties.reduce(
+    (best, p, i) =>
+      p.yieldNet &&
+      (!best || (properties[best].yieldNet && p.yieldNet < properties[best].yieldNet!))
+        ? i
+        : best,
+    0,
+  );
 
   return (
     <div className="container py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">
-          {compareSet.name || "Property Comparison"}
-        </h1>
+        <h1 className="text-3xl font-bold">{compareSet.name || "Property Comparison"}</h1>
         <p className="text-muted-foreground">
           Comparing {properties.length} properties side-by-side
         </p>
@@ -155,9 +160,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
               {properties.map((p, i) => (
                 <td key={i} className="border p-4">
                   {p.priceEur ? (
-                    <span className="text-lg font-semibold">
-                      {p.priceEur.toLocaleString()} €
-                    </span>
+                    <span className="text-lg font-semibold">{p.priceEur.toLocaleString()} €</span>
                   ) : (
                     "N/A"
                   )}
@@ -171,9 +174,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
                   {p.eurM2 ? (
                     <div className="flex items-center gap-2">
                       <span className="font-semibold">{p.eurM2.toLocaleString()} €/m²</span>
-                      {i === bestValue && (
-                        <Badge variant="default">Best Value</Badge>
-                      )}
+                      {i === bestValue && <Badge variant="default">Best Value</Badge>}
                     </div>
                   ) : (
                     "N/A"
@@ -238,9 +239,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
                       >
                         {p.ttsBucket}
                       </Badge>
-                      {i === fastestSell && (
-                        <Badge variant="default">Fastest</Badge>
-                      )}
+                      {i === fastestSell && <Badge variant="default">Fastest</Badge>}
                     </div>
                   ) : (
                     "N/A"
@@ -255,9 +254,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
                   {p.yieldNet ? (
                     <div className="flex items-center gap-2">
                       <span>{(p.yieldNet * 100).toFixed(1)}%</span>
-                      {i === bestYield && (
-                        <Badge variant="default">Best Yield</Badge>
-                      )}
+                      {i === bestYield && <Badge variant="default">Best Yield</Badge>}
                     </div>
                   ) : (
                     "N/A"
@@ -280,11 +277,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
               {properties.map((p, i) => (
                 <td key={i} className="border p-4">
                   {p.riskSeismic ? (
-                    <Badge
-                      variant={
-                        p.riskSeismic > 0.5 ? "destructive" : "secondary"
-                      }
-                    >
+                    <Badge variant={p.riskSeismic > 0.5 ? "destructive" : "secondary"}>
                       {p.riskSeismic > 0.5 ? "High" : "Low"}
                     </Badge>
                   ) : (

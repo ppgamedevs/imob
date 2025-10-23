@@ -8,16 +8,11 @@ export const metadata: Metadata = {
     "Află pretul recomandat pentru apartamentul tău în 3 pași simpli. Evaluare AVM gratuită, estimare timp de vânzare și recomandări personalizate.",
   openGraph: {
     title: "Evaluare Preț Apartament București",
-    description:
-      "Calculează prețul optim de vânzare pentru apartamentul tău cu tehnologie AVM",
+    description: "Calculează prețul optim de vânzare pentru apartamentul tău cu tehnologie AVM",
   },
 };
 
-export default function VindePage({
-  searchParams,
-}: {
-  searchParams: { areaSlug?: string };
-}) {
+export default function VindePage({ searchParams }: { searchParams: { areaSlug?: string } }) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -53,8 +48,8 @@ export default function VindePage({
             Află prețul optim pentru apartamentul tău
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-            Evaluare automată (AVM) gratuită în 3 pași simpli. Primești preț recomandat,
-            interval de încredere, estimare timp de vânzare și raport complet.
+            Evaluare automată (AVM) gratuită în 3 pași simpli. Primești preț recomandat, interval de
+            încredere, estimare timp de vânzare și raport complet.
           </p>
         </div>
 
@@ -64,8 +59,7 @@ export default function VindePage({
             <div className="text-3xl mb-3">📊</div>
             <h3 className="text-lg font-semibold mb-2">Evaluare AVM</h3>
             <p className="text-sm text-muted-foreground">
-              Tehnologie Automated Valuation Model bazată pe mii de tranzacții recente
-              din zona ta.
+              Tehnologie Automated Valuation Model bazată pe mii de tranzacții recente din zona ta.
             </p>
           </div>
 
@@ -73,8 +67,7 @@ export default function VindePage({
             <div className="text-3xl mb-3">⏱️</div>
             <h3 className="text-lg font-semibold mb-2">Timp până la vânzare</h3>
             <p className="text-sm text-muted-foreground">
-              Estimare TTS (Time to Sell) - află în cât timp poți vinde la prețul
-              recomandat.
+              Estimare TTS (Time to Sell) - află în cât timp poți vinde la prețul recomandat.
             </p>
           </div>
 
@@ -93,9 +86,9 @@ export default function VindePage({
         {/* Trust signals */}
         <div className="mt-12 text-center">
           <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-            <strong>Confidențialitate garantată.</strong> Datele tale sunt protejate și nu
-            sunt partajate cu terți. Calculele sunt estimări automate și nu constituie
-            consultanță financiară. Poți solicita ștergerea datelor oricând.
+            <strong>Confidențialitate garantată.</strong> Datele tale sunt protejate și nu sunt
+            partajate cu terți. Calculele sunt estimări automate și nu constituie consultanță
+            financiară. Poți solicita ștergerea datelor oricând.
           </p>
         </div>
 
@@ -106,26 +99,24 @@ export default function VindePage({
             <div>
               <h3 className="font-semibold mb-2">Preț bazat pe date reale</h3>
               <p className="text-sm text-muted-foreground">
-                Analizăm zilnic mii de anunțuri din București pentru a-ți oferi o
-                evaluare precisă bazată pe zona ta, suprafață, an construcție și alte
-                caracteristici.
+                Analizăm zilnic mii de anunțuri din București pentru a-ți oferi o evaluare precisă
+                bazată pe zona ta, suprafață, an construcție și alte caracteristici.
               </p>
             </div>
 
             <div>
               <h3 className="font-semibold mb-2">Raport complet gratuit</h3>
               <p className="text-sm text-muted-foreground">
-                Primești un raport detaliat cu interval de preț (minim-maxim), preț
-                recomandat, estimare timp de vânzare, chirie potențială și randament ca
-                investiție.
+                Primești un raport detaliat cu interval de preț (minim-maxim), preț recomandat,
+                estimare timp de vânzare, chirie potențială și randament ca investiție.
               </p>
             </div>
 
             <div>
               <h3 className="font-semibold mb-2">Link public pentru partajare</h3>
               <p className="text-sm text-muted-foreground">
-                Poți genera un link public al raportului pentru a-l împărtăși cu agenții
-                imobiliari sau potențiali cumpărători. Adresa exactă rămâne confidențială.
+                Poți genera un link public al raportului pentru a-l împărtăși cu agenții imobiliari
+                sau potențiali cumpărători. Adresa exactă rămâne confidențială.
               </p>
             </div>
           </div>

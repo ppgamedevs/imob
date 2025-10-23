@@ -84,9 +84,7 @@ export async function GET(req: Request) {
                 <span>📍</span>
                 <span>București</span>
               </div>
-              <div style={{ fontSize: 72, fontWeight: "bold", lineHeight: 1.1 }}>
-                {area.name}
-              </div>
+              <div style={{ fontSize: 72, fontWeight: "bold", lineHeight: 1.1 }}>{area.name}</div>
             </div>
 
             {/* KPIs */}
@@ -110,9 +108,7 @@ export async function GET(req: Request) {
                     gap: "16px",
                   }}
                 >
-                  <span>
-                    {medianEurM2 ? `${Math.round(medianEurM2).toLocaleString()}` : "N/A"}
-                  </span>
+                  <span>{medianEurM2 ? `${Math.round(medianEurM2).toLocaleString()}` : "N/A"}</span>
                   <span style={{ fontSize: 48, opacity: 0.8 }}>€/m²</span>
                 </div>
               </div>
@@ -172,7 +168,7 @@ export async function GET(req: Request) {
       {
         width: 1200,
         height: 630,
-      }
+      },
     );
   } catch (err) {
     console.error("OG image error:", err);
