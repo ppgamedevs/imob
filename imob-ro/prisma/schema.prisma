@@ -959,3 +959,20 @@ model EmbedUsage {
   @@index([widgetType, createdAt])
   @@index([createdAt])
 }
+
+// Cron job execution tracking for observability
+model CronLog {
+  id          String   @id @default(cuid())
+  name        String   // cron job name (e.g., "crawl-tick", "avm-train")
+  status      String   // "started", "completed", "failed"
+  duration    Int?     // execution time in milliseconds
+  error       String?  @db.Text // error message if failed
+  metadata    Json?    // additional context (rows processed, etc.)
+  startedAt   DateTime @default(now())
+  completedAt DateTime?
+  
+  @@index([name, startedAt])
+  @@index([status, startedAt])
+  @@index([startedAt])
+}
+

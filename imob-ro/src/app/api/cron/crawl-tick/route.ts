@@ -11,13 +11,14 @@ import { pickAdapter } from "@/lib/crawl/adapters";
 import { takeBatch, markDone, hashContent, hasContentChanged } from "@/lib/crawl/queue";
 import { fetchWithCache } from "@/lib/crawl/fetcher";
 import { normalizeUrl } from "@/lib/url";
+import { withCronTracking } from "@/lib/obs/cron-tracker";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const BATCH_SIZE = 25;
 
-export async function GET() {
+export const GET = withCronTracking("crawl-tick", async () => {
   // Take batch with domain diversity
   const batch = await takeBatch(BATCH_SIZE);
 
@@ -153,4 +154,4 @@ export async function GET() {
     skipped,
     errors,
   });
-}
+});

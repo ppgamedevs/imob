@@ -92,7 +92,7 @@ export async function POST(req: Request) {
   if (!norm) return NextResponse.json({ ok: false, error: "invalid_url" }, { status: 400 });
 
   // Sanitize extracted content to prevent XSS
-  const sanitizedExtracted = sanitizeListing(extracted);
+  const sanitizedExtracted = await sanitizeListing(extracted);
 
   // Generate content hash for deduplication
   const contentHash = generateContentHash(sanitizedExtracted);

@@ -1,4 +1,11 @@
-import DOMPurify from "isomorphic-dompurify";
+// Lazy load DOMPurify to avoid bundling browser code during build
+let DOMPurify: any = null;
+async function getDOMPurify() {
+  if (!DOMPurify) {
+    DOMPurify = (await import("isomorphic-dompurify")).default;
+  }
+  return DOMPurify;
+}
 
 /**
  * Sanitize HTML to prevent XSS attacks
@@ -11,13 +18,14 @@ import DOMPurify from "isomorphic-dompurify";
  * @example
  * ```ts
  * const userInput = '<script>alert("XSS")</script><p>Safe content</p>';
- * const safe = sanitizeHTML(userInput);
+ * const safe = await sanitizeHTML(userInput);
  * // Returns: '<p>Safe content</p>'
  * ```
  */
-export function sanitizeHTML(dirty: string, options?: any): string {
+export async function sanitizeHTML(dirty: string, options?: any): Promise<string> {
+  const purify = await getDOMPurify();
   return String(
-    DOMPurify.sanitize(dirty, {
+    purify.sanitize(dirty, {
       ALLOWED_TAGS: [
         "p",
         "br",
@@ -55,13 +63,14 @@ export function sanitizeHTML(dirty: string, options?: any): string {
  * @example
  * ```ts
  * const html = '<p>Hello <strong>World</strong></p>';
- * const text = stripHTML(html);
+ * const text = await stripHTML(html);
  * // Returns: 'Hello World'
  * ```
  */
-export function stripHTML(html: string): string {
+export async function stripHTML(html: string): Promise<string> {
+  const purify = await getDOMPurify();
   return String(
-    DOMPurify.sanitize(html, {
+    purify.sanitize(html, {
       ALLOWED_TAGS: [],
       KEEP_CONTENT: true,
     }),
@@ -78,11 +87,11 @@ export function stripHTML(html: string): string {
  * @example
  * ```ts
  * const desc = 'Apartment for sale <script>steal()</script> with 3 rooms';
- * const safe = sanitizeDescription(desc);
+ * const safe = await sanitizeDescription(desc);
  * // Returns: 'Apartment for sale  with 3 rooms'
  * ```
  */
-export function sanitizeDescription(description: string): string {
+export async function sanitizeDescription(description: string): Promise<string> {
   return sanitizeHTML(description, {
     ALLOWED_TAGS: ["p", "br", "strong", "em", "ul", "ol", "li"],
     ALLOWED_ATTR: [],
@@ -98,12 +107,13 @@ export function sanitizeDescription(description: string): string {
  * @example
  * ```ts
  * const title = 'Amazing <script>alert("XSS")</script> Apartment';
- * const safe = sanitizeTitle(title);
+ * const safe = await sanitizeTitle(title);
  * // Returns: 'Amazing  Apartment'
  * ```
  */
-export function sanitizeTitle(title: string): string {
-  return stripHTML(title).trim();
+export async function sanitizeTitle(title: string): Promise<string> {
+  const stripped = await stripHTML(title);
+  return stripped.trim();
 }
 
 /**
@@ -112,8 +122,9 @@ export function sanitizeTitle(title: string): string {
  * @param address - Raw address from user or external source
  * @returns Plain text address
  */
-export function sanitizeAddress(address: string): string {
-  return stripHTML(address).trim();
+export async function sanitizeAddress(address: string): Promise<string> {
+  const stripped = await stripHTML(address);
+  return stripped.trim();
 }
 
 /**
@@ -167,21 +178,21 @@ export function sanitizeURL(url: string): string {
  * @param listing - Raw extracted listing data
  * @returns Sanitized listing safe for storage and display
  */
-export function sanitizeListing<T extends Record<string, any>>(listing: T): T {
+export async function sanitizeListing<T extends Record<string, any>>(listing: T): Promise<T> {
   const sanitized: any = { ...listing };
 
   // Sanitize text fields
   if (typeof sanitized.title === "string") {
-    sanitized.title = sanitizeTitle(sanitized.title);
+    sanitized.title = await sanitizeTitle(sanitized.title);
   }
   if (typeof sanitized.description === "string") {
-    sanitized.description = sanitizeDescription(sanitized.description);
+    sanitized.description = await sanitizeDescription(sanitized.description);
   }
   if (typeof sanitized.addressRaw === "string") {
-    sanitized.addressRaw = sanitizeAddress(sanitized.addressRaw);
+    sanitized.addressRaw = await sanitizeAddress(sanitized.addressRaw);
   }
   if (typeof sanitized.addressInferred === "string") {
-    sanitized.addressInferred = sanitizeAddress(sanitized.addressInferred);
+    sanitized.addressInferred = await sanitizeAddress(sanitized.addressInferred);
   }
 
   // Sanitize URLs

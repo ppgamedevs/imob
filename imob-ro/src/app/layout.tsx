@@ -17,6 +17,13 @@ import CookieBanner from "@/components/CookieBanner";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
+import { initSentry } from "@/lib/obs/sentry";
+
+// Initialize Sentry for error tracking
+if (typeof window === "undefined") {
+  // Server-side only
+  initSentry();
+}
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
