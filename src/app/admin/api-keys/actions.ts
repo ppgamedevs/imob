@@ -2,37 +2,45 @@
 
 import { prisma } from '@/lib/db';
 import { generateApiKey } from '@/lib/api/validate-key';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
 import { revalidatePath } from 'next/cache';
+import { requireAdmin } from '@/lib/auth-guards';
+import { z } from 'zod';
+
+// Validation schema
+const createApiKeySchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100),
+  domain: z.string().url('Invalid domain URL').optional().nullable(),
+  rateLimit: z.number().int().positive().max(10000).default(1000),
+  expiresAt: z.date().optional().nullable(),
+});
 
 export async function createApiKey(formData: FormData) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    throw new Error('Unauthorized');
-  }
+  // Admin guard
+  const user = await requireAdmin();
 
-  // Check if user is admin (you may want to add admin role check here)
-  // For now, any authenticated user can create keys
-
+  // Validate and parse input
   const name = formData.get('name') as string;
   const domain = formData.get('domain') as string | null;
   const rateLimitStr = formData.get('rateLimit') as string;
   const expiresAtStr = formData.get('expiresAt') as string | null;
 
-  const rateLimit = rateLimitStr ? parseInt(rateLimitStr, 10) : 1000;
-  const expiresAt = expiresAtStr ? new Date(expiresAtStr) : null;
+  const validated = createApiKeySchema.parse({
+    name,
+    domain: domain || null,
+    rateLimit: rateLimitStr ? parseInt(rateLimitStr, 10) : 1000,
+    expiresAt: expiresAtStr ? new Date(expiresAtStr) : null,
+  });
 
   const key = generateApiKey();
 
   const apiKey = await prisma.apiKey.create({
     data: {
       key,
-      userId: session.user.id,
-      name: name || null,
-      domain: domain || null,
-      rateLimit,
-      expiresAt,
+      userId: user.id,
+      name: validated.name,
+      domain: validated.domain,
+      rateLimit: validated.rateLimit,
+      expiresAt: validated.expiresAt,
       isActive: true,
     },
   });
@@ -42,13 +50,14 @@ export async function createApiKey(formData: FormData) {
 }
 
 export async function revokeApiKey(keyId: string) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    throw new Error('Unauthorized');
-  }
+  // Admin guard
+  await requireAdmin();
+
+  // Validate input
+  const validated = z.string().uuid().parse(keyId);
 
   await prisma.apiKey.update({
-    where: { id: keyId },
+    where: { id: validated },
     data: { isActive: false },
   });
 
@@ -57,14 +66,12 @@ export async function revokeApiKey(keyId: string) {
 }
 
 export async function getApiKeys() {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
-    return [];
-  }
+  // Admin guard
+  const user = await requireAdmin();
 
   const keys = await prisma.apiKey.findMany({
     where: {
-      userId: session.user.id,
+      userId: user.id,
     },
     orderBy: {
       createdAt: 'desc',

@@ -1,10 +1,28 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextResponse } from "next/server";
+import { z } from "zod";
 
-import { prisma } from "@/lib/db";
-import { allowRequest, getClientIp, createRateLimitResponse } from "@/lib/rate-limiter-enhanced";
-import { normalizeUrl } from "@/lib/url";
 import { generateContentHash } from "@/lib/content-hash";
+import { prisma } from "@/lib/db";
+import { allowRequest, createRateLimitResponse, getClientIp } from "@/lib/rate-limiter-enhanced";
+import { sanitizeListing } from "@/lib/sanitize";
+import { normalizeUrl } from "@/lib/url";
+
+// Validation schema for incoming request
+const analyzeRequestSchema = z.object({
+  originUrl: z.string().url("Invalid origin URL"),
+  extracted: z
+    .object({
+      title: z.string().optional(),
+      description: z.string().optional(),
+      price: z.number().optional(),
+      areaM2: z.number().optional(),
+      rooms: z.number().optional(),
+      addressRaw: z.string().optional(),
+      sourceUrl: z.string().url().optional(),
+      photos: z.array(z.string().url()).optional(),
+    })
+    .passthrough(), // Allow additional fields
+});
 
 function isDisallowedDomain(urlStr: string) {
   try {
@@ -39,8 +57,24 @@ export async function POST(req: Request) {
     return createRateLimitResponse(ip, "analyze");
   }
 
-  const originUrl = body?.originUrl;
-  if (typeof originUrl === "string" && isDisallowedDomain(originUrl)) {
+  // Validate input with Zod
+  let validated;
+  try {
+    validated = analyzeRequestSchema.parse(body);
+  } catch (error) {
+    return NextResponse.json(
+      {
+        error: "invalid_payload",
+        message: error instanceof z.ZodError ? error.issues : "Validation failed",
+      },
+      { status: 400 },
+    );
+  }
+
+  const { originUrl, extracted } = validated;
+
+  // Check if domain is disallowed
+  if (isDisallowedDomain(originUrl)) {
     try {
       await (prisma as any).apiAudit.create({
         data: {
@@ -53,15 +87,15 @@ export async function POST(req: Request) {
     } catch {}
     return NextResponse.json({ error: "blocked_domain" }, { status: 403 });
   }
-  const extracted = body?.extracted;
-  if (!originUrl || !extracted)
-    return NextResponse.json({ error: "invalid_payload" }, { status: 400 });
 
-  const norm = normalizeUrl(originUrl as string);
+  const norm = normalizeUrl(originUrl);
   if (!norm) return NextResponse.json({ ok: false, error: "invalid_url" }, { status: 400 });
 
+  // Sanitize extracted content to prevent XSS
+  const sanitizedExtracted = sanitizeListing(extracted);
+
   // Generate content hash for deduplication
-  const contentHash = generateContentHash(extracted);
+  const contentHash = generateContentHash(sanitizedExtracted);
 
   // Check for existing analysis with same content hash (idempotency)
   const existingByHash = await prisma.analysis.findFirst({
@@ -108,8 +142,8 @@ export async function POST(req: Request) {
     });
   }
 
-  // Ensure photos is an array (JSON)
-  const photos = Array.isArray(extracted.photos) ? extracted.photos : [];
+  // Ensure photos is an array (JSON) and use sanitized data
+  const photos = Array.isArray(sanitizedExtracted.photos) ? sanitizedExtracted.photos : [];
 
   // Upsert ExtractedListing for this analysis
   await prisma.extractedListing.upsert({
@@ -117,35 +151,35 @@ export async function POST(req: Request) {
 
     create: {
       analysisId: analysis.id,
-      title: extracted.title || undefined,
-      price: extracted.price || undefined,
-      currency: extracted.currency || undefined,
-      areaM2: extracted.areaM2 || undefined,
-      rooms: extracted.rooms || undefined,
-      floor: extracted.floor || undefined,
-      floorRaw: extracted.floorRaw || undefined,
-      yearBuilt: extracted.yearBuilt || undefined,
-      addressRaw: extracted.addressRaw || undefined,
-      lat: extracted.lat || undefined,
-      lng: extracted.lng || undefined,
+      title: sanitizedExtracted.title || undefined,
+      price: sanitizedExtracted.price || undefined,
+      currency: sanitizedExtracted.currency || undefined,
+      areaM2: sanitizedExtracted.areaM2 || undefined,
+      rooms: sanitizedExtracted.rooms || undefined,
+      floor: sanitizedExtracted.floor || undefined,
+      floorRaw: sanitizedExtracted.floorRaw || undefined,
+      yearBuilt: sanitizedExtracted.yearBuilt || undefined,
+      addressRaw: sanitizedExtracted.addressRaw || undefined,
+      lat: sanitizedExtracted.lat || undefined,
+      lng: sanitizedExtracted.lng || undefined,
       photos: photos,
-      sourceMeta: extracted.sourceMeta || undefined,
+      sourceMeta: sanitizedExtracted.sourceMeta || undefined,
     } as any,
 
     update: {
-      title: extracted.title || undefined,
-      price: extracted.price || undefined,
-      currency: extracted.currency || undefined,
-      areaM2: extracted.areaM2 || undefined,
-      rooms: extracted.rooms || undefined,
-      floor: extracted.floor || undefined,
-      floorRaw: extracted.floorRaw || undefined,
-      yearBuilt: extracted.yearBuilt || undefined,
-      addressRaw: extracted.addressRaw || undefined,
-      lat: extracted.lat || undefined,
-      lng: extracted.lng || undefined,
+      title: sanitizedExtracted.title || undefined,
+      price: sanitizedExtracted.price || undefined,
+      currency: sanitizedExtracted.currency || undefined,
+      areaM2: sanitizedExtracted.areaM2 || undefined,
+      rooms: sanitizedExtracted.rooms || undefined,
+      floor: sanitizedExtracted.floor || undefined,
+      floorRaw: sanitizedExtracted.floorRaw || undefined,
+      yearBuilt: sanitizedExtracted.yearBuilt || undefined,
+      addressRaw: sanitizedExtracted.addressRaw || undefined,
+      lat: sanitizedExtracted.lat || undefined,
+      lng: sanitizedExtracted.lng || undefined,
       photos: photos,
-      sourceMeta: extracted.sourceMeta || undefined,
+      sourceMeta: sanitizedExtracted.sourceMeta || undefined,
     } as any,
   });
 
