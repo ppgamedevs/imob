@@ -27,7 +27,7 @@ export default async function ComparePage({ params }: ComparePageProps) {
   }
 
   const compareSet = await prisma.compareSet.findUnique({
-    where: { id: params.id },
+    where: { id },
   });
 
   if (!compareSet || compareSet.userId !== session.user.id) {
