@@ -1,133 +1,156 @@
-import { NextResponse } from "next/server";
+/**
+ * Day 32: Crawl Runner with Content Hash Change Detection
+ * Takes batch from queue, fetches, extracts, and pushes to analysis pipeline
+ */
 
+import { NextResponse } from "next/server";
 import { startAnalysis } from "@/lib/analysis";
 import { sleep } from "@/lib/crawl/helpers";
 import { prisma } from "@/lib/db";
-import { runExtractor } from "@/lib/extract/run";
+import { pickAdapter } from "@/lib/crawl/adapters";
+import { takeBatch, markDone, hashContent, hasContentChanged } from "@/lib/crawl/queue";
+import { fetchWithCache } from "@/lib/crawl/fetcher";
 import { normalizeUrl } from "@/lib/url";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
-// simplu: alege până la N joburi din domenii diferite
-const CONCURRENCY = 3;
-
-async function fetchHtml(url: string) {
-  const ctl = new AbortController();
-  const id = setTimeout(() => ctl.abort(), 10_000);
-  try {
-    const res = await fetch(url, {
-      headers: { "user-agent": "ImobIntelBot/0.1 (+https://example.com/bot)" },
-      signal: ctl.signal,
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const html = await res.text();
-    return html;
-  } finally {
-    clearTimeout(id);
-  }
-}
+const BATCH_SIZE = 25;
 
 export async function GET() {
-  // select distinct domains queued
-  const queued = await prisma.crawlJob.findMany({
-    where: { status: "queued" },
-    orderBy: { scheduledAt: "asc" },
-    take: 50, // overfetch, we'll pick distinct domains
-  });
+  // Take batch with domain diversity
+  const batch = await takeBatch(BATCH_SIZE);
 
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-  const byDomain = new Map<string, any>();
-  for (const j of queued) {
-    if (!byDomain.has(j.domain)) byDomain.set(j.domain, j);
-    if (byDomain.size >= CONCURRENCY) break;
+  if (!batch.length) {
+    return NextResponse.json({ ok: true, processed: 0, message: "No jobs in queue" });
   }
-  const pick = Array.from(byDomain.values());
-  if (!pick.length) return NextResponse.json({ ok: true, taken: 0 });
 
-  // mark as fetching
-  await prisma.crawlJob.updateMany({
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    where: { id: { in: pick.map((j: any) => j.id) } },
-    data: { status: "fetching" },
-  });
+  let processed = 0;
+  let skipped = 0;
+  let errors = 0;
 
-  let done = 0;
-  for (const job of pick) {
+  for (const job of batch) {
     try {
-      const html = await fetchHtml(job.url);
-      const ext = await runExtractor(html, job.url);
+      // Fetch HTML with caching
+      const url = new URL(job.url);
+      const { status, html } = await fetchWithCache(url);
 
-      // upsert Analysis
+      // Handle 304 Not Modified
+      if (status === 304 || !html) {
+        await markDone({ id: job.id, status: "done" });
+        skipped++;
+        continue;
+      }
+
+      // Calculate content hash
+      const newHash = hashContent(html);
+
+      // Check if content changed since last crawl
+      const changed = await hasContentChanged(job.normalized, newHash);
+      if (!changed) {
+        await markDone({ id: job.id, status: "done", contentHash: newHash });
+        skipped++;
+        continue;
+      }
+
+      // Extract structured data using adapter
+      const adapter = pickAdapter(url);
+      const result = await adapter.extract({ url, html });
+      const ext = result.extracted;
+
+      // Skip if no meaningful data extracted
+      if (!ext.title && !ext.price) {
+        await markDone({
+          id: job.id,
+          status: "error",
+          error: "No data extracted",
+          contentHash: newHash,
+        });
+        errors++;
+        continue;
+      }
+
+      // Find or create Analysis record
       const norm = normalizeUrl(job.url) ?? job.url;
-      let a = await prisma.analysis.findFirst({
+      let analysis = await prisma.analysis.findFirst({
         where: { sourceUrl: norm },
       });
-      if (!a) {
-        a = await prisma.analysis.create({
-          data: { sourceUrl: norm, status: "queued" },
+
+      if (!analysis) {
+        analysis = await prisma.analysis.create({
+          data: {
+            sourceUrl: norm,
+            canonicalUrl: norm,
+            status: "queued",
+          },
         });
       }
 
-      // store extracted data with all available fields
+      // Upsert ExtractedListing with all fields
       await prisma.extractedListing.upsert({
-        where: { analysisId: a.id },
+        where: { analysisId: analysis.id },
         update: {
-          title: ext.title || undefined,
-          price: ext.price || undefined,
-          currency: ext.currency || undefined,
-          areaM2: ext.areaM2 || undefined,
-          rooms: ext.rooms || undefined,
-          floorRaw: ext.floorRaw || undefined,
-          yearBuilt: ext.yearBuilt || undefined,
-          lat: ext.lat || undefined,
-          lng: ext.lng || undefined,
-          addressRaw: ext.addressRaw || undefined,
+          title: ext.title,
+          price: ext.price,
+          currency: ext.currency,
+          areaM2: ext.areaM2,
+          rooms: ext.rooms,
+          floorRaw: ext.floorRaw,
+          yearBuilt: ext.yearBuilt,
+          lat: ext.lat,
+          lng: ext.lng,
+          addressRaw: ext.addressRaw,
           photos: ext.photos?.length ? ext.photos : undefined,
-          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-          sourceMeta: { ...ext.sourceMeta, source: "crawler" } as any,
+          sourceMeta: { ...ext.sourceMeta, crawlerV2: true } as any,
         },
         create: {
-          analysisId: a.id,
-          title: ext.title || undefined,
-          price: ext.price || undefined,
-          currency: ext.currency || undefined,
-          areaM2: ext.areaM2 || undefined,
-          rooms: ext.rooms || undefined,
-          floorRaw: ext.floorRaw || undefined,
-          yearBuilt: ext.yearBuilt || undefined,
-          lat: ext.lat || undefined,
-          lng: ext.lng || undefined,
-          addressRaw: ext.addressRaw || undefined,
+          analysisId: analysis.id,
+          title: ext.title,
+          price: ext.price,
+          currency: ext.currency,
+          areaM2: ext.areaM2,
+          rooms: ext.rooms,
+          floorRaw: ext.floorRaw,
+          yearBuilt: ext.yearBuilt,
+          lat: ext.lat,
+          lng: ext.lng,
+          addressRaw: ext.addressRaw,
           photos: ext.photos?.length ? ext.photos : undefined,
-          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-          sourceMeta: { ...ext.sourceMeta, source: "crawler" } as any,
+          sourceMeta: { ...ext.sourceMeta, crawlerV2: true } as any,
         },
       });
 
-      // kick pipeline
-      // (poți să-l rulezi fire-and-forget; aici doar îl apelăm simplu)
-      await startAnalysis(a.id, norm);
+      // Trigger analysis pipeline (normalize → score)
+      await startAnalysis(analysis.id);
 
-      await prisma.crawlJob.update({
-        where: { id: job.id },
-        data: { status: "done", analysisId: a.id },
+      // Mark job as done
+      await markDone({
+        id: job.id,
+        status: "done",
+        contentHash: newHash,
+        analysisId: analysis.id,
       });
-      done++;
-      await sleep(500); // mică pauză între joburi
-      /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    } catch (e: any) {
-      const tries = job.tries + 1;
-      await prisma.crawlJob.update({
-        where: { id: job.id },
-        data: {
-          status: tries >= 3 ? "error" : "queued",
-          tries,
-          lastError: String(e?.message ?? e),
-          scheduledAt: new Date(Date.now() + 1000 * 60 * (tries * 5)), // backoff
-        },
+
+      processed++;
+
+      // Respect rate limits between requests
+      await sleep(1000);
+    } catch (err) {
+      console.error(`Failed to process ${job.url}:`, err);
+      await markDone({
+        id: job.id,
+        status: "error",
+        error: String(err),
       });
+      errors++;
     }
   }
 
-  return NextResponse.json({ ok: true, taken: pick.length, done });
+  return NextResponse.json({
+    ok: true,
+    batch: batch.length,
+    processed,
+    skipped,
+    errors,
+  });
 }

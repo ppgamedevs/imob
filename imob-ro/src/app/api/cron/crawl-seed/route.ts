@@ -1,59 +1,95 @@
 /**
- * Day 25 - Crawl Seed
- * Seeds ListingSources and initial discover jobs for București
+ * Day 32 - Crawl Seed with Sitemaps
+ * Seeds ListingSources and discovers URLs from sitemaps for București
  */
 
 import { prisma } from "@/lib/db";
+import { pickAdapter } from "@/lib/crawl/adapters";
 
 export const runtime = "nodejs";
+export const maxDuration = 60; // 60 seconds for sitemap processing
+
+const MAX_URLS_PER_DAY = 2000;
 
 export async function GET() {
-  // Seed listing sources (add real domains when ready)
-  const domains = [
-    "example1.ro", // TODO: Replace with real domains
-    "example2.ro", // e.g., "olx.ro", "imobiliare.ro", etc.
+  // Seed listing sources with real domains
+  const sources = [
+    { domain: "imobiliare.ro", sitemap: "https://www.imobiliare.ro/sitemap.xml" },
+    { domain: "storia.ro", sitemap: "https://www.storia.ro/sitemap.xml" },
+    { domain: "olx.ro", sitemap: "https://www.olx.ro/sitemap.xml" },
   ];
 
-  for (const d of domains) {
+  for (const src of sources) {
     await prisma.listingSource
       .upsert({
-        where: { domain: d },
+        where: { domain: src.domain },
         update: { enabled: true },
-        create: { domain: d, enabled: true, minDelayMs: 2000 },
+        create: { domain: src.domain, enabled: true, minDelayMs: 2000 },
       })
       .catch(() => {});
   }
 
-  // Seed initial discover page URLs for București
-  const seeds = [
-    "https://example1.ro/bucuresti?page=1",
-    "https://example2.ro/bucuresti?page=1",
-    // TODO: Add real listing page URLs for București
-  ];
+  // Discover URLs from sitemaps
+  let totalDiscovered = 0;
+  let totalEnqueued = 0;
 
-  let seeded = 0;
-  for (const url of seeds) {
+  for (const src of sources) {
+    if (totalEnqueued >= MAX_URLS_PER_DAY) break;
+
     try {
-      const u = new URL(url);
-      const normalized = u.toString();
+      const url = new URL(src.sitemap);
+      const adapter = pickAdapter(url);
 
-      await prisma.crawlJob.create({
-        data: {
-          url: normalized,
-          normalized,
-          domain: u.hostname.replace(/^www\./, ""),
-          kind: "discover",
-          status: "queued",
-          priority: 10, // High priority for seed jobs
-        },
-      });
-      seeded++;
-    } catch {
-      // Ignore duplicates or invalid URLs
+      // Discover from sitemap
+      const result = await adapter.discover(url);
+      totalDiscovered += result.links.length;
+
+      // Enqueue up to limit, filtering for București
+      for (const link of result.links) {
+        if (totalEnqueued >= MAX_URLS_PER_DAY) break;
+
+        // Filter for București (basic heuristic)
+        const linkLower = link.toLowerCase();
+        if (
+          linkLower.includes("bucuresti") ||
+          linkLower.includes("bucharest") ||
+          linkLower.includes("/ilfov/")
+        ) {
+          try {
+            const linkUrl = new URL(link);
+            const normalized = linkUrl.toString();
+
+            await prisma.crawlJob.create({
+              data: {
+                url: normalized,
+                normalized,
+                domain: linkUrl.hostname.replace(/^www\./, ""),
+                kind: "detail",
+                status: "queued",
+                priority: 5,
+              },
+            });
+            totalEnqueued++;
+          } catch {
+            // Ignore duplicates or invalid URLs
+          }
+        }
+      }
+    } catch (err) {
+      console.error(`Failed to process ${src.domain}:`, err);
     }
   }
 
-  return new Response(JSON.stringify({ ok: true, domains: domains.length, seeded }), {
-    headers: { "Content-Type": "application/json" },
-  });
+  return new Response(
+    JSON.stringify({
+      ok: true,
+      sources: sources.length,
+      discovered: totalDiscovered,
+      enqueued: totalEnqueued,
+      limit: MAX_URLS_PER_DAY,
+    }),
+    {
+      headers: { "Content-Type": "application/json" },
+    },
+  );
 }

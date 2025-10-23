@@ -516,6 +516,7 @@ model CrawlJob {
   priority    Int       @default(0)
   tries       Int       @default(0)
   lastError   String?
+  contentHash String?   // SHA-256 hash of page content for change detection
   scheduledAt DateTime  @default(now())
   lockedAt    DateTime?
   doneAt      DateTime?

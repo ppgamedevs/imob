@@ -5,15 +5,15 @@
 
 import type { SourceAdapter } from "../types";
 import { adapterGeneric } from "./generic";
-
-// TODO: Add domain-specific adapters here
-// import { adapterOlxRo } from "./olx-ro";
-// import { adapterImobiliareRo } from "./imobiliare-ro";
+import { adapterImobiliare } from "./imobiliare";
+import { adapterStoria } from "./storia";
+import { adapterOlx } from "./olx";
 
 export const ADAPTERS: SourceAdapter[] = [
-  adapterGeneric,
-  // adapterOlxRo,
-  // adapterImobiliareRo,
+  adapterImobiliare,
+  adapterStoria,
+  adapterOlx,
+  adapterGeneric, // Fallback
 ];
 
 /**
