@@ -570,6 +570,7 @@ model DedupGroup {
   analyses    Analysis[]
   edges       DedupEdge[]
   snapshots   GroupSnapshot[]
+  watchItems  WatchItem[]
 
   @@index([city, areaSlug])
 }
@@ -839,8 +840,11 @@ model WatchItem {
   createdAt   DateTime  @default(now())
   note        String?
   
+  group       DedupGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  
   @@unique([userId, groupId])
   @@index([userId, createdAt])
+  @@index([groupId])
 }
 
 model CompareSet {
