@@ -17,6 +17,7 @@ import { getSubscription } from "@/lib/billing/entitlements";
 
   const navLinks = [
     { href: "/", label: "Acasă" },
+    { href: "/bucuresti", label: "București" }, // Day 30: City page
     { href: "/search", label: "Căutare" },
     { href: "/discover", label: "Discover" },
     { href: "/me/buyer", label: "Portal Cumpărător" },

@@ -6,7 +6,12 @@ import { prisma } from "@/lib/db";
 
 interface ZoneKpi {
   pricePerSqm: number | null;
+  pricePerSqmChange30d: number | null; // Day 30: 30-day % change
   supply: number;
+  demandScore: number | null; // Day 30: demand indicator
+  rentEurM2: number | null; // Day 30: rent per m²
+  yieldNet: number | null; // Day 30: net yield %
+  ttsMedianDays: number | null; // Day 30: median time to sell
 }
 
 interface HistogramBucket {
@@ -65,9 +70,31 @@ export async function loadZone(slug: string): Promise<ZoneData | null> {
 
   // Latest KPIs
   const today = daily[daily.length - 1];
+  const prev30 = daily.length >= 30 ? daily[daily.length - 30] : null;
+  
+  // Calculate 30-day change
+  const pricePerSqmChange30d =
+    today && prev30 && prev30.pricePerSqm && today.pricePerSqm
+      ? (today.pricePerSqm - prev30.pricePerSqm) / prev30.pricePerSqm
+      : null;
+
+  // Extract stats from latest AreaDaily (Day 30: rent, yield, TTS)
+  const latestAreaDaily = rawDaily[rawDaily.length - 1];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const stats = (latestAreaDaily?.stats as any) ?? {};
+  const rentEurM2 = typeof stats.rentEurM2 === "number" ? stats.rentEurM2 : null;
+  const yieldNet = typeof stats.yieldNet === "number" ? stats.yieldNet : null;
+  const ttsMedianDays = typeof stats.ttsMedianDays === "number" ? stats.ttsMedianDays : null;
+  const demandScore = latestAreaDaily?.demandScore ?? null;
+
   const kpi: ZoneKpi = {
     pricePerSqm: today?.pricePerSqm ?? null,
+    pricePerSqmChange30d,
     supply: today?.supply ?? 0,
+    demandScore,
+    rentEurM2,
+    yieldNet,
+    ttsMedianDays,
   };
 
   // Top listings (collapse duplicates by groupId)

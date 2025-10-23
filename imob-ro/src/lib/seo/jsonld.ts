@@ -20,6 +20,10 @@ export function jsonLdZone({
   medianEurM2?: number | null;
   supply?: number | null;
 }) {
+  // Day 30: Calculate lowPrice/highPrice from median (±15%)
+  const lowPrice = medianEurM2 ? Math.round(medianEurM2 * 0.85) : undefined;
+  const highPrice = medianEurM2 ? Math.round(medianEurM2 * 1.15) : undefined;
+
   return {
     "@context": "https://schema.org",
     "@type": "Place",
@@ -33,8 +37,8 @@ export function jsonLdZone({
     aggregateOffer: {
       "@type": "AggregateOffer",
       offerCount: supply ?? undefined,
-      lowPrice: undefined,
-      highPrice: undefined,
+      lowPrice,
+      highPrice,
       priceCurrency: "EUR",
     },
     additionalProperty: medianEurM2

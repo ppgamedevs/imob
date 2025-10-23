@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
+// Prisma Client regenerated - includes all models
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };

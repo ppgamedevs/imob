@@ -31,6 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title,
       description: desc,
       url: `/zona/${resolvedParams.slug}`,
+      images: [`/api/og/area?slug=${resolvedParams.slug}`], // Day 30: Dynamic OG image
     },
   };
 }
