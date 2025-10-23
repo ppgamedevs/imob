@@ -30,6 +30,7 @@ model User {
   listings Listing[]
   analyses Analysis[]
   agentProfile AgentProfile?
+  apiKeys  ApiKey[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -902,4 +903,55 @@ model UserTaste {
   createdAt   DateTime @default(now())
   
   @@index([userId])
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  userId      String?
+  name        String?
+  domain      String?
+  rateLimit   Int      @default(1000)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+  lastUsedAt  DateTime?
+  
+  user        User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  usage       ApiUsage[]
+  
+  @@index([key])
+  @@index([userId])
+}
+
+model ApiUsage {
+  id          String   @id @default(cuid())
+  apiKeyId    String
+  endpoint    String
+  method      String
+  statusCode  Int
+  responseMs  Int?
+  ip          String?
+  userAgent   String?
+  referer     String?
+  createdAt   DateTime @default(now())
+  
+  apiKey      ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  
+  @@index([apiKeyId, createdAt])
+  @@index([createdAt])
+}
+
+model EmbedUsage {
+  id          String   @id @default(cuid())
+  widgetType  String
+  referrer    String?
+  domain      String?
+  userAgent   String?
+  country     String?
+  createdAt   DateTime @default(now())
+  
+  @@index([domain, createdAt])
+  @@index([widgetType, createdAt])
+  @@index([createdAt])
 }

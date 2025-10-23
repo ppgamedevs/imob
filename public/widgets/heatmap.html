@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Harta Prețurilor €/m² | imob.ro</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --bg: #ffffff;
+      --text: #1f2937;
+      --text-secondary: #6b7280;
+      --border: #e5e7eb;
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    }
+
+    [data-theme="dark"] {
+      --primary: #3b82f6;
+      --bg: #1f2937;
+      --text: #f9fafb;
+      --text-secondary: #9ca3af;
+      --border: #374151;
+      --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      padding: 1rem;
+    }
+
+    .widget {
+      max-width: 800px;
+      margin: 0 auto;
+      background: var(--bg);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+
+    .widget-header {
+      padding: 1.5rem;
+      background: linear-gradient(135deg, var(--primary), #1d4ed8);
+      color: white;
+      text-align: center;
+    }
+
+    .widget-header h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .widget-header p {
+      font-size: 0.875rem;
+      opacity: 0.9;
+    }
+
+    .widget-body {
+      padding: 1.5rem;
+      position: relative;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      background: #f3f4f6;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      cursor: crosshair;
+    }
+
+    .tooltip {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 10;
+      white-space: nowrap;
+    }
+
+    .tooltip.visible {
+      opacity: 1;
+    }
+
+    .legend {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+
+    .legend-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .legend-gradient {
+      flex: 1;
+      max-width: 300px;
+      height: 20px;
+      border-radius: 4px;
+      background: linear-gradient(to right, #3b82f6, #10b981, #fbbf24, #f59e0b, #ef4444);
+      position: relative;
+    }
+
+    .legend-ticks {
+      display: flex;
+      justify-content: space-between;
+      max-width: 300px;
+      margin: 0 auto;
+      margin-top: 0.25rem;
+    }
+
+    .legend-tick {
+      font-size: 0.625rem;
+      color: var(--text-secondary);
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 3rem;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+    }
+
+    .loading.hidden {
+      display: none;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .widget-footer {
+      padding: 0.75rem 1.5rem;
+      background: #f9fafb;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    .widget-footer a {
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .widget-footer a:hover {
+      color: var(--primary);
+    }
+
+    @media (max-width: 768px) {
+      .widget {
+        border-radius: 0;
+      }
+      body {
+        padding: 0;
+      }
+      .legend {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .legend-gradient {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="widget" id="heatmapWidget">
+    <div class="widget-header">
+      <h2>Harta Prețurilor</h2>
+      <p>Prețuri medii €/m² în București</p>
+    </div>
+
+    <div class="widget-body">
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <span>Încărcăm harta...</span>
+      </div>
+
+      <div class="canvas-container" id="canvasContainer" style="display: none;">
+        <canvas id="heatmap" width="800" height="600"></canvas>
+        <div class="tooltip" id="tooltip"></div>
+      </div>
+
+      <div class="legend" id="legend" style="display: none;">
+        <span class="legend-label">Preț/m²:</span>
+        <div>
+          <div class="legend-gradient"></div>
+          <div class="legend-ticks">
+            <span class="legend-tick">800€</span>
+            <span class="legend-tick">1200€</span>
+            <span class="legend-tick">1600€</span>
+            <span class="legend-tick">2000€</span>
+            <span class="legend-tick">2400€+</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="widget-footer">
+      <a href="https://imob.ro?utm_source=widget&utm_medium=heatmap&utm_campaign=embed" target="_blank" rel="noopener">
+        🏠 Powered by imob.ro
+      </a>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // Configuration
+      const API_BASE = window.location.hostname === 'localhost' 
+        ? 'http://localhost:3000'
+        : 'https://imob.ro';
+
+      // Theme detection
+      const urlParams = new URLSearchParams(window.location.search);
+      const theme = urlParams.get('theme');
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+
+      // Track widget load
+      fetch(`${API_BASE}/api/public/track/widget`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'heatmap',
+          referrer: document.referrer || window.location.href
+        })
+      }).catch(() => {});
+
+      // Bucharest bounds (approximate)
+      const BUCHAREST_BOUNDS = {
+        minLat: 44.35,
+        maxLat: 44.52,
+        minLng: 25.95,
+        maxLng: 26.25
+      };
+
+      // Mock data generator (in production, this would fetch from API)
+      // TODO: Replace with actual API call to /api/public/tiles/bucharest
+      function generateMockData() {
+        const data = [];
+        const sectors = [
+          { lat: 44.45, lng: 26.09, name: 'Sector 1', price: 2100 },
+          { lat: 44.43, lng: 26.12, name: 'Sector 2', price: 1850 },
+          { lat: 44.41, lng: 26.10, name: 'Sector 3', price: 1600 },
+          { lat: 44.38, lng: 26.12, name: 'Sector 4', price: 1700 },
+          { lat: 44.40, lng: 26.05, name: 'Sector 5', price: 1550 },
+          { lat: 44.43, lng: 26.05, name: 'Sector 6', price: 1650 }
+        ];
+
+        sectors.forEach(sector => {
+          // Generate grid around sector center
+          for (let i = -3; i <= 3; i++) {
+            for (let j = -3; j <= 3; j++) {
+              const lat = sector.lat + (i * 0.01);
+              const lng = sector.lng + (j * 0.01);
+              const distance = Math.sqrt(i * i + j * j);
+              const priceVariation = (Math.random() - 0.5) * 400;
+              const distancePenalty = distance * 50;
+              data.push({
+                lat,
+                lng,
+                price: Math.max(800, sector.price + priceVariation - distancePenalty),
+                area: sector.name
+              });
+            }
+          }
+        });
+
+        return data;
+      }
+
+      // Color interpolation
+      function getColorForPrice(price) {
+        const min = 800;
+        const max = 2400;
+        const normalized = Math.max(0, Math.min(1, (price - min) / (max - min)));
+
+        // Color stops: blue -> green -> yellow -> orange -> red
+        const stops = [
+          { pos: 0, r: 59, g: 130, b: 246 },    // blue
+          { pos: 0.25, r: 16, g: 185, b: 129 },  // green
+          { pos: 0.5, r: 251, g: 191, b: 36 },   // yellow
+          { pos: 0.75, r: 245, g: 158, b: 11 },  // orange
+          { pos: 1, r: 239, g: 68, b: 68 }       // red
+        ];
+
+        for (let i = 0; i < stops.length - 1; i++) {
+          if (normalized >= stops[i].pos && normalized <= stops[i + 1].pos) {
+            const segmentPos = (normalized - stops[i].pos) / (stops[i + 1].pos - stops[i].pos);
+            const r = Math.round(stops[i].r + (stops[i + 1].r - stops[i].r) * segmentPos);
+            const g = Math.round(stops[i].g + (stops[i + 1].g - stops[i].g) * segmentPos);
+            const b = Math.round(stops[i].b + (stops[i + 1].b - stops[i].b) * segmentPos);
+            return `rgb(${r}, ${g}, ${b})`;
+          }
+        }
+
+        return 'rgb(239, 68, 68)'; // fallback red
+      }
+
+      // Coordinate conversion
+      function latLngToPixel(lat, lng, width, height) {
+        const x = ((lng - BUCHAREST_BOUNDS.minLng) / (BUCHAREST_BOUNDS.maxLng - BUCHAREST_BOUNDS.minLng)) * width;
+        const y = height - ((lat - BUCHAREST_BOUNDS.minLat) / (BUCHAREST_BOUNDS.maxLat - BUCHAREST_BOUNDS.minLat)) * height;
+        return { x, y };
+      }
+
+      // Render heatmap
+      async function renderHeatmap() {
+        const canvas = document.getElementById('heatmap');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // Load data
+        const data = generateMockData(); // Replace with API call
+
+        // Clear canvas
+        ctx.fillStyle = '#f3f4f6';
+        ctx.fillRect(0, 0, width, height);
+
+        // Draw cells
+        const cellSize = 20; // pixels
+        data.forEach(point => {
+          const { x, y } = latLngToPixel(point.lat, point.lng, width, height);
+          const color = getColorForPrice(point.price);
+          
+          ctx.fillStyle = color;
+          ctx.globalAlpha = 0.6;
+          ctx.beginPath();
+          ctx.arc(x, y, cellSize, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.globalAlpha = 1;
+
+        // Setup tooltip
+        setupTooltip(canvas, data, width, height);
+
+        // Show canvas
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('canvasContainer').style.display = 'block';
+        document.getElementById('legend').style.display = 'flex';
+      }
+
+      // Tooltip interaction
+      function setupTooltip(canvas, data, width, height) {
+        const tooltip = document.getElementById('tooltip');
+        const container = document.getElementById('canvasContainer');
+
+        canvas.addEventListener('mousemove', (e) => {
+          const rect = canvas.getBoundingClientRect();
+          const scaleX = canvas.width / rect.width;
+          const scaleY = canvas.height / rect.height;
+          const mouseX = (e.clientX - rect.left) * scaleX;
+          const mouseY = (e.clientY - rect.top) * scaleY;
+
+          // Find closest point
+          let closestPoint = null;
+          let minDist = Infinity;
+
+          data.forEach(point => {
+            const { x, y } = latLngToPixel(point.lat, point.lng, width, height);
+            const dist = Math.sqrt(Math.pow(mouseX - x, 2) + Math.pow(mouseY - y, 2));
+            if (dist < minDist && dist < 30) {
+              minDist = dist;
+              closestPoint = point;
+            }
+          });
+
+          if (closestPoint) {
+            tooltip.innerHTML = `
+              <strong>${closestPoint.area}</strong><br>
+              ${Math.round(closestPoint.price)}€/m²
+            `;
+            tooltip.style.left = e.clientX - rect.left + 10 + 'px';
+            tooltip.style.top = e.clientY - rect.top + 10 + 'px';
+            tooltip.classList.add('visible');
+          } else {
+            tooltip.classList.remove('visible');
+          }
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+          tooltip.classList.remove('visible');
+        });
+      }
+
+      // Initialize
+      renderHeatmap();
+    })();
+  </script>
+</body>
+</html>
