@@ -258,6 +258,19 @@ model AreaDaily {
   @@index([date])
 }
 
+// ML model snapshots for AVM, TTS, Rent predictions
+model ModelSnapshot {
+  id        String   @id @default(cuid())
+  kind      String   // "avm", "tts", "rent"
+  version   Int
+  weights   Json     // { weights: number[], intercept: number, residualStd: number }
+  metrics   Json     // { mae, mape, testMae, testMape, samples, trainSamples, testSamples }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kind, createdAt])
+}
+
 // Events aggregated per-area per-day to compute demandScore
 model AreaEvent {
   id       String   @id @default(cuid())
