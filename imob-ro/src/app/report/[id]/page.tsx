@@ -1,4 +1,3 @@
-"use server";
 import Image from "next/image";
 import React from "react";
 
@@ -37,6 +36,9 @@ import { QualityCard } from "./QualityCard";
 import { ReportShareButton } from "./ReportShareButton";
 import { TrustCard } from "./TrustCard";
 import { ViewTracker } from "./ViewTracker";
+
+// ISR: Revalidate report pages every 5 minutes
+export const revalidate = 300;
 
 // Next.js 15: params is now a Promise
 type Props = { params: Promise<{ id?: string | string[] }> };

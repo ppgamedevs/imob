@@ -123,7 +123,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET",
         "Access-Control-Allow-Headers": "x-api-key",
-        "Cache-Control": "public, max-age=3600", // 1 hour
+        "Cache-Control": "s-maxage=300, stale-while-revalidate=3600",
       },
     });
   } catch (error) {

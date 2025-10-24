@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { parsePageSize, getTakePlusOne } from "@/lib/pagination";
 
 import { discoverSchema } from "./validate";
 
@@ -12,7 +13,7 @@ export async function discoverSearch(raw: URLSearchParams) {
     return { ok: false as const, error: parsed.error.flatten().fieldErrors };
   }
   const p = parsed.data;
-  const take = p.pageSize ?? 20;
+  const take = parsePageSize(p.pageSize); // Cap at 50
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: any = {}; // v1: afișăm toate analizele din DB (București filtrat în JS)
@@ -36,7 +37,7 @@ export async function discoverSearch(raw: URLSearchParams) {
         },
       },
     },
-    take: take + 1,
+    take: getTakePlusOne(take), // take + 1 pattern
     ...(cursor ? { skip: 1, cursor } : {}),
   });
 

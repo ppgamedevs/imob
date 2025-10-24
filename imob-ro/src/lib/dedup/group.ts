@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from "@/lib/db";
+import { revalidateGroup } from "@/lib/cache-tags";
 
 import { canonicalSignature, fuzzyScore } from "./similarity";
 import { rebuildGroupSnapshot } from "./snapshot";
@@ -50,6 +51,7 @@ export async function attachToGroup(analysisId: string) {
       create: { groupId: g.id, analysisId: a.id, score: 1, reason: { type: "signature" } as any },
     });
     await rebuildGroupSnapshot(g.id).catch((e) => console.warn("snapshot failed", e));
+    await revalidateGroup(g.id); // Invalidate cache for this group
     return;
   }
 
@@ -103,6 +105,7 @@ export async function attachToGroup(analysisId: string) {
       },
     });
     await rebuildGroupSnapshot(best.groupId).catch((e) => console.warn("snapshot failed", e));
+    await revalidateGroup(best.groupId); // Invalidate cache for this group
     return;
   }
 
@@ -121,4 +124,5 @@ export async function attachToGroup(analysisId: string) {
     data: { groupId: g.id, analysisId: a.id, score: 0.5, reason: { type: "adhoc" } as any },
   });
   await rebuildGroupSnapshot(g.id).catch((e) => console.warn("snapshot failed", e));
+  await revalidateGroup(g.id); // Invalidate cache for this group
 }
