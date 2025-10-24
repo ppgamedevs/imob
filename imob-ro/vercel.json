@@ -7,6 +7,46 @@
     {
       "path": "/api/cron/dedup-tick",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/crawl-seed",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/crawl-refresh",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/avm-train",
+      "schedule": "0 3 * * 0"
+    },
+    {
+      "path": "/api/cron/alerts",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/saved-search",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/taste/decay",
+      "schedule": "0 4 * * *"
+    },
+    {
+      "path": "/api/cron/tiles/rebuild",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/provenance-tick",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/backup",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/cron/revalidate-zones",
+      "schedule": "0 */3 * * *"
     }
   ]
 }

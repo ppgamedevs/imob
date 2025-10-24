@@ -62,6 +62,12 @@ export default async function ReportPage({ params }: Props) {
   if (!id) throw new Error("Missing report id");
   const analysis = await loadAnalysis(id);
 
+  // Handle missing analysis (soft 404)
+  if (!analysis) {
+    const { notFound } = await import("next/navigation");
+    notFound();
+  }
+
   // Load comparables from CompMatch table
   const comps = await prisma.compMatch.findMany({
     where: { analysisId: id },
@@ -1036,13 +1042,24 @@ export async function generateMetadata(
   );
   const id = Array.isArray(maybeParams?.id) ? maybeParams.id[0] : maybeParams?.id;
   const analysis = id
-    ? await prisma.analysis.findUnique({ where: { id }, include: { extractedListing: true } })
+    ? await prisma.analysis.findUnique({
+        where: { id },
+        include: { extractedListing: true, group: true },
+      })
     : null;
   const isPrivate = analysis == null || analysis.status !== "completed";
   const base =
     process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
-  const canonical = `${base}/report/${id ?? ""}`;
+  // Use group canonical URL if available
+  const dedupGroup = analysis?.groupId
+    ? await prisma.dedupGroup.findUnique({
+        where: { id: analysis.groupId },
+        select: { canonicalUrl: true },
+      })
+    : null;
+
+  const canonical = dedupGroup?.canonicalUrl || `${base}/report/${id ?? ""}`;
   const address = analysis?.extractedListing?.addressRaw ?? "";
   const price = analysis?.extractedListing?.price
     ? String(analysis!.extractedListing!.price) + " EUR"
@@ -1059,6 +1076,12 @@ export async function generateMetadata(
     openGraph: {
       title: analysis?.extractedListing?.title ?? "Raport analiză",
       images: [{ url: ogUrl, width: 1200, height: 630 }],
+      url: canonical,
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: analysis?.extractedListing?.title ?? "Raport analiză",
+      images: [ogUrl],
     },
   };
 }

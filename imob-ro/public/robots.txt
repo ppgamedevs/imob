@@ -1,0 +1,16 @@
+# robots.txt for imob.ro
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+
+# Disallow admin and API routes
+Disallow: /api/
+Disallow: /admin/
+Disallow: /account/
+Disallow: /me/
+Disallow: /agent/inbox
+
+# Sitemap
+Sitemap: https://imob-three.vercel.app/sitemap.xml
+Sitemap: https://imob-three.vercel.app/sitemap-zones.xml
