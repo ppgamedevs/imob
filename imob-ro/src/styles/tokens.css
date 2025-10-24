@@ -1,0 +1,132 @@
+/**
+ * Design Tokens - Single Source of Truth
+ * 
+ * All design values defined here as CSS custom properties.
+ * Supports dark mode via prefers-color-scheme.
+ * Used by Tailwind config and runtime theming.
+ */
+
+:root {
+  /* === Brand === */
+  --brand-h: 252; /* deep indigo baseline */
+  --brand-s: 85%;
+  --brand-l: 55%;
+
+  /* === Palette (Dark Mode) === */
+  --color-bg: #0b0c10;
+  --color-surface: #0f1116;
+  --color-muted: #1a1e27;
+  --color-border: #232838;
+  --color-text: #eef2ff;
+
+  --color-primary: hsl(var(--brand-h) var(--brand-s) var(--brand-l));
+  --color-primary-foreground: #0b0c10;
+
+  --color-success: #16a34a;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #38bdf8;
+
+  /* === Elevation (Soft, Modern) === */
+  --elev-0: 0 0 0 1px rgba(255, 255, 255, 0.03);
+  --elev-1: 0 2px 8px rgba(0, 0, 0, 0.25);
+  --elev-2: 0 8px 24px rgba(0, 0, 0, 0.35);
+
+  /* === Radius === */
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 28px;
+
+  /* === Spacing (4px base) === */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+
+  /* === Typography === */
+  --font-sans: ui-sans-serif, Inter, system-ui, -apple-system, Segoe UI, Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+
+  --fs-xs: 12px;
+  --fs-sm: 14px;
+  --fs-md: 16px;
+  --fs-lg: 18px;
+  --fs-xl: 20px;
+  --fs-2xl: 24px;
+  --fs-3xl: 28px;
+  --lh-tight: 1.2;
+  --lh-normal: 1.5;
+
+  /* === Motion === */
+  --ease-emph: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-med: 220ms;
+  --dur-slow: 400ms;
+
+  /* === Ad Tokens === */
+  --ad-bg: #0c0f16;
+  --ad-border: #2a3246;
+  --ad-label: #93c5fd; /* readable, neutral */
+}
+
+/* === Light Mode Override === */
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-bg: #ffffff;
+    --color-surface: #f8fafc;
+    --color-muted: #f1f5f9;
+    --color-border: #e2e8f0;
+    --color-text: #0b1220;
+
+    --elev-0: 0 0 0 1px rgba(0, 0, 0, 0.06);
+    --elev-1: 0 2px 8px rgba(0, 0, 0, 0.1);
+    --elev-2: 0 8px 24px rgba(0, 0, 0, 0.18);
+
+    --ad-bg: #f9fbff;
+    --ad-border: #dbeafe;
+  }
+}
+
+/* === Accessibility Utilities === */
+.focus-ring {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* === Base Focus Styles === */
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* === Density Modes === */
+body.density-compact {
+  --space-1: 3px;
+  --space-2: 6px;
+  --space-3: 9px;
+  --space-4: 12px;
+  --space-5: 15px;
+  --space-6: 18px;
+  --space-7: 21px;
+  --space-8: 24px;
+}
