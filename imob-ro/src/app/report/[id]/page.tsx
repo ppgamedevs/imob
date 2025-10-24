@@ -2,6 +2,7 @@ import Image from "next/image";
 import React from "react";
 
 // Report page with AVM, TTS, Yield, and Risk analysis
+import { RerunPipelineButton } from "@/components/admin/RerunPipelineButton";
 import FeedbackBanner from "@/components/FeedbackBanner";
 import { ListingCard } from "@/components/listing-card";
 import ReportPreview from "@/components/pdf/ReportPreview";
@@ -383,6 +384,7 @@ export default async function ReportPage({ params }: Props) {
     orderBy: { createdAt: "desc" },
   });
   const isOwner = session?.user?.id === analysis?.userId;
+  const isAdmin = session?.user?.role === "admin";
 
   return (
     <div className="container mx-auto py-8">
@@ -399,6 +401,8 @@ export default async function ReportPage({ params }: Props) {
         <h1 className="text-2xl font-semibold">Raport analiză</h1>
         <div className="flex gap-2">
           <UpgradeBanner />
+          {/* Admin: Re-run pipeline button */}
+          {isAdmin && <RerunPipelineButton analysisId={analysis?.id ?? ""} />}
           {/* client-side refresh button with toast */}
           <RefreshButton analysisId={analysis?.id ?? ""} />
           {/* Report preview (Client) */}

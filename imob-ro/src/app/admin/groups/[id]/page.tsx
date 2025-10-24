@@ -27,7 +27,7 @@ export default async function AdminGroupDetailPage({
       },
       snapshots: {
         orderBy: { createdAt: "desc" },
-        take: 1,
+        take: 10, // Get more for timeline
       },
     },
   });
@@ -134,6 +134,94 @@ export default async function AdminGroupDetailPage({
           )}
         </CardContent>
       </Card>
+
+      {/* Timeline */}
+      {group.snapshots.length > 1 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>History Timeline</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {group.snapshots.map((snapshot, idx) => {
+                const isFirst = idx === 0;
+                const prevSnapshot = idx < group.snapshots.length - 1 ? group.snapshots[idx + 1] : null;
+
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                const explain = (snapshot.explain as any) ?? {};
+                
+                // Detect what changed
+                const changes: string[] = [];
+                if (prevSnapshot) {
+                  if (snapshot.priceEur !== prevSnapshot.priceEur) {
+                    changes.push(
+                      `Price: ${prevSnapshot.priceEur?.toLocaleString()} → ${snapshot.priceEur?.toLocaleString()} €`
+                    );
+                  }
+                  if (snapshot.areaM2 !== prevSnapshot.areaM2) {
+                    changes.push(`Area: ${prevSnapshot.areaM2} → ${snapshot.areaM2} m²`);
+                  }
+                  if (snapshot.sources !== prevSnapshot.sources) {
+                    changes.push(`Sources: ${prevSnapshot.sources} → ${snapshot.sources}`);
+                  }
+                }
+
+                return (
+                  <div key={snapshot.id} className="flex gap-4">
+                    <div className="flex flex-col items-center">
+                      <div
+                        className={`w-3 h-3 rounded-full ${isFirst ? "bg-primary" : "bg-muted-foreground"}`}
+                      />
+                      {idx < group.snapshots.length - 1 && (
+                        <div className="w-0.5 h-full bg-border mt-1" />
+                      )}
+                    </div>
+                    <div className="flex-1 pb-4">
+                      <div className="text-sm font-medium">
+                        {isFirst ? "Current State" : "Snapshot"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(snapshot.createdAt).toLocaleString()}
+                      </div>
+                      {changes.length > 0 && (
+                        <div className="mt-2 text-sm space-y-1">
+                          {changes.map((change, i) => (
+                            <div key={i} className="text-muted-foreground">
+                              {change}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="mt-2 flex gap-2 text-xs">
+                        {snapshot.priceEur && (
+                          <span className="px-2 py-0.5 bg-muted rounded">
+                            {snapshot.priceEur.toLocaleString()} €
+                          </span>
+                        )}
+                        {snapshot.areaM2 && (
+                          <span className="px-2 py-0.5 bg-muted rounded">
+                            {snapshot.areaM2} m²
+                          </span>
+                        )}
+                        {snapshot.sources && (
+                          <span className="px-2 py-0.5 bg-muted rounded">
+                            {snapshot.sources} sources
+                          </span>
+                        )}
+                      </div>
+                      {explain.picked && (
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Canonical: {explain.picked}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Members List */}
       <Card>

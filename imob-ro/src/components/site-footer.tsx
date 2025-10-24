@@ -29,13 +29,18 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="hover:text-foreground hover:underline">
+                <Link href="/termeni" className="hover:text-foreground hover:underline">
                   Termeni
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="hover:text-foreground hover:underline">
+                <Link href="/confidentialitate" className="hover:text-foreground hover:underline">
                   Confidențialitate
+                </Link>
+              </li>
+              <li>
+                <Link href="/cookies" className="hover:text-foreground hover:underline">
+                  Cookie-uri
                 </Link>
               </li>
             </ul>
