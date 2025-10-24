@@ -145,17 +145,17 @@ export default async function AdminGroupDetailPage({
             <div className="space-y-4">
               {group.snapshots.map((snapshot, idx) => {
                 const isFirst = idx === 0;
-                const prevSnapshot = idx < group.snapshots.length - 1 ? group.snapshots[idx + 1] : null;
+                const prevSnapshot =
+                  idx < group.snapshots.length - 1 ? group.snapshots[idx + 1] : null;
 
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const explain = (snapshot.explain as any) ?? {};
-                
+
                 // Detect what changed
                 const changes: string[] = [];
                 if (prevSnapshot) {
                   if (snapshot.priceEur !== prevSnapshot.priceEur) {
                     changes.push(
-                      `Price: ${prevSnapshot.priceEur?.toLocaleString()} → ${snapshot.priceEur?.toLocaleString()} €`
+                      `Price: ${prevSnapshot.priceEur?.toLocaleString()} → ${snapshot.priceEur?.toLocaleString()} €`,
                     );
                   }
                   if (snapshot.areaM2 !== prevSnapshot.areaM2) {
@@ -199,9 +199,7 @@ export default async function AdminGroupDetailPage({
                           </span>
                         )}
                         {snapshot.areaM2 && (
-                          <span className="px-2 py-0.5 bg-muted rounded">
-                            {snapshot.areaM2} m²
-                          </span>
+                          <span className="px-2 py-0.5 bg-muted rounded">{snapshot.areaM2} m²</span>
                         )}
                         {snapshot.sources && (
                           <span className="px-2 py-0.5 bg-muted rounded">
