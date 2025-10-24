@@ -42,10 +42,10 @@ export default async function AdminHomePage() {
       take: 5,
       select: {
         id: true,
-        cronName: true,
+        name: true,
         status: true,
         startedAt: true,
-        finishedAt: true,
+        completedAt: true,
         error: true,
       },
     }),
@@ -233,11 +233,11 @@ export default async function AdminHomePage() {
                       }`}
                     />
                     <div>
-                      <div className="font-medium text-sm">{log.cronName}</div>
+                      <div className="font-medium text-sm">{log.name}</div>
                       <div className="text-xs text-muted-foreground">
                         {new Date(log.startedAt).toLocaleString()}
-                        {log.finishedAt &&
-                          ` • ${Math.round((new Date(log.finishedAt).getTime() - new Date(log.startedAt).getTime()) / 1000)}s`}
+                        {log.completedAt &&
+                          ` • ${Math.round((new Date(log.completedAt).getTime() - new Date(log.startedAt).getTime()) / 1000)}s`}
                       </div>
                       {log.error && (
                         <div className="text-xs text-destructive mt-1">{log.error}</div>
