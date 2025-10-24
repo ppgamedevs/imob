@@ -2,16 +2,11 @@ import * as React from "react";
 import { Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Surface } from "@/components/ui/Surface";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 /**
  * KpiGrid - Compact KPI tiles grid
- * 
+ *
  * Features:
  * - Responsive: 2 cols mobile, 3 cols desktop
  * - KPI tiles with labels, values, optional hints
@@ -97,7 +92,9 @@ export default function KpiGrid({
         <KpiTile
           label="Risc Seismic"
           value={seismic.class}
-          hint={seismic.confidence ? `${Math.round(seismic.confidence * 100)}% confidence` : undefined}
+          hint={
+            seismic.confidence ? `${Math.round(seismic.confidence * 100)}% confidence` : undefined
+          }
           tone={seismic.class === "RS1" ? "danger" : seismic.class === "RS2" ? "warning" : "info"}
           tooltip="Clasificare risc seismic conform normativelor românești (RS1 = risc ridicat)"
         />
@@ -114,8 +111,8 @@ export default function KpiGrid({
               ? quality.score >= 80
                 ? "success"
                 : quality.score >= 60
-                ? "info"
-                : "warning"
+                  ? "info"
+                  : "warning"
               : "info"
           }
           tooltip="Completitudine și acuratețe informații: fotografii, descriere, date tehnice"
@@ -164,15 +161,10 @@ function KpiTile({ label, value, hint, tone = "info", tooltip }: KpiTileProps) {
     <Surface
       elevation={0}
       rounded="lg"
-      className={cn(
-        "p-4 transition-shadow duration-med hover:shadow-elev1",
-        toneStyles[tone]
-      )}
+      className={cn("p-4 transition-shadow duration-med hover:shadow-elev1", toneStyles[tone])}
     >
       <div className="flex items-start justify-between gap-2 mb-2">
-        <h3 className="text-xs font-medium text-muted uppercase tracking-wide">
-          {label}
-        </h3>
+        <h3 className="text-xs font-medium text-muted uppercase tracking-wide">{label}</h3>
         {tooltip && (
           <TooltipProvider>
             <Tooltip>
@@ -193,9 +185,7 @@ function KpiTile({ label, value, hint, tone = "info", tooltip }: KpiTileProps) {
         )}
       </div>
 
-      <div className={cn("text-2xl font-bold mb-1", valueStyles[tone])}>
-        {value}
-      </div>
+      <div className={cn("text-2xl font-bold mb-1", valueStyles[tone])}>{value}</div>
 
       {hint && (
         <div className="text-xs text-muted truncate" title={hint}>

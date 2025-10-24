@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Container - Responsive content container with max-width constraints
- * 
+ *
  * Provides consistent horizontal spacing and max-width limits:
  * - Default: 1200px for most pages
  * - Wide: 1440px for discover/map views
@@ -40,14 +40,14 @@ const Container = React.forwardRef<HTMLDivElement, ContainerProps>(
           "mx-auto",
           widthStyles[width],
           !noPadding && "px-4 md:px-6 lg:px-8",
-          className
+          className,
         )}
         {...props}
       >
         {children}
       </div>
     );
-  }
+  },
 );
 
 Container.displayName = "Container";

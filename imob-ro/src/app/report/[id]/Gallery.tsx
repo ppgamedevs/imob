@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 /**
  * Gallery - Image carousel with thumbnails
- * 
+ *
  * Features:
  * - Swipeable on mobile (touch gestures)
  * - Keyboard navigation (arrow keys)
@@ -45,7 +45,7 @@ export default function Gallery({ images, title = "Galerie foto" }: GalleryProps
         setCurrentIndex(index);
       }
     },
-    [images.length]
+    [images.length],
   );
 
   // Previous/Next handlers
@@ -156,7 +156,7 @@ export default function Gallery({ images, title = "Galerie foto" }: GalleryProps
                   "relative shrink-0 w-20 h-16 rounded-md overflow-hidden border-2 transition-all focus-ring",
                   index === currentIndex
                     ? "border-primary shadow-elev1"
-                    : "border-border hover:border-primary/50"
+                    : "border-border hover:border-primary/50",
                 )}
                 aria-label={`Vizualizează imaginea ${index + 1}`}
                 aria-current={index === currentIndex}

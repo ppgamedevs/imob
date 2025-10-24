@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 /**
  * TtsCard - Time to Sell explanation
- * 
+ *
  * Shows:
  * - TTS bucket (fast/normal/slow)
  * - Estimated days on market
@@ -24,12 +24,7 @@ export interface TtsCardProps {
   advice?: string;
 }
 
-export default function TtsCard({
-  bucket,
-  estimatedDays,
-  factors,
-  advice,
-}: TtsCardProps) {
+export default function TtsCard({ bucket, estimatedDays, factors, advice }: TtsCardProps) {
   const bucketConfig = {
     fast: {
       label: "Vânzare Rapidă",
@@ -65,25 +60,15 @@ export default function TtsCard({
       {/* Header */}
       <div>
         <h2 className="text-lg font-semibold mb-1">Time to Sell</h2>
-        <p className="text-sm text-muted">
-          Estimare durată până la vânzare bazată pe piață
-        </p>
+        <p className="text-sm text-muted">Estimare durată până la vânzare bazată pe piață</p>
       </div>
 
       {/* Bucket Display */}
-      <div
-        className={cn(
-          "p-4 rounded-lg border",
-          config.bgColor,
-          config.borderColor
-        )}
-      >
+      <div className={cn("p-4 rounded-lg border", config.bgColor, config.borderColor)}>
         <div className="flex items-center gap-3 mb-2">
           <Icon className={cn("h-6 w-6", config.color)} />
           <div>
-            <div className={cn("text-lg font-bold", config.color)}>
-              {config.label}
-            </div>
+            <div className={cn("text-lg font-bold", config.color)}>{config.label}</div>
             <div className="text-sm text-muted">{config.range}</div>
           </div>
         </div>
@@ -108,7 +93,7 @@ export default function TtsCard({
                   "font-medium",
                   factors.priceDelta > 5 && "text-danger",
                   factors.priceDelta < -5 && "text-success",
-                  Math.abs(factors.priceDelta) <= 5 && "text-info"
+                  Math.abs(factors.priceDelta) <= 5 && "text-info",
                 )}
               >
                 {factors.priceDelta > 0 ? "+" : ""}
@@ -128,8 +113,8 @@ export default function TtsCard({
                 {factors.seasonality === "high"
                   ? "Sezon bun"
                   : factors.seasonality === "low"
-                  ? "Sezon slab"
-                  : "Sezon mediu"}
+                    ? "Sezon slab"
+                    : "Sezon mediu"}
               </Badge>
             </div>
           )}
@@ -142,14 +127,14 @@ export default function TtsCard({
                 variant="outline"
                 className={cn(
                   factors.demand === "high" && "border-success/50 text-success",
-                  factors.demand === "low" && "border-warning/50 text-warning"
+                  factors.demand === "low" && "border-warning/50 text-warning",
                 )}
               >
                 {factors.demand === "high"
                   ? "Ridicată"
                   : factors.demand === "low"
-                  ? "Scăzută"
-                  : "Medie"}
+                    ? "Scăzută"
+                    : "Medie"}
               </Badge>
             </div>
           )}
@@ -164,8 +149,8 @@ export default function TtsCard({
             (bucket === "fast"
               ? "Proprietatea are șanse mari să se vândă rapid. Fii pregătit pentru negocieri."
               : bucket === "slow"
-              ? "Vânzarea poate dura. Consideră ajustarea prețului sau îmbunătățiri vizuale (fotografii, descriere)."
-              : "Durată normală de vânzare pentru această zonă și preț. Monitorizează piața.")}
+                ? "Vânzarea poate dura. Consideră ajustarea prețului sau îmbunătățiri vizuale (fotografii, descriere)."
+                : "Durată normală de vânzare pentru această zonă și preț. Monitorizează piața.")}
         </div>
       </div>
 
@@ -193,7 +178,7 @@ export default function TtsCard({
             <div
               className={cn(
                 "absolute top-0 h-full w-1 transition-all duration-med",
-                config.color.replace("text-", "bg-")
+                config.color.replace("text-", "bg-"),
               )}
               style={{
                 left: `${Math.min(100, (estimatedDays / 120) * 100)}%`,

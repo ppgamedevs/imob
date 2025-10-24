@@ -8,7 +8,7 @@ import { Container } from "./Container";
 
 /**
  * AppHeader - Main navigation header
- * 
+ *
  * Features:
  * - Sticky positioning with backdrop blur
  * - Search input (prominent)
@@ -45,23 +45,18 @@ const AppHeader = React.forwardRef<HTMLElement, AppHeaderProps>(
           "border-b border-border",
           "bg-bg/95 backdrop-blur-sm",
           "supports-[backdrop-filter]:bg-bg/80",
-          className
+          className,
         )}
         {...props}
       >
         <Container>
           <div className="flex h-16 items-center justify-between gap-4">
             {/* Logo */}
-            <Link
-              href="/"
-              className="flex items-center gap-2 shrink-0 focus-ring rounded-md"
-            >
+            <Link href="/" className="flex items-center gap-2 shrink-0 focus-ring rounded-md">
               <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center">
                 <span className="text-primary font-bold text-sm">iR</span>
               </div>
-              <span className="font-bold text-lg hidden sm:inline">
-                imob.ro
-              </span>
+              <span className="font-bold text-lg hidden sm:inline">imob.ro</span>
             </Link>
 
             {/* Search Bar (Desktop) */}
@@ -76,7 +71,7 @@ const AppHeader = React.forwardRef<HTMLElement, AppHeaderProps>(
                     "bg-surface border border-border rounded-lg",
                     "text-sm text-text placeholder:text-muted",
                     "focus:outline-none focus:ring-2 focus:ring-primary",
-                    "transition-shadow duration-fast"
+                    "transition-shadow duration-fast",
                   )}
                 />
               </div>
@@ -92,7 +87,7 @@ const AppHeader = React.forwardRef<HTMLElement, AppHeaderProps>(
                     "px-4 py-2 text-sm font-medium rounded-md",
                     "text-text hover:bg-muted",
                     "transition-colors duration-fast",
-                    "focus-ring"
+                    "focus-ring",
                   )}
                 >
                   {link.label}
@@ -134,7 +129,7 @@ const AppHeader = React.forwardRef<HTMLElement, AppHeaderProps>(
                         className={cn(
                           "px-4 py-3 text-sm font-medium rounded-md",
                           "text-text hover:bg-muted",
-                          "transition-colors duration-fast"
+                          "transition-colors duration-fast",
                         )}
                       >
                         {link.label}
@@ -158,7 +153,7 @@ const AppHeader = React.forwardRef<HTMLElement, AppHeaderProps>(
                   "bg-surface border border-border rounded-lg",
                   "text-sm text-text placeholder:text-muted",
                   "focus:outline-none focus:ring-2 focus:ring-primary",
-                  "transition-shadow duration-fast"
+                  "transition-shadow duration-fast",
                 )}
               />
             </div>
@@ -166,7 +161,7 @@ const AppHeader = React.forwardRef<HTMLElement, AppHeaderProps>(
         </Container>
       </header>
     );
-  }
+  },
 );
 
 AppHeader.displayName = "AppHeader";

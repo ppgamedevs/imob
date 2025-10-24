@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 /**
  * StickyActions - Save, Compare, Share, Contact
- * 
+ *
  * Layout:
  * - Mobile: Fixed bottom bar with 4 buttons
  * - Desktop: Part of right column sticky sidebar
@@ -47,7 +47,7 @@ export default function StickyActions({
         ? saved.filter((id: string) => id !== propertyId)
         : [...saved, propertyId];
       localStorage.setItem("saved:set", JSON.stringify(newSaved));
-      
+
       setShowToast(isSaved ? "Eliminat din favorite" : "Adăugat la favorite");
       setTimeout(() => setShowToast(null), 3000);
     }
@@ -119,12 +119,7 @@ export default function StickyActions({
   return (
     <>
       {/* Desktop: Vertical button stack */}
-      <div
-        className={cn(
-          "hidden lg:flex flex-col gap-2",
-          className
-        )}
-      >
+      <div className={cn("hidden lg:flex flex-col gap-2", className)}>
         <Button
           variant={isSaved ? "default" : "outline"}
           className="w-full justify-start"
@@ -143,20 +138,12 @@ export default function StickyActions({
           Compară
         </Button>
 
-        <Button
-          variant="outline"
-          className="w-full justify-start"
-          onClick={handleShare}
-        >
+        <Button variant="outline" className="w-full justify-start" onClick={handleShare}>
           <Share2 className="h-4 w-4 mr-2" />
           Distribuie
         </Button>
 
-        <Button
-          variant="default"
-          className="w-full justify-start"
-          onClick={handleContact}
-        >
+        <Button variant="default" className="w-full justify-start" onClick={handleContact}>
           <Mail className="h-4 w-4 mr-2" />
           Contact
         </Button>
@@ -170,9 +157,7 @@ export default function StickyActions({
             onClick={handleSave}
             className={cn(
               "flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-colors focus-ring text-xs",
-              isSaved
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-muted active:bg-muted"
+              isSaved ? "bg-primary text-primary-foreground" : "hover:bg-muted active:bg-muted",
             )}
           >
             <Heart className={cn("h-5 w-5", isSaved && "fill-current")} />
@@ -184,9 +169,7 @@ export default function StickyActions({
             onClick={handleCompare}
             className={cn(
               "flex flex-col items-center gap-1 py-2 px-1 rounded-lg transition-colors focus-ring text-xs",
-              isInCompare
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-muted active:bg-muted"
+              isInCompare ? "bg-primary text-primary-foreground" : "hover:bg-muted active:bg-muted",
             )}
           >
             <ArrowLeftRight className="h-5 w-5" />

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * YieldCard - Rental yield breakdown
- * 
+ *
  * Shows:
  * - Estimated monthly rent
  * - €/m² rent calculation
@@ -38,9 +38,7 @@ export default function YieldCard({
 }: YieldCardProps) {
   const annualRent = rentEur * 12;
   const totalExpenses = expenses
-    ? (expenses.maintenanceEur || 0) +
-      (expenses.taxesEur || 0) +
-      (expenses.managementEur || 0)
+    ? (expenses.maintenanceEur || 0) + (expenses.taxesEur || 0) + (expenses.managementEur || 0)
     : annualRent * 0.2; // Default 20% expenses
   const netAnnualIncome = annualRent - totalExpenses;
 
@@ -52,9 +50,7 @@ export default function YieldCard({
       {/* Header */}
       <div>
         <h2 className="text-lg font-semibold mb-1">Randament Închiriere</h2>
-        <p className="text-sm text-muted">
-          Estimare venit net din închiriere pe termen lung
-        </p>
+        <p className="text-sm text-muted">Estimare venit net din închiriere pe termen lung</p>
       </div>
 
       {/* Monthly Rent Estimate */}
@@ -112,17 +108,13 @@ export default function YieldCard({
           {/* Total Expenses */}
           <div className="flex justify-between border-t pt-1.5">
             <span className="text-muted">Cheltuieli Totale</span>
-            <span className="font-medium text-danger">
-              −{formatEur(totalExpenses)}
-            </span>
+            <span className="font-medium text-danger">−{formatEur(totalExpenses)}</span>
           </div>
 
           {/* Net Income */}
           <div className="flex justify-between pt-1.5 border-t-2">
             <span className="font-medium">Venit Net Anual</span>
-            <span className="font-bold text-success">
-              {formatEur(netAnnualIncome)}
-            </span>
+            <span className="font-bold text-success">{formatEur(netAnnualIncome)}</span>
           </div>
         </div>
       </div>
@@ -131,26 +123,14 @@ export default function YieldCard({
       <div
         className={cn(
           "p-4 rounded-lg border-2",
-          isGoodYield
-            ? "bg-success/10 border-success/30"
-            : "bg-warning/10 border-warning/30"
+          isGoodYield ? "bg-success/10 border-success/30" : "bg-warning/10 border-warning/30",
         )}
       >
         <div className="flex items-center justify-between mb-1">
           <span className="text-sm font-medium">Randament Net</span>
-          <TrendingUp
-            className={cn(
-              "h-5 w-5",
-              isGoodYield ? "text-success" : "text-warning"
-            )}
-          />
+          <TrendingUp className={cn("h-5 w-5", isGoodYield ? "text-success" : "text-warning")} />
         </div>
-        <div
-          className={cn(
-            "text-3xl font-bold",
-            isGoodYield ? "text-success" : "text-warning"
-          )}
-        >
+        <div className={cn("text-3xl font-bold", isGoodYield ? "text-success" : "text-warning")}>
           {(netYield * 100).toFixed(2)}%
         </div>
         <div className="text-xs text-muted mt-1">
@@ -180,28 +160,25 @@ export default function YieldCard({
           <li className="list-disc">
             {isGoodYield ? (
               <>
-                <strong className="text-success">Randament bun</strong> (≥6%)
-                pentru piața românească
+                <strong className="text-success">Randament bun</strong> (≥6%) pentru piața
+                românească
               </>
             ) : netYield >= 0.04 ? (
               <>
-                <strong className="text-info">Randament acceptabil</strong>{" "}
-                (4-6%), comparabil cu alte investiții
+                <strong className="text-info">Randament acceptabil</strong> (4-6%), comparabil cu
+                alte investiții
               </>
             ) : (
               <>
-                <strong className="text-warning">Randament scăzut</strong> (&lt;4%),
-                investiția se bazează pe apreciere capital
+                <strong className="text-warning">Randament scăzut</strong> (&lt;4%), investiția se
+                bazează pe apreciere capital
               </>
             )}
           </li>
-          <li className="list-disc">
-            Calculul presupune ocupare 90% și chirii la nivelul pieței
-          </li>
+          <li className="list-disc">Calculul presupune ocupare 90% și chirii la nivelul pieței</li>
           {isBetterThanArea && (
             <li className="list-disc">
-              <strong className="text-success">Avantaj:</strong> Randament mai
-              bun decât media zonei
+              <strong className="text-success">Avantaj:</strong> Randament mai bun decât media zonei
             </li>
           )}
         </ul>

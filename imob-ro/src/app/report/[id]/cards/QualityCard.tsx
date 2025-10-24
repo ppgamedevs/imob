@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 /**
  * QualityCard - Data quality assessment
- * 
+ *
  * Shows:
  * - Overall completeness score
  * - Photo quality metrics
@@ -42,19 +42,17 @@ export default function QualityCard({
     overallScore >= 80
       ? { label: "Excellent", color: "text-success", bgColor: "bg-success/10" }
       : overallScore >= 60
-      ? { label: "Bun", color: "text-info", bgColor: "bg-info/10" }
-      : overallScore >= 40
-      ? { label: "Acceptabil", color: "text-warning", bgColor: "bg-warning/10" }
-      : { label: "Scăzut", color: "text-danger", bgColor: "bg-danger/10" };
+        ? { label: "Bun", color: "text-info", bgColor: "bg-info/10" }
+        : overallScore >= 40
+          ? { label: "Acceptabil", color: "text-warning", bgColor: "bg-warning/10" }
+          : { label: "Scăzut", color: "text-danger", bgColor: "bg-danger/10" };
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div>
         <h2 className="text-lg font-semibold mb-1">Calitate Anunț</h2>
-        <p className="text-sm text-muted">
-          Evaluare completitudine și acuratețe informații
-        </p>
+        <p className="text-sm text-muted">Evaluare completitudine și acuratețe informații</p>
       </div>
 
       {/* Overall Score */}
@@ -66,17 +64,12 @@ export default function QualityCard({
           </Badge>
         </div>
         <div className="flex items-end gap-2">
-          <span className={cn("text-3xl font-bold", qualityLevel.color)}>
-            {overallScore}
-          </span>
+          <span className={cn("text-3xl font-bold", qualityLevel.color)}>{overallScore}</span>
           <span className="text-lg text-muted mb-0.5">/100</span>
         </div>
         <div className="mt-3 h-2 bg-muted/30 rounded-full overflow-hidden">
           <div
-            className={cn(
-              "h-full transition-all",
-              qualityLevel.color.replace("text-", "bg-")
-            )}
+            className={cn("h-full transition-all", qualityLevel.color.replace("text-", "bg-"))}
             style={{ width: `${overallScore}%` }}
           />
         </div>
@@ -89,17 +82,14 @@ export default function QualityCard({
           <span className="font-medium">{completeness}%</span>
         </div>
         <div className="h-1.5 bg-muted/30 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-primary transition-all"
-            style={{ width: `${completeness}%` }}
-          />
+          <div className="h-full bg-primary transition-all" style={{ width: `${completeness}%` }} />
         </div>
         <p className="text-xs text-muted">
           {completeness >= 80
             ? "Toate informațiile esențiale sunt prezente"
             : completeness >= 60
-            ? "Majoritatea câmpurilor sunt completate"
-            : "Lipsesc informații importante"}
+              ? "Majoritatea câmpurilor sunt completate"
+              : "Lipsesc informații importante"}
         </p>
       </div>
 
@@ -116,8 +106,8 @@ export default function QualityCard({
               photoQuality.score >= 70
                 ? "border-success/50 text-success"
                 : photoQuality.score >= 50
-                ? "border-info/50 text-info"
-                : "border-warning/50 text-warning"
+                  ? "border-info/50 text-info"
+                  : "border-warning/50 text-warning"
             }
           >
             {photoQuality.score}/100
@@ -178,8 +168,8 @@ export default function QualityCard({
               textQuality.score >= 70
                 ? "border-success/50 text-success"
                 : textQuality.score >= 50
-                ? "border-info/50 text-info"
-                : "border-warning/50 text-warning"
+                  ? "border-info/50 text-info"
+                  : "border-warning/50 text-warning"
             }
           >
             {textQuality.score}/100
@@ -189,9 +179,7 @@ export default function QualityCard({
         <div className="space-y-1.5 text-xs">
           <div className="flex items-center justify-between">
             <span className="text-muted">Lungime descriere:</span>
-            <span className="font-medium">
-              {textQuality.descriptionLength} caractere
-            </span>
+            <span className="font-medium">{textQuality.descriptionLength} caractere</span>
           </div>
 
           {textQuality.hasDetails !== undefined && (
@@ -232,18 +220,18 @@ export default function QualityCard({
         <p className="text-muted">
           {overallScore >= 80 ? (
             <>
-              Anunț <strong>foarte complet</strong> cu fotografii de calitate și
-              descriere detaliată. Vânzătorul pare serios și transparent.
+              Anunț <strong>foarte complet</strong> cu fotografii de calitate și descriere
+              detaliată. Vânzătorul pare serios și transparent.
             </>
           ) : overallScore >= 60 ? (
             <>
-              Anunț <strong>decent</strong>, dar ar putea beneficia de mai multe
-              fotografii sau detalii suplimentare.
+              Anunț <strong>decent</strong>, dar ar putea beneficia de mai multe fotografii sau
+              detalii suplimentare.
             </>
           ) : (
             <>
-              Anunț <strong>incomplet</strong>. Lipsesc informații importante.
-              Solicită detalii suplimentare înainte de vizionare.
+              Anunț <strong>incomplet</strong>. Lipsesc informații importante. Solicită detalii
+              suplimentare înainte de vizionare.
             </>
           )}
         </p>

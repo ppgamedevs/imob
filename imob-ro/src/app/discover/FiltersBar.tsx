@@ -7,7 +7,7 @@ import { X } from "lucide-react";
 
 /**
  * FiltersBar - Compact filter chips and selects
- * 
+ *
  * Features:
  * - Horizontal scroll on mobile
  * - Stable height (no CLS)
@@ -29,14 +29,7 @@ export interface FilterState {
   sort?: string;
 }
 
-const AREAS = [
-  "Centru Vechi",
-  "Pipera",
-  "Floreasca",
-  "Aviației",
-  "Dorobanți",
-  "Primăverii",
-];
+const AREAS = ["Centru Vechi", "Pipera", "Floreasca", "Aviației", "Dorobanți", "Primăverii"];
 
 const SORT_OPTIONS = [
   { value: "price-asc", label: "Preț crescător" },
@@ -56,7 +49,7 @@ export default function FiltersBar({ onFilterChange }: FiltersBarProps) {
       setFilters(newFilters);
       onFilterChange?.(newFilters);
     },
-    [filters, onFilterChange]
+    [filters, onFilterChange],
   );
 
   const removeFilter = React.useCallback(
@@ -66,7 +59,7 @@ export default function FiltersBar({ onFilterChange }: FiltersBarProps) {
       setFilters(newFilters);
       onFilterChange?.(newFilters);
     },
-    [filters, onFilterChange]
+    [filters, onFilterChange],
   );
 
   const clearAll = React.useCallback(() => {
@@ -89,7 +82,7 @@ export default function FiltersBar({ onFilterChange }: FiltersBarProps) {
             className={cn(
               "h-8 px-3 text-sm rounded-lg border border-border bg-surface",
               "focus:outline-none focus:ring-2 focus:ring-primary",
-              "transition-colors duration-fast"
+              "transition-colors duration-fast",
             )}
           >
             <option value="">Toate zonele</option>
@@ -107,14 +100,11 @@ export default function FiltersBar({ onFilterChange }: FiltersBarProps) {
               placeholder="Min €"
               value={filters.priceMin || ""}
               onChange={(e) =>
-                updateFilter(
-                  "priceMin",
-                  e.target.value ? Number(e.target.value) : undefined
-                )
+                updateFilter("priceMin", e.target.value ? Number(e.target.value) : undefined)
               }
               className={cn(
                 "w-24 h-8 px-2 text-sm rounded-lg border border-border bg-surface",
-                "focus:outline-none focus:ring-2 focus:ring-primary"
+                "focus:outline-none focus:ring-2 focus:ring-primary",
               )}
             />
             <span className="text-sm text-muted">—</span>
@@ -123,14 +113,11 @@ export default function FiltersBar({ onFilterChange }: FiltersBarProps) {
               placeholder="Max €"
               value={filters.priceMax || ""}
               onChange={(e) =>
-                updateFilter(
-                  "priceMax",
-                  e.target.value ? Number(e.target.value) : undefined
-                )
+                updateFilter("priceMax", e.target.value ? Number(e.target.value) : undefined)
               }
               className={cn(
                 "w-24 h-8 px-2 text-sm rounded-lg border border-border bg-surface",
-                "focus:outline-none focus:ring-2 focus:ring-primary"
+                "focus:outline-none focus:ring-2 focus:ring-primary",
               )}
             />
           </div>
@@ -142,14 +129,11 @@ export default function FiltersBar({ onFilterChange }: FiltersBarProps) {
               placeholder="Min m²"
               value={filters.areaM2Min || ""}
               onChange={(e) =>
-                updateFilter(
-                  "areaM2Min",
-                  e.target.value ? Number(e.target.value) : undefined
-                )
+                updateFilter("areaM2Min", e.target.value ? Number(e.target.value) : undefined)
               }
               className={cn(
                 "w-24 h-8 px-2 text-sm rounded-lg border border-border bg-surface",
-                "focus:outline-none focus:ring-2 focus:ring-primary"
+                "focus:outline-none focus:ring-2 focus:ring-primary",
               )}
             />
             <span className="text-sm text-muted">—</span>
@@ -158,14 +142,11 @@ export default function FiltersBar({ onFilterChange }: FiltersBarProps) {
               placeholder="Max m²"
               value={filters.areaM2Max || ""}
               onChange={(e) =>
-                updateFilter(
-                  "areaM2Max",
-                  e.target.value ? Number(e.target.value) : undefined
-                )
+                updateFilter("areaM2Max", e.target.value ? Number(e.target.value) : undefined)
               }
               className={cn(
                 "w-24 h-8 px-2 text-sm rounded-lg border border-border bg-surface",
-                "focus:outline-none focus:ring-2 focus:ring-primary"
+                "focus:outline-none focus:ring-2 focus:ring-primary",
               )}
             />
           </div>
@@ -178,7 +159,7 @@ export default function FiltersBar({ onFilterChange }: FiltersBarProps) {
             }
             className={cn(
               "h-8 px-3 text-sm rounded-lg border border-border bg-surface",
-              "focus:outline-none focus:ring-2 focus:ring-primary"
+              "focus:outline-none focus:ring-2 focus:ring-primary",
             )}
           >
             <option value="">Camere</option>
@@ -194,7 +175,7 @@ export default function FiltersBar({ onFilterChange }: FiltersBarProps) {
             onChange={(e) => updateFilter("sort", e.target.value || undefined)}
             className={cn(
               "h-8 px-3 text-sm rounded-lg border border-border bg-surface",
-              "focus:outline-none focus:ring-2 focus:ring-primary"
+              "focus:outline-none focus:ring-2 focus:ring-primary",
             )}
           >
             <option value="">Sortează</option>
@@ -223,9 +204,7 @@ export default function FiltersBar({ onFilterChange }: FiltersBarProps) {
         {hasActiveFilters && (
           <div className="mt-2 flex flex-wrap items-center gap-2">
             {filters.area && (
-              <FilterChip onRemove={() => removeFilter("area")}>
-                Zonă: {filters.area}
-              </FilterChip>
+              <FilterChip onRemove={() => removeFilter("area")}>Zonă: {filters.area}</FilterChip>
             )}
             {(filters.priceMin || filters.priceMax) && (
               <FilterChip
@@ -244,14 +223,11 @@ export default function FiltersBar({ onFilterChange }: FiltersBarProps) {
                   removeFilter("areaM2Max");
                 }}
               >
-                Suprafață: {filters.areaM2Min || "0"} -{" "}
-                {filters.areaM2Max || "∞"} m²
+                Suprafață: {filters.areaM2Min || "0"} - {filters.areaM2Max || "∞"} m²
               </FilterChip>
             )}
             {filters.rooms && (
-              <FilterChip onRemove={() => removeFilter("rooms")}>
-                {filters.rooms} camere
-              </FilterChip>
+              <FilterChip onRemove={() => removeFilter("rooms")}>{filters.rooms} camere</FilterChip>
             )}
           </div>
         )}
@@ -261,13 +237,7 @@ export default function FiltersBar({ onFilterChange }: FiltersBarProps) {
 }
 
 /** Filter Chip with Remove Button */
-function FilterChip({
-  children,
-  onRemove,
-}: {
-  children: React.ReactNode;
-  onRemove: () => void;
-}) {
+function FilterChip({ children, onRemove }: { children: React.ReactNode; onRemove: () => void }) {
   return (
     <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-md">
       {children}

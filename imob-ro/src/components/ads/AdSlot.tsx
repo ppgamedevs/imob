@@ -6,7 +6,7 @@ import { SponsoredLabel } from "../ui/SponsoredLabel";
 
 /**
  * AdSlot - Static advertising slot component with zero CLS
- * 
+ *
  * Features:
  * - Reserved height to prevent layout shift
  * - Viewability tracking via IntersectionObserver
@@ -58,18 +58,7 @@ const AD_SIZES = {
 };
 
 const AdSlot = React.forwardRef<HTMLDivElement, AdSlotProps>(
-  (
-    {
-      id,
-      position,
-      size,
-      adUrl,
-      clickUrl,
-      className,
-      ...props
-    },
-    ref
-  ) => {
+  ({ id, position, size, adUrl, clickUrl, className, ...props }, ref) => {
     const [isVisible, setIsVisible] = React.useState(false);
     const [hasTrackedImpression, setHasTrackedImpression] = React.useState(false);
     const containerRef = React.useRef<HTMLDivElement>(null);
@@ -88,7 +77,7 @@ const AdSlot = React.forwardRef<HTMLDivElement, AdSlotProps>(
             }
           });
         },
-        { threshold: 0.5 }
+        { threshold: 0.5 },
       );
 
       observer.observe(containerRef.current);
@@ -148,7 +137,7 @@ const AdSlot = React.forwardRef<HTMLDivElement, AdSlotProps>(
         className={cn(
           "flex items-center justify-center",
           "bg-adBg border border-adBorder rounded-md overflow-hidden",
-          className
+          className,
         )}
         style={{
           width: "100%",
@@ -198,15 +187,13 @@ const AdSlot = React.forwardRef<HTMLDivElement, AdSlotProps>(
                   />
                 </svg>
               </div>
-              <p className="text-xs text-adLabel font-medium">
-                Spațiu rezervat publicitate
-              </p>
+              <p className="text-xs text-adLabel font-medium">Spațiu rezervat publicitate</p>
             </div>
           )}
         </div>
       </div>
     );
-  }
+  },
 );
 
 AdSlot.displayName = "AdSlot";

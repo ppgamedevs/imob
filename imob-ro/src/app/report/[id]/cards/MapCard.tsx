@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * MapCard - Location map with metro station
- * 
+ *
  * Shows:
  * - Small SVG map similar to MapPanel but compact
  * - Property marker
@@ -44,8 +44,7 @@ export default function MapCard({
   // Convert lat/lng to SVG coordinates
   const latToY = (lat: number) =>
     ((bounds.maxLat - lat) / (bounds.maxLat - bounds.minLat)) * height;
-  const lngToX = (lng: number) =>
-    ((lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * width;
+  const lngToX = (lng: number) => ((lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * width;
 
   const propertyX = lngToX(propertyLng);
   const propertyY = latToY(propertyLat);
@@ -65,18 +64,14 @@ export default function MapCard({
     M5: "#FFA500", // Orange
   };
 
-  const metroColor = metroStation
-    ? metroLineColors[metroStation.line] || "#888"
-    : "#888";
+  const metroColor = metroStation ? metroLineColors[metroStation.line] || "#888" : "#888";
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div>
         <h2 className="text-lg font-semibold mb-1">Locație & Acces Metrou</h2>
-        <p className="text-sm text-muted">
-          {areaName}, București
-        </p>
+        <p className="text-sm text-muted">{areaName}, București</p>
       </div>
 
       {/* Map SVG */}
@@ -119,13 +114,7 @@ export default function MapCard({
           {metroStation && (
             <g>
               {/* Outer ring */}
-              <circle
-                cx={metroX}
-                cy={metroY}
-                r={12}
-                fill={metroColor}
-                fillOpacity={0.2}
-              />
+              <circle cx={metroX} cy={metroY} r={12} fill={metroColor} fillOpacity={0.2} />
               {/* Inner circle */}
               <circle cx={metroX} cy={metroY} r={6} fill={metroColor} />
               {/* Label */}
@@ -143,20 +132,8 @@ export default function MapCard({
           {/* Property Marker (on top) */}
           <g>
             {/* Pulse ring */}
-            <circle
-              cx={propertyX}
-              cy={propertyY}
-              r={16}
-              className="fill-primary"
-              fillOpacity={0.2}
-            >
-              <animate
-                attributeName="r"
-                from="12"
-                to="20"
-                dur="2s"
-                repeatCount="indefinite"
-              />
+            <circle cx={propertyX} cy={propertyY} r={16} className="fill-primary" fillOpacity={0.2}>
+              <animate attributeName="r" from="12" to="20" dur="2s" repeatCount="indefinite" />
               <animate
                 attributeName="opacity"
                 from="0.6"
@@ -182,10 +159,7 @@ export default function MapCard({
       {metroStation && (
         <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
           <div className="flex items-center gap-2">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: metroColor }}
-            />
+            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: metroColor }} />
             <span className="text-sm font-medium">
               {metroStation.line} - {metroStation.name}
             </span>
@@ -200,8 +174,7 @@ export default function MapCard({
       {/* Walking Time Estimate */}
       {metroStation && (
         <div className="text-sm text-muted text-center">
-          <MapPin className="h-4 w-4 inline mr-1" />
-          ~{Math.ceil(distanceM / 80)} minute mers pe jos
+          <MapPin className="h-4 w-4 inline mr-1" />~{Math.ceil(distanceM / 80)} minute mers pe jos
           <span className="text-xs ml-1">(80m/min)</span>
         </div>
       )}
@@ -211,18 +184,18 @@ export default function MapCard({
         <p className="text-muted">
           {metroStation ? (
             <>
-              Proprietatea este la <strong>{Math.round(distanceM)}m</strong> de
-              metroul <strong>{metroStation.name}</strong>.{" "}
+              Proprietatea este la <strong>{Math.round(distanceM)}m</strong> de metroul{" "}
+              <strong>{metroStation.name}</strong>.{" "}
               {distanceM <= 500
                 ? "Acces excelent la transport în comun."
                 : distanceM <= 1000
-                ? "Acces bun la transport în comun."
-                : "Distanță mai mare, consideră și alte mijloace de transport."}
+                  ? "Acces bun la transport în comun."
+                  : "Distanță mai mare, consideră și alte mijloace de transport."}
             </>
           ) : (
             <>
-              Nu există stații de metrou în proximitate imediată. Verifică
-              alte opțiuni de transport public (autobuz, tramvai).
+              Nu există stații de metrou în proximitate imediată. Verifică alte opțiuni de transport
+              public (autobuz, tramvai).
             </>
           )}
         </p>
@@ -232,12 +205,7 @@ export default function MapCard({
 }
 
 /** Calculate distance between two lat/lng points in meters (Haversine) */
-function calculateDistance(
-  lat1: number,
-  lng1: number,
-  lat2: number,
-  lng2: number
-): number {
+function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371e3; // Earth radius in meters
   const φ1 = (lat1 * Math.PI) / 180;
   const φ2 = (lat2 * Math.PI) / 180;

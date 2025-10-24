@@ -9,9 +9,9 @@ import { Badge } from "@/components/ui/badge";
 
 /**
  * UI Showcase - Visual QA for design system primitives
- * 
+ *
  * Access: /ui (development only - can be removed in production)
- * 
+ *
  * Displays all core components for quick visual testing:
  * - Design tokens (colors, shadows, spacing)
  * - Surface elevations
@@ -41,9 +41,7 @@ export default function UIShowcasePage() {
           {/* Header */}
           <div>
             <h1 className="text-4xl font-bold mb-2">Design System Showcase</h1>
-            <p className="text-muted text-lg">
-              Visual QA pentru componente și tokens
-            </p>
+            <p className="text-muted text-lg">Visual QA pentru componente și tokens</p>
           </div>
 
           {/* Color Tokens */}
@@ -91,9 +89,7 @@ export default function UIShowcasePage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <Surface elevation={0} className="p-6">
                 <h3 className="font-semibold mb-2">Elevation 0</h3>
-                <p className="text-sm text-muted">
-                  Minimal border, subtle presence
-                </p>
+                <p className="text-sm text-muted">Minimal border, subtle presence</p>
               </Surface>
               <Surface elevation={1} className="p-6">
                 <h3 className="font-semibold mb-2">Elevation 1</h3>
@@ -119,9 +115,7 @@ export default function UIShowcasePage() {
 
           {/* Buttons & Focus States */}
           <section>
-            <h2 className="text-2xl font-semibold mb-6">
-              Buttons & Focus States
-            </h2>
+            <h2 className="text-2xl font-semibold mb-6">Buttons & Focus States</h2>
             <div className="flex flex-wrap gap-4">
               <Button variant="default">Primary</Button>
               <Button variant="secondary">Secondary</Button>
@@ -153,31 +147,17 @@ export default function UIShowcasePage() {
                 <h3 className="text-sm font-medium mb-3 text-muted">
                   Banner (728×90 desktop / 320×100 mobile)
                 </h3>
-                <AdSlot
-                  id="showcase-banner"
-                  position="top"
-                  size="banner"
-                />
+                <AdSlot id="showcase-banner" position="top" size="banner" />
               </div>
               <div>
-                <h3 className="text-sm font-medium mb-3 text-muted">
-                  Rectangle (300×250)
-                </h3>
-                <AdSlot
-                  id="showcase-rectangle"
-                  position="sidebar"
-                  size="rectangle"
-                />
+                <h3 className="text-sm font-medium mb-3 text-muted">Rectangle (300×250)</h3>
+                <AdSlot id="showcase-rectangle" position="sidebar" size="rectangle" />
               </div>
               <div>
                 <h3 className="text-sm font-medium mb-3 text-muted">
                   Skyscraper (300×600 desktop / 300×250 mobile)
                 </h3>
-                <AdSlot
-                  id="showcase-skyscraper"
-                  position="sidebar"
-                  size="skyscraper"
-                />
+                <AdSlot id="showcase-skyscraper" position="sidebar" size="skyscraper" />
               </div>
             </div>
           </section>
@@ -196,45 +176,31 @@ export default function UIShowcasePage() {
             <div className="space-y-4">
               <div>
                 <p className="text-xs text-muted mb-1">text-xs (12px)</p>
-                <p className="text-xs">
-                  The quick brown fox jumps over the lazy dog
-                </p>
+                <p className="text-xs">The quick brown fox jumps over the lazy dog</p>
               </div>
               <div>
                 <p className="text-xs text-muted mb-1">text-sm (14px)</p>
-                <p className="text-sm">
-                  The quick brown fox jumps over the lazy dog
-                </p>
+                <p className="text-sm">The quick brown fox jumps over the lazy dog</p>
               </div>
               <div>
                 <p className="text-xs text-muted mb-1">text-base (16px)</p>
-                <p className="text-base">
-                  The quick brown fox jumps over the lazy dog
-                </p>
+                <p className="text-base">The quick brown fox jumps over the lazy dog</p>
               </div>
               <div>
                 <p className="text-xs text-muted mb-1">text-lg (18px)</p>
-                <p className="text-lg">
-                  The quick brown fox jumps over the lazy dog
-                </p>
+                <p className="text-lg">The quick brown fox jumps over the lazy dog</p>
               </div>
               <div>
                 <p className="text-xs text-muted mb-1">text-xl (20px)</p>
-                <p className="text-xl">
-                  The quick brown fox jumps over the lazy dog
-                </p>
+                <p className="text-xl">The quick brown fox jumps over the lazy dog</p>
               </div>
               <div>
                 <p className="text-xs text-muted mb-1">text-2xl (24px)</p>
-                <p className="text-2xl">
-                  The quick brown fox jumps over the lazy dog
-                </p>
+                <p className="text-2xl">The quick brown fox jumps over the lazy dog</p>
               </div>
               <div>
                 <p className="text-xs text-muted mb-1">text-3xl (28px)</p>
-                <p className="text-3xl">
-                  The quick brown fox jumps over the lazy dog
-                </p>
+                <p className="text-3xl">The quick brown fox jumps over the lazy dog</p>
               </div>
             </div>
           </section>
@@ -246,10 +212,7 @@ export default function UIShowcasePage() {
               {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
                 <div key={n} className="flex items-center gap-4">
                   <span className="text-sm text-muted w-20">space-{n}</span>
-                  <div
-                    className="h-6 bg-primary rounded"
-                    style={{ width: `${n * 4}px` }}
-                  />
+                  <div className="h-6 bg-primary rounded" style={{ width: `${n * 4}px` }} />
                   <span className="text-xs text-muted">{n * 4}px</span>
                 </div>
               ))}
@@ -282,12 +245,8 @@ export default function UIShowcasePage() {
               <div>
                 <Button
                   className="transition-transform duration-fast ease-emph hover:scale-105"
-                  onMouseEnter={(e) =>
-                    e.currentTarget.classList.add("scale-105")
-                  }
-                  onMouseLeave={(e) =>
-                    e.currentTarget.classList.remove("scale-105")
-                  }
+                  onMouseEnter={(e) => e.currentTarget.classList.add("scale-105")}
+                  onMouseLeave={(e) => e.currentTarget.classList.remove("scale-105")}
                 >
                   Fast (120ms) + Emph Easing
                 </Button>
@@ -295,12 +254,8 @@ export default function UIShowcasePage() {
               <div>
                 <Button
                   className="transition-transform duration-med ease-inout hover:scale-105"
-                  onMouseEnter={(e) =>
-                    e.currentTarget.classList.add("scale-105")
-                  }
-                  onMouseLeave={(e) =>
-                    e.currentTarget.classList.remove("scale-105")
-                  }
+                  onMouseEnter={(e) => e.currentTarget.classList.add("scale-105")}
+                  onMouseLeave={(e) => e.currentTarget.classList.remove("scale-105")}
                 >
                   Medium (220ms) + In-Out Easing
                 </Button>
@@ -308,12 +263,8 @@ export default function UIShowcasePage() {
               <div>
                 <Button
                   className="transition-transform duration-slow ease-inout hover:scale-105"
-                  onMouseEnter={(e) =>
-                    e.currentTarget.classList.add("scale-105")
-                  }
-                  onMouseLeave={(e) =>
-                    e.currentTarget.classList.remove("scale-105")
-                  }
+                  onMouseEnter={(e) => e.currentTarget.classList.add("scale-105")}
+                  onMouseLeave={(e) => e.currentTarget.classList.remove("scale-105")}
                 >
                   Slow (400ms) + In-Out Easing
                 </Button>

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 /**
  * ReportSummary - Property header with key info
- * 
+ *
  * Features:
  * - Price + €/m² prominently displayed
  * - AVM badge (Underpriced/Fair/Overpriced)
@@ -51,9 +51,7 @@ export default function ReportSummary({
     <div className="space-y-4">
       {/* Title + Location */}
       <div>
-        <h1 className="text-2xl lg:text-3xl font-bold leading-tight mb-2">
-          {title}
-        </h1>
+        <h1 className="text-2xl lg:text-3xl font-bold leading-tight mb-2">{title}</h1>
         <div className="flex items-center gap-2 text-muted">
           <MapPin className="h-4 w-4" />
           <span className="font-medium">{areaName}</span>
@@ -63,14 +61,8 @@ export default function ReportSummary({
       {/* Price Row */}
       <div className="flex items-baseline justify-between gap-4 py-4 border-y border-border">
         <div className="flex items-baseline gap-3">
-          <div className="text-3xl lg:text-4xl font-bold tracking-tight">
-            {formatEur(priceEur)}
-          </div>
-          {eurM2 && (
-            <div className="text-lg text-muted">
-              {formatEur(eurM2)}/m²
-            </div>
-          )}
+          <div className="text-3xl lg:text-4xl font-bold tracking-tight">{formatEur(priceEur)}</div>
+          {eurM2 && <div className="text-lg text-muted">{formatEur(eurM2)}/m²</div>}
         </div>
         {avmBadge && <AvmBadge badge={avmBadge} />}
       </div>
@@ -118,27 +110,17 @@ export default function ReportSummary({
           className={cn(
             "flex items-center gap-2",
             "text-muted hover:text-text transition-colors",
-            "focus-ring rounded-sm"
+            "focus-ring rounded-sm",
           )}
         >
           {source.faviconUrl && (
-            <img
-              src={source.faviconUrl}
-              alt=""
-              width={16}
-              height={16}
-              className="rounded-sm"
-            />
+            <img src={source.faviconUrl} alt="" width={16} height={16} className="rounded-sm" />
           )}
           <span className="font-medium">{source.host}</span>
           <ExternalLink className="h-3 w-3" />
         </a>
 
-        {relativeTime && (
-          <span className="text-xs text-muted">
-            Actualizat {relativeTime}
-          </span>
-        )}
+        {relativeTime && <span className="text-xs text-muted">Actualizat {relativeTime}</span>}
       </div>
     </div>
   );
@@ -166,11 +148,7 @@ function AvmBadge({ badge }: { badge: "under" | "fair" | "over" }) {
 
   const { label, className } = config[badge];
 
-  return (
-    <Badge className={cn("text-sm font-semibold", className)}>
-      {label}
-    </Badge>
-  );
+  return <Badge className={cn("text-sm font-semibold", className)}>{label}</Badge>;
 }
 
 /** Format EUR currency */

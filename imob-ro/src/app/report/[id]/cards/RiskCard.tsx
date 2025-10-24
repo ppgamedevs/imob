@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 /**
  * RiskCard - Seismic risk explanation
- * 
+ *
  * Shows:
  * - Seismic risk class (RS1/RS2/RS3/none)
  * - Confidence level
@@ -51,8 +51,7 @@ export default function RiskCard({
       borderColor: "border-warning/30",
       icon: AlertTriangle,
       severity: "Mediu",
-      description:
-        "Clădire cu risc seismic moderat. Consolidarea este recomandată dar nu urgentă.",
+      description: "Clădire cu risc seismic moderat. Consolidarea este recomandată dar nu urgentă.",
     },
     RS3: {
       label: "Risc Seismic III",
@@ -61,8 +60,7 @@ export default function RiskCard({
       borderColor: "border-info/30",
       icon: Info,
       severity: "Scăzut",
-      description:
-        "Clădire cu risc seismic redus. Structura este în general sigură.",
+      description: "Clădire cu risc seismic redus. Structura este în general sigură.",
     },
     none: {
       label: "Fără Clasificare",
@@ -91,24 +89,13 @@ export default function RiskCard({
       </div>
 
       {/* Risk Class Display */}
-      <div
-        className={cn(
-          "p-4 rounded-lg border-2",
-          config.bgColor,
-          config.borderColor
-        )}
-      >
+      <div className={cn("p-4 rounded-lg border-2", config.bgColor, config.borderColor)}>
         <div className="flex items-start gap-3">
           <Icon className={cn("h-6 w-6 flex-shrink-0 mt-0.5", config.color)} />
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <span className={cn("text-lg font-bold", config.color)}>
-                {config.label}
-              </span>
-              <Badge
-                variant="outline"
-                className={cn("text-xs", config.color, config.borderColor)}
-              >
+              <span className={cn("text-lg font-bold", config.color)}>{config.label}</span>
+              <Badge variant="outline" className={cn("text-xs", config.color, config.borderColor)}>
                 {config.severity}
               </Badge>
             </div>
@@ -121,9 +108,7 @@ export default function RiskCard({
           <div className="mt-3 pt-3 border-t border-current/10">
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted">Încredere clasificare:</span>
-              <span className="font-medium">
-                {Math.round(confidence * 100)}%
-              </span>
+              <span className="font-medium">{Math.round(confidence * 100)}%</span>
             </div>
             <div className="mt-2 h-1.5 bg-muted/30 rounded-full overflow-hidden">
               <div
@@ -144,9 +129,7 @@ export default function RiskCard({
               <span className="font-medium">
                 {yearBuilt}
                 {yearBuilt < 1978 && (
-                  <span className="text-xs text-warning ml-2">
-                    (pre-normativ seismic)
-                  </span>
+                  <span className="text-xs text-warning ml-2">(pre-normativ seismic)</span>
                 )}
               </span>
             </div>
@@ -178,12 +161,8 @@ export default function RiskCard({
               <li className="list-disc">
                 Consolidarea este <strong>obligatorie legal</strong>
               </li>
-              <li className="list-disc">
-                Asigurarea poate fi dificilă sau scumpă
-              </li>
-              <li className="list-disc">
-                Verifică dacă există proiect de consolidare aprobat
-              </li>
+              <li className="list-disc">Asigurarea poate fi dificilă sau scumpă</li>
+              <li className="list-disc">Verifică dacă există proiect de consolidare aprobat</li>
             </>
           )}
           {seismicClass === "RS2" && (
@@ -194,26 +173,18 @@ export default function RiskCard({
               <li className="list-disc">
                 Consolidarea este recomandată dar nu obligatorie imediat
               </li>
-              <li className="list-disc">
-                Informează-te despre starea structurală reală
-              </li>
+              <li className="list-disc">Informează-te despre starea structurală reală</li>
             </>
           )}
           {seismicClass === "RS3" && (
             <>
-              <li className="list-disc">
-                Risc redus - structura este relativ sigură
-              </li>
-              <li className="list-disc">
-                Nu sunt necesare măsuri speciale imediate
-              </li>
+              <li className="list-disc">Risc redus - structura este relativ sigură</li>
+              <li className="list-disc">Nu sunt necesare măsuri speciale imediate</li>
             </>
           )}
           {seismicClass === "none" && (
             <>
-              <li className="list-disc">
-                Clădirea nu este în lista oficială cu risc seismic
-              </li>
+              <li className="list-disc">Clădirea nu este în lista oficială cu risc seismic</li>
               <li className="list-disc">
                 Aceasta nu garantează siguranță 100%, mai ales pentru clădiri vechi
               </li>
@@ -258,9 +229,8 @@ export default function RiskCard({
             <div className="text-sm">
               <div className="font-semibold text-danger mb-1">Atenție Importantă</div>
               <p className="text-muted">
-                Această clasificare trebuie luată foarte în serios. Consultă un
-                inginer structurist înainte de achiziție și verifică dacă există
-                planuri de consolidare aprobate.
+                Această clasificare trebuie luată foarte în serios. Consultă un inginer structurist
+                înainte de achiziție și verifică dacă există planuri de consolidare aprobate.
               </p>
             </div>
           </div>

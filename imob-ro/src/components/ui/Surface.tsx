@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Surface - Base container primitive with elevation levels
- * 
+ *
  * Provides consistent styling for cards, panels, and containers with:
  * - Elevation levels (0/1/2) for depth hierarchy
  * - Border and radius from design tokens
@@ -19,12 +19,12 @@ export interface SurfaceProps extends React.HTMLAttributes<HTMLDivElement> {
    * - 2: large shadow (modals, popovers)
    */
   elevation?: 0 | 1 | 2;
-  
+
   /**
    * If true, merges props into immediate child instead of rendering a div
    */
   asChild?: boolean;
-  
+
   /**
    * Border radius from design tokens
    */
@@ -32,17 +32,7 @@ export interface SurfaceProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Surface = React.forwardRef<HTMLDivElement, SurfaceProps>(
-  (
-    {
-      className,
-      elevation = 0,
-      asChild = false,
-      rounded = "xl",
-      children,
-      ...props
-    },
-    ref
-  ) => {
+  ({ className, elevation = 0, asChild = false, rounded = "xl", children, ...props }, ref) => {
     const Comp = asChild ? Slot : "div";
 
     const elevationStyles = {
@@ -70,14 +60,14 @@ const Surface = React.forwardRef<HTMLDivElement, SurfaceProps>(
           roundedStyles[rounded],
           // Motion (hover elevation increase)
           "transition-shadow duration-med ease-inout",
-          className
+          className,
         )}
         {...props}
       >
         {children}
       </Comp>
     );
-  }
+  },
 );
 
 Surface.displayName = "Surface";

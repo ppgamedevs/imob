@@ -20,11 +20,11 @@ import { Surface } from "@/components/ui/Surface";
 
 /**
  * Report Page v3 - Trust-building detail page
- * 
+ *
  * Layout:
  * - Mobile: Stacked (Gallery → Summary → KpiGrid → Cards → Actions)
  * - Desktop: 2-column (left content + right sticky sidebar with actions + ad)
- * 
+ *
  * Components:
  * - Gallery: Swipeable carousel with thumbnails
  * - ReportSummary: Header with price, AVM, meta
@@ -188,7 +188,7 @@ const mockComps: CompProperty[] = [
     areaM2: 71,
     rooms: 3,
     distanceM: 180,
-    similarity: 0.90,
+    similarity: 0.9,
     sourceHost: "publi24.ro",
   },
 ];
@@ -277,10 +277,7 @@ export default async function ReportPageV3({ params }: Props) {
         </Surface>
 
         {/* Sticky actions fixed at bottom */}
-        <StickyActions
-          propertyId={report.id}
-          propertyTitle={report.title}
-        />
+        <StickyActions propertyId={report.id} propertyTitle={report.title} />
       </div>
 
       {/* Desktop: 2-column layout */}
@@ -363,10 +360,7 @@ export default async function ReportPageV3({ params }: Props) {
           <div className="sticky top-4 space-y-6">
             {/* Actions */}
             <Surface elevation={1} rounded="lg" className="p-4">
-              <StickyActions
-                propertyId={report.id}
-                propertyTitle={report.title}
-              />
+              <StickyActions propertyId={report.id} propertyTitle={report.title} />
             </Surface>
 
             {/* Ad Slot (Rectangle 300×250) */}

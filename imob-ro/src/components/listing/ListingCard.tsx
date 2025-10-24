@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * ListingCard v3 - Future-proof property card
- * 
+ *
  * Info hierarchy (top → bottom):
  * 1. Media: photo with fallback
  * 2. Price + €/m² + AVM badge
@@ -14,71 +14,71 @@ import { cn } from "@/lib/utils";
  * 4. Signals: TTS, Yield, Seismic, Quality badges
  * 5. Location + Title
  * 6. Footer: source favicon + chevron
- * 
+ *
  * Sponsored variant: identical layout + subtle tint + label
  */
 
 export interface ListingCardProps {
   /** Unique identifier */
   id: string;
-  
+
   /** Dedup group ID */
   groupId?: string;
-  
+
   /** Link to report page */
   href: string;
-  
+
   /** First photo URL */
   mediaUrl?: string;
-  
+
   /** Price in EUR */
   priceEur?: number;
-  
+
   /** Price per m² in EUR */
   eurM2?: number;
-  
+
   /** AVM valuation badge */
   avmBadge?: "under" | "fair" | "over";
-  
+
   /** Time to sell estimate */
   tts?: string; // e.g., "sub 60 zile"
-  
+
   /** Net yield (0-1) */
   yieldNet?: number;
-  
+
   /** Seismic risk */
   seismic?: string; // "RS1" | "RS2" | "none"
-  
+
   /** Distance to nearest metro (meters) */
   distMetroM?: number;
-  
+
   /** Property area in m² */
   areaM2?: number;
-  
+
   /** Number of rooms */
   rooms?: number;
-  
+
   /** Floor information */
   floor?: string;
-  
+
   /** Year built */
   yearBuilt?: number;
-  
+
   /** Area/neighborhood name */
   areaName?: string;
-  
+
   /** Property title */
   title?: string;
-  
+
   /** Source domain */
   sourceHost?: string;
-  
+
   /** Source favicon URL */
   faviconUrl?: string;
-  
+
   /** Is this a sponsored listing? */
   sponsored?: boolean;
-  
+
   /** Hover callback for map highlighting */
   onHover?: (id: string) => void;
 }
@@ -119,7 +119,7 @@ export default function ListingCard(props: ListingCardProps) {
       rounded="xl"
       className={cn(
         "group relative overflow-hidden transition-shadow duration-med ease-inout hover:shadow-elev1",
-        sponsored && "border-2 border-adBorder bg-adBg/30"
+        sponsored && "border-2 border-adBorder bg-adBg/30",
       )}
     >
       <a
@@ -144,7 +144,7 @@ export default function ListingCard(props: ListingCardProps) {
               Fără foto
             </div>
           )}
-          
+
           {sponsored && (
             <div className="absolute left-2 top-2">
               <SponsoredLabel variant="sponsored" size="md" />
@@ -157,14 +157,8 @@ export default function ListingCard(props: ListingCardProps) {
           {/* Price + AVM Badge */}
           <div className="flex items-baseline justify-between gap-2">
             <div className="flex items-baseline gap-2">
-              <div className="text-lg font-semibold tracking-tight">
-                {fmtEur(priceEur)}
-              </div>
-              {eurM2 && (
-                <div className="text-xs text-muted">
-                  · {fmtEur(eurM2)}/m²
-                </div>
-              )}
+              <div className="text-lg font-semibold tracking-tight">{fmtEur(priceEur)}</div>
+              {eurM2 && <div className="text-xs text-muted">· {fmtEur(eurM2)}/m²</div>}
             </div>
             {avmBadge && <AvmBadge badge={avmBadge} />}
           </div>
@@ -178,9 +172,7 @@ export default function ListingCard(props: ListingCardProps) {
             {floor || "—"}
             {" · "}
             {yearBuilt || "—"}
-            {typeof distMetroM === "number" && (
-              <span> · {Math.round(distMetroM)} m de metrou</span>
-            )}
+            {typeof distMetroM === "number" && <span> · {Math.round(distMetroM)} m de metrou</span>}
           </div>
 
           {/* Signals Row */}
@@ -188,13 +180,9 @@ export default function ListingCard(props: ListingCardProps) {
             <div className="flex flex-wrap items-center gap-1">
               {tts && <Chip>{tts}</Chip>}
               {typeof yieldNet === "number" && (
-                <Chip title="Randament net anual">
-                  {Math.round(yieldNet * 100)}% net
-                </Chip>
+                <Chip title="Randament net anual">{Math.round(yieldNet * 100)}% net</Chip>
               )}
-              {seismic && seismic !== "none" && (
-                <Chip title="Risc seismic">{seismic}</Chip>
-              )}
+              {seismic && seismic !== "none" && <Chip title="Risc seismic">{seismic}</Chip>}
             </div>
           )}
 
@@ -208,17 +196,9 @@ export default function ListingCard(props: ListingCardProps) {
           <div className="mt-1 flex items-center justify-between">
             <div className="flex items-center gap-2 text-xs text-muted">
               {faviconUrl && (
-                <img
-                  src={faviconUrl}
-                  alt=""
-                  width={14}
-                  height={14}
-                  className="rounded-sm"
-                />
+                <img src={faviconUrl} alt="" width={14} height={14} className="rounded-sm" />
               )}
-              <span className="truncate max-w-[120px]">
-                {sourceHost || "imob.ro"}
-              </span>
+              <span className="truncate max-w-[120px]">{sourceHost || "imob.ro"}</span>
             </div>
             <span aria-hidden className="text-xs text-muted">
               →
@@ -250,30 +230,14 @@ function AvmBadge({ badge }: { badge: "under" | "fair" | "over" }) {
   const { label, className } = config[badge];
 
   return (
-    <span
-      className={cn(
-        "px-2 py-0.5 rounded-md text-[11px] font-medium",
-        className
-      )}
-    >
-      {label}
-    </span>
+    <span className={cn("px-2 py-0.5 rounded-md text-[11px] font-medium", className)}>{label}</span>
   );
 }
 
 /** Signal Chip Component */
-function Chip({
-  children,
-  title,
-}: {
-  children: React.ReactNode;
-  title?: string;
-}) {
+function Chip({ children, title }: { children: React.ReactNode; title?: string }) {
   return (
-    <span
-      title={title}
-      className="px-2 py-0.5 rounded-md bg-muted text-[11px] font-medium"
-    >
+    <span title={title} className="px-2 py-0.5 rounded-md bg-muted text-[11px] font-medium">
       {children}
     </span>
   );

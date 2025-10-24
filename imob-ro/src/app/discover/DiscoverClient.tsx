@@ -8,7 +8,7 @@ import type { FilterState } from "./FiltersBar";
 
 /**
  * DiscoverClient - Client-side list+map with ad injection
- * 
+ *
  * Features:
  * - Fetch listings based on filters
  * - Deterministic ad injection (sponsored cards at [2,9,16], max 2)
@@ -35,7 +35,7 @@ export default function DiscoverClient({ initialItems = [] }: DiscoverClientProp
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      
+
       if (filterState.area) params.set("area", filterState.area);
       if (filterState.priceMin) params.set("priceMin", String(filterState.priceMin));
       if (filterState.priceMax) params.set("priceMax", String(filterState.priceMax));
@@ -45,9 +45,9 @@ export default function DiscoverClient({ initialItems = [] }: DiscoverClientProp
       if (filterState.sort) params.set("sort", filterState.sort);
 
       const response = await fetch(`/api/discover?${params.toString()}`);
-      
+
       if (!response.ok) throw new Error("Failed to fetch listings");
-      
+
       const data = await response.json();
       setItems(data.items || []);
     } catch (error) {
@@ -109,12 +109,8 @@ export default function DiscoverClient({ initialItems = [] }: DiscoverClientProp
           {/* Empty State */}
           {!loading && items.length === 0 && (
             <div className="py-12 text-center">
-              <p className="text-lg font-medium mb-2">
-                Niciun rezultat găsit
-              </p>
-              <p className="text-sm text-muted">
-                Încearcă să modifici filtrele de căutare
-              </p>
+              <p className="text-lg font-medium mb-2">Niciun rezultat găsit</p>
+              <p className="text-sm text-muted">Încearcă să modifici filtrele de căutare</p>
             </div>
           )}
 
@@ -125,11 +121,7 @@ export default function DiscoverClient({ initialItems = [] }: DiscoverClientProp
                 if ("kind" in item && item.kind === "ad") {
                   return (
                     <li key={item.id}>
-                      <AdSlot
-                        id={item.id}
-                        position="inline"
-                        size="rectangle"
-                      />
+                      <AdSlot id={item.id} position="inline" size="rectangle" />
                     </li>
                   );
                 }
@@ -159,7 +151,7 @@ export default function DiscoverClient({ initialItems = [] }: DiscoverClientProp
 
 /**
  * Inject ads deterministically into listing array
- * 
+ *
  * Rules:
  * - Sponsored cards at positions [2, 9, 16] (max 2 per page)
  * - Static AdSlot after position 4
@@ -174,11 +166,7 @@ function injectAds(items: ListingCardProps[]): RenderItem[] {
     const item = items[i];
 
     // Try to inject sponsored card
-    if (
-      sponsoredPositions.has(i) &&
-      sponsoredUsed < maxSponsored &&
-      item.sponsored
-    ) {
+    if (sponsoredPositions.has(i) && sponsoredUsed < maxSponsored && item.sponsored) {
       output.push({ ...item, sponsored: true });
       sponsoredUsed++;
       continue;

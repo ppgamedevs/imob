@@ -25,8 +25,7 @@ export default async function DiscoverPage() {
       <Container className="py-6">
         <h1 className="text-2xl font-bold mb-1">Descoperă proprietăți</h1>
         <p className="text-sm text-muted">
-          Caută în {/* TODO: dynamic count */} proprietăți analizate din
-          București
+          Caută în {/* TODO: dynamic count */} proprietăți analizate din București
         </p>
       </Container>
 

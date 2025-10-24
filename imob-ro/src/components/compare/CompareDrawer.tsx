@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 
 /**
  * CompareDrawer - Global comparison drawer
- * 
+ *
  * Features:
  * - Up to 4 properties
  * - SessionStorage persistence
@@ -65,12 +65,12 @@ export default function CompareDrawer({ open, onClose }: CompareDrawerProps) {
     const newItems = items.filter((item) => item.id !== id);
     setItems(newItems);
     sessionStorage.setItem("compare:items", JSON.stringify(newItems));
-    
+
     // Also remove from localStorage compare:set
     const compareSet = JSON.parse(localStorage.getItem("compare:set") || "[]");
     localStorage.setItem(
       "compare:set",
-      JSON.stringify(compareSet.filter((itemId: string) => itemId !== id))
+      JSON.stringify(compareSet.filter((itemId: string) => itemId !== id)),
     );
   };
 
@@ -113,7 +113,7 @@ export default function CompareDrawer({ open, onClose }: CompareDrawerProps) {
           // Mobile: bottom sheet
           "bottom-0 left-0 right-0 max-h-[80vh] rounded-t-xl animate-in slide-in-from-bottom",
           // Desktop: right panel
-          "lg:top-0 lg:right-0 lg:bottom-0 lg:left-auto lg:w-[400px] lg:max-h-none lg:rounded-none lg:rounded-l-xl lg:animate-in lg:slide-in-from-right"
+          "lg:top-0 lg:right-0 lg:bottom-0 lg:left-auto lg:w-[400px] lg:max-h-none lg:rounded-none lg:rounded-l-xl lg:animate-in lg:slide-in-from-right",
         )}
         role="dialog"
         aria-modal="true"
@@ -125,9 +125,7 @@ export default function CompareDrawer({ open, onClose }: CompareDrawerProps) {
             <h2 id="compare-drawer-title" className="text-lg font-semibold">
               Compară Proprietăți
             </h2>
-            <p className="text-xs text-muted">
-              {items.length}/4 proprietăți selectate
-            </p>
+            <p className="text-xs text-muted">{items.length}/4 proprietăți selectate</p>
           </div>
           <button
             type="button"
@@ -143,22 +141,15 @@ export default function CompareDrawer({ open, onClose }: CompareDrawerProps) {
         <div className="overflow-y-auto max-h-[calc(80vh-140px)] lg:max-h-[calc(100vh-140px)] p-4">
           {items.length === 0 ? (
             <div className="py-12 text-center text-muted">
-              <p className="text-sm">
-                Nu ai selectat nicio proprietate pentru comparație.
-              </p>
+              <p className="text-sm">Nu ai selectat nicio proprietate pentru comparație.</p>
               <p className="text-xs mt-2">
-                Apasă pe butonul "Compară" de pe orice proprietate pentru a o
-                adăuga.
+                Apasă pe butonul "Compară" de pe orice proprietate pentru a o adăuga.
               </p>
             </div>
           ) : (
             <div className="space-y-3">
               {items.map((item) => (
-                <CompareItemCard
-                  key={item.id}
-                  item={item}
-                  onRemove={() => removeItem(item.id)}
-                />
+                <CompareItemCard key={item.id} item={item} onRemove={() => removeItem(item.id)} />
               ))}
             </div>
           )}
@@ -167,12 +158,7 @@ export default function CompareDrawer({ open, onClose }: CompareDrawerProps) {
         {/* Footer */}
         <div className="p-4 border-t border-border space-y-2">
           {items.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={clearAll}
-              className="w-full"
-            >
+            <Button variant="outline" size="sm" onClick={clearAll} className="w-full">
               Șterge Tot
             </Button>
           )}
@@ -191,9 +177,7 @@ export default function CompareDrawer({ open, onClose }: CompareDrawerProps) {
             )}
           </Button>
           {items.length < 2 && (
-            <p className="text-xs text-center text-muted">
-              Selectează cel puțin 2 proprietăți
-            </p>
+            <p className="text-xs text-center text-muted">Selectează cel puțin 2 proprietăți</p>
           )}
         </div>
       </div>
@@ -202,13 +186,7 @@ export default function CompareDrawer({ open, onClose }: CompareDrawerProps) {
 }
 
 /** Compare Item Card */
-function CompareItemCard({
-  item,
-  onRemove,
-}: {
-  item: CompareItem;
-  onRemove: () => void;
-}) {
+function CompareItemCard({ item, onRemove }: { item: CompareItem; onRemove: () => void }) {
   const avmBadgeConfig = {
     under: { label: "Under", className: "bg-success/15 text-success" },
     fair: { label: "Fair", className: "bg-warning/15 text-warning" },

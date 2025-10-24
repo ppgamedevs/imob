@@ -8,7 +8,7 @@ import { SponsoredLabel } from "@/components/ui/SponsoredLabel";
 
 /**
  * SponsoredCard - Listing card variant for sponsored/promoted content
- * 
+ *
  * Features:
  * - Same layout as ListingCard for consistency
  * - Clear "Sponsored" badge
@@ -17,8 +17,7 @@ import { SponsoredLabel } from "@/components/ui/SponsoredLabel";
  * - Never masquerades as organic content (WCAG-compliant)
  */
 
-export interface SponsoredCardProps
-  extends React.HTMLAttributes<HTMLElement> {
+export interface SponsoredCardProps extends React.HTMLAttributes<HTMLElement> {
   /**
    * Sponsored listing data
    */
@@ -52,11 +51,7 @@ const SponsoredCard = React.forwardRef<HTMLElement, SponsoredCardProps>(
       const observer = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
-            if (
-              entry.isIntersecting &&
-              entry.intersectionRatio >= 0.5 &&
-              !hasTrackedImpression
-            ) {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.5 && !hasTrackedImpression) {
               setTimeout(() => {
                 // Track sponsored impression
                 fetch("/api/track/sponsored-impression", {
@@ -75,7 +70,7 @@ const SponsoredCard = React.forwardRef<HTMLElement, SponsoredCardProps>(
             }
           });
         },
-        { threshold: 0.5 }
+        { threshold: 0.5 },
       );
 
       observer.observe(cardRef.current);
@@ -110,7 +105,7 @@ const SponsoredCard = React.forwardRef<HTMLElement, SponsoredCardProps>(
           "transition-transform hover:-translate-y-1",
           // Subtle sponsored tint
           "border-2 border-adBorder",
-          className
+          className,
         )}
         {...props}
       >
@@ -143,9 +138,7 @@ const SponsoredCard = React.forwardRef<HTMLElement, SponsoredCardProps>(
           aria-label={`Anunț sponsorizat: ${listing.title}`}
         >
           <div className="flex items-center justify-between">
-            <h3 className="line-clamp-1 text-lg font-semibold font-display">
-              {listing.title}
-            </h3>
+            <h3 className="line-clamp-1 text-lg font-semibold font-display">{listing.title}</h3>
             <div className="text-right">
               <div className="text-2xl font-extrabold text-brand-600">
                 {listing.price.toLocaleString("ro-RO")} €
@@ -160,19 +153,15 @@ const SponsoredCard = React.forwardRef<HTMLElement, SponsoredCardProps>(
               <div className="text-muted-foreground">•</div>
               <div>{listing.rooms} camere</div>
             </div>
-            <div className="text-sm text-muted-foreground">
-              {listing.neighborhood}
-            </div>
+            <div className="text-sm text-muted-foreground">{listing.neighborhood}</div>
           </div>
 
           {/* Subtle disclaimer */}
-          <div className="mt-2 text-xs text-adLabel">
-            Conținut promovat
-          </div>
+          <div className="mt-2 text-xs text-adLabel">Conținut promovat</div>
         </button>
       </article>
     );
-  }
+  },
 );
 
 SponsoredCard.displayName = "SponsoredCard";

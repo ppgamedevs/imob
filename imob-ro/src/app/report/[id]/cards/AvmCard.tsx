@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 
 /**
  * AvmCard - AVM explanation with sparkline
- * 
+ *
  * Shows:
  * - AVM estimate vs asking price
  * - Simple sparkline comparing to area median
@@ -61,9 +61,7 @@ export default function AvmCard({
       {/* Header */}
       <div>
         <h2 className="text-lg font-semibold mb-1">Valoare Estimată (AVM)</h2>
-        <p className="text-sm text-muted">
-          Estimare bazată pe proprietăți similare din zonă
-        </p>
+        <p className="text-sm text-muted">Estimare bazată pe proprietăți similare din zonă</p>
       </div>
 
       {/* Price Comparison */}
@@ -85,11 +83,7 @@ export default function AvmCard({
           {config.label}
         </Badge>
         <span
-          className={cn(
-            "text-sm font-medium",
-            isUnder && "text-success",
-            isOver && "text-danger"
-          )}
+          className={cn("text-sm font-medium", isUnder && "text-success", isOver && "text-danger")}
         >
           {delta > 0 ? "+" : ""}
           {delta.toFixed(1)}%
@@ -97,9 +91,7 @@ export default function AvmCard({
       </div>
 
       {/* Explanation */}
-      <div className="text-sm text-muted">
-        {explanation || config.message}
-      </div>
+      <div className="text-sm text-muted">{explanation || config.message}</div>
 
       {/* Simple Sparkline */}
       <div className="space-y-2">
@@ -111,7 +103,7 @@ export default function AvmCard({
                 "h-full transition-all duration-med",
                 isUnder && "bg-success",
                 badge === "fair" && "bg-warning",
-                isOver && "bg-danger"
+                isOver && "bg-danger",
               )}
               style={{
                 width: `${Math.min(100, Math.max(0, (askingPriceEur / areaMedianEur) * 100))}%`,
@@ -129,14 +121,14 @@ export default function AvmCard({
         <div className="p-3 bg-primary/5 border border-primary/20 rounded-lg text-sm">
           {isOver && (
             <>
-              <strong>Recomandare:</strong> Prețul este semnificativ mai mare decât
-              valoarea estimată. Poți negocia un preț mai bun.
+              <strong>Recomandare:</strong> Prețul este semnificativ mai mare decât valoarea
+              estimată. Poți negocia un preț mai bun.
             </>
           )}
           {isUnder && (
             <>
-              <strong>Atenție:</strong> Prețul este foarte atractiv comparativ cu
-              piața. Verifică motivul (stare, probleme legale, urgență vânzător).
+              <strong>Atenție:</strong> Prețul este foarte atractiv comparativ cu piața. Verifică
+              motivul (stare, probleme legale, urgență vânzător).
             </>
           )}
         </div>

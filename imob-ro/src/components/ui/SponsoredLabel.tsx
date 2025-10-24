@@ -3,22 +3,21 @@ import { cn } from "@/lib/utils";
 
 /**
  * SponsoredLabel - Badge component for marking sponsored/ad content
- * 
+ *
  * Provides clear, accessible labeling for paid content with:
  * - WCAG-compliant color contrast
  * - Semantic markup (aria-label)
  * - Consistent styling from design tokens
  */
 
-export interface SponsoredLabelProps
-  extends React.HTMLAttributes<HTMLSpanElement> {
+export interface SponsoredLabelProps extends React.HTMLAttributes<HTMLSpanElement> {
   /**
    * Label text variant
    * - "sponsored": Default, user-friendly
    * - "ad": More explicit
    */
   variant?: "sponsored" | "ad";
-  
+
   /**
    * Size variant
    */
@@ -46,7 +45,7 @@ const SponsoredLabel = React.forwardRef<HTMLSpanElement, SponsoredLabelProps>(
           sizeStyles[size],
           // Accessibility
           "select-none",
-          className
+          className,
         )}
         aria-label={`Conținut ${labelText.toLowerCase()}`}
         role="note"
@@ -69,7 +68,7 @@ const SponsoredLabel = React.forwardRef<HTMLSpanElement, SponsoredLabelProps>(
         {labelText}
       </span>
     );
-  }
+  },
 );
 
 SponsoredLabel.displayName = "SponsoredLabel";

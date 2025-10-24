@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 
 /**
  * CompsCard - Comparable properties
- * 
+ *
  * Shows:
  * - Horizontal carousel of comp cards (default)
  * - Toggle to table view
@@ -33,11 +33,7 @@ export interface CompsCardProps {
   subjectEurM2: number;
 }
 
-export default function CompsCard({
-  comps,
-  subjectPriceEur,
-  subjectEurM2,
-}: CompsCardProps) {
+export default function CompsCard({ comps, subjectPriceEur, subjectEurM2 }: CompsCardProps) {
   const [viewMode, setViewMode] = React.useState<"carousel" | "table">("carousel");
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const scrollRef = React.useRef<HTMLDivElement>(null);
@@ -76,9 +72,7 @@ export default function CompsCard({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-semibold mb-1">Proprietăți Similare</h2>
-          <p className="text-sm text-muted">
-            Top {comps.length} proprietăți comparabile din zonă
-          </p>
+          <p className="text-sm text-muted">Top {comps.length} proprietăți comparabile din zonă</p>
         </div>
         <Button
           variant="outline"
@@ -139,9 +133,7 @@ export default function CompsCard({
                   onClick={() => setCurrentIndex(idx)}
                   className={cn(
                     "h-1.5 rounded-full transition-all focus-ring",
-                    idx === currentIndex
-                      ? "w-6 bg-primary"
-                      : "w-1.5 bg-muted hover:bg-text/30"
+                    idx === currentIndex ? "w-6 bg-primary" : "w-1.5 bg-muted hover:bg-text/30",
                   )}
                   aria-label={`Proprietate ${idx + 1}`}
                 />
@@ -194,7 +186,11 @@ export default function CompsCard({
                       <div
                         className={cn(
                           "text-xs",
-                          priceDiff > 0 ? "text-danger" : priceDiff < 0 ? "text-success" : "text-muted"
+                          priceDiff > 0
+                            ? "text-danger"
+                            : priceDiff < 0
+                              ? "text-success"
+                              : "text-muted",
                         )}
                       >
                         {priceDiff > 0 ? "+" : ""}
@@ -206,7 +202,11 @@ export default function CompsCard({
                       <div
                         className={cn(
                           "text-xs",
-                          eurM2Diff > 0 ? "text-danger" : eurM2Diff < 0 ? "text-success" : "text-muted"
+                          eurM2Diff > 0
+                            ? "text-danger"
+                            : eurM2Diff < 0
+                              ? "text-success"
+                              : "text-muted",
                         )}
                       >
                         {eurM2Diff > 0 ? "+" : ""}
@@ -247,18 +247,12 @@ function CompCard({
       className={cn(
         "flex-shrink-0 w-70 snap-start",
         "p-3 rounded-lg border transition-all",
-        isActive ? "border-primary shadow-elev1" : "border-border"
+        isActive ? "border-primary shadow-elev1" : "border-border",
       )}
     >
       {/* Image */}
       <div className="relative aspect-[4/3] rounded overflow-hidden mb-3">
-        <Image
-          src={comp.imageUrl}
-          alt={comp.title}
-          fill
-          className="object-cover"
-          sizes="280px"
-        />
+        <Image src={comp.imageUrl} alt={comp.title} fill className="object-cover" sizes="280px" />
         <div className="absolute top-2 right-2">
           <Badge variant="outline" className="bg-bg/90 backdrop-blur">
             {Math.round(comp.similarity * 100)}% similar
@@ -276,7 +270,7 @@ function CompCard({
               "text-xs font-medium",
               priceDiff > 0 && "text-danger",
               priceDiff < 0 && "text-success",
-              priceDiff === 0 && "text-muted"
+              priceDiff === 0 && "text-muted",
             )}
           >
             {priceDiff > 0 ? "+" : ""}

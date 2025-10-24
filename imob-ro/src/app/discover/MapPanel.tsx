@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * MapPanel - SVG-based map with markers
- * 
+ *
  * Features:
  * - Heat tile visualization (SVG grid)
  * - Property markers with clustering
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 export interface MapPanelProps {
   /** Property items with coordinates */
   items: MapItem[];
-  
+
   /** Highlighted property ID */
   highlightId?: string;
 }
@@ -45,13 +45,11 @@ export default function MapPanel({ items, highlightId }: MapPanelProps) {
   // Convert lat/lng to SVG coordinates
   const latLngToSvg = React.useCallback(
     (lat: number, lng: number) => {
-      const x =
-        ((lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * 800;
-      const y =
-        ((bounds.maxLat - lat) / (bounds.maxLat - bounds.minLat)) * 600;
+      const x = ((lng - bounds.minLng) / (bounds.maxLng - bounds.minLng)) * 800;
+      const y = ((bounds.maxLat - lat) / (bounds.maxLat - bounds.minLat)) * 600;
       return { x, y };
     },
-    [bounds]
+    [bounds],
   );
 
   // Generate heat tiles (placeholder grid)
@@ -59,14 +57,14 @@ export default function MapPanel({ items, highlightId }: MapPanelProps) {
     const tileSize = 40;
     const cols = Math.ceil(800 / tileSize);
     const rows = Math.ceil(600 / tileSize);
-    
+
     return Array.from({ length: rows }, (_, row) =>
       Array.from({ length: cols }, (_, col) => ({
         x: col * tileSize,
         y: row * tileSize,
         size: tileSize,
         opacity: Math.random() * 0.3 + 0.05, // Placeholder density
-      }))
+      })),
     ).flat();
   }, []);
 
@@ -99,12 +97,13 @@ export default function MapPanel({ items, highlightId }: MapPanelProps) {
           {items.map((item) => {
             const { x, y } = latLngToSvg(item.lat, item.lng);
             const isHighlighted = item.id === highlightId || item.id === hoveredId;
-            
-            const markerColor = item.avmBadge === "under"
-              ? "var(--color-success)"
-              : item.avmBadge === "over"
-              ? "var(--color-danger)"
-              : "var(--color-primary)";
+
+            const markerColor =
+              item.avmBadge === "under"
+                ? "var(--color-success)"
+                : item.avmBadge === "over"
+                  ? "var(--color-danger)"
+                  : "var(--color-primary)";
 
             return (
               <g
@@ -129,7 +128,7 @@ export default function MapPanel({ items, highlightId }: MapPanelProps) {
                     className="animate-pulse"
                   />
                 )}
-                
+
                 {/* Marker Dot */}
                 <circle
                   cx={x}
@@ -139,7 +138,7 @@ export default function MapPanel({ items, highlightId }: MapPanelProps) {
                   opacity={isHighlighted ? 1 : 0.8}
                   className="transition-all duration-fast"
                 />
-                
+
                 {/* Tooltip (on hover) */}
                 {isHighlighted && (
                   <g>
@@ -161,16 +160,9 @@ export default function MapPanel({ items, highlightId }: MapPanelProps) {
                       fill="var(--color-text)"
                       fontWeight="600"
                     >
-                      {item.priceEur
-                        ? `${item.priceEur.toLocaleString("ro-RO")} €`
-                        : "N/A"}
+                      {item.priceEur ? `${item.priceEur.toLocaleString("ro-RO")} €` : "N/A"}
                     </text>
-                    <text
-                      x={x + 18}
-                      y={y + 6}
-                      fontSize="10"
-                      fill="var(--color-muted)"
-                    >
+                    <text x={x + 18} y={y + 6} fontSize="10" fill="var(--color-muted)">
                       {item.title?.substring(0, 15) || item.id}
                     </text>
                   </g>
@@ -183,12 +175,7 @@ export default function MapPanel({ items, highlightId }: MapPanelProps) {
         {/* Shadow Filter Definition */}
         <defs>
           <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-            <feDropShadow
-              dx="0"
-              dy="2"
-              stdDeviation="4"
-              floodOpacity="0.2"
-            />
+            <feDropShadow dx="0" dy="2" stdDeviation="4" floodOpacity="0.2" />
           </filter>
         </defs>
       </svg>
@@ -200,7 +187,7 @@ export default function MapPanel({ items, highlightId }: MapPanelProps) {
           className={cn(
             "w-10 h-10 rounded-lg bg-surface border border-border",
             "flex items-center justify-center",
-            "hover:bg-muted transition-colors focus-ring"
+            "hover:bg-muted transition-colors focus-ring",
           )}
           aria-label="Zoom in"
         >
@@ -211,7 +198,7 @@ export default function MapPanel({ items, highlightId }: MapPanelProps) {
           className={cn(
             "w-10 h-10 rounded-lg bg-surface border border-border",
             "flex items-center justify-center",
-            "hover:bg-muted transition-colors focus-ring"
+            "hover:bg-muted transition-colors focus-ring",
           )}
           aria-label="Zoom out"
         >
