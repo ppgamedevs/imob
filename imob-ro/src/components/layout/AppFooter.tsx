@@ -13,7 +13,7 @@ import { Container } from "./Container";
  * - Copyright notice
  */
 
-export interface AppFooterProps extends React.HTMLAttributes<HTMLElement> {}
+export type AppFooterProps = React.HTMLAttributes<HTMLElement>;
 
 const footerLinks = {
   product: {

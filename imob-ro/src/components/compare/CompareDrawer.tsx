@@ -143,7 +143,7 @@ export default function CompareDrawer({ open, onClose }: CompareDrawerProps) {
             <div className="py-12 text-center text-muted">
               <p className="text-sm">Nu ai selectat nicio proprietate pentru comparație.</p>
               <p className="text-xs mt-2">
-                Apasă pe butonul "Compară" de pe orice proprietate pentru a o adăuga.
+                Apasă pe butonul &ldquo;Compară&rdquo; de pe orice proprietate pentru a o adăuga.
               </p>
             </div>
           ) : (
