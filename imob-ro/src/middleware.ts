@@ -1,46 +1,43 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { auth } from "@/lib/auth";
-
 /**
  * Middleware to protect admin routes and enforce authentication
  *
+ * IMPORTANT: This middleware runs in Edge runtime and cannot use Prisma.
+ * We only check for the presence of auth cookies here. Actual role verification
+ * happens in the page components using server-side auth() calls.
+ *
  * Protected paths:
- * - /admin/* - Requires admin role
- * - /dashboard - Requires authenticated user
+ * - /admin/* - Requires session cookie (role check in page)
+ * - /dashboard - Requires session cookie
  */
 export async function middleware(request: NextRequest) {
-  const session = await auth();
   const { pathname } = request.nextUrl;
+
+  // Check for NextAuth session cookie (Edge-compatible)
+  // NextAuth v5 uses different cookie names depending on environment
+  const sessionCookie =
+    request.cookies.get("authjs.session-token") || // HTTP (dev)
+    request.cookies.get("__Secure-authjs.session-token") || // HTTPS (production)
+    request.cookies.get("next-auth.session-token") || // Legacy HTTP
+    request.cookies.get("__Secure-next-auth.session-token"); // Legacy HTTPS
+
+  const hasSession = !!sessionCookie;
 
   // Protect all /admin routes
   if (pathname.startsWith("/admin")) {
-    // No session = redirect to sign in
-    if (!session?.user) {
+    if (!hasSession) {
       const signInUrl = new URL("/auth/signin", request.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(signInUrl);
     }
-
-    // Not admin = forbidden
-    if (session.user.role !== "admin") {
-      return new NextResponse(
-        JSON.stringify({
-          error: "Forbidden",
-          message: "Admin access required",
-        }),
-        {
-          status: 403,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
-    }
+    // Role verification happens in page components with requireAdmin()
   }
 
   // Protect dashboard routes
   if (pathname.startsWith("/dashboard")) {
-    if (!session?.user) {
+    if (!hasSession) {
       const signInUrl = new URL("/auth/signin", request.url);
       signInUrl.searchParams.set("callbackUrl", pathname);
       return NextResponse.redirect(signInUrl);

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/db";
 
 import { updateLeadStatus } from "@/app/vinde/actions";
@@ -16,6 +17,7 @@ export default async function AdminOwnersPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  await requireAdmin();
   const { status } = await searchParams;
   const statusFilter = status ?? undefined;
 

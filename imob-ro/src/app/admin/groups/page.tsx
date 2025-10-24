@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/db";
 
 export const metadata = {
@@ -14,6 +15,7 @@ export default async function AdminGroupsPage({
 }: {
   searchParams: Promise<{ city?: string; minSize?: string }>;
 }) {
+  await requireAdmin();
   const { city, minSize: minSizeParam } = await searchParams;
   const minSize = minSizeParam ? parseInt(minSizeParam) : 2;
 

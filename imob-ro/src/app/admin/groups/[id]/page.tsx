@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/db";
 
 export default async function AdminGroupDetailPage({
@@ -11,6 +12,7 @@ export default async function AdminGroupDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireAdmin();
   const { id } = await params;
   const group = await prisma.dedupGroup.findUnique({
     where: { id },

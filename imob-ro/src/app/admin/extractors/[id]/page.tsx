@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/db";
 
 import { upsertExtractorProfile } from "./actions";
@@ -10,6 +11,7 @@ interface Params {
 }
 
 export default async function ExtractorEditorPage(props: { params: Promise<Params> }) {
+  await requireAdmin();
   const { id } = await props.params;
   /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
   let profile: any = null;
