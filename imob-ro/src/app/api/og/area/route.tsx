@@ -1,25 +1,31 @@
-/**
- * Day 30: Dynamic OpenGraph Images for Area Pages
- * Generates social media images with zone KPIs
- */
-
-import { ImageResponse } from "next/og";
-
+import { NextRequest } from "next/server";
+import { renderOg } from "../_shared";
 import { prisma } from "@/lib/db";
 
-// Use Node.js runtime instead of Edge to avoid 1MB size limit
-export const runtime = "nodejs";
+export const runtime = "edge";
 
-export async function GET(req: Request) {
+/**
+ * GET /api/og/area?slug=...
+ *
+ * Generates Open Graph image for an area page with:
+ * - Area name
+ * - Median €/m²
+ * - 30-day delta (up/down)
+ * - Sparkline chart (last 12 data points)
+ *
+ * Example:
+ * /api/og/area?slug=bucuresti-sector-1&brand=#6A1B9A&logo=...
+ */
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(request.url);
     const slug = searchParams.get("slug");
 
     if (!slug) {
       return new Response("Missing slug parameter", { status: 400 });
     }
 
-    // Fetch area and latest stats
+    // Fetch area
     const area = await prisma.area.findUnique({
       where: { slug },
     });
@@ -28,152 +34,147 @@ export async function GET(req: Request) {
       return new Response("Area not found", { status: 404 });
     }
 
-    const [latest] = await prisma.areaDaily.findMany({
+    // Fetch recent daily aggregates
+    const dailyData = await prisma.areaDaily.findMany({
       where: { areaSlug: slug },
       orderBy: { date: "desc" },
-      take: 1,
+      take: 30,
     });
 
-    const [prev30] = await prisma.areaDaily.findMany({
-      where: { areaSlug: slug },
-      orderBy: { date: "desc" },
-      skip: 29,
-      take: 1,
-    });
+    if (dailyData.length === 0) {
+      return new Response("No data available", { status: 404 });
+    }
 
-    const medianEurM2 = latest?.medianEurM2 ?? null;
-    const supply = latest?.supply ?? 0;
-    const change30d =
-      latest && latest.medianEurM2 && prev30 && prev30.medianEurM2
-        ? ((latest.medianEurM2 - prev30.medianEurM2) / prev30.medianEurM2) * 100
-        : null;
+    // Current median €/m²
+    const latest = dailyData[0];
+    const medianEurM2 = latest.medianEurM2 ? Math.round(latest.medianEurM2) : null;
 
-    const trendEmoji = change30d === null ? "→" : change30d > 0 ? "↑" : "↓";
-    const trendColor = change30d === null ? "#64748b" : change30d > 0 ? "#10b981" : "#ef4444";
+    // 30-day delta
+    const prev30 = dailyData[dailyData.length - 1]; // oldest in last 30 days
+    const delta30 =
+      medianEurM2 && prev30?.medianEurM2 ? medianEurM2 - Math.round(prev30.medianEurM2) : null;
+    const deltaPercent30 =
+      delta30 && prev30?.medianEurM2 ? ((delta30 / prev30.medianEurM2) * 100).toFixed(1) : null;
 
-    return new ImageResponse(
-      (
+    // Sparkline data (last 12 points, reversed for chronological order)
+    const sparklineData = dailyData
+      .slice(0, 12)
+      .reverse()
+      .map((d) => d.medianEurM2 || 0);
+
+    // Generate sparkline SVG path
+    const sparklinePath = generateSparklinePath(sparklineData, 300, 100);
+
+    return renderOg(
+      <div
+        style={{
+          display: "flex",
+          width: "100%",
+          height: "100%",
+          flexDirection: "column",
+          justifyContent: "space-between",
+        }}
+      >
+        {/* Title */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <h1 style={{ fontSize: 48, margin: 0, lineHeight: 1.2 }}>{area.name}</h1>
+          <p style={{ fontSize: 22, margin: 0, opacity: 0.6 }}>Market Overview</p>
+        </div>
+
+        {/* Stats */}
         <div
           style={{
             display: "flex",
-            width: "1200px",
-            height: "630px",
-            background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-            color: "white",
-            padding: "60px",
-            fontFamily: "system-ui, sans-serif",
+            gap: 48,
+            alignItems: "flex-end",
+            marginTop: 48,
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              width: "100%",
-            }}
-          >
-            {/* Header */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-              <div
-                style={{
-                  fontSize: 28,
-                  opacity: 0.7,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                }}
-              >
-                <span>📍</span>
-                <span>București</span>
-              </div>
-              <div style={{ fontSize: 72, fontWeight: "bold", lineHeight: 1.1 }}>{area.name}</div>
+          {/* Median €/m² */}
+          {medianEurM2 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <span style={{ fontSize: 18, opacity: 0.6 }}>Median €/m²</span>
+              <span style={{ fontSize: 56, fontWeight: 700 }}>
+                €{medianEurM2.toLocaleString("en")}
+              </span>
             </div>
+          )}
 
-            {/* KPIs */}
+          {/* 30-day delta */}
+          {delta30 !== null && deltaPercent30 && (
             <div
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: "32px",
+                gap: 8,
+                marginBottom: 8,
               }}
             >
-              {/* Price */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
-                <div style={{ fontSize: 24, opacity: 0.7 }}>Preț median</div>
-                <div
-                  style={{
-                    fontSize: 96,
-                    fontWeight: "bold",
-                    color: "#3b82f6",
-                    display: "flex",
-                    alignItems: "baseline",
-                    gap: "16px",
-                  }}
-                >
-                  <span>{medianEurM2 ? `${Math.round(medianEurM2).toLocaleString()}` : "N/A"}</span>
-                  <span style={{ fontSize: 48, opacity: 0.8 }}>€/m²</span>
-                </div>
-              </div>
-
-              {/* Trend + Supply */}
-              <div
+              <span style={{ fontSize: 18, opacity: 0.6 }}>30-day change</span>
+              <span
                 style={{
-                  display: "flex",
-                  gap: "48px",
                   fontSize: 32,
+                  fontWeight: 600,
+                  color: delta30 > 0 ? "#10b981" : "#ef4444",
                 }}
               >
-                {change30d !== null && (
-                  <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                    <span
-                      style={{
-                        fontSize: 48,
-                        color: trendColor,
-                      }}
-                    >
-                      {trendEmoji}
-                    </span>
-                    <div style={{ display: "flex", flexDirection: "column" }}>
-                      <span style={{ opacity: 0.7, fontSize: 20 }}>Trend 30 zile</span>
-                      <span style={{ fontWeight: "bold", color: trendColor }}>
-                        {Math.abs(change30d).toFixed(1)}%
-                      </span>
-                    </div>
-                  </div>
-                )}
-                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                  <span style={{ fontSize: 48 }}>📊</span>
-                  <div style={{ display: "flex", flexDirection: "column" }}>
-                    <span style={{ opacity: 0.7, fontSize: 20 }}>Oferte active</span>
-                    <span style={{ fontWeight: "bold" }}>{supply}</span>
-                  </div>
-                </div>
-              </div>
+                {delta30 > 0 ? "+" : ""}
+                {deltaPercent30}%
+              </span>
             </div>
-
-            {/* Footer */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                opacity: 0.7,
-                fontSize: 24,
-              }}
-            >
-              <span>imob.ro</span>
-              <span>Statistici actualizate zilnic</span>
-            </div>
-          </div>
+          )}
         </div>
-      ),
+
+        {/* Sparkline */}
+        {sparklineData.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+              marginTop: 32,
+              width: 300,
+              height: 100,
+            }}
+          >
+            <svg width="300" height="100" viewBox="0 0 300 100" style={{ overflow: "visible" }}>
+              <path
+                d={sparklinePath}
+                fill="none"
+                stroke="#2563eb"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        )}
+      </div>,
       {
-        width: 1200,
-        height: 630,
+        brand: searchParams.get("brand") || undefined,
+        logo: searchParams.get("logo") || undefined,
+        titleSuffix: searchParams.get("title") || undefined,
       },
     );
-  } catch (err) {
-    console.error("OG image error:", err);
-    return new Response("Failed to generate image", { status: 500 });
+  } catch (error) {
+    console.error("OG Area error:", error);
+    return new Response("Error generating OG image", { status: 500 });
   }
+}
+
+/**
+ * Generates SVG path for sparkline chart
+ */
+function generateSparklinePath(data: number[], width: number, height: number): string {
+  if (data.length === 0) return "";
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1; // avoid division by zero
+
+  const points = data.map((value, index) => {
+    const x = (index / (data.length - 1)) * width;
+    const y = height - ((value - min) / range) * height;
+    return `${x},${y}`;
+  });
+
+  return `M ${points.join(" L ")}`;
 }
