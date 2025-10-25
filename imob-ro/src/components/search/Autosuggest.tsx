@@ -1,14 +1,14 @@
 "use client";
 
-import * as React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { MapPin, Home, FileText, Bookmark, Star, ExternalLink } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import type { SuggestItem, SuggestSections } from '@/lib/search/types';
-import { formatNumber } from '@/lib/areas/series';
+import * as React from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { MapPin, Home, FileText, Bookmark, Star, ExternalLink } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { SuggestItem, SuggestSections } from "@/lib/search/types";
+import { formatNumber } from "@/lib/areas/series";
 
 export interface AutosuggestProps {
   query: string;
@@ -16,18 +16,24 @@ export interface AutosuggestProps {
   loading?: boolean;
   onSelect: (item: SuggestItem) => void;
   selectedIndex: number;
-  onKeyboardNav: (direction: 'up' | 'down') => void;
+  onKeyboardNav: (direction: "up" | "down") => void;
 }
 
 const SECTION_LABELS = {
-  areas: 'Zone',
-  addresses: 'Adrese',
-  listings: 'Proprietăți',
-  saved: 'Salvate',
-  pages: 'Pagini',
+  areas: "Zone",
+  addresses: "Adrese",
+  listings: "Proprietăți",
+  saved: "Salvate",
+  pages: "Pagini",
 } as const;
 
-const SECTION_ORDER: (keyof SuggestSections)[] = ['areas', 'addresses', 'listings', 'saved', 'pages'];
+const SECTION_ORDER: (keyof SuggestSections)[] = [
+  "areas",
+  "addresses",
+  "listings",
+  "saved",
+  "pages",
+];
 
 export default function Autosuggest({
   query,
@@ -89,7 +95,9 @@ export default function Autosuggest({
               items={items}
               onSelect={onSelect}
               selectedIndex={selectedIndex}
-              globalOffset={flatItems.findIndex((fi) => fi.section === section && fi.item === items[0])}
+              globalOffset={flatItems.findIndex(
+                (fi) => fi.section === section && fi.item === items[0],
+              )}
             />
           );
         })}
@@ -120,7 +128,13 @@ interface SuggestSectionProps {
   globalOffset: number;
 }
 
-function SuggestSection({ label, items, onSelect, selectedIndex, globalOffset }: SuggestSectionProps) {
+function SuggestSection({
+  label,
+  items,
+  onSelect,
+  selectedIndex,
+  globalOffset,
+}: SuggestSectionProps) {
   return (
     <div className="py-2">
       <div className="px-4 py-2 text-xs font-semibold text-muted uppercase tracking-wide">
@@ -160,9 +174,9 @@ function SuggestItem({ item, selected, onSelect }: SuggestItemProps) {
       href={item.href}
       onClick={handleClick}
       className={cn(
-        'flex items-center gap-3 px-4 py-3 transition-colors',
-        'hover:bg-accent focus:bg-accent focus:outline-none',
-        selected && 'bg-accent'
+        "flex items-center gap-3 px-4 py-3 transition-colors",
+        "hover:bg-accent focus:bg-accent focus:outline-none",
+        selected && "bg-accent",
       )}
       role="option"
       aria-selected={selected}
@@ -177,31 +191,25 @@ function SuggestItem({ item, selected, onSelect }: SuggestItemProps) {
 }
 
 function ItemIcon({ item }: { item: SuggestItem }) {
-  const iconClass = 'h-5 w-5 text-muted';
+  const iconClass = "h-5 w-5 text-muted";
 
   switch (item.kind) {
-    case 'area':
+    case "area":
       return <MapPin className={iconClass} />;
-    case 'address':
+    case "address":
       return <MapPin className={iconClass} />;
-    case 'listing':
-    case 'group':
+    case "listing":
+    case "group":
       return item.thumb ? (
-        <Image
-          src={item.thumb}
-          alt=""
-          width={40}
-          height={40}
-          className="rounded object-cover"
-        />
+        <Image src={item.thumb} alt="" width={40} height={40} className="rounded object-cover" />
       ) : (
         <Home className={iconClass} />
       );
-    case 'saved':
+    case "saved":
       return <Bookmark className={iconClass} />;
-    case 'page':
+    case "page":
       return <FileText className={iconClass} />;
-    case 'sponsored':
+    case "sponsored":
       return <Star className={iconClass} />;
     default:
       return <ExternalLink className={iconClass} />;
@@ -209,7 +217,7 @@ function ItemIcon({ item }: { item: SuggestItem }) {
 }
 
 function ItemContent({ item }: { item: SuggestItem }) {
-  if (item.kind === 'area') {
+  if (item.kind === "area") {
     return (
       <div>
         <div className="font-medium text-fg">{item.name}</div>
@@ -220,7 +228,7 @@ function ItemContent({ item }: { item: SuggestItem }) {
     );
   }
 
-  if (item.kind === 'address') {
+  if (item.kind === "address") {
     return (
       <div>
         <div className="font-medium text-fg">{item.name}</div>
@@ -229,7 +237,7 @@ function ItemContent({ item }: { item: SuggestItem }) {
     );
   }
 
-  if (item.kind === 'listing' || item.kind === 'group') {
+  if (item.kind === "listing" || item.kind === "group") {
     return (
       <div>
         <div className="font-medium text-fg truncate">{item.title}</div>
@@ -240,7 +248,7 @@ function ItemContent({ item }: { item: SuggestItem }) {
     );
   }
 
-  if (item.kind === 'saved') {
+  if (item.kind === "saved") {
     return (
       <div>
         <div className="font-medium text-fg">{item.label}</div>
@@ -249,7 +257,7 @@ function ItemContent({ item }: { item: SuggestItem }) {
     );
   }
 
-  if (item.kind === 'page') {
+  if (item.kind === "page") {
     return (
       <div>
         <div className="font-medium text-fg">{item.title}</div>
@@ -261,11 +269,11 @@ function ItemContent({ item }: { item: SuggestItem }) {
 }
 
 function ItemHint({ item }: { item: SuggestItem }) {
-  if (item.kind === 'listing' && item.avmBadge === 'under') {
+  if (item.kind === "listing" && item.avmBadge === "under") {
     return <Badge variant="default">Subapreciat</Badge>;
   }
 
-  if (item.kind === 'sponsored') {
+  if (item.kind === "sponsored") {
     return <Badge variant="secondary">Sponsorizat</Badge>;
   }
 
