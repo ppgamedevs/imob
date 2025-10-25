@@ -1,126 +1,87 @@
-/**
- * Copilot: Build a modern hero for a real-estate marketplace:
- * - Headline: "Caută, compară și vinde în București"
- * - Sub: "Preț estimat, timp până la vânzare, zone pe înțelesul tău."
- * - Search bar (fake for now) with Input + Button -> navigate to /search
- * - 3 Feature cards (Card) with icons: "Preț estimat", "Se vinde în ~X zile", "Area Interest"
- * - Responsive grid, nice spacing, minimal animation on hover
- */
 "use client";
 
-import { Clock, MapPin, Search, TrendingUp } from "lucide-react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-
-const features = [
-  {
-    icon: TrendingUp,
-    title: "Preț estimat",
-    description: "Află prețul real de piață pentru orice proprietate din București.",
-  },
-  {
-    icon: Clock,
-    title: "Se vinde în ~X zile",
-    description: "Estimăm timpul necesar pentru vânzarea proprietății tale.",
-  },
-  {
-    icon: MapPin,
-    title: "Area Interest",
-    description: "Descoperă zonele cu cel mai mare potențial de investiție.",
-  },
-];
-
-export default function Home() {
-  const router = useRouter();
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const form = e.target as HTMLFormElement;
-    const input = form.querySelector("input") as HTMLInputElement | null;
-    const val = input?.value?.trim() ?? "";
-    if (!val) return;
-
-    // crude URL detection: starts with http or contains a domain-like pattern
-    const isUrl = /^https?:\/\//i.test(val) || /\.[a-z]{2,}\/?.*$/.test(val);
-    if (isUrl) {
-      // route to analyze page which accepts a ?url= param
-      router.push(`/analyze?url=${encodeURIComponent(val)}`);
-      return;
-    }
-
-    // otherwise, treat as address/zone search
-    router.push(`/search?q=${encodeURIComponent(val)}`);
-  };
-
+export default function HomePage() {
   return (
-    <div className="flex flex-col">
-      {/* Hero Section - Mobile First */}
-      <section className="bg-gradient-to-b from-background to-muted/20 px-4 py-12 md:py-20 lg:py-32">
-        <div className="container mx-auto max-w-7xl">
-          <div className="mx-auto max-w-3xl text-center">
-            <h1 className="mb-4 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
-              Caută, compară și vinde în București
-            </h1>
-            <p className="mb-6 text-base text-muted-foreground sm:mb-8 sm:text-lg md:text-xl">
-              Preț estimat, timp până la vânzare, zone pe înțelesul tău.
-            </p>
+    <div>
+      {/* Hero section with radial gradient */}
+      <section
+        className="py-16 px-3 text-center"
+        style={{
+          background: "radial-gradient(circle at 50% 0, rgba(99,102,241,.25), transparent 50%)",
+        }}
+      >
+        <div className="mx-auto max-w-[600px]">
+          <h1 className="text-[32px] md:text-[44px] font-bold tracking-tight mb-3">
+            Caută, compară și vinde în București
+          </h1>
+          <p className="text-[color:var(--color-text)]/70 mb-6 text-[15px]">
+            Preț estimat, viteza vânzării, zone pe înțelesul tău.
+          </p>
 
-            {/* Search Bar - Mobile Optimized */}
-            <form onSubmit={handleSearch} className="mx-auto max-w-2xl">
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    placeholder="Caută după adresă, zonă sau cod poștal..."
-                    className="h-14 pl-12 text-base shadow-sm"
-                  />
-                </div>
-                <Button type="submit" size="lg" className="h-14 sm:h-auto">
-                  Caută
-                </Button>
+          {/* Search bar */}
+          <form
+            action="/discover"
+            method="get"
+            className="rounded-xl border border-border bg-surface shadow-elev0 overflow-hidden mb-10"
+          >
+            <input
+              type="text"
+              name="q"
+              placeholder="ex: Floreasca, București..."
+              className="w-full px-4 py-3 text-[15px] bg-transparent border-0 outline-none focus:ring-2 focus:ring-primary"
+            />
+          </form>
+
+          {/* Value prop cards */}
+          <div className="grid gap-4 md:grid-cols-3 text-left">
+            <div className="rounded-xl border border-border bg-surface shadow-elev0 p-4">
+              <div className="text-[13px] text-[color:var(--color-text)]/60 mb-1">Preț estimat</div>
+              <div className="text-[15px] font-medium">Află cât valorează orice proprietate</div>
+            </div>
+            <div className="rounded-xl border border-border bg-surface shadow-elev0 p-4">
+              <div className="text-[13px] text-[color:var(--color-text)]/60 mb-1">
+                Viteza vânzării
               </div>
-              <div className="mt-3 text-sm text-muted-foreground">
-                <span>
-                  Lipește un URL de anunț (ex: site cu apartamente) pentru analiză instant;
-                </span>
-                <span> altfel introdu o adresă sau zonă.</span>
-              </div>
-            </form>
+              <div className="text-[15px] font-medium">Estimăm în câte zile se vinde</div>
+            </div>
+            <div className="rounded-xl border border-border bg-surface shadow-elev0 p-4">
+              <div className="text-[13px] text-[color:var(--color-text)]/60 mb-1">Randament</div>
+              <div className="text-[15px] font-medium">Vedem ce zonă îți aduce profit</div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Features Section - Mobile First */}
-      <section className="px-4 py-12 md:py-16 lg:py-20">
-        <div className="container mx-auto max-w-7xl">
-          <div className="grid gap-4 sm:gap-6 md:grid-cols-3 md:gap-8">
-            {features.map((feature) => {
-              const Icon = feature.icon;
-              return (
-                <Card
-                  key={feature.title}
-                  className="transition-shadow hover:shadow-lg md:hover:scale-105"
-                >
-                  <CardHeader className="pb-3">
-                    <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 sm:h-12 sm:w-12">
-                      <Icon className="h-5 w-5 text-primary sm:h-6 sm:w-6" />
-                    </div>
-                    <CardTitle className="text-lg sm:text-xl">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-sm sm:text-base">
-                      {feature.description}
-                    </CardDescription>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+      {/* CTAs */}
+      <section className="py-10 px-3 text-center">
+        <div className="flex gap-3 justify-center flex-wrap">
+          <Link
+            href="/discover"
+            className="rounded-lg px-5 py-2.5 text-sm bg-primary text-primaryFg hover:bg-primary/90 transition-colors focus-ring"
+          >
+            Începe căutarea
+          </Link>
+          <Link
+            href="/owners"
+            className="rounded-lg px-5 py-2.5 text-sm border border-border hover:bg-surface transition-colors focus-ring"
+          >
+            Estimează-ți proprietatea
+          </Link>
         </div>
+      </section>
+
+      {/* Secondary SEO section (keep existing content if valuable) */}
+      <section className="py-12 px-3 text-center max-w-[800px] mx-auto">
+        <h2 className="text-[24px] font-semibold mb-4">
+          Датеle tale imobiliare, la un click distanță
+        </h2>
+        <p className="text-[15px] text-[color:var(--color-text)]/70 leading-relaxed">
+          Analizăm mii de anunțuri în timp real ca să îți oferim estimări precise de preț, timp de
+          vânzare și potențial de investiție. Fie că ești cumpărător, proprietar sau agent, ai acces
+          la informația de care ai nevoie pentru decizii inteligente.
+        </p>
       </section>
     </div>
   );
