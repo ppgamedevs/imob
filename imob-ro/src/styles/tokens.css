@@ -41,16 +41,18 @@
   /* === Shadows (Elevation) === */
   --elev0: 0 0 0 1px rgb(var(--border) / 0.1);
   --elev1: 0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px rgb(var(--border) / 0.1);
-  --elev2: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1),
+  --elev2:
+    0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1),
     0 0 0 1px rgb(var(--border) / 0.1);
-  --elev3: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1),
+  --elev3:
+    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1),
     0 0 0 1px rgb(var(--border) / 0.1);
 
   /* === Typography === */
-  --font-sans: ui-sans-serif, Inter, system-ui, -apple-system, Segoe UI, Roboto,
-    "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-  --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas,
-    "Liberation Mono", monospace;
+  --font-sans:
+    ui-sans-serif, Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial,
+    "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
   --fs-xs: 0.75rem; /* 12px */
   --fs-sm: 0.875rem; /* 14px */
@@ -118,17 +120,18 @@
     /* Stronger shadows for dark mode */
     --elev0: 0 0 0 1px rgb(var(--border) / 0.2);
     --elev1: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 0 0 1px rgb(var(--border) / 0.2);
-    --elev2: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3),
+    --elev2:
+      0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3),
       0 0 0 1px rgb(var(--border) / 0.2);
-    --elev3: 0 10px 15px -3px rgb(0 0 0 / 0.5),
-      0 4px 6px -4px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(var(--border) / 0.2);
+    --elev3:
+      0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4),
+      0 0 0 1px rgb(var(--border) / 0.2);
 
     --ad-bg: rgb(var(--surface-2));
     --ad-border: rgb(var(--border));
     --ad-label: rgb(var(--ad-tint));
   }
 }
-
 
 /* === Explicit Dark Theme Class === */
 .theme-dark,
@@ -151,9 +154,11 @@
 
   --elev0: 0 0 0 1px rgb(var(--border) / 0.2);
   --elev1: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 0 0 1px rgb(var(--border) / 0.2);
-  --elev2: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3),
+  --elev2:
+    0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3),
     0 0 0 1px rgb(var(--border) / 0.2);
-  --elev3: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4),
+  --elev3:
+    0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4),
     0 0 0 1px rgb(var(--border) / 0.2);
 }
 

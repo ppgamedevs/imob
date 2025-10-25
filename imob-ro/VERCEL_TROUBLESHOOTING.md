@@ -1,6 +1,7 @@
 # Vercel Deployment Troubleshooting
 
 ## Current Status
+
 - ✅ Build works locally (successful)
 - ✅ Latest commits pushed to main (e0a796f)
 - ⚠️ Vercel showing deployment errors (see screenshot)
@@ -10,14 +11,18 @@
 Based on your screenshot, all recent deployments show "Error" status. Common causes:
 
 ### 1. **Database Connection Issue**
+
 **Symptom**: Build fails during Prisma Client generation
 **Solution**: Check Vercel environment variables
+
 - Go to Vercel Dashboard → Settings → Environment Variables
 - Verify `DATABASE_URL` is set for Production
 - Should point to your Neon.tech connection string with `?pgbouncer=true&connection_limit=1`
 
 ### 2. **Missing Environment Variables**
+
 **Check these are set in Vercel:**
+
 ```
 DATABASE_URL=postgresql://...neon.tech/neondb?pgbouncer=true&connection_limit=1
 NEXTAUTH_URL=https://your-domain.vercel.app
@@ -25,19 +30,24 @@ NEXTAUTH_SECRET=your-secret-here
 ```
 
 ### 3. **Build Command Issues**
+
 **Vercel should use:**
+
 - Build Command: `npm run build` or `next build`
 - Output Directory: `.next`
 - Install Command: `npm install`
 
 ### 4. **Prisma Migration Not Applied**
+
 **If deployment fails with "Table doesn't exist":**
+
 ```bash
 # Run on your local machine:
 npx prisma migrate deploy
 ```
 
 Or add this to Vercel build command:
+
 ```json
 {
   "scripts": {
@@ -49,6 +59,7 @@ Or add this to Vercel build command:
 ## Steps to Fix Deployments
 
 ### Step 1: Check Build Logs
+
 1. Go to Vercel Dashboard
 2. Click on any failed deployment (red dot)
 3. Look for error message in build logs
@@ -58,6 +69,7 @@ Or add this to Vercel build command:
    - "Table 'Analysis' doesn't exist" → Run migrations
 
 ### Step 2: Verify Environment Variables
+
 ```
 Vercel Dashboard → Your Project → Settings → Environment Variables
 
@@ -72,18 +84,22 @@ Optional:
 ```
 
 ### Step 3: Force Redeploy
+
 **Option A: Via Dashboard**
+
 1. Go to Deployments tab
 2. Find latest deployment
 3. Click "..." → "Redeploy"
 
 **Option B: Via Git** (already done)
+
 ```bash
 git commit --allow-empty -m "Trigger Vercel deployment"
 git push origin main
 ```
 
 ### Step 4: Check Vercel Project Settings
+
 ```
 Settings → General:
 - Framework Preset: Next.js
@@ -106,6 +122,7 @@ All above: ● Error     ← These failed to build
 ```
 
 **This means:**
+
 - Commits after `34534a8` introduced build errors
 - OR environment variables changed
 - OR database connection issue
@@ -113,6 +130,7 @@ All above: ● Error     ← These failed to build
 ## Check Specific Commits
 
 **To find what broke:**
+
 ```bash
 # See what changed in failing commits
 git log --oneline 34534a8..HEAD
@@ -122,6 +140,7 @@ git diff 34534a8 HEAD
 ```
 
 **Our recent commits:**
+
 - `e0a796f` - Empty commit (trigger deployment)
 - `76ebb99` - Fix vercel.json cron paths
 - `60061e1` - Fix TypeScript errors
@@ -136,23 +155,27 @@ Given the timing, the issue is probably:
 ### **New Prisma Models Not Migrated**
 
 The backend stability commit added:
+
 - ApiKey model
-- ApiUsage model  
+- ApiUsage model
 - EmbedUsage model
 - contentHash field
 
 **Solution:**
+
 1. Make sure migration ran on Neon.tech
 2. Check Neon.tech Dashboard → Migrations tab
 3. Should see: `20251023175518_add_content_hash_and_indices`
 
 **If migration is missing:**
+
 ```bash
 # Connect to production database
 npx prisma migrate deploy
 ```
 
 Or add to package.json:
+
 ```json
 {
   "scripts": {
@@ -179,6 +202,7 @@ Once deployment succeeds:
 ## Monitor Next Deployment
 
 After the empty commit push (`e0a796f`):
+
 1. Refresh Vercel dashboard
 2. New deployment should appear at top
 3. Watch build logs in real-time
@@ -187,6 +211,7 @@ After the empty commit push (`e0a796f`):
 ---
 
 **Next Steps:**
+
 1. ✅ Empty commit pushed to trigger webhook
 2. ⏳ Wait 1-2 minutes for Vercel to start building
 3. 📊 Check Vercel dashboard for new deployment

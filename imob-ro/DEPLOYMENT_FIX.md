@@ -1,6 +1,7 @@
 # Vercel Deployment Fix Guide
 
 ## Current Issue
+
 All deployments showing Error status since commit 34534a8. Local builds work fine.
 
 ## Root Cause Analysis
@@ -10,6 +11,7 @@ Based on the recent changes, there are **2 likely causes**:
 ### 1. Database Migration Not Applied (MOST LIKELY)
 
 The Day 36 commit added new tables that might not exist in production:
+
 - `ApiKey` (for public API authentication)
 - `ApiUsage` (for API usage tracking)
 - `EmbedUsage` (for widget analytics)
@@ -19,6 +21,7 @@ The Day 36 commit added new tables that might not exist in production:
 ### 2. Prisma Client Generation Failing
 
 The `vercel-build` script runs:
+
 ```json
 "vercel-build": "prisma generate && prisma migrate deploy && next build"
 ```
@@ -28,30 +31,37 @@ If Prisma generation fails, the entire build fails.
 ## Quick Diagnostic
 
 ### Step 1: Check Build Logs
+
 1. Go to Vercel Dashboard → Deployments
 2. Click on latest deployment (commit `e0a796f` or `76ebb99`)
 3. Click "Building" or "Error" tab
 4. Look for these specific errors:
 
 **Error Pattern A: Missing Tables**
+
 ```
 Invalid `prisma.apiKey.create()` invocation:
   The table `public.ApiKey` does not exist in the current database
 ```
+
 **Fix**: Migration not applied → See Fix #1 below
 
 **Error Pattern B: Database Connection**
+
 ```
 P1001: Can't reach database server at `...`
 Please make sure your database server is running at `...`
 ```
+
 **Fix**: DATABASE_URL incorrect → See Fix #2 below
 
 **Error Pattern C: Prisma Generation**
+
 ```
 Error: Generator "client" failed:
 ...
 ```
+
 **Fix**: Prisma version mismatch → See Fix #3 below
 
 ## Fixes
@@ -84,6 +94,7 @@ Sometimes Vercel's build cache causes issues:
 Go to Vercel Dashboard → Settings → Environment Variables
 
 **Required Variables:**
+
 ```env
 DATABASE_URL=postgresql://user:pass@host/db?pgbouncer=true&connection_limit=1
 NEXTAUTH_URL=https://your-domain.vercel.app
@@ -91,6 +102,7 @@ NEXTAUTH_SECRET=your-secret-key
 ```
 
 **Important Notes:**
+
 - `DATABASE_URL` must include `?pgbouncer=true&connection_limit=1` for Vercel
 - All variables must be set for **Production**, **Preview**, and **Development**
 - After adding/changing variables, **redeploy** from Vercel dashboard
@@ -106,6 +118,7 @@ git push origin main
 ```
 
 Then in Vercel:
+
 1. Wait 30 seconds for webhook
 2. Deployment should start automatically
 3. Watch build logs in real-time
@@ -120,12 +133,13 @@ In your `package.json`, ensure Prisma versions match:
     "@prisma/client": "6.17.1"
   },
   "devDependencies": {
-    "prisma": "6.17.1"  // MUST MATCH
+    "prisma": "6.17.1" // MUST MATCH
   }
 }
 ```
 
 If they don't match:
+
 ```bash
 pnpm add -D prisma@6.17.1
 git commit -am "Fix Prisma version mismatch"
@@ -137,37 +151,45 @@ git push origin main
 Once deployment succeeds (green checkmark), verify:
 
 ### 1. Site Loads
+
 ```bash
 curl -I https://your-domain.vercel.app
 # Should return: HTTP/2 200
 ```
 
 ### 2. Database Tables Exist
+
 In Neon.tech SQL Editor:
+
 ```sql
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
   AND table_name IN ('ApiKey', 'ApiUsage', 'EmbedUsage', 'Analysis');
 ```
+
 Should return 4 rows.
 
 ### 3. New contentHash Field
+
 ```sql
-SELECT column_name, data_type 
-FROM information_schema.columns 
-WHERE table_name = 'Analysis' 
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'Analysis'
   AND column_name = 'contentHash';
 ```
+
 Should return: `contentHash | text`
 
 ### 4. Indices Created
+
 ```sql
-SELECT indexname 
-FROM pg_indexes 
-WHERE tablename = 'Analysis' 
+SELECT indexname
+FROM pg_indexes
+WHERE tablename = 'Analysis'
   AND indexname LIKE '%contentHash%';
 ```
+
 Should return: `Analysis_contentHash_idx`
 
 ## Next Steps After Successful Deployment
@@ -180,6 +202,7 @@ Should return: `Analysis_contentHash_idx`
 ## Contact Points
 
 If still failing after these fixes, share:
+
 1. **Full build log** from Vercel (copy entire log)
 2. **Environment variables** (names only, no values)
 3. **Database connection test** result from Neon dashboard

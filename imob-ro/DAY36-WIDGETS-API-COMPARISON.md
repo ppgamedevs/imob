@@ -12,7 +12,9 @@
 ### ✅ What We Already Have
 
 #### 1. **Existing Embed Infrastructure**
+
 **File:** `src/app/api/embed/[slug]/route.ts` (28 lines)
+
 - **Purpose:** Embeds shortlink reports in iframes
 - **Technology:** Edge runtime, JavaScript loader
 - **Features:**
@@ -22,7 +24,9 @@
 - **Limitation:** Only for shortlinks, not general widgets
 
 #### 2. **Owner AVM Estimation Function**
+
 **File:** `src/lib/ml/owner-avm.ts` (154 lines)
+
 - **Function:** `estimateAVMFromFeatures(features: OwnerFeatures): Promise<AvmEstimate>`
 - **Features:**
   - Pure function for AVM estimation
@@ -34,7 +38,9 @@
 - **Ready for:** Direct use in public API
 
 #### 3. **Area KPI Data**
+
 **File:** `src/lib/zones/load-zone.ts` (lines 78-110)
+
 - **Available metrics:**
   - `pricePerSqm` (median €/m²)
   - `change30d` (price change percentage)
@@ -47,7 +53,9 @@
 - **Ready for:** Public API endpoint
 
 #### 4. **Precomputed Tile System (Day 34)**
-**Files:** 
+
+**Files:**
+
 - `src/lib/tiles/loader.ts` (203 lines)
 - `public/data/tiles/bucharest-z14/` (168 tiles, 7,200 cells)
 - **Features:**
@@ -58,14 +66,18 @@
 - **Ready for:** Heatmap widget data source
 
 #### 5. **OpenGraph Image Generation**
+
 **File:** `src/app/api/og/area/route.tsx` (130 lines)
+
 - **Dynamic image generation** with ImageResponse API
 - **Shows:** Zone name, price, trend, supply
 - **Technology:** Next.js ImageResponse, Node.js runtime
 - **Not a widget:** But shows we can render visual cards
 
 #### 6. **/vinde Page (Owner Wizard)**
+
 **File:** `src/app/vinde/page.tsx`
+
 - **Form-based AVM estimation** for property owners
 - **Features:**
   - Step-by-step wizard
@@ -82,10 +94,13 @@
 #### Missing API Endpoints:
 
 **Endpoint 1: Area KPIs**
+
 ```
 GET /api/public/area/:slug/kpis
 ```
+
 **Should return:**
+
 ```json
 {
   "slug": "bucuresti-sector-1",
@@ -100,14 +115,18 @@ GET /api/public/area/:slug/kpis
   "updatedAt": "2025-10-23T10:30:00Z"
 }
 ```
+
 **Data source:** ✅ Already available in `load-zone.ts`  
 **Implementation needed:** API route with x-api-key auth
 
 **Endpoint 2: Price Estimate**
+
 ```
 GET /api/public/estimate?areaSlug=bucuresti-sector-1&areaM2=65&rooms=2&year=2010&condition=0.7
 ```
+
 **Should return:**
+
 ```json
 {
   "low": 95000,
@@ -127,12 +146,14 @@ GET /api/public/estimate?areaSlug=bucuresti-sector-1&areaM2=65&rooms=2&year=2010
   }
 }
 ```
+
 **Data source:** ✅ Already available in `estimateAVMFromFeatures()`  
 **Implementation needed:** API route with x-api-key auth + query param parsing
 
 #### Missing API Key System:
 
 **Schema changes needed:**
+
 ```prisma
 model ApiKey {
   id          String   @id @default(cuid())
@@ -145,9 +166,9 @@ model ApiKey {
   createdAt   DateTime @default(now())
   expiresAt   DateTime?
   lastUsedAt  DateTime?
-  
+
   user        User?    @relation(fields: [userId], references: [id])
-  
+
   @@index([key])
   @@index([userId])
 }
@@ -163,15 +184,16 @@ model ApiUsage {
   userAgent   String?
   referer     String?
   createdAt   DateTime @default(now())
-  
+
   apiKey      ApiKey   @relation(fields: [apiKeyId], references: [id])
-  
+
   @@index([apiKeyId, createdAt])
   @@index([createdAt])
 }
 ```
 
 **Admin UI needed:**
+
 - `/admin/api-keys` page to list/create/revoke keys
 - Key generation with crypto.randomBytes(32).toString('hex')
 - Display key once on creation (like GitHub tokens)
@@ -179,37 +201,38 @@ model ApiUsage {
 - Rate limiting enforcement
 
 **Middleware needed:**
+
 ```typescript
 // src/lib/api/validate-key.ts
 async function validateApiKey(req: Request): Promise<ApiKey | null> {
-  const key = req.headers.get('x-api-key');
+  const key = req.headers.get("x-api-key");
   if (!key) return null;
-  
+
   const apiKey = await prisma.apiKey.findUnique({
-    where: { key, isActive: true }
+    where: { key, isActive: true },
   });
-  
+
   if (!apiKey) return null;
   if (apiKey.expiresAt && apiKey.expiresAt < new Date()) return null;
-  
+
   // Check rate limit
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const usageCount = await prisma.apiUsage.count({
     where: {
       apiKeyId: apiKey.id,
-      createdAt: { gte: today }
-    }
+      createdAt: { gte: today },
+    },
   });
-  
+
   if (usageCount >= apiKey.rateLimit) return null;
-  
+
   // Update last used
   await prisma.apiKey.update({
     where: { id: apiKey.id },
-    data: { lastUsedAt: new Date() }
+    data: { lastUsedAt: new Date() },
   });
-  
+
   return apiKey;
 }
 ```
@@ -223,6 +246,7 @@ async function validateApiKey(req: Request): Promise<ApiKey | null> {
 **File:** `public/widgets/avm.html` (NOT CREATED)
 
 **Requirements:**
+
 - ✅ Vanilla JS, <50KB total
 - ✅ Responsive design
 - ✅ Themeable via query params (?theme=dark&color=blue)
@@ -233,6 +257,7 @@ async function validateApiKey(req: Request): Promise<ApiKey | null> {
 - ✅ Tracks referrer on load
 
 **Technology Stack:**
+
 - Pure HTML/CSS/JS (no React/framework)
 - Fetch API for requests
 - CSS Grid for layout
@@ -240,79 +265,86 @@ async function validateApiKey(req: Request): Promise<ApiKey | null> {
 - localStorage for theme preference
 
 **Sample structure:**
+
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <title>AVM Estimator Widget</title>
-  <style>
-    :root {
-      --primary: #3b82f6;
-      --bg: #ffffff;
-      --text: #1f2937;
-      --border: #e5e7eb;
-    }
-    [data-theme="dark"] {
-      --bg: #1f2937;
-      --text: #f9fafb;
-      --border: #374151;
-    }
-    .avm-widget { /* styles */ }
-    .avm-form { /* styles */ }
-    .avm-result { /* styles */ }
-    .avm-footer { /* styles */ }
-  </style>
-</head>
-<body>
-  <div class="avm-widget" id="avmWidget">
-    <form class="avm-form"><!-- inputs --></form>
-    <div class="avm-result" id="result"><!-- result --></div>
-    <div class="avm-footer">
-      <a href="https://imob.ro?utm_source=widget" target="_blank">
-        Powered by imob.ro
-      </a>
-    </div>
-  </div>
-  <script>
-    (function() {
-      const API_URL = 'https://imob.ro/api/public';
-      const widget = document.getElementById('avmWidget');
-      
-      // Parse URL params for theming
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('theme') === 'dark') {
-        widget.setAttribute('data-theme', 'dark');
+  <head>
+    <title>AVM Estimator Widget</title>
+    <style>
+      :root {
+        --primary: #3b82f6;
+        --bg: #ffffff;
+        --text: #1f2937;
+        --border: #e5e7eb;
       }
-      
-      // Track widget load
-      fetch(API_URL + '/track/widget', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'avm',
-          referrer: document.referrer
-        })
-      });
-      
-      // Form submission
-      document.querySelector('.avm-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(e.target);
-        const query = new URLSearchParams({
-          areaSlug: formData.get('area'),
-          areaM2: formData.get('areaM2'),
-          rooms: formData.get('rooms'),
-          year: formData.get('year'),
-          condition: formData.get('condition')
+      [data-theme="dark"] {
+        --bg: #1f2937;
+        --text: #f9fafb;
+        --border: #374151;
+      }
+      .avm-widget {
+        /* styles */
+      }
+      .avm-form {
+        /* styles */
+      }
+      .avm-result {
+        /* styles */
+      }
+      .avm-footer {
+        /* styles */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="avm-widget" id="avmWidget">
+      <form class="avm-form"><!-- inputs --></form>
+      <div class="avm-result" id="result"><!-- result --></div>
+      <div class="avm-footer">
+        <a href="https://imob.ro?utm_source=widget" target="_blank"> Powered by imob.ro </a>
+      </div>
+    </div>
+    <script>
+      (function () {
+        const API_URL = "https://imob.ro/api/public";
+        const widget = document.getElementById("avmWidget");
+
+        // Parse URL params for theming
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("theme") === "dark") {
+          widget.setAttribute("data-theme", "dark");
+        }
+
+        // Track widget load
+        fetch(API_URL + "/track/widget", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "avm",
+            referrer: document.referrer,
+          }),
         });
-        
-        const res = await fetch(API_URL + '/estimate?' + query, {
-          headers: { 'x-api-key': 'PUBLIC_KEY' }
-        });
-        const data = await res.json();
-        
-        // Render result
-        document.getElementById('result').innerHTML = `
+
+        // Form submission
+        document.querySelector(".avm-form").addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          const query = new URLSearchParams({
+            areaSlug: formData.get("area"),
+            areaM2: formData.get("areaM2"),
+            rooms: formData.get("rooms"),
+            year: formData.get("year"),
+            condition: formData.get("condition"),
+          });
+
+          const res = await fetch(API_URL + "/estimate?" + query, {
+            headers: { "x-api-key": "PUBLIC_KEY" },
+          });
+          const data = await res.json();
+
+          // Render result
+          document.getElementById("result").innerHTML = `
           <div class="price-range">
             <span>${data.low.toLocaleString()} €</span>
             <span>–</span>
@@ -322,22 +354,24 @@ async function validateApiKey(req: Request): Promise<ApiKey | null> {
             <div class="bar" style="width: ${data.conf * 100}%"></div>
           </div>
         `;
-      });
-    })();
-  </script>
-</body>
+        });
+      })();
+    </script>
+  </body>
 </html>
 ```
 
 **Embed code generator needed:**
+
 ```html
 <!-- Copy-paste this to your site -->
-<iframe 
-  src="https://imob.ro/widgets/avm.html?theme=light&color=blue" 
-  width="100%" 
-  height="480px" 
+<iframe
+  src="https://imob.ro/widgets/avm.html?theme=light&color=blue"
+  width="100%"
+  height="480px"
   frameborder="0"
-  loading="lazy">
+  loading="lazy"
+>
 </iframe>
 ```
 
@@ -346,6 +380,7 @@ async function validateApiKey(req: Request): Promise<ApiKey | null> {
 **File:** `public/widgets/heatmap.html` (NOT CREATED)
 
 **Requirements:**
+
 - ✅ Display precomputed tile data (no external map library needed)
 - ✅ Canvas-based rendering or CSS Grid
 - ✅ Color-coded cells by €/m² or intelligence score
@@ -356,88 +391,99 @@ async function validateApiKey(req: Request): Promise<ApiKey | null> {
 - ✅ Tracks referrer on load
 
 **Data source:**
+
 - Fetch `/api/public/area/:slug/kpis` for each visible cell
 - Or create new endpoint: `/api/public/tiles/bucharest` returning all cells
 - Use existing tile JSON structure from Day 34
 
 **Technology:**
+
 - Canvas for rendering (better performance)
 - Or SVG for hover interactivity
 - Fetch API for tile data
 - requestAnimationFrame for smooth rendering
 
 **Sample structure:**
+
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <title>Price Heatmap Widget</title>
-  <style>
-    .heatmap-widget { /* container */ }
-    .heatmap-canvas { /* canvas styles */ }
-    .heatmap-legend { /* color scale */ }
-    .heatmap-tooltip { /* hover tooltip */ }
-    .heatmap-footer { /* powered by link */ }
-  </style>
-</head>
-<body>
-  <div class="heatmap-widget">
-    <canvas id="heatmap" width="800" height="600"></canvas>
-    <div class="heatmap-legend">
-      <span>Low</span>
-      <div class="gradient"></div>
-      <span>High</span>
-    </div>
-    <div class="heatmap-tooltip" id="tooltip"></div>
-    <div class="heatmap-footer">
-      <a href="https://imob.ro?utm_source=widget" target="_blank">
-        Powered by imob.ro
-      </a>
-    </div>
-  </div>
-  <script>
-    (function() {
-      const canvas = document.getElementById('heatmap');
-      const ctx = canvas.getContext('2d');
-      
-      // Fetch tile data
-      fetch('https://imob.ro/api/public/tiles/bucharest')
-        .then(r => r.json())
-        .then(tiles => {
-          renderHeatmap(tiles);
-        });
-      
-      function renderHeatmap(tiles) {
-        // Color scale: green (low) -> yellow (mid) -> red (high)
-        const minPrice = Math.min(...tiles.map(t => t.medianEurM2));
-        const maxPrice = Math.max(...tiles.map(t => t.medianEurM2));
-        
-        tiles.forEach(tile => {
-          const color = getHeatColor(tile.medianEurM2, minPrice, maxPrice);
-          ctx.fillStyle = color;
-          ctx.fillRect(tile.x, tile.y, tile.size, tile.size);
-        });
+  <head>
+    <title>Price Heatmap Widget</title>
+    <style>
+      .heatmap-widget {
+        /* container */
       }
-      
-      function getHeatColor(value, min, max) {
-        const ratio = (value - min) / (max - min);
-        // Interpolate between green and red
-        const r = Math.round(ratio * 255);
-        const g = Math.round((1 - ratio) * 255);
-        return `rgb(${r}, ${g}, 0)`;
+      .heatmap-canvas {
+        /* canvas styles */
       }
-      
-      // Track widget load
-      fetch('https://imob.ro/api/public/track/widget', {
-        method: 'POST',
-        body: JSON.stringify({
-          type: 'heatmap',
-          referrer: document.referrer
-        })
-      });
-    })();
-  </script>
-</body>
+      .heatmap-legend {
+        /* color scale */
+      }
+      .heatmap-tooltip {
+        /* hover tooltip */
+      }
+      .heatmap-footer {
+        /* powered by link */
+      }
+    </style>
+  </head>
+  <body>
+    <div class="heatmap-widget">
+      <canvas id="heatmap" width="800" height="600"></canvas>
+      <div class="heatmap-legend">
+        <span>Low</span>
+        <div class="gradient"></div>
+        <span>High</span>
+      </div>
+      <div class="heatmap-tooltip" id="tooltip"></div>
+      <div class="heatmap-footer">
+        <a href="https://imob.ro?utm_source=widget" target="_blank"> Powered by imob.ro </a>
+      </div>
+    </div>
+    <script>
+      (function () {
+        const canvas = document.getElementById("heatmap");
+        const ctx = canvas.getContext("2d");
+
+        // Fetch tile data
+        fetch("https://imob.ro/api/public/tiles/bucharest")
+          .then((r) => r.json())
+          .then((tiles) => {
+            renderHeatmap(tiles);
+          });
+
+        function renderHeatmap(tiles) {
+          // Color scale: green (low) -> yellow (mid) -> red (high)
+          const minPrice = Math.min(...tiles.map((t) => t.medianEurM2));
+          const maxPrice = Math.max(...tiles.map((t) => t.medianEurM2));
+
+          tiles.forEach((tile) => {
+            const color = getHeatColor(tile.medianEurM2, minPrice, maxPrice);
+            ctx.fillStyle = color;
+            ctx.fillRect(tile.x, tile.y, tile.size, tile.size);
+          });
+        }
+
+        function getHeatColor(value, min, max) {
+          const ratio = (value - min) / (max - min);
+          // Interpolate between green and red
+          const r = Math.round(ratio * 255);
+          const g = Math.round((1 - ratio) * 255);
+          return `rgb(${r}, ${g}, 0)`;
+        }
+
+        // Track widget load
+        fetch("https://imob.ro/api/public/track/widget", {
+          method: "POST",
+          body: JSON.stringify({
+            type: "heatmap",
+            referrer: document.referrer,
+          }),
+        });
+      })();
+    </script>
+  </body>
 </html>
 ```
 
@@ -448,6 +494,7 @@ async function validateApiKey(req: Request): Promise<ApiKey | null> {
 **File:** `/widgets` page (NOT CREATED)
 
 **Requirements:**
+
 - Public landing page at `/widgets`
 - Shows widget previews (iframe demos)
 - Copy-paste embed code generator
@@ -459,6 +506,7 @@ async function validateApiKey(req: Request): Promise<ApiKey | null> {
 - SEO optimized (JSON-LD, OG tags)
 
 **Sample structure:**
+
 ```tsx
 // src/app/widgets/page.tsx
 export default function WidgetsPage() {
@@ -466,7 +514,7 @@ export default function WidgetsPage() {
     <div className="container py-12">
       <h1>Embeddable Widgets</h1>
       <p>Add real estate intelligence to your website</p>
-      
+
       {/* Widget 1: AVM Estimator */}
       <section>
         <h2>Price Estimator Widget</h2>
@@ -480,10 +528,10 @@ export default function WidgetsPage() {
               <option>light</option>
               <option>dark</option>
             </select>
-            
+
             <label>Primary Color</label>
             <input type="color" name="color" />
-            
+
             <div className="embed-code">
               <code>{`<iframe src="..." />`}</code>
               <button>Copy</button>
@@ -491,13 +539,13 @@ export default function WidgetsPage() {
           </div>
         </div>
       </section>
-      
+
       {/* Widget 2: Heatmap */}
       <section>
         <h2>Price Heatmap Widget</h2>
         {/* Similar structure */}
       </section>
-      
+
       {/* API Documentation */}
       <section>
         <h2>Public API</h2>
@@ -516,6 +564,7 @@ export default function WidgetsPage() {
 #### Missing: EmbedUsage Table
 
 **Schema needed:**
+
 ```prisma
 model EmbedUsage {
   id          String   @id @default(cuid())
@@ -525,7 +574,7 @@ model EmbedUsage {
   userAgent   String?
   country     String?  // From IP geolocation
   createdAt   DateTime @default(now())
-  
+
   @@index([domain, createdAt])
   @@index([widgetType, createdAt])
   @@index([createdAt])
@@ -533,35 +582,37 @@ model EmbedUsage {
 ```
 
 **Tracking endpoint needed:**
+
 ```typescript
 // src/app/api/public/track/widget/route.ts
 export async function POST(req: Request) {
   const { type, referrer } = await req.json();
-  
+
   // Parse domain from referrer
   let domain = null;
   if (referrer) {
     try {
       const url = new URL(referrer);
-      domain = url.hostname.replace('www.', '');
+      domain = url.hostname.replace("www.", "");
     } catch {}
   }
-  
+
   await prisma.embedUsage.create({
     data: {
       widgetType: type,
       referrer: referrer || null,
       domain: domain || null,
-      userAgent: req.headers.get('user-agent'),
+      userAgent: req.headers.get("user-agent"),
       // Could add IP geolocation here
-    }
+    },
   });
-  
+
   return NextResponse.json({ ok: true });
 }
 ```
 
 **Analytics dashboard needed:**
+
 - `/admin/widgets` page showing:
   - Total widget loads per day
   - Top referring domains
@@ -576,11 +627,13 @@ export async function POST(req: Request) {
 ### Phase 1: Public API Foundation (3-4 hours)
 
 **Step 1:** Create schema migration for API keys
+
 ```bash
 npx prisma migrate dev --name add_api_keys_and_embed_usage
 ```
 
 **Step 2:** Create API key admin page
+
 - `/admin/api-keys/page.tsx` - List view
 - `/admin/api-keys/actions.ts` - Server actions for CRUD
 - Key generation with crypto
@@ -588,18 +641,19 @@ npx prisma migrate dev --name add_api_keys_and_embed_usage
 - Revoke functionality
 
 **Step 3:** Create API key validation middleware
+
 - `src/lib/api/validate-key.ts`
 - Rate limiting logic
 - Usage tracking
 
 **Step 4:** Create public API endpoints
+
 - `src/app/api/public/area/[slug]/kpis/route.ts`
   - Fetch AreaDaily + stats
   - Return JSON with all KPIs
   - Add CORS headers
   - Validate x-api-key
   - Track usage
-  
 - `src/app/api/public/estimate/route.ts`
   - Parse query params (areaSlug, areaM2, rooms, year, condition)
   - Call estimateAVMFromFeatures()
@@ -608,6 +662,7 @@ npx prisma migrate dev --name add_api_keys_and_embed_usage
   - Track usage
 
 **Step 5:** Add public key for widgets
+
 - Create special "PUBLIC" API key with high rate limit
 - Hardcode in widgets for demo purposes
 - Document in /widgets page
@@ -617,6 +672,7 @@ npx prisma migrate dev --name add_api_keys_and_embed_usage
 ### Phase 2: Widget Development (4-5 hours)
 
 **Step 6:** Create AVM Estimator Widget
+
 - `public/widgets/avm.html`
 - Vanilla JS/CSS implementation
 - Form with area selector (fetch areas list)
@@ -629,6 +685,7 @@ npx prisma migrate dev --name add_api_keys_and_embed_usage
 - Track on load
 
 **Step 7:** Create Heatmap Widget
+
 - `public/widgets/heatmap.html`
 - Canvas-based rendering
 - Fetch tile data (create `/api/public/tiles/bucharest` if needed)
@@ -640,6 +697,7 @@ npx prisma migrate dev --name add_api_keys_and_embed_usage
 - Track on load
 
 **Step 8:** Create tile data endpoint (if needed)
+
 - `src/app/api/public/tiles/bucharest/route.ts`
 - Return simplified tile data (lat, lng, medianEurM2, areaSlug)
 - Validate x-api-key
@@ -650,6 +708,7 @@ npx prisma migrate dev --name add_api_keys_and_embed_usage
 ### Phase 3: Widget Generator & Docs (2-3 hours)
 
 **Step 9:** Create /widgets landing page
+
 - `src/app/widgets/page.tsx`
 - Hero section with demo iframes
 - Customization UI (theme, color, size)
@@ -660,6 +719,7 @@ npx prisma migrate dev --name add_api_keys_and_embed_usage
 - SEO optimization
 
 **Step 10:** Create API documentation page
+
 - `/api-docs/page.tsx`
 - Endpoint reference
 - Request/response examples
@@ -669,6 +729,7 @@ npx prisma migrate dev --name add_api_keys_and_embed_usage
 - Code samples (curl, JavaScript, Python)
 
 **Step 11:** Add tracking dashboard
+
 - `/admin/widgets/page.tsx`
 - Show EmbedUsage stats
 - Top referring domains table
@@ -681,16 +742,19 @@ npx prisma migrate dev --name add_api_keys_and_embed_usage
 ### Phase 4: SEO & Growth Features (1-2 hours)
 
 **Step 12:** Add canonical backlinks enforcement
+
 - Ensure widgets always show "Powered by imob.ro" footer
 - Add utm_source=widget to all links
 - Make footer link mandatory (can't be removed via params)
 
 **Step 13:** Create widget showcase
+
 - Add "Used by" section on homepage
 - Show top domains using widgets
 - Display widget load counter ("10,000+ embeds")
 
 **Step 14:** Marketing materials
+
 - Create social media cards for /widgets page
 - Write blog post: "How to Add Real Estate Intelligence to Your Website"
 - Prepare email campaign for existing users
@@ -717,36 +781,36 @@ src/
   app/
     widgets/
       page.tsx (new - 200 lines)
-      
+
     api-docs/
       page.tsx (new - 150 lines)
-    
+
     admin/
       api-keys/
         page.tsx (new - 180 lines)
         actions.ts (new - 100 lines)
-      
+
       widgets/
         page.tsx (new - 150 lines)
-    
+
     api/
       public/
         area/
           [slug]/
             kpis/
               route.ts (new - 80 lines)
-        
+
         estimate/
           route.ts (new - 100 lines)
-        
+
         tiles/
           bucharest/
             route.ts (new - 60 lines)
-        
+
         track/
           widget/
             route.ts (new - 50 lines)
-  
+
   lib/
     api/
       validate-key.ts (new - 100 lines)
@@ -768,24 +832,25 @@ src/
 
 ## Technical Comparison
 
-| Feature | Current State | Day 36 Requirement | Gap |
-|---------|--------------|-------------------|-----|
-| **Public API** | ❌ None | ✅ 2 endpoints with x-api-key | Need full implementation |
-| **API Keys** | ❌ No system | ✅ DB storage + admin UI | Need schema + UI |
-| **Rate Limiting** | ❌ None | ✅ Per-key daily limits | Need middleware |
-| **AVM Widget** | ⚠️ /vinde page exists | ✅ Embeddable <50KB | Need standalone HTML |
-| **Heatmap Widget** | ⚠️ Tiles exist | ✅ Embeddable canvas | Need standalone HTML |
-| **Embed Code Gen** | ⚠️ Basic for shortlinks | ✅ Full generator with preview | Need UI page |
-| **Widget Tracking** | ❌ None | ✅ EmbedUsage table | Need schema + endpoint |
-| **Backlink Enforcement** | ❌ None | ✅ Mandatory footer link | Need in widgets |
-| **API Docs** | ❌ None | ✅ Public docs page | Need page |
-| **Widget Landing** | ❌ None | ✅ /widgets page | Need page |
+| Feature                  | Current State           | Day 36 Requirement             | Gap                      |
+| ------------------------ | ----------------------- | ------------------------------ | ------------------------ |
+| **Public API**           | ❌ None                 | ✅ 2 endpoints with x-api-key  | Need full implementation |
+| **API Keys**             | ❌ No system            | ✅ DB storage + admin UI       | Need schema + UI         |
+| **Rate Limiting**        | ❌ None                 | ✅ Per-key daily limits        | Need middleware          |
+| **AVM Widget**           | ⚠️ /vinde page exists   | ✅ Embeddable <50KB            | Need standalone HTML     |
+| **Heatmap Widget**       | ⚠️ Tiles exist          | ✅ Embeddable canvas           | Need standalone HTML     |
+| **Embed Code Gen**       | ⚠️ Basic for shortlinks | ✅ Full generator with preview | Need UI page             |
+| **Widget Tracking**      | ❌ None                 | ✅ EmbedUsage table            | Need schema + endpoint   |
+| **Backlink Enforcement** | ❌ None                 | ✅ Mandatory footer link       | Need in widgets          |
+| **API Docs**             | ❌ None                 | ✅ Public docs page            | Need page                |
+| **Widget Landing**       | ❌ None                 | ✅ /widgets page               | Need page                |
 
 ---
 
 ## Data Flow
 
 ### AVM Widget Flow:
+
 ```
 User embeds iframe → public/widgets/avm.html loads
   → Track widget load (referrer → EmbedUsage)
@@ -799,6 +864,7 @@ User embeds iframe → public/widgets/avm.html loads
 ```
 
 ### Heatmap Widget Flow:
+
 ```
 User embeds iframe → public/widgets/heatmap.html loads
   → Track widget load (referrer → EmbedUsage)
@@ -811,12 +877,13 @@ User embeds iframe → public/widgets/heatmap.html loads
 ```
 
 ### API Key Flow:
+
 ```
 Admin → /admin/api-keys → Create new key
   → Generate random 64-char hex
   → Store in ApiKey table
   → Display once (copy button)
-  
+
 Developer → Add x-api-key header to requests
   → Middleware validates key
   → Check isActive, expiresAt
@@ -830,18 +897,21 @@ Developer → Add x-api-key header to requests
 ## SEO & Growth Impact
 
 ### Backlinks Strategy:
+
 - Every widget shows "Powered by imob.ro" (non-removable)
 - UTM tracking: `?utm_source=widget&utm_medium=embed`
 - Canonical rel="nofollow" to avoid spam penalties
 - Estimate: **50-100 new backlinks per month** after 6 months
 
 ### Traffic Projections:
+
 - Month 1: 10 widget embeds → 1,000 views
 - Month 3: 50 widget embeds → 10,000 views
 - Month 6: 200 widget embeds → 50,000 views
 - Month 12: 500+ widget embeds → 200,000+ views
 
 ### Distribution Channels:
+
 1. **Real estate blogs** (embed price estimator)
 2. **Neighborhood guides** (embed heatmap)
 3. **Property management sites** (embed AVM)
@@ -853,11 +923,14 @@ Developer → Add x-api-key header to requests
 ## Testing Strategy
 
 ### Widget QA:
+
 1. **Local HTML test:**
+
    ```html
    <!-- test-widget.html -->
    <iframe src="http://localhost:3000/widgets/avm.html" width="400" height="500"></iframe>
    ```
+
    - Open in browser
    - Test form submission
    - Verify result display
@@ -878,15 +951,17 @@ Developer → Add x-api-key header to requests
    - Check analytics tracking
 
 ### API QA:
+
 1. **Key validation:**
+
    ```bash
    # Valid key
    curl -H "x-api-key: abc123..." https://imob.ro/api/public/area/bucuresti-sector-1/kpis
-   
+
    # Invalid key
    curl -H "x-api-key: invalid" https://imob.ro/api/public/area/bucuresti-sector-1/kpis
    # Should return 401
-   
+
    # Rate limit test
    for i in {1..1001}; do curl -H "x-api-key: abc123..." https://imob.ro/api/public/estimate; done
    # Should start returning 429 after 1000
@@ -903,6 +978,7 @@ Developer → Add x-api-key header to requests
 ## Migration Strategy
 
 ### Database Migration:
+
 ```sql
 -- Add ApiKey table
 CREATE TABLE "ApiKey" (
@@ -916,7 +992,7 @@ CREATE TABLE "ApiKey" (
   "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
   "expiresAt" TIMESTAMP,
   "lastUsedAt" TIMESTAMP,
-  
+
   FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE SET NULL
 );
 
@@ -935,7 +1011,7 @@ CREATE TABLE "ApiUsage" (
   "userAgent" TEXT,
   "referer" TEXT,
   "createdAt" TIMESTAMP NOT NULL DEFAULT NOW(),
-  
+
   FOREIGN KEY ("apiKeyId") REFERENCES "ApiKey"("id") ON DELETE CASCADE
 );
 
@@ -959,6 +1035,7 @@ CREATE INDEX "EmbedUsage_createdAt_idx" ON "EmbedUsage"("createdAt");
 ```
 
 ### Deployment Steps:
+
 1. Run Prisma migration
 2. Generate Prisma client
 3. Deploy API endpoints
@@ -975,22 +1052,26 @@ CREATE INDEX "EmbedUsage_createdAt_idx" ON "EmbedUsage"("createdAt");
 ## Success Metrics
 
 ### Week 1:
+
 - ✅ 5 widget embeds
 - ✅ 10 API calls/day
 - ✅ 0 errors in logs
 
 ### Month 1:
+
 - ✅ 20 widget embeds
 - ✅ 500 API calls/day
 - ✅ 5 referring domains
 
 ### Month 3:
+
 - ✅ 100 widget embeds
 - ✅ 5,000 API calls/day
 - ✅ 30 referring domains
 - ✅ 10 backlinks indexed by Google
 
 ### Month 6:
+
 - ✅ 300 widget embeds
 - ✅ 20,000 API calls/day
 - ✅ 100 referring domains
@@ -1001,17 +1082,20 @@ CREATE INDEX "EmbedUsage_createdAt_idx" ON "EmbedUsage"("createdAt");
 ## Risk Assessment
 
 ### Security Risks:
+
 1. **API abuse:** Rate limiting prevents DoS
 2. **Key leakage:** Keys are revokable + domain-restricted
 3. **Widget XSS:** Use CSP headers + sanitize inputs
 4. **CORS issues:** Explicit allow-origin for widgets
 
 ### Performance Risks:
+
 1. **High API load:** Cache responses + CDN for widgets
 2. **Database load:** Index ApiUsage by date for cleanup
 3. **Widget size:** Keep <50KB with minification
 
 ### SEO Risks:
+
 1. **Backlink spam:** Monitor referring domains
 2. **Duplicate content:** Widgets show minimal text
 3. **Low-quality sites:** Can revoke API keys if needed
@@ -1023,12 +1107,14 @@ CREATE INDEX "EmbedUsage_createdAt_idx" ON "EmbedUsage"("createdAt");
 **Implementation Complexity:** 🔴 MEDIUM-HIGH
 
 **Prerequisites:**
+
 - ✅ AVM logic exists (owner-avm.ts)
 - ✅ Area KPIs exist (load-zone.ts)
 - ✅ Tile system exists (Day 34)
 - ✅ Basic embed exists (shortlinks)
 
 **New Infrastructure Needed:**
+
 - ❌ API key system (schema + admin + middleware)
 - ❌ Public API endpoints (2 routes)
 - ❌ Widget HTML files (2 files)
@@ -1039,10 +1125,10 @@ CREATE INDEX "EmbedUsage_createdAt_idx" ON "EmbedUsage"("createdAt");
 **Estimated Total:** ~12-15 hours of development
 
 **Growth Potential:** 🟢 HIGH
+
 - Self-serve distribution (zero partnerships)
 - Automatic backlinks (SEO compound effect)
 - Brand awareness (widgets show on 3rd party sites)
 - API ecosystem (developers can build on top)
 
 **Recommendation:** ✅ **IMPLEMENT** - High ROI for growth, leverages existing data/logic, creates moat through distribution.
-

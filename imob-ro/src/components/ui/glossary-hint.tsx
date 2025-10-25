@@ -2,16 +2,18 @@
 
 import * as React from "react";
 import { InfoIcon } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ro } from "@/i18n/ro";
 import { cn } from "@/lib/utils";
 
-export type GlossaryTerm = "avm" | "tts" | "eurm2" | "yield" | "seismic" | "confidence" | "comparable";
+export type GlossaryTerm =
+  | "avm"
+  | "tts"
+  | "eurm2"
+  | "yield"
+  | "seismic"
+  | "confidence"
+  | "comparable";
 
 interface GlossaryHintProps {
   term: GlossaryTerm;
@@ -25,20 +27,20 @@ interface GlossaryHintProps {
 
 /**
  * GlossaryHint - Tooltip component for technical terms
- * 
+ *
  * Features:
  * - Keyboard accessible (focus/escape)
  * - Screen reader friendly (aria-label)
  * - Links to full glossary page
  * - Respects prefers-reduced-motion
- * 
+ *
  * Usage:
  * <GlossaryHint term="avm" />
  * <GlossaryHint term="yield" inline label="Randament" />
  */
 export function GlossaryHint({ term, label, className, inline = false }: GlossaryHintProps) {
   const definition = ro.glossary[term];
-  
+
   if (!definition) {
     console.warn(`GlossaryHint: Unknown term "${term}"`);
     return null;
@@ -57,7 +59,7 @@ export function GlossaryHint({ term, label, className, inline = false }: Glossar
             "focus-visible:ring-offset-2 focus-visible:ring-offset-[rgb(var(--bg))]",
             "rounded-[var(--r-sm)]",
             "transition-colors duration-[var(--duration-fast)]",
-            className
+            className,
           )}
         >
           {inline ? (
@@ -66,7 +68,7 @@ export function GlossaryHint({ term, label, className, inline = false }: Glossar
                 "cursor-help",
                 "border-b border-dashed border-[rgb(var(--muted))]",
                 "hover:border-[rgb(var(--primary))]",
-                "text-[rgb(var(--text))]"
+                "text-[rgb(var(--text))]",
               )}
               role="button"
               tabIndex={0}
@@ -82,7 +84,7 @@ export function GlossaryHint({ term, label, className, inline = false }: Glossar
                 "w-4 h-4",
                 "text-[rgb(var(--muted))]",
                 "hover:text-[rgb(var(--primary))]",
-                "transition-colors duration-[var(--duration-fast)]"
+                "transition-colors duration-[var(--duration-fast)]",
               )}
               aria-label={`Află mai multe despre ${label || term}: ${definition.short}`}
             >
@@ -103,7 +105,7 @@ export function GlossaryHint({ term, label, className, inline = false }: Glossar
             "text-sm text-[rgb(var(--text))]",
             "animate-in fade-in-0 zoom-in-95",
             "data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
-            "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2"
+            "data-[side=bottom]:slide-in-from-top-2 data-[side=top]:slide-in-from-bottom-2",
           )}
           sideOffset={8}
         >
@@ -115,7 +117,7 @@ export function GlossaryHint({ term, label, className, inline = false }: Glossar
                 "inline-flex items-center gap-1",
                 "text-xs text-[rgb(var(--primary))]",
                 "hover:underline",
-                "focus-visible:outline-none focus-visible:underline"
+                "focus-visible:outline-none focus-visible:underline",
               )}
               onClick={(e) => {
                 // Allow Cmd/Ctrl+Click to open in new tab

@@ -11,22 +11,16 @@ const badgeVariants = cva(
       variant: {
         default:
           "border-transparent bg-[rgb(var(--primary))] text-[rgb(var(--primary-contrast))] hover:opacity-90",
-        neutral:
-          "border-[rgb(var(--border))] bg-[rgb(var(--surface-2))] text-[rgb(var(--text))]",
-        success:
-          "border-transparent bg-[rgb(var(--success))] text-white hover:opacity-90",
+        neutral: "border-[rgb(var(--border))] bg-[rgb(var(--surface-2))] text-[rgb(var(--text))]",
+        success: "border-transparent bg-[rgb(var(--success))] text-white hover:opacity-90",
         warn: "border-transparent bg-[rgb(var(--warn))] text-white hover:opacity-90",
-        danger:
-          "border-transparent bg-[rgb(var(--danger))] text-white hover:opacity-90",
-        sponsored:
-          "border-transparent bg-[rgb(var(--ad-tint))] text-white hover:opacity-90",
+        danger: "border-transparent bg-[rgb(var(--danger))] text-white hover:opacity-90",
+        sponsored: "border-transparent bg-[rgb(var(--ad-tint))] text-white hover:opacity-90",
         outline:
           "border-[rgb(var(--border))] bg-transparent text-[rgb(var(--text))] hover:bg-[rgb(var(--surface-2))]",
         // Backward compatibility aliases
-        secondary:
-          "border-[rgb(var(--border))] bg-[rgb(var(--surface-2))] text-[rgb(var(--text))]",
-        destructive:
-          "border-transparent bg-[rgb(var(--danger))] text-white hover:opacity-90",
+        secondary: "border-[rgb(var(--border))] bg-[rgb(var(--surface-2))] text-[rgb(var(--text))]",
+        destructive: "border-transparent bg-[rgb(var(--danger))] text-white hover:opacity-90",
       },
     },
     defaultVariants: {

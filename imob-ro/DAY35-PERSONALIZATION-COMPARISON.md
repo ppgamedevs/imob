@@ -14,6 +14,7 @@
 #### **Existing Infrastructure:**
 
 **BuyerEvent Table** (prisma/schema.prisma line 874):
+
 ```prisma
 model BuyerEvent {
   id        String   @id @default(cuid())
@@ -21,31 +22,33 @@ model BuyerEvent {
   kind      String   // "saved_search_run" | "watch_price_drop" | "compare_open" | "mortgage_calc"
   meta      Json?
   ts        DateTime @default(now())
-  
+
   @@index([userId, ts])
 }
 ```
 
 **Current Event Types:**
+
 - `saved_search_run` - When user runs a saved search
 - `watch_price_drop` - When a watched property drops in price
 - `compare_open` - When user opens comparison page
 - `mortgage_calc` - When user uses mortgage calculator
 
 **Current Tracking (ReportTracker.tsx):**
+
 ```tsx
 // Tracks area-level events (not user-specific)
-- view_report
-- save_report  
-- share_pdf
+-view_report - save_report - share_pdf;
 // Goes to /api/track, updates AreaEvent (not BuyerEvent)
 ```
 
 **Existing BuyerEvent Usage:**
+
 1. `src/lib/saved-search/run.ts` - Logs `saved_search_run`
 2. `src/app/compare/[id]/page.tsx` - Logs `compare_open`
 
 #### **Issues:**
+
 ❌ No tracking of property views (report page visits)  
 ❌ No dwell time tracking (time spent on property)  
 ❌ No watch item additions tracked in BuyerEvent  
@@ -58,6 +61,7 @@ model BuyerEvent {
 ### 2. Current Recommendation System
 
 **Current Implementation** (`/me/buyer/page.tsx` lines 77-102):
+
 ```tsx
 // Get recommendations (simple heuristic: underpriced + fast TTS)
 const recommendations = await prisma.analysis.findMany({
@@ -84,6 +88,7 @@ const goodDeals = recommendations.filter((a) => {
 ```
 
 **Current Ranking:**
+
 - ❌ No personalization (same for all users)
 - ❌ Only uses price badge + TTS bucket
 - ❌ No area preference matching
@@ -95,6 +100,7 @@ const goodDeals = recommendations.filter((a) => {
 - ✅ Shows fast-selling properties
 
 **Display Section:**
+
 - Section title: "Recommended for You" (misleading - not personalized)
 - Description: "Properties with great value or fast selling potential"
 - Shows up to 6 properties
@@ -110,29 +116,30 @@ const goodDeals = recommendations.filter((a) => {
 model UserTaste {
   id          String   @id @default(cuid())
   userId      String   @unique
-  
+
   // Area preferences (JSON array of {areaSlug, score, lastSeen})
   areas       Json?    // [{slug: "bucuresti-sector-1", score: 0.8, ts: "2025-10-23T..."}]
-  
+
   // Price band preferences
   minPrice    Int?     // Minimum price seen/searched (EUR)
   maxPrice    Int?     // Maximum price seen/searched (EUR)
-  
+
   // Room preferences (JSON object {1: 0.1, 2: 0.5, 3: 0.8, 4: 0.2})
   rooms       Json?    // {roomCount: preferenceScore}
-  
+
   // Property type preferences
   types       Json?    // {apartment: 0.9, house: 0.2}
-  
+
   // Last updated timestamp
   updatedAt   DateTime @updatedAt
   createdAt   DateTime @default(now())
-  
+
   @@index([userId])
 }
 ```
 
 **Decay Logic:**
+
 - 7-day half-life: `weight = 0.5^(daysSince / 7)`
 - Events >30 days old contribute minimally
 - Recent behavior dominates recommendations
@@ -143,6 +150,7 @@ model UserTaste {
 #### **Enhanced BuyerEvent Types:**
 
 **New Event Types to Add:**
+
 ```typescript
 type BuyerEventKind =
   // Existing
@@ -151,31 +159,32 @@ type BuyerEventKind =
   | "compare_open"
   | "mortgage_calc"
   // New (Day 35)
-  | "view_property"         // View report page
-  | "dwell_property"        // Spent >15s on property
-  | "add_to_watch"          // Added to watchlist
-  | "discover_card_click"   // Clicked property card in discover
-  | "search_filters"        // Applied search filters
+  | "view_property" // View report page
+  | "dwell_property" // Spent >15s on property
+  | "add_to_watch" // Added to watchlist
+  | "discover_card_click" // Clicked property card in discover
+  | "search_filters"; // Applied search filters
 ```
 
 **Enhanced Meta Structure:**
+
 ```typescript
 type BuyerEventMeta = {
   // Property context
-  groupId?: string;         // DedupGroup ID
-  analysisId?: string;      // Analysis ID
-  areaSlug?: string;        // Area slug
-  
+  groupId?: string; // DedupGroup ID
+  analysisId?: string; // Analysis ID
+  areaSlug?: string; // Area slug
+
   // Property details
-  priceEur?: number;        // Price in EUR
-  areaM2?: number;          // Square meters
-  rooms?: number;           // Room count
-  city?: string;            // City
-  
+  priceEur?: number; // Price in EUR
+  areaM2?: number; // Square meters
+  rooms?: number; // Room count
+  city?: string; // City
+
   // Behavior context
-  dwellSeconds?: number;    // Time spent (for dwell_property)
-  source?: string;          // Where event originated (discover, search, direct)
-  
+  dwellSeconds?: number; // Time spent (for dwell_property)
+  source?: string; // Where event originated (discover, search, direct)
+
   // Search context (for search_filters)
   filters?: {
     minPrice?: number;
@@ -214,10 +223,10 @@ type TasteUpdate = {
  */
 const EVENT_WEIGHTS = {
   view_property: 1.0,
-  dwell_property: 3.0,      // 3x weight for >15s dwell
-  add_to_watch: 5.0,        // 5x weight for adding to watchlist
+  dwell_property: 3.0, // 3x weight for >15s dwell
+  add_to_watch: 5.0, // 5x weight for adding to watchlist
   discover_card_click: 0.5, // Lower weight for quick clicks
-  search_filters: 2.0,      // 2x weight for deliberate filtering
+  search_filters: 2.0, // 2x weight for deliberate filtering
 };
 
 /**
@@ -244,16 +253,16 @@ export async function updateUserTaste(update: TasteUpdate): Promise<void> {
     },
     update: {},
   });
-  
+
   const eventWeight = EVENT_WEIGHTS[update.eventKind] ?? 1.0;
   const decayFactor = getDecayFactor(update.eventTs);
   const finalWeight = eventWeight * decayFactor;
-  
+
   // Update area preferences
   if (update.meta.areaSlug) {
     const areas = (taste.areas as any[]) ?? [];
     const existing = areas.find((a) => a.slug === update.meta.areaSlug);
-    
+
     if (existing) {
       existing.score += finalWeight;
       existing.ts = update.eventTs.toISOString();
@@ -264,22 +273,22 @@ export async function updateUserTaste(update: TasteUpdate): Promise<void> {
         ts: update.eventTs.toISOString(),
       });
     }
-    
+
     // Keep top 20 areas, sort by score
     areas.sort((a, b) => b.score - a.score);
     const topAreas = areas.slice(0, 20);
-    
+
     await prisma.userTaste.update({
       where: { userId: update.userId },
       data: { areas: topAreas },
     });
   }
-  
+
   // Update price band
   if (update.meta.priceEur) {
     const currentMin = taste.minPrice ?? Infinity;
     const currentMax = taste.maxPrice ?? 0;
-    
+
     await prisma.userTaste.update({
       where: { userId: update.userId },
       data: {
@@ -288,12 +297,12 @@ export async function updateUserTaste(update: TasteUpdate): Promise<void> {
       },
     });
   }
-  
+
   // Update room preferences
   if (update.meta.rooms) {
     const rooms = (taste.rooms as Record<number, number>) ?? {};
     rooms[update.meta.rooms] = (rooms[update.meta.rooms] ?? 0) + finalWeight;
-    
+
     await prisma.userTaste.update({
       where: { userId: update.userId },
       data: { rooms },
@@ -306,7 +315,7 @@ export async function updateUserTaste(update: TasteUpdate): Promise<void> {
  */
 export async function decayAllTastes(): Promise<void> {
   const allTastes = await prisma.userTaste.findMany();
-  
+
   for (const taste of allTastes) {
     // Decay area scores
     if (taste.areas) {
@@ -314,28 +323,28 @@ export async function decayAllTastes(): Promise<void> {
         ...a,
         score: a.score * getDecayFactor(new Date(a.ts)),
       }));
-      
+
       // Remove areas with score < 0.1
       const filteredAreas = areas.filter((a) => a.score >= 0.1);
-      
+
       await prisma.userTaste.update({
         where: { id: taste.id },
         data: { areas: filteredAreas },
       });
     }
-    
+
     // Decay room preferences
     if (taste.rooms) {
       const rooms = taste.rooms as Record<number, number>;
       const decayedRooms: Record<number, number> = {};
-      
+
       for (const [roomCount, score] of Object.entries(rooms)) {
         const decayed = score * 0.95; // Weekly 5% decay
         if (decayed >= 0.1) {
           decayedRooms[Number(roomCount)] = decayed;
         }
       }
-      
+
       await prisma.userTaste.update({
         where: { id: taste.id },
         data: { rooms: decayedRooms },
@@ -385,13 +394,13 @@ type ScoredCandidate = CandidateGroup & {
  * Scoring weights
  */
 const WEIGHTS = {
-  areaMatch: 3.0,        // Match to top-N areas
-  priceInBand: 2.0,      // Within user's price band
-  underpriced: 2.5,      // Underpriced badge
-  fastTTS: 1.5,          // Fast TTS bucket
-  highYield: 1.0,        // High net yield
-  metroProximity: 0.5,   // Close to metro
-  roomMatch: 1.5,        // Match room preferences
+  areaMatch: 3.0, // Match to top-N areas
+  priceInBand: 2.0, // Within user's price band
+  underpriced: 2.5, // Underpriced badge
+  fastTTS: 1.5, // Fast TTS bucket
+  highYield: 1.0, // High net yield
+  metroProximity: 0.5, // Close to metro
+  roomMatch: 1.5, // Match room preferences
 };
 
 /**
@@ -399,7 +408,7 @@ const WEIGHTS = {
  */
 async function getCandidates(): Promise<CandidateGroup[]> {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  
+
   const groups = await prisma.dedupGroup.findMany({
     where: {
       createdAt: { gte: sevenDaysAgo },
@@ -421,12 +430,12 @@ async function getCandidates(): Promise<CandidateGroup[]> {
     },
     take: 200, // Limit candidate pool
   });
-  
+
   return groups.map((g) => {
     const analysis = g.analyses[0];
     const features = analysis?.featureSnapshot?.features as any;
     const score = analysis?.scoreSnapshot as any;
-    
+
     return {
       id: g.id,
       areaSlug: features?.areaSlug ?? null,
@@ -445,10 +454,7 @@ async function getCandidates(): Promise<CandidateGroup[]> {
 /**
  * Score a single candidate against user taste
  */
-function scoreCandidate(
-  candidate: CandidateGroup,
-  taste: UserTaste
-): ScoredCandidate {
+function scoreCandidate(candidate: CandidateGroup, taste: UserTaste): ScoredCandidate {
   const breakdown = {
     areaMatch: 0,
     priceInBand: 0,
@@ -458,7 +464,7 @@ function scoreCandidate(
     metroProximity: 0,
     roomMatch: 0,
   };
-  
+
   // 1. Area match (top-N areas)
   if (candidate.areaSlug && taste.areas) {
     const areas = taste.areas as any[];
@@ -469,35 +475,35 @@ function scoreCandidate(
       breakdown.areaMatch = (match.score / maxScore) * WEIGHTS.areaMatch;
     }
   }
-  
+
   // 2. Price in band
   if (candidate.priceEur && taste.minPrice && taste.maxPrice) {
     const mid = (taste.minPrice + taste.maxPrice) / 2;
     const range = taste.maxPrice - taste.minPrice;
     const distance = Math.abs(candidate.priceEur - mid);
-    
+
     if (distance <= range / 2) {
       breakdown.priceInBand = WEIGHTS.priceInBand;
     } else if (distance <= range) {
       breakdown.priceInBand = WEIGHTS.priceInBand * 0.5;
     }
   }
-  
+
   // 3. Underpriced badge
   if (candidate.priceBadge === "underpriced") {
     breakdown.underpriced = WEIGHTS.underpriced;
   }
-  
+
   // 4. Fast TTS
   if (candidate.ttsBucket === "fast") {
     breakdown.fastTTS = WEIGHTS.fastTTS;
   }
-  
+
   // 5. High yield
   if (candidate.yieldNet && candidate.yieldNet >= 0.06) {
     breakdown.highYield = WEIGHTS.highYield;
   }
-  
+
   // 6. Metro proximity
   if (candidate.distMetroM !== null) {
     if (candidate.distMetroM <= 500) {
@@ -506,7 +512,7 @@ function scoreCandidate(
       breakdown.metroProximity = WEIGHTS.metroProximity * 0.5;
     }
   }
-  
+
   // 7. Room match
   if (candidate.rooms && taste.rooms) {
     const rooms = taste.rooms as Record<number, number>;
@@ -517,9 +523,9 @@ function scoreCandidate(
       breakdown.roomMatch = (match / maxScore) * WEIGHTS.roomMatch;
     }
   }
-  
+
   const totalScore = Object.values(breakdown).reduce((sum, v) => sum + v, 0);
-  
+
   return {
     ...candidate,
     score: totalScore,
@@ -532,27 +538,27 @@ function scoreCandidate(
  */
 export async function getPersonalizedRecommendations(
   userId: string,
-  limit = 10
+  limit = 10,
 ): Promise<ScoredCandidate[]> {
   // Get user taste
   const taste = await prisma.userTaste.findUnique({
     where: { userId },
   });
-  
+
   if (!taste) {
     // No taste yet - return generic recommendations
     return getGenericRecommendations(limit);
   }
-  
+
   // Get candidate groups
   const candidates = await getCandidates();
-  
+
   // Score each candidate
   const scored = candidates.map((c) => scoreCandidate(c, taste));
-  
+
   // Sort by score descending
   scored.sort((a, b) => b.score - a.score);
-  
+
   // Return top N
   return scored.slice(0, limit);
 }
@@ -560,17 +566,13 @@ export async function getPersonalizedRecommendations(
 /**
  * Fallback for users without taste profile
  */
-async function getGenericRecommendations(
-  limit: number
-): Promise<ScoredCandidate[]> {
+async function getGenericRecommendations(limit: number): Promise<ScoredCandidate[]> {
   const candidates = await getCandidates();
-  
+
   // Simple scoring: underpriced + fast TTS
   const scored = candidates.map((c) => ({
     ...c,
-    score:
-      (c.priceBadge === "underpriced" ? 2 : 0) +
-      (c.ttsBucket === "fast" ? 1 : 0),
+    score: (c.priceBadge === "underpriced" ? 2 : 0) + (c.ttsBucket === "fast" ? 1 : 0),
     scoreBreakdown: {
       areaMatch: 0,
       priceInBand: 0,
@@ -581,7 +583,7 @@ async function getGenericRecommendations(
       roomMatch: 0,
     },
   }));
-  
+
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, limit);
 }
@@ -607,6 +609,7 @@ async function getGenericRecommendations(
 #### **New Tracking Points Needed:**
 
 **1. Report Page View Tracking:**
+
 ```tsx
 // src/app/report/[id]/page.tsx
 // After analysis load, log BuyerEvent
@@ -627,7 +630,7 @@ if (session?.user?.id && analysis?.groupId) {
       ts: new Date(),
     },
   });
-  
+
   // Update user taste
   await updateUserTaste({
     userId: session.user.id,
@@ -644,6 +647,7 @@ if (session?.user?.id && analysis?.groupId) {
 ```
 
 **2. Dwell Time Tracking (Client-side):**
+
 ```tsx
 // src/components/DwellTracker.tsx
 "use client";
@@ -651,10 +655,10 @@ if (session?.user?.id && analysis?.groupId) {
 export default function DwellTracker({ groupId, analysisId, meta }) {
   useEffect(() => {
     const startTime = Date.now();
-    
+
     const handleBeforeUnload = () => {
       const dwellSeconds = (Date.now() - startTime) / 1000;
-      
+
       if (dwellSeconds >= 15) {
         // Send beacon (non-blocking)
         navigator.sendBeacon(
@@ -664,20 +668,21 @@ export default function DwellTracker({ groupId, analysisId, meta }) {
             analysisId,
             dwellSeconds,
             meta,
-          })
+          }),
         );
       }
     };
-    
+
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [groupId, analysisId]);
-  
+
   return null;
 }
 ```
 
 **3. Watch Item Addition:**
+
 ```tsx
 // src/app/me/buyer/watch.actions.ts
 // Update addToWatchAction
@@ -685,7 +690,7 @@ export default function DwellTracker({ groupId, analysisId, meta }) {
 export async function addToWatchAction(groupId: string) {
   const session = await auth();
   if (!session?.user?.id) throw new Error("Not authenticated");
-  
+
   const item = await prisma.watchItem.create({
     data: { userId: session.user.id, groupId },
     include: {
@@ -701,7 +706,7 @@ export async function addToWatchAction(groupId: string) {
       },
     },
   });
-  
+
   // Log BuyerEvent
   const features = item.group.analyses[0]?.featureSnapshot?.features as any;
   await prisma.buyerEvent.create({
@@ -716,7 +721,7 @@ export async function addToWatchAction(groupId: string) {
       },
     },
   });
-  
+
   // Update taste with high weight
   await updateUserTaste({
     userId: session.user.id,
@@ -729,12 +734,13 @@ export async function addToWatchAction(groupId: string) {
       rooms: features?.rooms,
     },
   });
-  
+
   revalidatePath("/me/buyer");
 }
 ```
 
 **4. Discover Card Click:**
+
 ```tsx
 // src/app/discover/page.tsx or card component
 // Add click tracking
@@ -762,19 +768,16 @@ import { getPersonalizedRecommendations } from "@/lib/reco/rank";
 export default async function BuyerPortalPage() {
   const session = await auth();
   if (!session?.user?.id) return <SignInRequired />;
-  
+
   // ... existing code ...
-  
+
   // Get personalized recommendations
-  const recommendations = await getPersonalizedRecommendations(
-    session.user.id,
-    10
-  );
-  
+  const recommendations = await getPersonalizedRecommendations(session.user.id, 10);
+
   return (
     <div className="container py-8 space-y-8">
       {/* ... existing sections ... */}
-      
+
       {/* Personalized Recommendations */}
       <Card>
         <CardHeader>
@@ -805,7 +808,7 @@ export default async function BuyerPortalPage() {
           )}
         </CardContent>
       </Card>
-      
+
       {/* Debug: Show Taste Profile (dev only) */}
       {process.env.NODE_ENV === "development" && (
         <Card>
@@ -826,36 +829,38 @@ export default async function BuyerPortalPage() {
 
 ## Summary Comparison Table
 
-| Aspect | Current | Planned (Day 35) | Improvement |
-|--------|---------|------------------|-------------|
-| **User Preference Storage** | None | UserTaste table | New capability |
-| **Tracking Events** | 4 types (saved search, compare, watch drop, mortgage) | 9 types (+view, dwell, add watch, discover click, filters) | 125% more events |
-| **Event Context** | Minimal (kind + basic meta) | Rich (groupId, areaSlug, price, rooms, dwell time) | 5× more context |
-| **Area Preferences** | None | Top-20 areas with scores + decay | New |
-| **Price Band** | None | Min/max price from behavior | New |
-| **Room Preferences** | None | Weighted room count preferences | New |
-| **Decay Logic** | None | 7-day half-life | New |
-| **Recommendation Scoring** | Binary (underpriced OR fast TTS) | Weighted 7-factor score | Much smarter |
-| **Scoring Factors** | 2 (price badge, TTS) | 7 (area, price band, badge, TTS, yield, metro, rooms) | 3.5× more factors |
-| **Personalization** | None (same for all users) | Fully personalized per user | ∞× better |
-| **Candidate Pool** | All analyses | Last 7 days groups | Fresher |
-| **Ranking** | Simple filter → newest first | Weighted score → highest first | Intelligent |
-| **Dwell Time** | Not tracked | Tracked (3× weight for >15s) | New signal |
-| **Watch Impact** | Not tracked for taste | 5× weight in taste | Strong signal |
-| **Fallback** | Basic filter | Generic recommendations | Better UX |
-| **Score Transparency** | None | scoreBreakdown shown | Debuggable |
+| Aspect                      | Current                                               | Planned (Day 35)                                           | Improvement       |
+| --------------------------- | ----------------------------------------------------- | ---------------------------------------------------------- | ----------------- |
+| **User Preference Storage** | None                                                  | UserTaste table                                            | New capability    |
+| **Tracking Events**         | 4 types (saved search, compare, watch drop, mortgage) | 9 types (+view, dwell, add watch, discover click, filters) | 125% more events  |
+| **Event Context**           | Minimal (kind + basic meta)                           | Rich (groupId, areaSlug, price, rooms, dwell time)         | 5× more context   |
+| **Area Preferences**        | None                                                  | Top-20 areas with scores + decay                           | New               |
+| **Price Band**              | None                                                  | Min/max price from behavior                                | New               |
+| **Room Preferences**        | None                                                  | Weighted room count preferences                            | New               |
+| **Decay Logic**             | None                                                  | 7-day half-life                                            | New               |
+| **Recommendation Scoring**  | Binary (underpriced OR fast TTS)                      | Weighted 7-factor score                                    | Much smarter      |
+| **Scoring Factors**         | 2 (price badge, TTS)                                  | 7 (area, price band, badge, TTS, yield, metro, rooms)      | 3.5× more factors |
+| **Personalization**         | None (same for all users)                             | Fully personalized per user                                | ∞× better         |
+| **Candidate Pool**          | All analyses                                          | Last 7 days groups                                         | Fresher           |
+| **Ranking**                 | Simple filter → newest first                          | Weighted score → highest first                             | Intelligent       |
+| **Dwell Time**              | Not tracked                                           | Tracked (3× weight for >15s)                               | New signal        |
+| **Watch Impact**            | Not tracked for taste                                 | 5× weight in taste                                         | Strong signal     |
+| **Fallback**                | Basic filter                                          | Generic recommendations                                    | Better UX         |
+| **Score Transparency**      | None                                                  | scoreBreakdown shown                                       | Debuggable        |
 
 ---
 
 ## Implementation Checklist
 
 ### Phase 1: Schema & Infrastructure
+
 - [ ] Add UserTaste table to schema.prisma
 - [ ] Create migration for UserTaste
 - [ ] Update BuyerEvent.kind type (add new event types)
 - [ ] Enhance BuyerEvent.meta structure
 
 ### Phase 2: Taste Tracking
+
 - [ ] Create `src/lib/reco/taste.ts`
 - [ ] Implement `updateUserTaste()` function
 - [ ] Implement `decayAllTastes()` function
@@ -863,6 +868,7 @@ export default async function BuyerPortalPage() {
 - [ ] Add 7-day half-life calculation
 
 ### Phase 3: Ranking Engine
+
 - [ ] Create `src/lib/reco/rank.ts`
 - [ ] Implement `getCandidates()` (last 7 days groups)
 - [ ] Implement `scoreCandidate()` with 7 factors
@@ -870,6 +876,7 @@ export default async function BuyerPortalPage() {
 - [ ] Implement `getGenericRecommendations()` fallback
 
 ### Phase 4: Event Tracking Integration
+
 - [ ] Update Report page to log "view_property"
 - [ ] Create DwellTracker component for >15s tracking
 - [ ] Create `/api/track/dwell` endpoint
@@ -878,6 +885,7 @@ export default async function BuyerPortalPage() {
 - [ ] Create `/api/track/discover` endpoint
 
 ### Phase 5: UI Integration
+
 - [ ] Update `/me/buyer` recommendations section
 - [ ] Replace basic filter with `getPersonalizedRecommendations()`
 - [ ] Add "Recomandate pentru tine" title
@@ -886,11 +894,13 @@ export default async function BuyerPortalPage() {
 - [ ] Create TasteProfileDebug component (dev mode)
 
 ### Phase 6: Decay Automation
+
 - [ ] Create `/api/cron/taste/decay` endpoint
 - [ ] Schedule weekly decay job (Sundays 4 AM UTC)
 - [ ] Add logging and error handling
 
 ### Phase 7: QA & Testing
+
 - [ ] Create test user account
 - [ ] View 3-4 properties in Sector 1, 2-room, 80k-120k EUR
 - [ ] Dwell >15s on 1-2 properties
@@ -907,6 +917,7 @@ export default async function BuyerPortalPage() {
 ## Key Differences from Spec
 
 ### ✅ Aligned:
+
 - UserTaste table with areas, price band, room prefs
 - 7-day half-life decay
 - Weighted scoring (match areas, price, underpriced, fast TTS, yield, metro)
@@ -916,6 +927,7 @@ export default async function BuyerPortalPage() {
 - QA plan: test user, view zones, verify shift
 
 ### ⚠️ Enhancements Over Spec:
+
 - Added property type preferences (apartment vs house)
 - Added room preference tracking (not just binary)
 - Added discover card click event
@@ -926,6 +938,7 @@ export default async function BuyerPortalPage() {
 - Added weekly decay cron (spec didn't mention automation)
 
 ### 🔄 Implementation Notes:
+
 - BuyerEvent already exists - just need to add new event types
 - DedupGroup infrastructure ready (Day 19, Day 29)
 - /me/buyer page exists - just need to swap recommendation logic
@@ -937,6 +950,7 @@ export default async function BuyerPortalPage() {
 ## File Creation Summary
 
 **New Files (9):**
+
 1. `src/lib/reco/taste.ts` (~200 lines) - Taste update & decay logic
 2. `src/lib/reco/rank.ts` (~250 lines) - Scoring & ranking engine
 3. `src/components/DwellTracker.tsx` (~40 lines) - Client-side dwell tracking
@@ -948,6 +962,7 @@ export default async function BuyerPortalPage() {
 9. `prisma/migrations/YYYYMMDD_add_user_taste/migration.sql` (auto-generated)
 
 **Modified Files (4):**
+
 1. `prisma/schema.prisma` - Add UserTaste model
 2. `src/app/me/buyer/page.tsx` - Use personalized recommendations
 3. `src/app/report/[id]/page.tsx` - Add view_property tracking
@@ -960,18 +975,21 @@ export default async function BuyerPortalPage() {
 ## Expected Impact
 
 **Performance:**
+
 - First-time users: Generic recommendations (underpriced + fast TTS)
 - After 3-5 property views: Start showing area/price preferences
 - After 10+ interactions: Fully personalized recommendations
 - Decay ensures fresh preferences (7-day half-life)
 
 **User Experience:**
+
 - Relevant recommendations based on actual behavior
 - No annoying notifications (zero emails/push)
 - Seamless in-app discovery
 - "Recomandate pentru tine" feels personal
 
 **Business Value:**
+
 - Higher engagement (relevant recommendations)
 - Better conversion (properties match taste)
 - Implicit feedback loop (views → better recs → more views)

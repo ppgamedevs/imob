@@ -12,10 +12,10 @@ export interface InlineStatProps extends ComponentPropsWithoutRef<"div"> {
 
 /**
  * InlineStat - Compact label/value pair
- * 
+ *
  * Micro-component for displaying inline statistics.
  * Perfect for dense layouts, table cells, or card footers.
- * 
+ *
  * @example
  * <InlineStat label="Units" value="24" />
  * <InlineStat label="Yield" value="5.2%" variant="success" />
@@ -38,7 +38,9 @@ export function InlineStat({
   return (
     <div className={cn("inline-flex items-baseline gap-1.5", className)} {...props}>
       <span className="text-[var(--fs-sm)] text-[rgb(var(--muted))] font-medium">{label}:</span>
-      <span className={cn("text-[var(--fs-sm)] font-semibold tabular-nums", variantColors[variant])}>
+      <span
+        className={cn("text-[var(--fs-sm)] font-semibold tabular-nums", variantColors[variant])}
+      >
         {typeof value === "number" ? value.toLocaleString() : value}
       </span>
     </div>

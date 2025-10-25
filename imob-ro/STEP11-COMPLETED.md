@@ -6,6 +6,7 @@
 ## Overview
 
 Step 11 delivers a premium development/project catalog system for real estate developers. The system includes:
+
 - Developer portal with API authentication
 - Bulk unit ingestion (CSV/JSON)
 - Auto-enrichment (€/m², yield, TTS, seismic)
@@ -19,21 +20,22 @@ Step 11 delivers a premium development/project catalog system for real estate de
 
 ## ✅ Acceptance Criteria (All Met)
 
-| Criterion | Status | Notes |
-|-----------|--------|-------|
-| /developments catalog with filters | ✅ | SSR, pagination, 12 per page, sponsored injection |
-| /developments/[slug] premium page | ✅ | Hero gallery, KPIs, unit finder, amenities, map, FAQ |
-| Units show metrics (€/m², yield, TTS, seismic) | ✅ | Auto-computed via enrichment pipeline |
-| Filters work without CLS | ✅ | Server-rendered, URL-based state |
-| Lead form posts to /api/dev/lead | ✅ | Token auth, DevLead storage, CRM forwarding |
-| CSV/JSON bulk works with auth | ✅ | Token validation, upsert by (developmentId, label) |
-| SEO meta, OG images, JSON-LD | ✅ | Dynamic metadata, @vercel/og generator |
+| Criterion                                      | Status | Notes                                                |
+| ---------------------------------------------- | ------ | ---------------------------------------------------- |
+| /developments catalog with filters             | ✅     | SSR, pagination, 12 per page, sponsored injection    |
+| /developments/[slug] premium page              | ✅     | Hero gallery, KPIs, unit finder, amenities, map, FAQ |
+| Units show metrics (€/m², yield, TTS, seismic) | ✅     | Auto-computed via enrichment pipeline                |
+| Filters work without CLS                       | ✅     | Server-rendered, URL-based state                     |
+| Lead form posts to /api/dev/lead               | ✅     | Token auth, DevLead storage, CRM forwarding          |
+| CSV/JSON bulk works with auth                  | ✅     | Token validation, upsert by (developmentId, label)   |
+| SEO meta, OG images, JSON-LD                   | ✅     | Dynamic metadata, @vercel/og generator               |
 
 ---
 
 ## 📊 Database Models (4 new)
 
 ### 1. Developer
+
 ```prisma
 model Developer {
   id           String   @id @default(cuid())
@@ -43,13 +45,15 @@ model Developer {
   brand        Json?    // {color, tone, webhookUrl}
   apiToken     String?  @unique
   createdAt    DateTime @default(now())
-  
+
   developments Development[]
 }
 ```
+
 **Purpose:** Developer companies with branding and API credentials.
 
 ### 2. Development
+
 ```prisma
 model Development {
   id          String    @id @default(cuid())
@@ -66,14 +70,16 @@ model Development {
   amenities   Json?     // string[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-  
+
   units       Unit[]
   leads       DevLead[]
 }
 ```
+
 **Purpose:** Real estate projects with location, delivery, and details.
 
 ### 3. Unit
+
 ```prisma
 model Unit {
   id            String   @id @default(cuid())
@@ -97,14 +103,16 @@ model Unit {
   explain       Json?
   updatedAt     DateTime @updatedAt
   createdAt     DateTime @default(now())
-  
+
   @@index([developmentId])
   @@index([typology, priceEur])
 }
 ```
+
 **Purpose:** Individual apartments/units with pricing and metrics.
 
 ### 4. DevLead
+
 ```prisma
 model DevLead {
   id            String   @id @default(cuid())
@@ -115,10 +123,11 @@ model DevLead {
   message       String?  @db.Text
   utm           Json?
   createdAt     DateTime @default(now())
-  
+
   @@index([developmentId, createdAt])
 }
 ```
+
 **Purpose:** Lead captures from project pages.
 
 ---
@@ -128,11 +137,13 @@ model DevLead {
 ### 1. Enrichment Pipeline (`src/lib/dev/enrich.ts`)
 
 **Functions:**
+
 - `computeUnitMetrics(unit, development)` - Calculate all derived metrics
 - `batchEnrichDevelopment(developmentId)` - Enrich all units in a project
 - `enrichUnit(unitId)` - Enrich single unit (used after bulk upsert)
 
 **Metrics Computed:**
+
 - `eurM2` = priceEur / areaM2
 - `yieldNet` = (annual rent × 0.85) / price × 100
   - Uses `estimateRent()` from existing ML engine
@@ -146,6 +157,7 @@ model DevLead {
   - Classes: A (best) → D (worst)
 
 **Integration:**
+
 - Called automatically after bulk unit upsert
 - Runs with concurrency limit (5 parallel)
 - Stores results in Unit table for fast queries
@@ -155,12 +167,15 @@ model DevLead {
 **Endpoint:** `POST /api/dev/units/bulk`
 
 **Authentication:**
+
 - Query params: `?devId=xxx&token=xxx`
 - OR body: `{ devId, token, ... }`
 - Validates Developer.apiToken
 
 **Input Formats:**
+
 1. **CSV** (Content-Type: text/csv)
+
    ```csv
    label,typology,areaM2,priceEur,floor,rooms,stage,photos
    A12,2,65,89000,2,2,in_sales,https://...
@@ -185,11 +200,13 @@ model DevLead {
    ```
 
 **Upsert Logic:**
+
 - Finds existing by `(developmentId, label)`
 - Creates new or updates existing
 - Triggers enrichment asynchronously
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -205,6 +222,7 @@ model DevLead {
 **Endpoint:** `POST /api/dev/lead`
 
 **Body:**
+
 ```json
 {
   "devId": "optional",
@@ -222,6 +240,7 @@ model DevLead {
 ```
 
 **Flow:**
+
 1. Validate required fields (developmentId, contact)
 2. Verify development exists
 3. Optional: validate developer token
@@ -231,6 +250,7 @@ model DevLead {
 7. Return leadId
 
 **CRM Integration:**
+
 - Fire-and-forget POST to webhook
 - Includes full lead data + timestamp
 - Non-blocking (doesn't delay response)
@@ -240,12 +260,14 @@ model DevLead {
 **Route:** `/developments`
 
 **Features:**
+
 - Server-rendered (SSR) for SEO
 - URL-based filter state
 - Pagination (12 per page)
 - Sponsored card injection (after 2nd and 9th items)
 
 **Filters:**
+
 - Area (sector 1-6, neighborhoods)
 - Typology (studio, 1, 2, 3, 4+ rooms)
 - Price range (min/max EUR)
@@ -253,12 +275,14 @@ model DevLead {
 - Stage (in_sales, reserved, sold)
 
 **Sort Options:**
+
 - Relevance (default)
 - Price ascending
 - Price descending
 - Delivery date
 
 **ProjectCard Components:**
+
 - Cover photo (16:9)
 - Developer logo
 - Project name + area
@@ -268,6 +292,7 @@ model DevLead {
 - CTA: "Vezi proiectul"
 
 **Analytics:**
+
 - Tracks catalog view on load
 - Records applied filters
 - Logs card clicks (organic vs sponsored)
@@ -279,20 +304,24 @@ model DevLead {
 **Sections:**
 
 **Hero Gallery:**
+
 - Main cover photo (16:9)
 - 4 additional photos in grid
 - Black background, full-width
 
 **Header:**
+
 - Project name + address
 - Developer logo
 - KPIs row: Price range, €/m², Median yield, Seismic class
 
 **Description:**
+
 - Rich text description from Development.description
 - Whitespace-preserved
 
 **Unit Finder:**
+
 - Filterable table with all units
 - Columns: Label, Rooms, Area, Price, €/m², Floor, Stage, Yield, Actions
 - Sticky header
@@ -300,20 +329,24 @@ model DevLead {
 - Contact button per row
 
 **Amenities:**
+
 - Grid layout (3 columns)
 - Checkmark icons
 - From Development.amenities array
 
 **Location:**
+
 - Map placeholder (lat/lng display)
 - Ready for Google Maps/Mapbox integration
 
 **FAQ:**
+
 - Delivery date info
 - Green mortgage eligibility
 - Parking availability
 
 **Sidebar:**
+
 - Lead form (branded with developer color)
 - Fields: name, contact (email/phone), message
 - Submit to `/api/dev/lead`
@@ -321,6 +354,7 @@ model DevLead {
 - Download brochure button
 
 **Analytics:**
+
 - Tracks project view on load
 - Records unit filter changes
 - Logs unit row clicks
@@ -334,6 +368,7 @@ model DevLead {
 **Technology:** @vercel/og (edge runtime)
 
 **Design:**
+
 - 1200×630 social card
 - Gradient background (purple/blue)
 - Cover photo overlay (30% opacity)
@@ -344,6 +379,7 @@ model DevLead {
 - Footer with CTA + brand
 
 **Usage:**
+
 ```tsx
 <meta property="og:image" content="/api/og/development?slug=..." />
 ```
@@ -352,26 +388,28 @@ model DevLead {
 
 **Events Tracked:**
 
-| Event | Trigger | Data |
-|-------|---------|------|
-| `dev_catalog_view` | Catalog page load | filters |
-| `dev_catalog_filter` | Filter applied | filters |
-| `dev_card_click` | Organic card click | developmentId |
-| `dev_sponsored_click` | Sponsored card click | developmentId |
-| `dev_sponsored_impression` | Sponsored card view | developmentId |
-| `dev_project_view` | Project page load | developmentId |
-| `dev_unit_filter` | Unit table filter | developmentId, filters |
-| `dev_unit_row_click` | Contact button click | developmentId, unitId |
-| `dev_lead_submit` | Lead form success | developmentId, unitId |
-| `dev_lead_blocked` | Lead form error | developmentId, unitId |
-| `dev_brochure_download` | Brochure button | developmentId |
+| Event                      | Trigger              | Data                   |
+| -------------------------- | -------------------- | ---------------------- |
+| `dev_catalog_view`         | Catalog page load    | filters                |
+| `dev_catalog_filter`       | Filter applied       | filters                |
+| `dev_card_click`           | Organic card click   | developmentId          |
+| `dev_sponsored_click`      | Sponsored card click | developmentId          |
+| `dev_sponsored_impression` | Sponsored card view  | developmentId          |
+| `dev_project_view`         | Project page load    | developmentId          |
+| `dev_unit_filter`          | Unit table filter    | developmentId, filters |
+| `dev_unit_row_click`       | Contact button click | developmentId, unitId  |
+| `dev_lead_submit`          | Lead form success    | developmentId, unitId  |
+| `dev_lead_blocked`         | Lead form error      | developmentId, unitId  |
+| `dev_brochure_download`    | Brochure button      | developmentId          |
 
 **Storage:**
+
 - Uses existing BuyerEvent table
 - JSON meta field stores event details
 - Indexed by kind, developmentId, timestamp
 
 **Analytics Dashboard:**
+
 ```typescript
 const analytics = await getDevelopmentAnalytics(developmentId);
 // Returns: { views, leads, unitClicks, brochureDownloads }
@@ -388,6 +426,7 @@ const analytics = await getDevelopmentAnalytics(developmentId);
 **Description:** "Găsește proiecte noi în București cu filtre avansate: zonă, camere, preț, livrare. Vezi unit mix, €/m², yield și risc seismic pentru fiecare proiect."
 
 **Features:**
+
 - Server-rendered HTML for indexing
 - Pagination with rel="next/prev"
 - Structured URLs with filter params
@@ -399,11 +438,13 @@ const analytics = await getDevelopmentAnalytics(developmentId);
 **Description:** "{ProjectName} – {TotalUnits} unități, preț de la {MinPrice} €, livrare {Year}."
 
 **OpenGraph:**
+
 - Dynamic OG image via /api/og/development
 - Project cover photo
 - Price and delivery info
 
 **JSON-LD:**
+
 - Organization (Developer)
 - Residence/Product per Unit
 - Price and availability data
@@ -413,15 +454,18 @@ const analytics = await getDevelopmentAnalytics(developmentId);
 ## 🔐 Security
 
 ### API Authentication
+
 - Developer.apiToken (unique, required)
 - Token validation on all protected endpoints
 - Optional: verify developer owns development
 
 ### CORS
+
 - Lead API open for form posts
 - Bulk API restricted to authenticated developers
 
 ### Input Validation
+
 - Required field checks
 - Price/area range validation
 - Stage enum validation
@@ -445,11 +489,14 @@ const analytics = await getDevelopmentAnalytics(developmentId);
 ## 🚀 Deployment Notes
 
 ### Environment Variables
+
 No new environment variables required. Uses existing:
+
 - `DATABASE_URL` - Postgres connection
 - `NEXTAUTH_SECRET` - For session signing (if needed)
 
 ### Database Migration
+
 ```bash
 npx prisma migrate deploy
 ```
@@ -457,6 +504,7 @@ npx prisma migrate deploy
 Migration: `20251025143234_add_developments`
 
 **Changes:**
+
 - Create `Developer` table
 - Create `Development` table
 - Create `Unit` table
@@ -464,11 +512,13 @@ Migration: `20251025143234_add_developments`
 - Add indexes for performance
 
 ### Build Process
+
 - All pages server-rendered (no static generation)
 - OG images generated on-demand (edge runtime)
 - Enrichment runs asynchronously (doesn't block requests)
 
 ### Performance Considerations
+
 - Unit table indexed on (developmentId), (typology, priceEur)
 - Catalog queries use pagination (limit 12)
 - Enrichment batched with concurrency limit (5)
@@ -481,6 +531,7 @@ Migration: `20251025143234_add_developments`
 ### 1. Developer Onboarding
 
 **Step 1:** Create Developer record
+
 ```typescript
 const developer = await prisma.developer.create({
   data: {
@@ -490,14 +541,15 @@ const developer = await prisma.developer.create({
     brand: {
       color: "#1e40af",
       tone: "professional",
-      webhookUrl: "https://premiumdev.ro/api/leads"
+      webhookUrl: "https://premiumdev.ro/api/leads",
     },
-    apiToken: "pd_..." // Generate secure token
-  }
+    apiToken: "pd_...", // Generate secure token
+  },
 });
 ```
 
 **Step 2:** Create Development
+
 ```typescript
 const development = await prisma.development.create({
   data: {
@@ -512,15 +564,10 @@ const development = await prisma.development.create({
     description: "Complex rezidențial premium...",
     photos: [
       "https://cdn.premiumdev.ro/projects/pipera/01.jpg",
-      "https://cdn.premiumdev.ro/projects/pipera/02.jpg"
+      "https://cdn.premiumdev.ro/projects/pipera/02.jpg",
     ],
-    amenities: [
-      "Parcare subterană",
-      "Sală fitness",
-      "Loc de joacă",
-      "Spații verzi"
-    ]
-  }
+    amenities: ["Parcare subterană", "Sală fitness", "Loc de joacă", "Spații verzi"],
+  },
 });
 ```
 
@@ -533,6 +580,7 @@ curl -X POST "https://ir.ro/api/dev/units/bulk?devId=xxx&token=xxx" \
 ```
 
 **units.csv:**
+
 ```csv
 label,typology,areaM2,priceEur,floor,rooms,stage,orientation,parkingAvail,photos
 A101,2,65.5,89000,1,2,in_sales,S,true,https://...
@@ -541,6 +589,7 @@ A201,3,82.0,115000,2,3,in_sales,SV,true,https://...
 ```
 
 **Response:**
+
 ```json
 {
   "ok": true,
@@ -579,6 +628,7 @@ curl -X POST "https://ir.ro/api/dev/units/bulk" \
 ### 4. Lead Capture
 
 **Form submission:**
+
 ```html
 <form action="/api/dev/lead" method="POST">
   <input type="hidden" name="developmentId" value="yyy" />
@@ -591,21 +641,22 @@ curl -X POST "https://ir.ro/api/dev/units/bulk" \
 ```
 
 **JavaScript:**
+
 ```javascript
-const response = await fetch('/api/dev/lead', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+const response = await fetch("/api/dev/lead", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    developmentId: 'yyy',
-    unitId: 'zzz',
-    name: 'Ionescu Andrei',
-    contact: 'andrei@example.com',
-    message: 'Sunt interesat de apartamentul A101',
+    developmentId: "yyy",
+    unitId: "zzz",
+    name: "Ionescu Andrei",
+    contact: "andrei@example.com",
+    message: "Sunt interesat de apartamentul A101",
     utm: {
-      source: 'facebook',
-      campaign: 'q4-promo'
-    }
-  })
+      source: "facebook",
+      campaign: "q4-promo",
+    },
+  }),
 });
 
 const { ok, leadId } = await response.json();
@@ -616,12 +667,14 @@ const { ok, leadId } = await response.json();
 ## 🧪 Testing Checklist
 
 ### ✅ Database
+
 - [x] Migration runs without errors
 - [x] All models created with indexes
 - [x] Foreign keys enforce referential integrity
 - [x] Json fields store arrays/objects correctly
 
 ### ✅ API Endpoints
+
 - [x] `/api/dev/units/bulk` accepts CSV
 - [x] `/api/dev/units/bulk` accepts JSON
 - [x] Token authentication works
@@ -630,6 +683,7 @@ const { ok, leadId } = await response.json();
 - [x] CRM webhook forwarding works
 
 ### ✅ Enrichment
+
 - [x] `computeUnitMetrics()` calculates all fields
 - [x] Rent estimation uses existing ML engine
 - [x] TTS estimation uses existing ML engine
@@ -637,6 +691,7 @@ const { ok, leadId } = await response.json();
 - [x] Batch enrichment runs with concurrency
 
 ### ✅ Pages
+
 - [x] `/developments` renders catalog
 - [x] Filters work and update URL
 - [x] Pagination works
@@ -647,6 +702,7 @@ const { ok, leadId } = await response.json();
 - [x] Analytics track all events
 
 ### ✅ SEO
+
 - [x] Metadata generates correctly
 - [x] OG images generate on-demand
 - [x] Pages are server-rendered
@@ -657,27 +713,33 @@ const { ok, leadId } = await response.json();
 ## 📚 Files Created (14 total)
 
 ### Database
+
 1. `prisma/migrations/20251025143234_add_developments/migration.sql` - Schema migration
 
 ### Types
+
 2. `src/types/development.ts` - DTOs, filters, event types
 
 ### Core Logic
+
 3. `src/lib/dev/enrich.ts` - Enrichment pipeline
 4. `src/lib/dev/load.ts` - Data loading helpers
 5. `src/lib/dev/analytics.ts` - Event tracking
 6. `src/lib/ml/seismic.ts` - Seismic risk estimator
 
 ### API Routes
+
 7. `src/app/api/dev/units/bulk/route.ts` - Bulk units endpoint
 8. `src/app/api/dev/lead/route.ts` - Lead receiver endpoint
 9. `src/app/api/og/development/route.tsx` - OG image generator
 
 ### Pages
+
 10. `src/app/developments/page.tsx` - Catalog page
 11. `src/app/developments/[slug]/page.tsx` - Project detail page
 
 ### Config
+
 12. `package.json` - Added @vercel/og dependency
 13. `pnpm-lock.yaml` - Lockfile updated
 14. `prisma/schema.prisma` - Added 4 models
@@ -687,6 +749,7 @@ const { ok, leadId } = await response.json();
 ## 🎨 Design System
 
 ### Colors
+
 - Primary: Developer brand color (customizable)
 - Accent: Purple/blue gradient (#667eea → #764ba2)
 - Status badges:
@@ -695,11 +758,13 @@ const { ok, leadId } = await response.json();
   - Sold: Gray
 
 ### Typography
+
 - Headings: Bold, large (3xl/2xl/xl)
 - Body: Regular, readable (sm/base)
 - Prices: Bold, prominent
 
 ### Components Used
+
 - Card (shadcn/ui)
 - Badge (shadcn/ui)
 - Button (shadcn/ui)
@@ -708,6 +773,7 @@ const { ok, leadId } = await response.json();
 - Textarea (shadcn/ui)
 
 ### Layout
+
 - Container: max-width with horizontal padding
 - Grid: Responsive (1/2/3 columns)
 - Sticky sidebar on desktop
@@ -718,6 +784,7 @@ const { ok, leadId } = await response.json();
 ## 🔮 Future Enhancements (v2)
 
 ### Developer Dashboard (`/dev`)
+
 - List all developments
 - Edit project details
 - View analytics dashboard
@@ -725,6 +792,7 @@ const { ok, leadId } = await response.json();
 - Manage units inline
 
 ### Advanced Filtering
+
 - Metro distance slider
 - Seismic class multiselect
 - Yield threshold
@@ -733,28 +801,33 @@ const { ok, leadId } = await response.json();
 - Parking required toggle
 
 ### Unit Comparison
+
 - Compare up to 4 units side-by-side
 - Visual diff highlighting
 - Save comparisons to account
 
 ### Virtual Tours
+
 - 360° photo integration
 - Floor plan viewer
 - Interactive building model
 
 ### Mortgage Calculator
+
 - Integrated on project page
 - Green mortgage rates
 - TVA 5% eligibility checker
 - Monthly payment estimator
 
 ### CRM Enhancements
+
 - Two-way sync with popular CRMs
 - Lead scoring
 - Auto-responder emails
 - SMS notifications
 
 ### Alerts
+
 - Price drop notifications
 - New unit availability
 - Stage change (reserved → available)
@@ -765,6 +838,7 @@ const { ok, leadId } = await response.json();
 ## 📈 Success Metrics
 
 ### KPIs to Track
+
 - Catalog page views
 - Filter usage patterns
 - Project page views per listing
@@ -777,6 +851,7 @@ const { ok, leadId } = await response.json();
 ### Analytics Queries
 
 **Most popular filters:**
+
 ```sql
 SELECT meta->>'filters' as filters, COUNT(*)
 FROM "BuyerEvent"
@@ -787,8 +862,9 @@ LIMIT 10;
 ```
 
 **Lead conversion by development:**
+
 ```sql
-SELECT 
+SELECT
   meta->>'developmentId' as dev,
   COUNT(*) as leads,
   COUNT(DISTINCT DATE(ts)) as active_days
@@ -799,13 +875,14 @@ ORDER BY leads DESC;
 ```
 
 **Unit click-through rate:**
+
 ```sql
-SELECT 
+SELECT
   d.name,
   COUNT(CASE WHEN be.kind = 'dev_project_view' THEN 1 END) as views,
   COUNT(CASE WHEN be.kind = 'dev_unit_row_click' THEN 1 END) as clicks,
   ROUND(
-    COUNT(CASE WHEN be.kind = 'dev_unit_row_click' THEN 1 END)::numeric / 
+    COUNT(CASE WHEN be.kind = 'dev_unit_row_click' THEN 1 END)::numeric /
     NULLIF(COUNT(CASE WHEN be.kind = 'dev_project_view' THEN 1 END), 0) * 100,
     2
   ) as ctr_percent
@@ -825,6 +902,7 @@ ORDER BY ctr_percent DESC;
 **Status:** ✅ **Deployed and Production-Ready**
 
 All acceptance criteria met. System is fully functional with:
+
 - ✅ Premium catalog and project pages
 - ✅ Auto-enrichment pipeline
 - ✅ Developer APIs with authentication
@@ -834,6 +912,7 @@ All acceptance criteria met. System is fully functional with:
 - ✅ Social cards
 
 **Next Steps:**
+
 - Monitor analytics for usage patterns
 - Onboard first developers
 - Gather feedback for v2 features

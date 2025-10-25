@@ -35,13 +35,14 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
     setToasts((prev) => [...prev, newToast]);
 
     // Auto-dismiss based on variant defaults
-    const duration = toast.duration !== undefined 
-      ? toast.duration 
-      : toast.variant === "success" 
-        ? 2200 
-        : toast.variant === "info" 
-          ? 0 // sticky
-          : 4000;
+    const duration =
+      toast.duration !== undefined
+        ? toast.duration
+        : toast.variant === "success"
+          ? 2200
+          : toast.variant === "info"
+            ? 0 // sticky
+            : 4000;
 
     if (duration > 0) {
       setTimeout(() => {
@@ -101,7 +102,7 @@ function ToastContainer() {
         <ToastItem key={toast.id} toast={toast} />
       ))}
     </div>,
-    document.body
+    document.body,
   );
 }
 
@@ -158,14 +159,12 @@ function ToastItem({ toast }: { toast: Toast }) {
         "transition-all duration-200",
         isExiting
           ? "opacity-0 translate-x-4"
-          : "opacity-100 translate-x-0 animate-in slide-in-from-right-5"
+          : "opacity-100 translate-x-0 animate-in slide-in-from-right-5",
       )}
     >
       <Icon className={cn("w-5 h-5 flex-shrink-0 mt-0.5", style.text)} />
-      
-      <p className="flex-1 text-sm text-[rgb(var(--text))] leading-relaxed">
-        {toast.message}
-      </p>
+
+      <p className="flex-1 text-sm text-[rgb(var(--text))] leading-relaxed">{toast.message}</p>
 
       <button
         type="button"
@@ -176,7 +175,7 @@ function ToastItem({ toast }: { toast: Toast }) {
           "hover:text-[rgb(var(--text))]",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--primary))]",
           "rounded-[var(--r-sm)]",
-          "transition-colors duration-[var(--duration-fast)]"
+          "transition-colors duration-[var(--duration-fast)]",
         )}
         aria-label="Închide notificarea"
       >

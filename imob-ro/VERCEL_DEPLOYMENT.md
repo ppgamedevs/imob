@@ -7,6 +7,7 @@ The backend stability improvements are **code-level enhancements** that work aut
 ## 1. Verify Deployment Status
 
 **Check if latest commit is deployed:**
+
 ```bash
 # Latest commits pushed:
 # 60061e1 - Fix TypeScript compilation errors
@@ -14,6 +15,7 @@ The backend stability improvements are **code-level enhancements** that work aut
 ```
 
 **Go to Vercel Dashboard:**
+
 - Visit: https://vercel.com/[your-team]/[project-name]
 - Check "Deployments" tab
 - Verify commit `60061e1` or `1f295ff` is deployed
@@ -22,6 +24,7 @@ The backend stability improvements are **code-level enhancements** that work aut
 ## 2. Cron Jobs Configuration
 
 **Fixed vercel.json paths** to match actual API routes:
+
 ```json
 {
   "crons": [
@@ -39,18 +42,21 @@ The backend stability improvements are **code-level enhancements** that work aut
 ```
 
 **To verify cron jobs on Vercel:**
+
 1. Go to Vercel Dashboard → Your Project
 2. Click "Settings" → "Cron Jobs"
 3. You should see 9 cron jobs listed
 4. **Note**: Cron jobs require **Pro tier** or higher on Vercel
 
 **If on Hobby tier:**
+
 - Cron jobs won't appear/work
 - Consider upgrading or use external cron service (GitHub Actions, etc.)
 
 ## 3. Database Migrations
 
 **Verify migration is applied:**
+
 ```bash
 # Check Neon.tech dashboard
 # Migration: 20251023175518_add_content_hash_and_indices
@@ -58,14 +64,16 @@ The backend stability improvements are **code-level enhancements** that work aut
 ```
 
 **Applied changes:**
+
 - `contentHash` field on Analysis table
 - 3 new indices: `Analysis.createdAt`, `Analysis.contentHash`, `ExtractedListing.analysisId`
 
 **Test in production:**
+
 ```sql
 -- Connect to Neon.tech console
-SELECT column_name 
-FROM information_schema.columns 
+SELECT column_name
+FROM information_schema.columns
 WHERE table_name = 'Analysis' AND column_name = 'contentHash';
 -- Should return: contentHash
 ```
@@ -75,6 +83,7 @@ WHERE table_name = 'Analysis' AND column_name = 'contentHash';
 ### **A. Test Idempotency (Content Deduplication)**
 
 **Using browser extension:**
+
 ```javascript
 // Submit same listing twice to /api/analyze/client-push
 // First request: { analysisId: "cm...", cached: false }
@@ -82,12 +91,14 @@ WHERE table_name = 'Analysis' AND column_name = 'contentHash';
 ```
 
 **Expected behavior:**
+
 - First submission creates new analysis
 - Second submission returns cached analysis ID (no reprocessing)
 
 ### **B. Test Rate Limiting**
 
 **Using curl/Postman:**
+
 ```bash
 # Send 31 requests in 1 minute to /api/analyze/client-push
 for i in {1..31}; do
@@ -110,6 +121,7 @@ wait
 ### **C. Test Public API Endpoints**
 
 **Test area KPIs:**
+
 ```bash
 curl -X GET "https://your-domain.vercel.app/api/public/area/bucuresti-sector-1/kpis" \
   -H "x-api-key: YOUR_API_KEY"
@@ -129,6 +141,7 @@ curl -X GET "https://your-domain.vercel.app/api/public/area/bucuresti-sector-1/k
 ```
 
 **Test price estimation:**
+
 ```bash
 curl -X GET "https://your-domain.vercel.app/api/public/estimate?areaSlug=bucuresti-sector-1&areaM2=65&rooms=2" \
   -H "x-api-key: YOUR_API_KEY"
@@ -146,21 +159,19 @@ curl -X GET "https://your-domain.vercel.app/api/public/estimate?areaSlug=bucures
 ## 5. Widget Testing
 
 **Test AVM widget:**
+
 ```html
 <!-- Create test.html -->
 <!DOCTYPE html>
 <html>
-<body>
-  <iframe 
-    src="https://your-domain.vercel.app/widgets/avm.html" 
-    width="400" 
-    height="600"
-  ></iframe>
-</body>
+  <body>
+    <iframe src="https://your-domain.vercel.app/widgets/avm.html" width="400" height="600"></iframe>
+  </body>
 </html>
 ```
 
 **Open in browser and verify:**
+
 - Widget loads
 - Form is functional
 - Price estimation works
@@ -171,23 +182,26 @@ curl -X GET "https://your-domain.vercel.app/api/public/estimate?areaSlug=bucures
 ### **Database Checks**
 
 **Verify indices are active:**
+
 ```sql
-SELECT indexname, indexdef 
-FROM pg_indexes 
+SELECT indexname, indexdef
+FROM pg_indexes
 WHERE tablename = 'Analysis';
 -- Should show: Analysis_createdAt_idx, Analysis_contentHash_idx
 ```
 
 **Check content hash generation:**
+
 ```sql
-SELECT id, sourceUrl, contentHash, status 
-FROM "Analysis" 
-ORDER BY "createdAt" DESC 
+SELECT id, sourceUrl, contentHash, status
+FROM "Analysis"
+ORDER BY "createdAt" DESC
 LIMIT 10;
 -- contentHash should be populated (64-char hex string)
 ```
 
 **Check dedup effectiveness:**
+
 ```sql
 SELECT contentHash, COUNT(*) as duplicates
 FROM "Analysis"
@@ -200,6 +214,7 @@ HAVING COUNT(*) > 1;
 ### **API Usage Tracking**
 
 **Check API key usage:**
+
 ```sql
 SELECT ak.name, COUNT(au.id) as requests, MAX(au."createdAt") as last_used
 FROM "ApiKey" ak
@@ -208,6 +223,7 @@ GROUP BY ak.id, ak.name;
 ```
 
 **Check widget embeds:**
+
 ```sql
 SELECT widgetType, domain, COUNT(*) as loads
 FROM "EmbedUsage"
@@ -220,26 +236,34 @@ LIMIT 20;
 ## 7. Common Issues & Solutions
 
 ### **Issue: Cron jobs not appearing in Vercel**
-**Solution:** 
+
+**Solution:**
+
 - Verify you're on Pro tier or higher
 - Check vercel.json is in project root
 - Redeploy project after adding vercel.json
 - Visit Settings → Cron Jobs to enable
 
 ### **Issue: Rate limiting not working**
+
 **Solution:**
+
 - Check deployment includes new files
 - Verify `src/lib/rate-limiter-enhanced.ts` is deployed
 - Test with unique IP (Vercel may cache)
 
 ### **Issue: contentHash is null**
+
 **Solution:**
+
 - Run migration manually: `npx prisma migrate deploy`
 - Check Neon.tech for migration status
 - Verify Prisma Client is regenerated
 
 ### **Issue: Public API returns 401**
+
 **Solution:**
+
 - Generate API key in `/admin/api-keys`
 - Add to widget HTML or request headers
 - Check key is active and not expired
@@ -247,11 +271,13 @@ LIMIT 20;
 ## 8. Performance Metrics to Track
 
 **In Vercel Analytics:**
+
 - API response times (should improve with indices)
 - 429 rate limit responses
 - Error rates
 
 **In Database:**
+
 - Query performance (EXPLAIN ANALYZE on common queries)
 - Dedup hit rate (cached vs new analyses)
 - Index usage statistics
@@ -292,6 +318,7 @@ git push origin main
 ---
 
 **The stability features are working if:**
+
 1. ✅ Build succeeds without errors
 2. ✅ Database has contentHash field and indices
 3. ✅ Rate limiting returns 429 with proper headers

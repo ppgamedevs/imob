@@ -35,11 +35,13 @@ src/
 All design values are defined as CSS custom properties in `src/styles/tokens.css`:
 
 ### Brand
+
 - **Hue**: 252° (deep indigo)
 - **Saturation**: 85%
 - **Lightness**: 55%
 
 ### Color Palette (Dark Mode Default)
+
 - `--color-bg`: #0b0c10 (background)
 - `--color-surface`: #0f1116 (cards, panels)
 - `--color-muted`: #1a1e27 (secondary backgrounds)
@@ -49,31 +51,37 @@ All design values are defined as CSS custom properties in `src/styles/tokens.css
 - Semantic: `--color-success`, `--color-warning`, `--color-danger`, `--color-info`
 
 ### Ad-Specific Tokens
+
 - `--ad-bg`: #0c0f16 (ad background)
 - `--ad-border`: #2a3246 (ad border)
 - `--ad-label`: #93c5fd (readable label color)
 
 ### Elevation (Soft, Modern)
+
 - `--elev-0`: Minimal border (subtle)
 - `--elev-1`: Small shadow (cards, dropdowns)
 - `--elev-2`: Large shadow (modals, popovers)
 
 ### Radius
+
 - `--radius-sm`: 10px
 - `--radius-md`: 16px
 - `--radius-lg`: 24px
 - `--radius-xl`: 28px
 
 ### Spacing (4px base)
+
 - `--space-1` through `--space-8` (4px increments)
 - Density mode reduces by ~20% via body class
 
 ### Typography
+
 - **Fonts**: Inter (sans), SF Mono (mono)
 - **Sizes**: xs (12px) → 3xl (28px)
 - **Line heights**: tight (1.2), normal (1.5)
 
 ### Motion
+
 - **Easing**: emph (emphasized), in-out (smooth)
 - **Duration**: fast (120ms), med (220ms), slow (400ms)
 - **Reduced Motion**: Respects `prefers-reduced-motion`
@@ -83,14 +91,17 @@ All design values are defined as CSS custom properties in `src/styles/tokens.css
 ## 🧩 Core Components
 
 ### Surface (`src/components/ui/Surface.tsx`)
+
 Base container primitive with elevation levels.
 
 **Props:**
+
 - `elevation?: 0 | 1 | 2` - Shadow depth (default: 0)
 - `rounded?: "sm" | "md" | "lg" | "xl"` - Border radius (default: "xl")
 - `asChild?: boolean` - Polymorphic rendering via Radix Slot
 
 **Usage:**
+
 ```tsx
 <Surface elevation={1} rounded="lg" className="p-6">
   Card content
@@ -98,21 +109,26 @@ Base container primitive with elevation levels.
 ```
 
 ### SponsoredLabel (`src/components/ui/SponsoredLabel.tsx`)
+
 Badge for marking sponsored/ad content with WCAG-compliant styling.
 
 **Props:**
+
 - `variant?: "sponsored" | "ad"` - Label text
 - `size?: "sm" | "md"` - Size variant
 
 **Usage:**
+
 ```tsx
 <SponsoredLabel variant="sponsored" size="md" />
 ```
 
 ### AdSlot (`src/components/ads/AdSlot.tsx`)
+
 Static advertising slot with **zero CLS** (reserved height).
 
 **Props:**
+
 - `id: string` - Unique identifier for tracking
 - `position: "top" | "inline" | "sidebar" | "footer"`
 - `size: "banner" | "rectangle" | "skyscraper"`
@@ -120,17 +136,20 @@ Static advertising slot with **zero CLS** (reserved height).
 - `clickUrl?: string` - Click-through URL
 
 **Features:**
+
 - Reserved dimensions (no layout shift)
 - Viewability tracking (50% visible for 1s)
 - Click tracking via `/api/track/ad-click`
 - Responsive sizing (mobile/desktop)
 
 **Sizes:**
+
 - **Banner**: 728×90 (desktop) / 320×100 (mobile)
 - **Rectangle**: 300×250 (all devices)
 - **Skyscraper**: 300×600 (desktop) / 300×250 (mobile fallback)
 
 **Usage:**
+
 ```tsx
 <AdSlot
   id="discover-top"
@@ -142,13 +161,16 @@ Static advertising slot with **zero CLS** (reserved height).
 ```
 
 ### SponsoredCard (`src/components/ads/SponsoredCard.tsx`)
+
 Listing card variant for promoted content.
 
 **Props:**
+
 - `listing` - Property data (id, title, price, area, rooms, image, url)
 - `position?: number` - Position in feed for tracking
 
 **Features:**
+
 - Same layout as `ListingCard` for consistency
 - Clear "Sponsorizat" badge
 - Subtle border tint (`border-adBorder`)
@@ -156,6 +178,7 @@ Listing card variant for promoted content.
 - Never masquerades as organic
 
 **Usage:**
+
 ```tsx
 <SponsoredCard
   listing={{
@@ -165,7 +188,7 @@ Listing card variant for promoted content.
     area: 85,
     rooms: 3,
     neighborhood: "Pipera",
-    url: "https://listing.com"
+    url: "https://listing.com",
   }}
   position={3}
 />
@@ -176,22 +199,27 @@ Listing card variant for promoted content.
 ## 📐 Layout Components
 
 ### Container (`src/components/layout/Container.tsx`)
+
 Responsive content wrapper with max-width constraints.
 
 **Props:**
+
 - `width?: "default" | "wide" | "full"` - Max width (1200px / 1440px / 100%)
 - `noPadding?: boolean` - Disable horizontal padding
 
 ### AppHeader (`src/components/layout/AppHeader.tsx`)
+
 Main navigation with search, auth, and mobile menu.
 
 **Features:**
+
 - Sticky positioning with backdrop blur
 - Prominent search input
 - Desktop nav + mobile sheet
 - Auth state display
 
 ### AppFooter (`src/components/layout/AppFooter.tsx`)
+
 Site footer with multi-column links and legal.
 
 ---
@@ -199,14 +227,17 @@ Site footer with multi-column links and legal.
 ## 🎯 Ad Placement Framework
 
 ### Discover Page
+
 - **Mobile**: 1 sponsored card per 6 organic results (max 2/page)
 - **Desktop**: Top banner under filters + 1 inline card after row 2
 
 ### Report Page
+
 - **Right column**: Rectangle (300×250)
 - **Below gallery**: Inline banner
 
 ### Area Pages
+
 - **Top**: Banner
 - **Inline**: Rectangle in "best listings" list
 
@@ -215,22 +246,27 @@ Site footer with multi-column links and legal.
 ## ♿ Accessibility
 
 ### Color Contrast
+
 - Minimum 4.5:1 for text on surfaces
 - Ad labels use `--ad-label` (#93c5fd) for readability
 
 ### Focus States
+
 - Visible 2px primary outline with 2px offset
 - Applied via `.focus-ring` utility class
 - `:focus-visible` on all interactive elements
 
 ### Touch Targets
+
 - Minimum 44×44px for all buttons/links
 
 ### Motion
+
 - Respects `prefers-reduced-motion`
 - Disables large transitions, keeps essential affordances
 
 ### ARIA Labels
+
 - Ad slots: `aria-label="Spațiu publicitar"` + `role="complementary"`
 - Sponsored cards: `aria-label="Anunț sponsorizat: {title}"`
 - Sponsored labels: `aria-label="Conținut {sponsorizat|publicitate}"` + `role="note"`
@@ -261,6 +297,7 @@ transitionDuration: {
 ```
 
 **Usage:**
+
 ```tsx
 <div className="bg-surface text-text shadow-elev1 rounded-xl transition-shadow duration-med" />
 ```
@@ -270,22 +307,27 @@ transitionDuration: {
 ## 📊 Analytics & Tracking
 
 ### Events
+
 All tracking uses first-party endpoints (GDPR-friendly):
 
 **Ad Impressions:**
+
 - Endpoint: `POST /api/track/ad-impression`
 - Payload: `{ slotId, position, size, timestamp }`
 - Trigger: 50% visible for 1s (IntersectionObserver)
 
 **Ad Clicks:**
+
 - Endpoint: `POST /api/track/ad-click`
 - Payload: `{ slotId, position, size, clickUrl, timestamp }`
 
 **Sponsored Impressions:**
+
 - Endpoint: `POST /api/track/sponsored-impression`
 - Payload: `{ groupId, sponsorId, position, timestamp }`
 
 **Sponsored Clicks:**
+
 - Endpoint: `POST /api/track/sponsored-click`
 - Payload: `{ groupId, sponsorId, position, url, timestamp }`
 
@@ -294,6 +336,7 @@ All tracking uses first-party endpoints (GDPR-friendly):
 ## 🎨 Visual QA
 
 Visit **`/ui`** route for comprehensive showcase:
+
 - All color tokens
 - Surface elevations
 - Sponsored labels
@@ -324,18 +367,21 @@ Visit **`/ui`** route for comprehensive showcase:
 ## 🚀 Next Steps
 
 **Step 2 - Discover/Search (Feed + Map)**
+
 - 2-pane layout (list + map)
 - Filter toolbar with chips
 - Inject SponsoredCard at intervals
 - Add top AdSlot banner
 
 **Step 3 - Report Detail Page**
+
 - Media gallery + KPI cards
 - Sticky CTA row
 - Right column AdSlot (rectangle)
 - Inline AdSlot below gallery
 
 **Step 4 - Area Pages**
+
 - Hero with KPIs
 - "Best listings" list
 - Top banner AdSlot

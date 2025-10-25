@@ -36,15 +36,13 @@ export default function GlossaryPage() {
           <ArrowLeftIcon className="w-4 h-4" />
           {ro.common.back}
         </Link>
-        
+
         <div className="flex items-start gap-4">
           <div className="p-3 bg-[rgb(var(--surface))] rounded-[var(--r-md)] border border-[rgb(var(--border))]">
             <BookOpenIcon className="w-6 h-6 text-[rgb(var(--primary))]" />
           </div>
           <div>
-            <h1 className="text-4xl font-bold text-[rgb(var(--text))] mb-2">
-              Glosar de termeni
-            </h1>
+            <h1 className="text-4xl font-bold text-[rgb(var(--text))] mb-2">Glosar de termeni</h1>
             <p className="text-lg text-[rgb(var(--muted))]">
               Explicații clare pentru termenii tehnici pe care îi folosim în rapoarte
             </p>
@@ -85,20 +83,18 @@ export default function GlossaryPage() {
               rounded="md"
               className="p-6 scroll-mt-8"
             >
-              <h2 className="text-2xl font-bold text-[rgb(var(--text))] mb-3">
-                {term.title}
-              </h2>
+              <h2 className="text-2xl font-bold text-[rgb(var(--text))] mb-3">{term.title}</h2>
               <p className="text-base text-[rgb(var(--text))] leading-relaxed mb-4">
                 {definition.full}
               </p>
-              
+
               {/* Context-specific examples */}
               {term.id === "avm" && (
                 <div className="mt-4 p-4 bg-[rgb(var(--surface-2))] rounded-[var(--r-sm)] border-l-4 border-[rgb(var(--primary))]">
                   <p className="text-sm text-[rgb(var(--muted))]">
-                    <strong className="text-[rgb(var(--text))]">Exemplu:</strong> Pentru un apartament
-                    2 camere în Militari, analizăm 50+ tranzacții din ultimele 6 luni și 200+ anunțuri
-                    active pentru a calcula intervalul 78.000–84.000 EUR.
+                    <strong className="text-[rgb(var(--text))]">Exemplu:</strong> Pentru un
+                    apartament 2 camere în Militari, analizăm 50+ tranzacții din ultimele 6 luni și
+                    200+ anunțuri active pentru a calcula intervalul 78.000–84.000 EUR.
                   </p>
                 </div>
               )}
@@ -106,9 +102,9 @@ export default function GlossaryPage() {
               {term.id === "tts" && (
                 <div className="mt-4 p-4 bg-[rgb(var(--surface-2))] rounded-[var(--r-sm)] border-l-4 border-[rgb(var(--success))]">
                   <p className="text-sm text-[rgb(var(--muted))]">
-                    <strong className="text-[rgb(var(--text))]">Exemplu:</strong> Un apartament listat
-                    la 90.000 EUR (preț median 85.000 EUR în zonă) are TTS estimat 90–120 zile. Dacă scazi
-                    la 85.000 EUR, TTS scade la 30–45 zile.
+                    <strong className="text-[rgb(var(--text))]">Exemplu:</strong> Un apartament
+                    listat la 90.000 EUR (preț median 85.000 EUR în zonă) are TTS estimat 90–120
+                    zile. Dacă scazi la 85.000 EUR, TTS scade la 30–45 zile.
                   </p>
                 </div>
               )}
@@ -117,8 +113,8 @@ export default function GlossaryPage() {
                 <div className="mt-4 p-4 bg-[rgb(var(--surface-2))] rounded-[var(--r-sm)] border-l-4 border-[rgb(var(--warn))]">
                   <p className="text-sm text-[rgb(var(--muted))]">
                     <strong className="text-[rgb(var(--text))]">Calculul:</strong> Preț 100.000 EUR,
-                    chirie 600 EUR/lună → Chirie anuală brută 7.200 EUR → După costuri (85%): 6.120 EUR
-                    → Randament net: 6.12%
+                    chirie 600 EUR/lună → Chirie anuală brută 7.200 EUR → După costuri (85%): 6.120
+                    EUR → Randament net: 6.12%
                   </p>
                 </div>
               )}
@@ -127,19 +123,20 @@ export default function GlossaryPage() {
                 <div className="mt-4 space-y-2">
                   <div className="p-4 bg-[rgb(var(--danger))]/10 rounded-[var(--r-sm)] border-l-4 border-[rgb(var(--danger))]">
                     <p className="text-sm text-[rgb(var(--text))]">
-                      <strong>RS1 (Risc ridicat):</strong> Clădire cu vulnerabilitate mare. Consolidare
-                      urgentă recomandată.
+                      <strong>RS1 (Risc ridicat):</strong> Clădire cu vulnerabilitate mare.
+                      Consolidare urgentă recomandată.
                     </p>
                   </div>
                   <div className="p-4 bg-[rgb(var(--warn))]/10 rounded-[var(--r-sm)] border-l-4 border-[rgb(var(--warn))]">
                     <p className="text-sm text-[rgb(var(--text))]">
-                      <strong>RS2 (Risc mediu):</strong> Clădire cu vulnerabilitate medie. Verificare
-                      periodică necesară.
+                      <strong>RS2 (Risc mediu):</strong> Clădire cu vulnerabilitate medie.
+                      Verificare periodică necesară.
                     </p>
                   </div>
                   <div className="p-4 bg-[rgb(var(--success))]/10 rounded-[var(--r-sm)] border-l-4 border-[rgb(var(--success))]">
                     <p className="text-sm text-[rgb(var(--text))]">
-                      <strong>RS3 (Risc scăzut):</strong> Structură rezistentă, risc redus la cutremure.
+                      <strong>RS3 (Risc scăzut):</strong> Structură rezistentă, risc redus la
+                      cutremure.
                     </p>
                   </div>
                 </div>
@@ -148,12 +145,12 @@ export default function GlossaryPage() {
               {term.id === "confidence" && (
                 <div className="mt-4 p-4 bg-[rgb(var(--surface-2))] rounded-[var(--r-sm)]">
                   <p className="text-sm text-[rgb(var(--muted))]">
-                    <strong className="text-[rgb(var(--text))]">Încredere mare:</strong> 50+ proprietăți
-                    comparabile → interval ±5% <br />
-                    <strong className="text-[rgb(var(--text))]">Încredere medie:</strong> 20–50 proprietăți
-                    → interval ±10% <br />
-                    <strong className="text-[rgb(var(--text))]">Încredere scăzută:</strong> {`<`}20 proprietăți
-                    → interval ±15%
+                    <strong className="text-[rgb(var(--text))]">Încredere mare:</strong> 50+
+                    proprietăți comparabile → interval ±5% <br />
+                    <strong className="text-[rgb(var(--text))]">Încredere medie:</strong> 20–50
+                    proprietăți → interval ±10% <br />
+                    <strong className="text-[rgb(var(--text))]">Încredere scăzută:</strong> {`<`}20
+                    proprietăți → interval ±15%
                   </p>
                 </div>
               )}

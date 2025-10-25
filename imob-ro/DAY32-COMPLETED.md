@@ -7,6 +7,7 @@ Successfully implemented automatic crawler system with sitemap discovery, domain
 ## 🎯 Features Delivered
 
 ### 1. **Queue Management** (`src/lib/crawl/queue.ts`)
+
 - ✅ `enqueueUrl()` - Add URLs with deduplication by canonical URL
 - ✅ `takeBatch()` - Domain diversity batching (avoids hammering single site)
 - ✅ `markDone()` - Update job status with content hash
@@ -14,28 +15,33 @@ Successfully implemented automatic crawler system with sitemap discovery, domain
 - ✅ `hasContentChanged()` - Skip re-processing unchanged pages
 
 ### 2. **Fetcher** (`src/lib/crawl/fetcher.ts`) ✅ Already existed
+
 - ETag/Last-Modified conditional requests
 - Per-host rate limiting (configurable via `ListingSource.minDelayMs`)
 - Automatic retry with backoff
 - `UrlCache` and `FetchLog` tracking
 
 ### 3. **Domain Adapters**
+
 Created 3 production-ready adapters:
 
 #### **`imobiliare.ts`** ✅
+
 - Sitemap parsing for `imobiliare.ro/sitemap.xml`
 - HTML extraction with selectors for:
   - Title, price (EUR/RON), area (m²), rooms, floor, year
   - Address, geocoding (lat/lng), photos (max 20)
 - JSON-LD schema support
 
-#### **`storia.ts`** ✅  
+#### **`storia.ts`** ✅
+
 - Sitemap parsing for `storia.ro/sitemap.xml` (formerly OLX Imobiliare)
 - Modern React-based scraping (data-cy attributes)
 - Srcset parsing for high-res photos
 - Supports `/oferta/` URL pattern
 
 #### **`olx.ts`** ✅
+
 - Sitemap parsing for `olx.ro/sitemap.xml`
 - Key-value parameter extraction
 - Handles `/d/oferta/` URL pattern
@@ -44,18 +50,22 @@ Created 3 production-ready adapters:
 ### 4. **Cron Endpoints**
 
 #### **`/api/cron/crawl-seed`** ✅ Enhanced
+
 ```typescript
-GET /api/cron/crawl-seed
+GET / api / cron / crawl - seed;
 ```
+
 - Reads real sitemaps from imobiliare.ro, storia.ro, olx.ro
 - Filters for București/Bucharest/Ilfov
 - Enqueues max 2,000 URLs per day
 - Returns `{ sources, discovered, enqueued, limit }`
 
 #### **`/api/cron/crawl-tick`** ✅ Rewritten
+
 ```typescript
-GET /api/cron/crawl-tick
+GET / api / cron / crawl - tick;
 ```
+
 - Takes batch of 25 jobs with domain diversity
 - Fetches HTML with `fetchWithCache()` (respects 304 Not Modified)
 - Calculates content hash and skips if unchanged
@@ -66,6 +76,7 @@ GET /api/cron/crawl-tick
 - Returns `{ batch, processed, skipped, errors }`
 
 ### 5. **Schema Changes**
+
 ```prisma
 model CrawlJob {
   ...
@@ -82,15 +93,18 @@ model DedupGroup {
 ```
 
 **Migrations:**
+
 - `20251023112057_add_watch_item_group_relation`
 - `20251023120352_add_crawljob_content_hash`
 
 ### 6. **Dependencies Added**
+
 ```json
 {
-  "fast-xml-parser": "^5.3.0"  // Sitemap XML parsing
+  "fast-xml-parser": "^5.3.0" // Sitemap XML parsing
 }
 ```
+
 (`cheerio` already installed for HTML scraping)
 
 ## 📊 Architecture Flow
@@ -168,90 +182,102 @@ model DedupGroup {
 ## 🧪 QA Testing Plan
 
 ### 1. **Seed Sitemaps** (Manual test in dev)
+
 ```bash
 curl http://localhost:3000/api/cron/crawl-seed
 ```
+
 **Expected:**
+
 ```json
 {
   "ok": true,
   "sources": 3,
-  "discovered": 5000,  // Total URLs from all sitemaps
-  "enqueued": 2000,    // Max limit applied
+  "discovered": 5000, // Total URLs from all sitemaps
+  "enqueued": 2000, // Max limit applied
   "limit": 2000
 }
 ```
 
 **Verify in DB:**
+
 ```sql
 SELECT COUNT(*) FROM "CrawlJob" WHERE status = 'queued';
 -- Should be ~2000
 
-SELECT domain, COUNT(*) as jobs 
-FROM "CrawlJob" 
-WHERE status = 'queued' 
+SELECT domain, COUNT(*) as jobs
+FROM "CrawlJob"
+WHERE status = 'queued'
 GROUP BY domain;
 -- Should show mix of imobiliare.ro, storia.ro, olx.ro
 ```
 
 ### 2. **Run Crawler** (Manual test in dev)
+
 ```bash
 curl http://localhost:3000/api/cron/crawl-tick
 ```
+
 **Expected:**
+
 ```json
 {
   "ok": true,
   "batch": 25,
-  "processed": 20,  // Successfully extracted
-  "skipped": 3,     // 304 Not Modified or no changes
-  "errors": 2       // Extraction failures
+  "processed": 20, // Successfully extracted
+  "skipped": 3, // 304 Not Modified or no changes
+  "errors": 2 // Extraction failures
 }
 ```
 
 **Verify in DB:**
+
 ```sql
-SELECT COUNT(*) FROM "Analysis" 
+SELECT COUNT(*) FROM "Analysis"
 WHERE "createdAt" > NOW() - INTERVAL '5 minutes';
 -- Should show newly created analyses
 
-SELECT COUNT(*) FROM "ExtractedListing" 
+SELECT COUNT(*) FROM "ExtractedListing"
 WHERE "sourceMeta"::text LIKE '%crawlerV2%';
 -- Should show entries with crawlerV2 flag
 
-SELECT status, COUNT(*) 
-FROM "CrawlJob" 
+SELECT status, COUNT(*)
+FROM "CrawlJob"
 GROUP BY status;
 -- Should show: queued (decreasing), done (increasing), error (some)
 ```
 
 ### 3. **Content Change Detection**
+
 Run `crawl-tick` twice on same URLs:
+
 ```bash
 curl http://localhost:3000/api/cron/crawl-tick
 # Wait 30 seconds
 curl http://localhost:3000/api/cron/crawl-tick
 ```
+
 **Expected:** Second run shows high `skipped` count (content unchanged)
 
 ### 4. **End-to-End Verification**
+
 1. Check Reports page: `/report/[new-analysis-id]`
    - Should show AVM prices, TTS estimate, risk score
    - Photos from crawler
    - Map with geocoded location
-   
 2. Check Discover: `/discover?city=București`
    - Should include new listings
    - Filters work correctly
-   
 3. Check Dedup: `/admin/groups`
    - New listings grouped by address/features
    - Canonical URLs selected
 
 ### 5. **Rate Limiting Test**
+
 Monitor FetchLog for per-host timing:
+
 ```sql
-SELECT domain, 
+SELECT domain,
        AVG(EXTRACT(EPOCH FROM ("fetchedAt" - LAG("fetchedAt") OVER (PARTITION BY domain ORDER BY "fetchedAt")))) as avg_delay_sec
 FROM "FetchLog"
 WHERE "fetchedAt" > NOW() - INTERVAL '1 hour'
@@ -260,6 +286,7 @@ GROUP BY domain;
 ```
 
 ### 6. **Error Handling**
+
 - **Invalid URLs**: Should skip and log error
 - **Timeout**: Should retry with backoff (handled by `fetchWithCache`)
 - **Empty extraction**: Should mark as error and not create Analysis
@@ -268,29 +295,32 @@ GROUP BY domain;
 ## 📈 Production Deployment
 
 ### Vercel Cron Setup
+
 ```json
 // vercel.json
 {
   "crons": [
     {
       "path": "/api/cron/crawl-seed",
-      "schedule": "0 2 * * *"  // Daily at 2 AM UTC
+      "schedule": "0 2 * * *" // Daily at 2 AM UTC
     },
     {
       "path": "/api/cron/crawl-tick",
-      "schedule": "*/5 * * * *"  // Every 5 minutes
+      "schedule": "*/5 * * * *" // Every 5 minutes
     }
   ]
 }
 ```
 
 ### Environment Variables
+
 ```env
 DATABASE_URL="postgresql://..."
 CRON_SECRET="..."  # Optional: Add auth to cron endpoints
 ```
 
 ### Monitoring Checklist
+
 - [ ] Queue size stays < 5k (seed rate = processing rate)
 - [ ] Error rate < 5%
 - [ ] `FetchLog` shows polite crawling (2+ sec intervals)
@@ -321,6 +351,7 @@ CRON_SECRET="..."  # Optional: Add auth to cron endpoints
 **Status:** Production-ready auto-crawler with sitemap discovery, content change detection, and safe rate limiting.
 
 **Files Changed:** 11 files (+978 lines, -139 lines)
+
 - 3 new adapters (imobiliare, storia, olx)
 - 1 new queue utility
 - 2 enhanced cron endpoints

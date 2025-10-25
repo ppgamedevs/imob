@@ -15,10 +15,10 @@ export interface BrandProviderProps {
 
 /**
  * BrandProvider - Applies brand theming via CSS custom properties
- * 
+ *
  * Sets [data-brand] and [data-logo-url] attributes on document.body
  * to enable brand color and logo overrides via CSS variables.
- * 
+ *
  * Usage:
  * <BrandProvider brand={{ color: "#ff5733", logoUrl: "/logo.png" }}>
  *   {children}

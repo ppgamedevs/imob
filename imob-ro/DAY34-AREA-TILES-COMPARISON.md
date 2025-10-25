@@ -14,6 +14,7 @@
 #### **Existing Files:**
 
 **src/lib/geo.ts** (42 lines)
+
 ```typescript
 export function haversineM(lat1, lon1, lat2, lon2) {
   // Haversine distance formula (meters)
@@ -33,6 +34,7 @@ export function gridSlug(lat, lng, p = 2) {
 ```
 
 **src/lib/data/metro.ts** (23 lines)
+
 ```typescript
 export const METRO_STATIONS: Station[] = [
   { name: "Piața Unirii", lat: 44.4274, lng: 26.1032 },
@@ -42,11 +44,13 @@ export const METRO_STATIONS: Station[] = [
 ```
 
 **Current Usage:**
+
 - `nearestStationM()` → Used in normalization pipeline for `distMetroM` feature
 - `gridSlug()` → Fallback for areaSlug when geocoding fails
 - Precision: 2 decimals = ~1.1 km × 1.1 km grid cells (too coarse)
 
 #### **Issues:**
+
 ❌ No precomputed tiles (runtime calculation is slow)  
 ❌ Grid too coarse for detailed analysis (1.1 km vs required 250m)  
 ❌ No POI data (schools, supermarkets, parks)  
@@ -58,36 +62,40 @@ export const METRO_STATIONS: Station[] = [
 ### 2. Current Heatmap Implementation
 
 **src/components/ui/area-heatmap.tsx** (42 lines)
+
 ```tsx
 export default function AreaHeatmap({ score, history, slug }) {
   // Input: demandScore (0-1+)
   // Output: Colored square (gray/emerald/amber/rose)
-  
+
   const normalized = Math.max(0, score);
   let bg = "bg-gray-300";
   if (normalized === 0) bg = "bg-gray-300";
   else if (normalized < 0.5) bg = "bg-emerald-400";
   else if (normalized < 1) bg = "bg-amber-400";
   else bg = "bg-rose-400";
-  
+
   // Displays: colored box + score percentage + optional sparkline
 }
 ```
 
 **Usage in Report Page:**
+
 ```tsx
 // src/app/report/[id]/page.tsx (line 556)
-{areaDailyForDisplay ? (
-  <AreaHeatmap score={areaDailyForDisplay.demandScore ?? 0} />
-) : null}
+{
+  areaDailyForDisplay ? <AreaHeatmap score={areaDailyForDisplay.demandScore ?? 0} /> : null;
+}
 ```
 
 **Current Data Source:**
+
 - `AreaDaily.demandScore` (computed by `scripts/area-aggregator.ts`)
 - Rolling 30-day user activity (view_report, save_report, share_pdf events)
 - **Not** based on actual POIs, grid tiles, or precomputed intelligence
 
 #### **Issues:**
+
 ❌ Heatmap data is user activity proxy, not actual area intelligence  
 ❌ No geographic granularity (one score per areaSlug, not per 250m cell)  
 ❌ No POI influence (schools, supermarkets, metro proximity)  
@@ -124,22 +132,23 @@ src/
 #### **Tile Data Structure:**
 
 **Tile JSON Schema** (`14-8956-5632.json`):
+
 ```json
 {
   "zoom": 14,
   "x": 8956,
   "y": 5632,
   "bounds": {
-    "north": 44.4500,
+    "north": 44.45,
     "south": 44.4475,
-    "west": 26.1000,
+    "west": 26.1,
     "east": 26.1025
   },
   "center": {
     "lat": 44.44875,
     "lng": 26.10125
   },
-  "cellSize": 250,                   // meters
+  "cellSize": 250, // meters
   "cells": [
     {
       "lat": 44.4488,
@@ -152,17 +161,18 @@ src/
         "restaurants": 5,
         "parks": 1
       },
-      "medianEurM2": 2100,            // Weighted from AreaDaily
+      "medianEurM2": 2100, // Weighted from AreaDaily
       "supply": 15,
       "demandScore": 0.65,
-      "intelligenceScore": 0.72        // Composite score
-    },
+      "intelligenceScore": 0.72 // Composite score
+    }
     // ... more cells in this tile
   ]
 }
 ```
 
 **Metadata JSON** (`metadata.json`):
+
 ```json
 {
   "generated": "2025-10-23T14:30:00Z",
@@ -173,7 +183,7 @@ src/
   "bounds": {
     "north": 44.55,
     "south": 44.35,
-    "west": 26.00,
+    "west": 26.0,
     "east": 26.25
   },
   "tileCount": 156,
@@ -209,7 +219,7 @@ import { METRO_STATIONS } from "@/lib/data/metro";
 const BUCHAREST_BOUNDS = {
   north: 44.55,
   south: 44.35,
-  west: 26.00,
+  west: 26.0,
   east: 26.25,
 };
 
@@ -228,10 +238,8 @@ type POI = {
  * Load POI data from GeoJSON
  */
 async function loadPOIs(): Promise<POI[]> {
-  const geojson = JSON.parse(
-    await fs.readFile("public/data/pois.geojson", "utf-8")
-  );
-  
+  const geojson = JSON.parse(await fs.readFile("public/data/pois.geojson", "utf-8"));
+
   return geojson.features.map((f: any) => ({
     type: f.properties.type,
     lat: f.geometry.coordinates[1],
@@ -245,17 +253,19 @@ async function loadPOIs(): Promise<POI[]> {
  */
 function generateGridCells() {
   const cells: Array<{ lat: number; lng: number }> = [];
-  
+
   // Calculate step size in degrees (approximate)
   const latStep = CELL_SIZE_M / 111320; // 1 degree lat ≈ 111.32 km
-  const lngStep = CELL_SIZE_M / (111320 * Math.cos((BUCHAREST_BOUNDS.north + BUCHAREST_BOUNDS.south) / 2 * Math.PI / 180));
-  
+  const lngStep =
+    CELL_SIZE_M /
+    (111320 * Math.cos((((BUCHAREST_BOUNDS.north + BUCHAREST_BOUNDS.south) / 2) * Math.PI) / 180));
+
   for (let lat = BUCHAREST_BOUNDS.south; lat < BUCHAREST_BOUNDS.north; lat += latStep) {
     for (let lng = BUCHAREST_BOUNDS.west; lng < BUCHAREST_BOUNDS.east; lng += lngStep) {
       cells.push({ lat: lat + latStep / 2, lng: lng + lngStep / 2 });
     }
   }
-  
+
   return cells;
 }
 
@@ -269,14 +279,14 @@ function countPOIsNearCell(cellLat: number, cellLng: number, pois: POI[], radius
     restaurants: 0,
     parks: 0,
   };
-  
+
   for (const poi of pois) {
     const dist = haversineM(cellLat, cellLng, poi.lat, poi.lng);
     if (dist <= radius) {
       counts[poi.type + "s"] = (counts[poi.type + "s"] || 0) + 1;
     }
   }
-  
+
   return counts;
 }
 
@@ -296,23 +306,23 @@ async function getWeightedMedianEurM2(cellLat: number, cellLng: number) {
     },
     take: 100,
   });
-  
+
   // Weight by inverse distance
   let totalWeight = 0;
   let weightedSum = 0;
-  
+
   for (const ad of areas) {
     // Need area centroid - approximate from areaSlug or Area table
     // For v1, use simple fallback
     const medianEurM2 = ad.medianEurM2;
     if (!medianEurM2) continue;
-    
+
     // Assume uniform weight for v1 (improve later with actual area centroids)
     const weight = 1;
     weightedSum += medianEurM2 * weight;
     totalWeight += weight;
   }
-  
+
   return totalWeight > 0 ? weightedSum / totalWeight : null;
 }
 
@@ -325,12 +335,12 @@ function calculateIntelligenceScore(cell: {
   medianEurM2: number | null;
 }) {
   let score = 0;
-  
+
   // Metro proximity (0-30 points): closer = better
   if (cell.distMetroM <= 300) score += 30;
   else if (cell.distMetroM <= 600) score += 20;
   else if (cell.distMetroM <= 1000) score += 10;
-  
+
   // POI density (0-40 points)
   const poiTotal =
     cell.poiCounts.schools * 3 + // Schools weighted higher
@@ -338,14 +348,14 @@ function calculateIntelligenceScore(cell: {
     cell.poiCounts.restaurants +
     cell.poiCounts.parks * 2;
   score += Math.min(40, poiTotal);
-  
+
   // Price indicator (0-30 points): moderate prices = better livability
   if (cell.medianEurM2) {
     if (cell.medianEurM2 >= 1500 && cell.medianEurM2 <= 2500) score += 30;
     else if (cell.medianEurM2 >= 1200 && cell.medianEurM2 <= 3000) score += 20;
     else score += 10;
   }
-  
+
   return score / 100; // Normalize to 0-1
 }
 
@@ -356,7 +366,10 @@ function latLngToTile(lat: number, lng: number, zoom: number) {
   const n = Math.pow(2, zoom);
   const x = Math.floor(((lng + 180) / 360) * n);
   const y = Math.floor(
-    ((1 - Math.log(Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180)) / Math.PI) / 2) * n
+    ((1 -
+      Math.log(Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180)) / Math.PI) /
+      2) *
+      n,
   );
   return { x, y };
 }
@@ -366,31 +379,32 @@ function latLngToTile(lat: number, lng: number, zoom: number) {
  */
 export async function buildAreaTiles() {
   console.log("[Tiles] Starting tile generation...");
-  
+
   // 1. Load POIs
   const pois = await loadPOIs();
   console.log(`[Tiles] Loaded ${pois.length} POIs`);
-  
+
   // 2. Generate grid cells
   const cells = generateGridCells();
   console.log(`[Tiles] Generated ${cells.length} grid cells`);
-  
+
   // 3. Process each cell
   const processedCells = [];
   for (const cell of cells) {
-    const nearestMetro = METRO_STATIONS
-      .map(s => ({ name: s.name, dist: haversineM(cell.lat, cell.lng, s.lat, s.lng) }))
-      .sort((a, b) => a.dist - b.dist)[0];
-    
+    const nearestMetro = METRO_STATIONS.map((s) => ({
+      name: s.name,
+      dist: haversineM(cell.lat, cell.lng, s.lat, s.lng),
+    })).sort((a, b) => a.dist - b.dist)[0];
+
     const poiCounts = countPOIsNearCell(cell.lat, cell.lng, pois);
     const medianEurM2 = await getWeightedMedianEurM2(cell.lat, cell.lng);
-    
+
     const intelligenceScore = calculateIntelligenceScore({
       distMetroM: nearestMetro.dist,
       poiCounts,
       medianEurM2,
     });
-    
+
     processedCells.push({
       lat: cell.lat,
       lng: cell.lng,
@@ -401,13 +415,13 @@ export async function buildAreaTiles() {
       intelligenceScore: parseFloat(intelligenceScore.toFixed(3)),
     });
   }
-  
+
   // 4. Group cells into tiles
   const tiles: Record<string, any> = {};
   for (const cell of processedCells) {
     const tile = latLngToTile(cell.lat, cell.lng, ZOOM);
     const key = `${ZOOM}-${tile.x}-${tile.y}`;
-    
+
     if (!tiles[key]) {
       tiles[key] = {
         zoom: ZOOM,
@@ -416,39 +430,40 @@ export async function buildAreaTiles() {
         cells: [],
       };
     }
-    
+
     tiles[key].cells.push(cell);
   }
-  
+
   // 5. Write tiles to disk
   const outDir = path.join(process.cwd(), "public/data/tiles/bucharest-z14");
   await fs.mkdir(outDir, { recursive: true });
-  
+
   let tileCount = 0;
   for (const [key, tile] of Object.entries(tiles)) {
-    await fs.writeFile(
-      path.join(outDir, `${key}.json`),
-      JSON.stringify(tile, null, 2)
-    );
+    await fs.writeFile(path.join(outDir, `${key}.json`), JSON.stringify(tile, null, 2));
     tileCount++;
   }
-  
+
   // 6. Write metadata
   await fs.writeFile(
     path.join(process.cwd(), "public/data/tiles/metadata.json"),
-    JSON.stringify({
-      generated: new Date().toISOString(),
-      version: "1.0",
-      city: "Bucharest",
-      zoom: ZOOM,
-      cellSize: CELL_SIZE_M,
-      bounds: BUCHAREST_BOUNDS,
-      tileCount,
-      cellCount: processedCells.length,
-      pois: pois.length,
-    }, null, 2)
+    JSON.stringify(
+      {
+        generated: new Date().toISOString(),
+        version: "1.0",
+        city: "Bucharest",
+        zoom: ZOOM,
+        cellSize: CELL_SIZE_M,
+        bounds: BUCHAREST_BOUNDS,
+        tileCount,
+        cellCount: processedCells.length,
+        pois: pois.length,
+      },
+      null,
+      2,
+    ),
   );
-  
+
   console.log(`[Tiles] Generated ${tileCount} tiles with ${processedCells.length} cells`);
 }
 
@@ -503,7 +518,10 @@ function latLngToTile(lat: number, lng: number, zoom: number) {
   const n = Math.pow(2, zoom);
   const x = Math.floor(((lng + 180) / 360) * n);
   const y = Math.floor(
-    ((1 - Math.log(Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180)) / Math.PI) / 2) * n
+    ((1 -
+      Math.log(Math.tan((lat * Math.PI) / 180) + 1 / Math.cos((lat * Math.PI) / 180)) / Math.PI) /
+      2) *
+      n,
   );
   return { x, y };
 }
@@ -513,17 +531,13 @@ function latLngToTile(lat: number, lng: number, zoom: number) {
  */
 export async function loadTile(x: number, y: number, zoom = 14): Promise<Tile | null> {
   const key = `${zoom}-${x}-${y}`;
-  
+
   if (TILE_CACHE.has(key)) {
     return TILE_CACHE.get(key)!;
   }
-  
-  const tilePath = path.join(
-    process.cwd(),
-    "public/data/tiles/bucharest-z14",
-    `${key}.json`
-  );
-  
+
+  const tilePath = path.join(process.cwd(), "public/data/tiles/bucharest-z14", `${key}.json`);
+
   try {
     const data = await fs.readFile(tilePath, "utf-8");
     const tile = JSON.parse(data);
@@ -540,13 +554,13 @@ export async function loadTile(x: number, y: number, zoom = 14): Promise<Tile | 
 export async function getNearestCell(lat: number, lng: number): Promise<TileCell | null> {
   const tile = latLngToTile(lat, lng, 14);
   const tileData = await loadTile(tile.x, tile.y, 14);
-  
+
   if (!tileData || !tileData.cells.length) return null;
-  
+
   // Find nearest cell within tile
   let nearest = tileData.cells[0];
   let minDist = haversineDist(lat, lng, nearest.lat, nearest.lng);
-  
+
   for (const cell of tileData.cells) {
     const dist = haversineDist(lat, lng, cell.lat, cell.lng);
     if (dist < minDist) {
@@ -554,7 +568,7 @@ export async function getNearestCell(lat: number, lng: number): Promise<TileCell
       nearest = cell;
     }
   }
-  
+
   return nearest;
 }
 
@@ -576,11 +590,11 @@ export async function getHeatmapData(bounds: {
   east: number;
 }) {
   const tiles: TileCell[] = [];
-  
+
   // Calculate tile range
   const nw = latLngToTile(bounds.north, bounds.west, 14);
   const se = latLngToTile(bounds.south, bounds.east, 14);
-  
+
   // Load all tiles in range
   for (let x = nw.x; x <= se.x; x++) {
     for (let y = nw.y; y <= se.y; y++) {
@@ -590,7 +604,7 @@ export async function getHeatmapData(bounds: {
       }
     }
   }
-  
+
   return tiles;
 }
 
@@ -623,22 +637,25 @@ const lng = f?.lng;
 const tileData = lat && lng ? await getNearestCell(lat, lng) : null;
 
 // ... in render
-{tileData ? (
-  <div className="space-y-2">
-    <AreaHeatmap 
-      score={tileData.intelligenceScore} 
-      slug={f?.area_slug}
-    />
-    
-    <div className="text-sm space-y-1">
-      <div>Metro: {tileData.nearestMetro} ({tileData.distMetroM}m)</div>
-      <div>POIs: {tileData.poiCounts.schools} schools, {tileData.poiCounts.supermarkets} supermarkets</div>
-      <div>Area avg: €{tileData.medianEurM2}/m²</div>
+{
+  tileData ? (
+    <div className="space-y-2">
+      <AreaHeatmap score={tileData.intelligenceScore} slug={f?.area_slug} />
+
+      <div className="text-sm space-y-1">
+        <div>
+          Metro: {tileData.nearestMetro} ({tileData.distMetroM}m)
+        </div>
+        <div>
+          POIs: {tileData.poiCounts.schools} schools, {tileData.poiCounts.supermarkets} supermarkets
+        </div>
+        <div>Area avg: €{tileData.medianEurM2}/m²</div>
+      </div>
     </div>
-  </div>
-) : (
-  <AreaHeatmap score={areaDailyForDisplay?.demandScore ?? 0} />
-)}
+  ) : (
+    <AreaHeatmap score={areaDailyForDisplay?.demandScore ?? 0} />
+  );
+}
 ```
 
 #### **Discover Map with Heatmap Layer:**
@@ -649,18 +666,18 @@ import { getHeatmapData } from "@/lib/tiles/loader";
 
 export default async function DiscoverMap({ bounds }) {
   const heatmap = await getHeatmapData(bounds);
-  
+
   return (
     <div className="relative h-full">
       <CompsMap comps={[]} center={center} />
-      
+
       {/* Overlay heatmap cells */}
       <svg className="absolute inset-0 pointer-events-none">
         {heatmap.map((cell, i) => {
           const { x, y } = latLngToPixel(cell.lat, cell.lng);
           const opacity = cell.intelligenceScore;
           const color = getHeatmapColor(cell.intelligenceScore);
-          
+
           return (
             <rect
               key={i}
@@ -674,7 +691,7 @@ export default async function DiscoverMap({ bounds }) {
           );
         })}
       </svg>
-      
+
       {/* Legend */}
       <div className="absolute bottom-4 right-4 bg-white p-3 rounded shadow">
         <div className="text-xs font-medium mb-2">Area Intelligence</div>
@@ -698,16 +715,13 @@ import { buildAreaTiles } from "@/scripts/build-area-tiles";
 export async function GET() {
   try {
     await buildAreaTiles();
-    
+
     return Response.json({
       success: true,
       message: "Tiles rebuilt successfully",
     });
   } catch (error) {
-    return Response.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return Response.json({ error: error.message }, { status: 500 });
   }
 }
 ```
@@ -767,29 +781,31 @@ export async function GET() {
 
 ## Summary Comparison Table
 
-| Aspect | Current (v0) | Planned (Day 34) | Improvement |
-|--------|--------------|------------------|-------------|
-| **Grid Size** | 1.1 km (2 decimal precision) | 250m cells | 4.4× finer |
-| **Tile System** | None | Precomputed JSON tiles | ∞× faster |
-| **Data Source** | AreaDaily.demandScore | POIs + Metro + Price | Real intelligence |
-| **POI Support** | None | Schools, markets, parks, etc. | New capability |
-| **Heatmap Granularity** | 1 score per area | 1 score per 250m cell | ~100× finer |
-| **Map Overlay** | None | SVG grid layer with legend | Visual enhancement |
-| **Caching** | No | In-memory + disk tiles | Fast queries |
-| **Update Frequency** | Nightly (demand calc) | Weekly cron | Lower overhead |
-| **File Size** | N/A | ~5 MB for all tiles | Reasonable |
-| **Coverage** | All areas | Bucharest only (v1) | Focused launch |
+| Aspect                  | Current (v0)                 | Planned (Day 34)              | Improvement        |
+| ----------------------- | ---------------------------- | ----------------------------- | ------------------ |
+| **Grid Size**           | 1.1 km (2 decimal precision) | 250m cells                    | 4.4× finer         |
+| **Tile System**         | None                         | Precomputed JSON tiles        | ∞× faster          |
+| **Data Source**         | AreaDaily.demandScore        | POIs + Metro + Price          | Real intelligence  |
+| **POI Support**         | None                         | Schools, markets, parks, etc. | New capability     |
+| **Heatmap Granularity** | 1 score per area             | 1 score per 250m cell         | ~100× finer        |
+| **Map Overlay**         | None                         | SVG grid layer with legend    | Visual enhancement |
+| **Caching**             | No                           | In-memory + disk tiles        | Fast queries       |
+| **Update Frequency**    | Nightly (demand calc)        | Weekly cron                   | Lower overhead     |
+| **File Size**           | N/A                          | ~5 MB for all tiles           | Reasonable         |
+| **Coverage**            | All areas                    | Bucharest only (v1)           | Focused launch     |
 
 ---
 
 ## Implementation Checklist
 
 ### Phase 1: Data Preparation
+
 - [ ] Create `public/data/pois.geojson` with OSM sample (100+ POIs)
 - [ ] Extract Bucharest schools, supermarkets, parks from OSM
 - [ ] Validate METRO_STATIONS coverage (20 stations complete)
 
 ### Phase 2: Tile Generator
+
 - [ ] Create `src/scripts/build-area-tiles.ts`
 - [ ] Implement 250m grid generation over Bucharest bounds
 - [ ] Add POI counting within 500m radius
@@ -800,6 +816,7 @@ export async function GET() {
 - [ ] Generate `metadata.json` with tile index
 
 ### Phase 3: Tile Loader
+
 - [ ] Create `src/lib/tiles/loader.ts`
 - [ ] Implement tile caching (in-memory Map)
 - [ ] Add `latLngToTile()` coordinate conversion
@@ -809,6 +826,7 @@ export async function GET() {
 - [ ] Add `getIntelligenceScore()` convenience wrapper
 
 ### Phase 4: Report Page Integration
+
 - [ ] Update `src/app/report/[id]/page.tsx`
 - [ ] Replace `AreaHeatmap` data source with tile data
 - [ ] Show nearest metro + distance
@@ -817,6 +835,7 @@ export async function GET() {
 - [ ] Add fallback to current demandScore if tile not found
 
 ### Phase 5: Discover Map Enhancement
+
 - [ ] Create `src/app/discover/ui/DiscoverMap.tsx`
 - [ ] Load heatmap tiles for visible bounds
 - [ ] Render SVG overlay with colored cells
@@ -825,12 +844,14 @@ export async function GET() {
 - [ ] Optimize rendering (only visible tiles)
 
 ### Phase 6: Cron Job
+
 - [ ] Create `src/app/api/cron/tiles/rebuild/route.ts`
 - [ ] Add weekly schedule to Vercel cron config
 - [ ] Add logging and error handling
 - [ ] Add cache invalidation after rebuild
 
 ### Phase 7: QA & Visual Check
+
 - [ ] Run `tsx src/scripts/build-area-tiles.ts` locally
 - [ ] Verify tile count (~150 tiles expected)
 - [ ] Check cell count (~25,000 cells)
@@ -844,6 +865,7 @@ export async function GET() {
 ## Key Differences from Spec
 
 ### ✅ Aligned:
+
 - 250m grid cell size
 - Zoom 14 tiles
 - Distance to nearest metro (already have function)
@@ -856,6 +878,7 @@ export async function GET() {
 - Weekly rebuild cron
 
 ### ⚠️ Clarifications Needed:
+
 - **Quadkey vs x/y:** Spec mentions quadkey, but x/y is more standard for z14. Recommend x/y.
 - **POI radius:** Using 500m radius for counting (not specified in spec)
 - **Intelligence score formula:** Created weighted formula (metro 30%, POI 40%, price 30%)
@@ -863,6 +886,7 @@ export async function GET() {
 - **Area centroid lookup:** Need to add centroids to Area table or calculate from polygon
 
 ### 🔄 Enhancements Over Spec:
+
 - In-memory tile caching for performance
 - Metadata.json for tile index
 - Intelligence score composite (not just raw POI counts)
@@ -874,6 +898,7 @@ export async function GET() {
 ## File Creation Summary
 
 **New Files (7):**
+
 1. `src/scripts/build-area-tiles.ts` (~300 lines)
 2. `src/lib/tiles/loader.ts` (~150 lines)
 3. `src/lib/tiles/quadkey.ts` (~50 lines, optional)
@@ -883,10 +908,12 @@ export async function GET() {
 7. `public/data/tiles/metadata.json` (auto-generated)
 
 **Modified Files (2):**
+
 1. `src/app/report/[id]/page.tsx` (add tile integration)
 2. `src/components/ui/area-heatmap.tsx` (optional: enhance with POI display)
 
 **Generated Files (~156):**
+
 - `public/data/tiles/bucharest-z14/*.json` (one per tile)
 
 ---
@@ -894,21 +921,25 @@ export async function GET() {
 ## Estimated Impact
 
 **Performance:**
+
 - Current: ~100ms per area lookup (DB query)
 - After: ~5ms per tile lookup (JSON read + cache)
 - **20× faster** for heatmap queries
 
 **Data Quality:**
+
 - Current: User activity proxy (demandScore)
 - After: Real POI + metro + price intelligence
 - **Much more accurate** area scoring
 
 **User Experience:**
+
 - Report page: Shows actual walkability metrics (metro, schools, shops)
 - Discover map: Visual heatmap layer reveals best neighborhoods at glance
 - Faster page loads due to precomputed data
 
 **Storage:**
+
 - ~5 MB total for all tiles
 - ~32 KB per tile (average)
 - Negligible compared to photos/videos

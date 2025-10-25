@@ -61,11 +61,12 @@ export const ro = {
   report: {
     title: "Raport de evaluare",
     subtitle: "Analiză completă pentru {address}",
-    
+
     avm: {
       title: "Estimarea ta",
       range: "Interval estimat: {min}–{max}",
-      recommendation: "Recomandare: publică între {recMin}–{recMax} pentru timp de vânzare mai scurt",
+      recommendation:
+        "Recomandare: publică între {recMin}–{recMax} pentru timp de vânzare mai scurt",
       confidenceLow: "Date puține în zonă; interval mai larg decât de obicei",
       confidenceMedium: "Estimare bazată pe date moderate",
       confidenceHigh: "Estimare bazată pe date extinse din zonă",
@@ -111,7 +112,7 @@ export const ro = {
   discover: {
     title: "Descoperă proprietăți",
     filtersHint: "Filtre rapide. Apasă pentru a seta bugete și zone",
-    
+
     empty: {
       title: "Nu am găsit potriviri",
       subtitle: "Încearcă să mărești prețul maxim sau adaugă alte zone",
@@ -131,7 +132,7 @@ export const ro = {
   area: {
     title: "Statistici zonă",
     subtitle: "Date imobiliare în timp real pentru {name}",
-    
+
     empty: {
       title: "Încă adunăm date pentru zona asta",
       subtitle: "Îți vom arăta evoluția în curând",
@@ -152,7 +153,7 @@ export const ro = {
   owners: {
     title: "Estimarea ta",
     subtitle: "Preț de piață și recomandări pentru vânzare",
-    
+
     empty: {
       title: "Începe cu adresa sau un link de anunț",
       subtitle: "Estimarea durează ~60 secunde",
@@ -162,19 +163,19 @@ export const ro = {
     roi: {
       title: "Pregătește anunțul perfect",
       subtitle: "Îmbunătățiri care aduc mai mulți cumpărători",
-      
+
       photos: {
         title: "Foto profesionale",
         description: "250–400 lei → mai multe vizualizări, timp mai scurt la vânzare",
         toggle: "Aplic deja",
       },
-      
+
       paint: {
         title: "Zugrăvit alb",
         description: "1500–2500 lei → +1–3% la prețul perceput",
         toggle: "Aplic deja",
       },
-      
+
       description: {
         title: "Descriere clară",
         description: "≥220 caractere → mai puține întrebări repetitive",
@@ -193,7 +194,7 @@ export const ro = {
   developments: {
     title: "Proiecte noi",
     subtitle: "{count} proiecte disponibile în București",
-    
+
     empty: {
       title: "Nu am găsit proiecte",
       subtitle: "Încearcă să modifici filtrele sau zonele selectate",
@@ -264,18 +265,19 @@ export const ro = {
       deleted: "Șters cu succes",
       updated: "Actualizat cu succes",
     },
-    
+
     info: {
-      estimatesDisclaimer: "Estimările sunt orientative. Verifică documentele imobilului înainte de decizie",
+      estimatesDisclaimer:
+        "Estimările sunt orientative. Verifică documentele imobilului înainte de decizie",
       processing: "Procesăm datele tale. Durează ~60 secunde",
     },
-    
+
     warning: {
       seismicUncertain: "Date seismice incerte pentru clădirea aceasta",
       dataLimited: "Date limitate în zonă - estimare mai puțin precisă",
       rateLimit: "Ai trimis multe mesuri într-un timp scurt. Încearcă din nou în câteva minute",
     },
-    
+
     error: {
       generic: "A apărut o eroare. Te rugăm să încerci din nou",
       pdfFailed: "Nu am putut genera PDF-ul acum. Încearcă din nou",

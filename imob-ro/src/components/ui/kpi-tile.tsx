@@ -22,10 +22,10 @@ export interface KpiTileProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
 
 /**
  * KpiTile - Display key performance indicators
- * 
+ *
  * Consistent component for showing metrics with icon, label, value, and optional delta.
  * Used across area pages, development pages, and dashboards.
- * 
+ *
  * @example
  * <KpiTile
  *   icon={TrendingUp}
@@ -80,9 +80,7 @@ export function KpiTile({
         <div className="flex-1">
           {/* Label */}
           <div className="flex items-center gap-1.5 mb-1">
-            <p className="text-[var(--fs-sm)] text-[rgb(var(--muted))] font-medium">
-              {label}
-            </p>
+            <p className="text-[var(--fs-sm)] text-[rgb(var(--muted))] font-medium">{label}</p>
             {glossaryTerm && <GlossaryHint term={glossaryTerm} />}
           </div>
 

@@ -16,9 +16,11 @@ Implemented comprehensive lead capture and sharing functionality for the Report 
 ### 1. Lead Guards & Utilities
 
 #### `src/lib/lead/guards.ts` (~170 lines)
+
 **Purpose**: Anti-spam and validation utilities
 
 **Functions**:
+
 - ✅ `isHoneypot()` - Detect bot submissions via hidden field
 - ✅ `isTooFast()` - Reject submissions < 800ms (skeleton for session storage)
 - ✅ `sanitizeMessage()` - Strip URLs, excessive numbers, profanity
@@ -29,6 +31,7 @@ Implemented comprehensive lead capture and sharing functionality for the Report 
 - ✅ `isMobileDevice()` - Device detection
 
 **Security Features**:
+
 - Romanian phone normalization (+40...)
 - Basic profanity filter
 - URL stripping
@@ -38,14 +41,17 @@ Implemented comprehensive lead capture and sharing functionality for the Report 
 ---
 
 #### `src/lib/lead/send.ts` (~180 lines)
+
 **Purpose**: Email forwarding via Resend API
 
 **Functions**:
+
 - ✅ `sendOwnerEmail()` - Notify property owner/agent
 - ✅ `sendUserConfirmation()` - Send reference code to user
 - ✅ `generateEmailHTML()` - Responsive HTML email template
 
 **Email Template Features**:
+
 - Property context (title, price, area)
 - Lead info (name, contact)
 - Message body with pre-wrap
@@ -54,6 +60,7 @@ Implemented comprehensive lead capture and sharing functionality for the Report 
 - Footer with brand info
 
 **Environment Variables Required**:
+
 ```env
 RESEND_API_KEY=re_...
 EMAIL_FROM=leads@imob.ro
@@ -63,9 +70,11 @@ NEXT_PUBLIC_BASE_URL=https://imob.ro
 ---
 
 #### `src/lib/http/rate.ts` (~170 lines)
+
 **Purpose**: In-memory rate limiting with sliding window
 
 **Functions**:
+
 - ✅ `rateLimit()` - Enforce rate limit for key
 - ✅ `isRateLimited()` - Check without incrementing
 - ✅ `getRemainingRequests()` - Get quota status
@@ -74,6 +83,7 @@ NEXT_PUBLIC_BASE_URL=https://imob.ro
 - ✅ `getRateLimiterStats()` - Monitoring data
 
 **Configuration**:
+
 - Max 10,000 entries (LRU eviction)
 - Sliding window algorithm
 - Per-listing and per-contact limits
@@ -84,13 +94,16 @@ NEXT_PUBLIC_BASE_URL=https://imob.ro
 ### 2. Server Actions
 
 #### `src/app/report/[id]/lead.actions.ts` (~270 lines)
+
 **Purpose**: Lead form submission handler
 
 **Actions**:
+
 - ✅ `createLeadAction()` - Main form handler with full validation
 - ✅ `trackChannelClick()` - Analytics for tel/email/WhatsApp
 
 **Validation Flow**:
+
 1. Zod schema validation (name, contact, message, consent)
 2. Honeypot check
 3. Timing guard (< 800ms rejection)
@@ -102,16 +115,19 @@ NEXT_PUBLIC_BASE_URL=https://imob.ro
 7. Suspicious content detection
 
 **Database Operations**:
+
 - ❌ Lead storage (TODO: Add Prisma model)
 - ❌ LeadLog audit trail (TODO: Add Prisma model)
 - ✅ Console logging as fallback
 
 **Email Flow** (non-blocking):
+
 - Send notification to owner/agent
 - Send confirmation to user (if email)
 - Graceful failure handling
 
 **Response States**:
+
 ```typescript
 {
   ok: boolean;
@@ -128,9 +144,11 @@ NEXT_PUBLIC_BASE_URL=https://imob.ro
 ### 3. Contact Panel
 
 #### `src/app/report/[id]/ContactPanel.tsx` (~460 lines)
+
 **Purpose**: Lead capture UI with multi-channel options
 
 **Props Interface**:
+
 ```typescript
 {
   analysisId: string;
@@ -154,6 +172,7 @@ NEXT_PUBLIC_BASE_URL=https://imob.ro
 ```
 
 **UI Structure**:
+
 1. **Seller Identity Block** (optional)
    - Avatar/favicon
    - Name + verified badge
@@ -181,6 +200,7 @@ NEXT_PUBLIC_BASE_URL=https://imob.ro
    - "Fără spam" messaging
 
 **Form Features**:
+
 - `useActionState` hook for server action
 - Inline validation errors
 - Success message with reference code
@@ -190,6 +210,7 @@ NEXT_PUBLIC_BASE_URL=https://imob.ro
 - Preset message selection
 
 **Mobile Optimizations**:
+
 - Auto-expand form if no channels
 - Collapsible accordion
 - Touch-friendly buttons
@@ -199,9 +220,11 @@ NEXT_PUBLIC_BASE_URL=https://imob.ro
 ### 4. Share Strip
 
 #### `src/app/report/[id]/ShareStrip.tsx` (~160 lines)
+
 **Purpose**: Social sharing with UTM tracking
 
 **Props Interface**:
+
 ```typescript
 {
   title: string;
@@ -212,6 +235,7 @@ NEXT_PUBLIC_BASE_URL=https://imob.ro
 ```
 
 **Share Channels**:
+
 1. **Copy Link** - Clipboard API + toast
 2. **Native Share** - `navigator.share()` (mobile only)
 3. **WhatsApp** - `wa.me/?text=...`
@@ -219,16 +243,19 @@ NEXT_PUBLIC_BASE_URL=https://imob.ro
 5. **Email** - `mailto:` with subject/body
 
 **UTM Tracking**:
+
 - Adds `?utm_source={source}&utm_medium=social` to shared URLs
 - Preserves original path
 - Full URL with protocol
 
 **Analytics**:
+
 - Tracks `share_click` events
 - Google Analytics gtag integration
 - Console logging fallback
 
 **Toast Notifications**:
+
 - "Link copiat! ✓" on copy
 - 3-second auto-dismiss
 - Fixed bottom position
@@ -270,6 +297,7 @@ model LeadLog {
 ```
 
 **Migration Command**:
+
 ```bash
 # Add to prisma/schema.prisma, then:
 npx prisma migrate dev --name add_lead_tables
@@ -293,7 +321,7 @@ import { ShareStrip } from "./ShareStrip";
 // Desktop (right sidebar):
 <div className="hidden lg:flex flex-col gap-4 sticky top-4">
   <StickyActions {...} />
-  
+
   <ContactPanel
     analysisId={report.id}
     seller={{
@@ -331,6 +359,7 @@ import { ShareStrip } from "./ShareStrip";
 ### 2. Add Environment Variables
 
 Create `.env.local`:
+
 ```env
 # Resend API
 RESEND_API_KEY=re_...
@@ -381,15 +410,15 @@ await prisma.leadLog.create({
 ```typescript
 // In lead.actions.ts
 await rateLimitComposite([
-  { 
+  {
     key: `lead:listing:${analysisId}`,
-    max: 10,              // 10 submissions per listing
-    windowMs: 30 * 60 * 1000  // per 30 minutes
+    max: 10, // 10 submissions per listing
+    windowMs: 30 * 60 * 1000, // per 30 minutes
   },
-  { 
+  {
     key: `lead:contact:${contact}`,
-    max: 3,               // 3 submissions per contact
-    windowMs: 30 * 60 * 1000  // per 30 minutes
+    max: 3, // 3 submissions per contact
+    windowMs: 30 * 60 * 1000, // per 30 minutes
   },
 ]);
 ```
@@ -547,19 +576,19 @@ Track these events for monitoring:
 
 ```typescript
 // Lead funnel
-contact_view         // ContactPanel rendered
-channel_click        // Tel/WhatsApp/Email clicked
-lead_submit_ok       // Form submitted successfully
-lead_submit_blocked  // Honeypot/timing guard triggered
-lead_submit_rate_limited // Rate limit hit
+contact_view; // ContactPanel rendered
+channel_click; // Tel/WhatsApp/Email clicked
+lead_submit_ok; // Form submitted successfully
+lead_submit_blocked; // Honeypot/timing guard triggered
+lead_submit_rate_limited; // Rate limit hit
 
 // Share funnel
-share_click          // Share button clicked (with channel)
-share_copy           // Link copied
-share_native         // Native share used
-share_whatsapp       // WhatsApp share
-share_twitter        // Twitter share
-share_email          // Email share
+share_click; // Share button clicked (with channel)
+share_copy; // Link copied
+share_native; // Native share used
+share_whatsapp; // WhatsApp share
+share_twitter; // Twitter share
+share_email; // Email share
 ```
 
 ---
@@ -622,15 +651,15 @@ share_email          // Email share
 
 ## File Summary
 
-| File | Lines | Purpose | Status |
-|------|-------|---------|--------|
-| `lib/lead/guards.ts` | ~170 | Validation & anti-spam | ✅ Complete |
-| `lib/lead/send.ts` | ~180 | Email forwarding | ✅ Complete |
-| `lib/http/rate.ts` | ~170 | Rate limiting | ✅ Complete |
-| `app/report/[id]/lead.actions.ts` | ~270 | Server actions | ⚠️ Needs DB |
-| `app/report/[id]/ContactPanel.tsx` | ~460 | Lead form UI | ✅ Complete |
-| `app/report/[id]/ShareStrip.tsx` | ~160 | Share buttons | ✅ Complete |
-| **Total** | **~1,410 lines** | | **90% Complete** |
+| File                               | Lines            | Purpose                | Status           |
+| ---------------------------------- | ---------------- | ---------------------- | ---------------- |
+| `lib/lead/guards.ts`               | ~170             | Validation & anti-spam | ✅ Complete      |
+| `lib/lead/send.ts`                 | ~180             | Email forwarding       | ✅ Complete      |
+| `lib/http/rate.ts`                 | ~170             | Rate limiting          | ✅ Complete      |
+| `app/report/[id]/lead.actions.ts`  | ~270             | Server actions         | ⚠️ Needs DB      |
+| `app/report/[id]/ContactPanel.tsx` | ~460             | Lead form UI           | ✅ Complete      |
+| `app/report/[id]/ShareStrip.tsx`   | ~160             | Share buttons          | ✅ Complete      |
+| **Total**                          | **~1,410 lines** |                        | **90% Complete** |
 
 ---
 
@@ -645,18 +674,20 @@ share_email          // Email share
 ⚠️ **Email** - Resend integration (needs API key and Prisma models)  
 ✅ **Accessibility** - WCAG AA compliant (labels, errors, keyboard)  
 ✅ **Performance** - No CLS, non-blocking operations  
-❌ **Database** - Lead/LeadLog models not added to Prisma (TODO)  
+❌ **Database** - Lead/LeadLog models not added to Prisma (TODO)
 
 ---
 
 **Overall Step 4 Status**: 🟡 **90% Complete**
 
 **Blocking Items**:
+
 1. Add Lead/LeadLog Prisma models
 2. Configure Resend API key
 3. Update lead.actions.ts with Prisma operations
 
 **Ready to Use**:
+
 - ContactPanel renders and validates correctly
 - ShareStrip works with all channels
 - Anti-spam guards functional

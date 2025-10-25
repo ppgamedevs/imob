@@ -16,10 +16,10 @@ export interface SegmentedProps extends Omit<ComponentPropsWithoutRef<"div">, "o
 
 /**
  * Segmented - iOS-style segmented control
- * 
+ *
  * Used for mutually exclusive options in a compact space.
  * Perfect for view toggles, sorting options, or filter groups.
- * 
+ *
  * @example
  * <Segmented
  *   options={[
@@ -30,7 +30,14 @@ export interface SegmentedProps extends Omit<ComponentPropsWithoutRef<"div">, "o
  *   onChange={setView}
  * />
  */
-export function Segmented({ options, value, onChange, size = "md", className, ...props }: SegmentedProps) {
+export function Segmented({
+  options,
+  value,
+  onChange,
+  size = "md",
+  className,
+  ...props
+}: SegmentedProps) {
   const sizeClasses = {
     sm: "h-8 text-[var(--fs-xs)]",
     md: "h-10 text-[var(--fs-sm)]",

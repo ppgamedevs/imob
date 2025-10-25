@@ -23,9 +23,11 @@ The Report page v3 is the trust-building hero screen where users gain deep insig
 ## Components Created
 
 ### 1. Gallery.tsx (220 lines)
+
 **Location:** `src/app/report/[id]/Gallery.tsx`
 
 **Features:**
+
 - Swipeable carousel with state management
 - Thumbnail row with horizontal scroll
 - Keyboard navigation (ArrowLeft/Right/Escape)
@@ -38,6 +40,7 @@ The Report page v3 is the trust-building hero screen where users gain deep insig
 - Proper `sizes` attribute for responsive images
 
 **Props:**
+
 ```typescript
 interface GalleryProps {
   images: GalleryImage[];
@@ -53,6 +56,7 @@ interface GalleryImage {
 ```
 
 **Accessibility:**
+
 - `role="region"` with `aria-roledescription="carousel"`
 - `aria-label` on all interactive buttons
 - Keyboard event listeners for navigation
@@ -61,9 +65,11 @@ interface GalleryImage {
 ---
 
 ### 2. ReportSummary.tsx (180 lines)
+
 **Location:** `src/app/report/[id]/ReportSummary.tsx`
 
 **Features:**
+
 - Property title (h1) + area name with MapPin icon
 - Price row with large font + €/m² + AVM badge
 - Meta row with area, rooms, floor, year, metro distance
@@ -72,6 +78,7 @@ interface GalleryImage {
 - Border styling between sections
 
 **Props:**
+
 ```typescript
 interface ReportSummaryProps {
   title: string;
@@ -96,6 +103,7 @@ interface ReportSummaryProps {
 ```
 
 **Helpers:**
+
 - `formatEur(value)`: Intl.NumberFormat ro-RO EUR
 - `getRelativeTime(date)`: Calculate diff and return Romanian string
 - `AvmBadge`: Component with color coding (under=green, fair=amber, over=red)
@@ -103,9 +111,11 @@ interface ReportSummaryProps {
 ---
 
 ### 3. KpiGrid.tsx (165 lines)
+
 **Location:** `src/app/report/[id]/KpiGrid.tsx`
 
 **Features:**
+
 - Responsive grid: 2 columns mobile, 3 columns desktop
 - KPI tiles with labels, values, hints, info tooltips
 - Tone-based styling (success, warning, danger, info)
@@ -113,6 +123,7 @@ interface ReportSummaryProps {
 - Conditional rendering (only shows tiles with data)
 
 **Props:**
+
 ```typescript
 interface KpiGridProps {
   avm?: { mid: number; low: number; high: number };
@@ -125,6 +136,7 @@ interface KpiGridProps {
 ```
 
 **KPI Tiles:**
+
 1. **AVM Estimate:** Price range with low-mid-high
 2. **Time to Sell:** Bucket (fast/normal/slow) + days estimate
 3. **Net Yield:** Percentage + monthly rent
@@ -137,9 +149,11 @@ interface KpiGridProps {
 ### 4-10. Narrative Cards (7 files)
 
 #### 4. AvmCard.tsx (150 lines)
+
 **Location:** `src/app/report/[id]/cards/AvmCard.tsx`
 
 **Shows:**
+
 - AVM estimate vs asking price
 - Simple sparkline bar comparing to area median
 - Badge explanation (underpriced/fair/overpriced)
@@ -147,6 +161,7 @@ interface KpiGridProps {
 - Advice based on significant variance (±10%)
 
 **Props:**
+
 ```typescript
 interface AvmCardProps {
   avmEur: number;
@@ -160,9 +175,11 @@ interface AvmCardProps {
 ---
 
 #### 5. TtsCard.tsx (180 lines)
+
 **Location:** `src/app/report/[id]/cards/TtsCard.tsx`
 
 **Shows:**
+
 - TTS bucket display (fast/normal/slow) with icon
 - Estimated days on market
 - Factors: price delta %, seasonality, demand
@@ -170,6 +187,7 @@ interface AvmCardProps {
 - Actionable advice based on bucket
 
 **Props:**
+
 ```typescript
 interface TtsCardProps {
   bucket: "fast" | "normal" | "slow";
@@ -186,9 +204,11 @@ interface TtsCardProps {
 ---
 
 #### 6. YieldCard.tsx (200 lines)
+
 **Location:** `src/app/report/[id]/cards/YieldCard.tsx`
 
 **Shows:**
+
 - Monthly rent estimate (large display)
 - €/m² × area calculation
 - Breakdown table: Annual rent - Expenses = Net income
@@ -198,6 +218,7 @@ interface TtsCardProps {
 - Interpretation guidance
 
 **Props:**
+
 ```typescript
 interface YieldCardProps {
   rentEur: number;
@@ -217,9 +238,11 @@ interface YieldCardProps {
 ---
 
 #### 7. RiskCard.tsx (230 lines)
+
 **Location:** `src/app/report/[id]/cards/RiskCard.tsx`
 
 **Shows:**
+
 - Seismic risk class with icon and severity badge
 - Confidence level progress bar
 - Year built context (pre-1978 flag)
@@ -229,6 +252,7 @@ interface YieldCardProps {
 - Warning banner for high risk (RS1/RS2)
 
 **Props:**
+
 ```typescript
 interface RiskCardProps {
   seismicClass: "RS1" | "RS2" | "RS3" | "none";
@@ -244,9 +268,11 @@ interface RiskCardProps {
 ---
 
 #### 8. QualityCard.tsx (180 lines)
+
 **Location:** `src/app/report/[id]/cards/QualityCard.tsx`
 
 **Shows:**
+
 - Overall quality score (0-100) with label (Excellent/Good/Fair/Poor)
 - Completeness percentage
 - Photo quality metrics: count, score, has exterior/interior/floor plan
@@ -255,6 +281,7 @@ interface RiskCardProps {
 - Interpretation guidance
 
 **Props:**
+
 ```typescript
 interface QualityCardProps {
   overallScore: number;
@@ -278,9 +305,11 @@ interface QualityCardProps {
 ---
 
 #### 9. CompsCard.tsx (250 lines)
+
 **Location:** `src/app/report/[id]/cards/CompsCard.tsx`
 
 **Shows:**
+
 - Toggle between carousel and table view
 - Horizontal scrolling carousel of comp cards
 - Each comp: thumbnail, price, €/m², area, rooms, distance, similarity
@@ -290,6 +319,7 @@ interface QualityCardProps {
 - Keyboard arrow navigation
 
 **Props:**
+
 ```typescript
 interface CompsCardProps {
   comps: CompProperty[];
@@ -314,9 +344,11 @@ interface CompProperty {
 ---
 
 #### 10. MapCard.tsx (180 lines)
+
 **Location:** `src/app/report/[id]/cards/MapCard.tsx`
 
 **Shows:**
+
 - SVG map with property marker
 - Nearest metro station with line color
 - Dashed line connecting property to metro
@@ -325,6 +357,7 @@ interface CompProperty {
 - Info text about access quality
 
 **Props:**
+
 ```typescript
 interface MapCardProps {
   propertyLat: number;
@@ -340,6 +373,7 @@ interface MapCardProps {
 ```
 
 **Helpers:**
+
 - `calculateDistance()`: Haversine formula for lat/lng distance in meters
 - Bucharest bounds: lat 44.3-44.55, lng 25.95-26.25
 - SVG coordinate conversion: latToY(), lngToX()
@@ -347,9 +381,11 @@ interface MapCardProps {
 ---
 
 ### 11. StickyActions.tsx (160 lines)
+
 **Location:** `src/app/report/[id]/StickyActions.tsx`
 
 **Features:**
+
 - Mobile: Fixed bottom bar with 4-button grid
 - Desktop: Vertical button stack (part of right sidebar)
 - Save/Unsave toggle (localStorage + toast)
@@ -360,6 +396,7 @@ interface MapCardProps {
 - Icons: Heart, ArrowLeftRight, Share2, Mail
 
 **Props:**
+
 ```typescript
 interface StickyActionsProps {
   propertyId: string;
@@ -375,6 +412,7 @@ interface StickyActionsProps {
 ```
 
 **Default Behaviors:**
+
 - Save: localStorage "saved:set" array
 - Compare: localStorage "compare:set" array
 - Share: navigator.share() → clipboard fallback
@@ -383,9 +421,11 @@ interface StickyActionsProps {
 ---
 
 ### 12. CompareDrawer.tsx (220 lines)
+
 **Location:** `src/components/compare/CompareDrawer.tsx`
 
 **Features:**
+
 - Global controlled component (open/onClose props)
 - Up to 4 properties in comparison
 - SessionStorage persistence ("compare:items")
@@ -399,6 +439,7 @@ interface StickyActionsProps {
 - Empty state with instructions
 
 **Props:**
+
 ```typescript
 interface CompareDrawerProps {
   open: boolean;
@@ -417,17 +458,20 @@ interface CompareItem {
 ```
 
 **Storage:**
+
 - `sessionStorage.compare:items` - Array of CompareItem
 - `localStorage.compare:set` - Array of property IDs (sync with actions)
 
 ---
 
 ### 13. page-v3.tsx (440 lines)
+
 **Location:** `src/app/report/[id]/page-v3.tsx`
 
 **Layout:**
 
 **Mobile (< lg):**
+
 ```
 Gallery
 ReportSummary (Surface)
@@ -444,6 +488,7 @@ StickyActions (fixed bottom)
 ```
 
 **Desktop (≥ lg):**
+
 ```
 2-column grid [content | 360px sidebar]
 
@@ -467,11 +512,13 @@ Right column (sticky top-4):
 ```
 
 **Data Loading:**
+
 - `loadReportData(id)`: Async function (TODO: replace with Prisma query)
 - Mock data provided for development
 - Generates metadata (title, description, openGraph)
 
 **Ad Placement:**
+
 1. Right sidebar: AdSlot rectangle (300×250) - "report-rect-1"
 2. Inline after Comps: SponsoredCard - sponsored listing with border
 3. Max 1 sponsored card per report page
@@ -519,17 +566,20 @@ src/
 ## Data Contract
 
 All components expect data from `loadReportData()` function which should map from:
+
 - Prisma Analysis + ExtractedListing + ScoreSnapshot
 - Using `map-report.ts` mapper (if exists)
 
 ### Mapping Guide:
 
 **Gallery:**
+
 ```typescript
-images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
+images: extractedListing.photos.map((url) => ({ src: url, alt: "" }));
 ```
 
 **ReportSummary:**
+
 ```typescript
 {
   title: extractedListing.title,
@@ -554,6 +604,7 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
 ```
 
 **KpiGrid:**
+
 ```typescript
 {
   avm: scoreSnapshot.explain.avm,
@@ -566,6 +617,7 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
 ```
 
 **Narrative Cards:**
+
 - Extract from `scoreSnapshot.explain.*` for each card
 - Comps from CompMatch table
 - Map coordinates from extractedListing or featureSnapshot
@@ -575,23 +627,27 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
 ## Performance Optimizations
 
 ### Zero CLS
+
 - Gallery: Reserved aspect ratio (`aspect-[4/3]` / `aspect-[16/9]`)
 - AdSlot: Fixed height (250px for rectangle)
 - Surface: Consistent padding and min-height
 - Images: `fill` with `sizes` attribute, no width/height changes
 
 ### Image Loading
+
 - First gallery image: `priority` + `loading="eager"`
 - Rest of images: `lazy` loading
 - Proper `sizes` attribute for responsive images
 - Next Image optimization
 
 ### Code Splitting
+
 - All cards are in separate files (automatic code splitting)
 - CompareDrawer is "use client" but separate chunk
 - Lazy load CompareDrawer only when opened
 
 ### Lighthouse Targets
+
 - **Performance:** ≥95 (LCP <2.5s, FID <100ms, CLS <0.1)
 - **Accessibility:** ≥95 (all interactive elements labeled, keyboard nav)
 - **Best Practices:** ≥90 (HTTPS, no console errors, proper image aspect ratios)
@@ -602,6 +658,7 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
 ## Accessibility
 
 ### Keyboard Navigation
+
 - **Gallery:**
   - Left/Right arrows: Navigate images
   - Escape: Close lightbox
@@ -615,6 +672,7 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
   - Focus trap when open
 
 ### Screen Readers
+
 - All interactive elements have `aria-label`
 - Gallery: `role="region"` with `aria-roledescription="carousel"`
 - Drawer: `role="dialog"` with `aria-modal="true"`
@@ -623,12 +681,14 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
 - Icons: Accompanied by text labels
 
 ### Color Contrast
+
 - All text: WCAG AA 4.5:1 contrast
 - Interactive elements: 3:1 minimum
 - AVM badge colors: Success (green), Warning (amber), Danger (red)
 - Seismic risk: Color + text + icon (not color-only)
 
 ### Touch Targets
+
 - All buttons: min 44×44px (iOS/Android guidelines)
 - Mobile bottom bar: Large touch targets
 - Gallery thumbnails: 80×64px (adequate spacing)
@@ -656,6 +716,7 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
 ## Ad Integration
 
 ### Ad Slots
+
 1. **Right sidebar rectangle** (desktop only)
    - Size: 300×250px
    - Position: Below actions, sticky
@@ -670,6 +731,7 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
    - Tracking: impression (50%/1s) + click
 
 ### Tracking
+
 - AdSlot: Uses IntersectionObserver for viewability
 - SponsoredCard: Inherits from ListingCard tracking
 - POST to `/api/track/ad-impression` and `/api/track/ad-click`
@@ -680,6 +742,7 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
 ## Testing Checklist
 
 ### Visual
+
 - [ ] Gallery displays correctly on mobile/desktop
 - [ ] All narrative cards render without layout shift
 - [ ] Sticky actions stay fixed on mobile
@@ -688,6 +751,7 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
 - [ ] Sponsored card has border tint
 
 ### Functional
+
 - [ ] Gallery carousel advances with arrows
 - [ ] Thumbnails scroll horizontally
 - [ ] Lightbox opens on image click
@@ -702,6 +766,7 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
 - [ ] Compare button navigates to /compare
 
 ### Accessibility
+
 - [ ] Tab through all interactive elements
 - [ ] Gallery keyboard navigation works
 - [ ] Screen reader announces all labels
@@ -711,6 +776,7 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
 - [ ] Color contrast passes WCAG AA
 
 ### Performance
+
 - [ ] Lighthouse Performance ≥95
 - [ ] Lighthouse Accessibility ≥95
 - [ ] CLS < 0.1
@@ -719,6 +785,7 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
 - [ ] Images load progressively
 
 ### Responsive
+
 - [ ] Test at 320px (small mobile)
 - [ ] Test at 375px (iPhone)
 - [ ] Test at 768px (tablet)
@@ -731,6 +798,7 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
 ## Next Steps (Post-Step 3)
 
 ### Backend Integration
+
 1. Replace `loadReportData()` mock with actual Prisma queries
 2. Create `map-report.ts` mapper for Analysis → Report DTO
 3. Implement server actions:
@@ -739,12 +807,14 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
    - `trackAdEvent()` for ad tracking
 
 ### API Endpoints
+
 1. `POST /api/track/ad-impression` - Track ad viewability
 2. `POST /api/track/ad-click` - Track ad clicks
 3. `GET /api/compare/[id]` - Fetch compare set
 4. `POST /api/compare` - Create compare set
 
 ### Additional Features
+
 1. Real-time price updates (WebSocket or polling)
 2. Share to social media (Facebook, Twitter, WhatsApp)
 3. Email alerts for price changes
@@ -753,6 +823,7 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
 6. Print-friendly layout
 
 ### Compare Page
+
 1. Create `/compare?ids=...` or `/compare/[id]` page
 2. Side-by-side table comparison
 3. Highlight differences
@@ -766,11 +837,13 @@ images: extractedListing.photos.map(url => ({ src: url, alt: '' }))
 To replace the existing `page.tsx` with the new Step 3 implementation:
 
 1. **Backup old page:**
+
    ```bash
    mv src/app/report/[id]/page.tsx src/app/report/[id]/page.old.tsx
    ```
 
 2. **Rename new page:**
+
    ```bash
    mv src/app/report/[id]/page-v3.tsx src/app/report/[id]/page.tsx
    ```
@@ -799,6 +872,7 @@ To replace the existing `page.tsx` with the new Step 3 implementation:
 ## Summary
 
 Step 3 delivers a production-ready Report page v3 with:
+
 - **13 new components** (Gallery, Summary, Grid, 7 Cards, Actions, Drawer, Page)
 - **~2,700 lines of code** (TypeScript + TSX)
 - **2-column responsive layout** (mobile stacked, desktop sidebar)

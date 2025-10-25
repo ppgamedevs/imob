@@ -37,7 +37,7 @@ src/
 
 2. **Price Row**
    - Large price (18px, semibold)
-   - €/m² (12px, muted) 
+   - €/m² (12px, muted)
    - AVM badge (right-aligned): Underpriced (green) / Fair (amber) / Overpriced (red)
 
 3. **Meta Row** (12px, muted, truncated)
@@ -91,6 +91,7 @@ interface ListingCardProps {
 ### Sponsored Variant
 
 When `sponsored: true`:
+
 - Subtle border tint: `border-2 border-adBorder`
 - Background tint: `bg-adBg/30`
 - `SponsoredLabel` overlay in top-left corner
@@ -119,11 +120,13 @@ When `sponsored: true`:
 ### Layout Structure
 
 #### Mobile
+
 - **List first**: Full-width, scrollable
 - **Filters**: Sticky at top (below header)
 - **Map**: Hidden (can be toggled via button - future enhancement)
 
 #### Desktop (lg+)
+
 - **Grid**: `grid-cols-[440px_minmax(0,1fr)]`
 - **List column**: Fixed 440px width, independent scroll, max-height `calc(100dvh - 128px)`
 - **Map column**: Flex-1, sticky positioning
@@ -135,12 +138,14 @@ When `sponsored: true`:
 #### 1. **FiltersBar** (`src/app/discover/FiltersBar.tsx`)
 
 **Features:**
+
 - Sticky positioning: `top-16` (below header), `z-40`
 - Horizontal scroll on mobile: `overflow-x-auto scrollbar-hide`
 - URL sync (future): Updates query params on filter change
 - Stable height: No CLS when filters change
 
 **Filters:**
+
 1. **Area** - Dropdown select (Centru Vechi, Pipera, Floreasca, etc.)
 2. **Price range** - Min/Max inputs (EUR)
 3. **Area m² range** - Min/Max inputs
@@ -149,10 +154,12 @@ When `sponsored: true`:
 6. **Clear all** - Button (shows when filters active)
 
 **Active filters summary:**
+
 - Shows removable chips below inputs
 - Each chip has X button to remove individual filter
 
 **Callback:**
+
 ```typescript
 onFilterChange?: (filters: FilterState) => void;
 ```
@@ -160,6 +167,7 @@ onFilterChange?: (filters: FilterState) => void;
 #### 2. **DiscoverClient** (`src/app/discover/DiscoverClient.tsx`)
 
 **Features:**
+
 - Client-side state management
 - Fetch listings from `/api/discover?{params}`
 - Deterministic ad injection
@@ -167,6 +175,7 @@ onFilterChange?: (filters: FilterState) => void;
 - Mock data fallback for development
 
 **State:**
+
 ```typescript
 const [items, setItems] = useState<ListingCardProps[]>([]);
 const [loading, setLoading] = useState(false);
@@ -189,10 +198,12 @@ function injectAds(items: ListingCardProps[]): RenderItem[] {
 ```
 
 **Rendered output:**
+
 - Type: `ListingCardProps | { kind: "ad"; id: string }`
 - Rendered as `<ListingCard>` or `<AdSlot>`
 
 **States:**
+
 - **Loading**: Centered spinner with text
 - **Empty**: "Niciun rezultat găsit" message
 - **Results**: Grid with cards + ads
@@ -200,6 +211,7 @@ function injectAds(items: ListingCardProps[]): RenderItem[] {
 #### 3. **MapPanel** (`src/app/discover/MapPanel.tsx`)
 
 **Features:**
+
 - SVG-based map (800×600 viewBox)
 - Heat tile grid (40×40px cells with opacity)
 - Property markers (colored by AVM badge)
@@ -210,6 +222,7 @@ function injectAds(items: ListingCardProps[]): RenderItem[] {
 - Zoom controls (placeholder)
 
 **Props:**
+
 ```typescript
 interface MapPanelProps {
   items: MapItem[];
@@ -227,17 +240,20 @@ interface MapItem {
 ```
 
 **Marker colors:**
+
 - Underpriced: `var(--color-success)` (green)
 - Fair: `var(--color-primary)` (indigo)
 - Overpriced: `var(--color-danger)` (red)
 
 **Hover sync:**
+
 1. User hovers over listing card → `onHover(id)` called
 2. `DiscoverClient` sets `highlightId`
 3. MapPanel receives `highlightId` and highlights matching marker
 4. Highlight ring animates with pulse
 
 **Accessibility:**
+
 - Each marker has `role="button"` and `tabIndex={0}`
 - `aria-label` describes property (title + price)
 - Keyboard navigation supported
@@ -249,12 +265,14 @@ interface MapItem {
 ### Placement Rules
 
 #### Sponsored Cards
+
 - **Positions**: Indices [2, 9, 16] in results array
 - **Cap**: Maximum 2 per page load
 - **Ranking**: Only injected at predetermined positions (not mixed with organic)
 - **Labeling**: `SponsoredLabel` + subtle border/background tint
 
 #### Static AdSlots
+
 1. **Desktop top banner** (under filters)
    - Position: `top`
    - Size: `banner` (728×90)
@@ -268,12 +286,14 @@ interface MapItem {
    - Both mobile + desktop
 
 ### Zero CLS Strategy
+
 - All `AdSlot` components have **reserved height** (see Step 1 docs)
 - ListingCard has **fixed min-height** for title (2.5rem)
 - Map panel has **fixed dimensions** (`h-[calc(100dvh-64px)]`)
 - Filters bar has **stable height** (no expansion/collapse)
 
 ### Tracking
+
 - **Impressions**: 50% visible for 1s (IntersectionObserver in AdSlot/SponsoredCard)
 - **Clicks**: Tracked via `/api/track/sponsored-click` or `/api/track/ad-click`
 - **Frequency caps**: Enforced client-side (max 2 sponsored per page)
@@ -295,6 +315,7 @@ interface MapItem {
 ## 🚀 Performance
 
 ### Metrics Targets
+
 - **CLS**: < 0.05 ✅
   - Fixed card heights
   - Reserved ad slots
@@ -313,6 +334,7 @@ interface MapItem {
   - Color contrast
 
 ### Optimizations
+
 1. **Images**: `loading="lazy"` + responsive `sizes`
 2. **List rendering**: Simple array map (virtualization ready for v2)
 3. **Map**: SVG (lightweight, no heavy GL libraries yet)
@@ -325,6 +347,7 @@ interface MapItem {
 ### Expected Endpoint: `GET /api/discover`
 
 **Query params:**
+
 - `area?: string`
 - `priceMin?: number`
 - `priceMax?: number`
@@ -336,6 +359,7 @@ interface MapItem {
 - `limit?: number` (default 20)
 
 **Response:**
+
 ```typescript
 {
   items: ListingCardProps[];
@@ -346,7 +370,9 @@ interface MapItem {
 ```
 
 ### Mock Data
+
 If API not ready, `generateMockData()` provides 20 sample listings:
+
 - Random prices (80k-280k EUR)
 - Random locations (Pipera, Floreasca, etc.)
 - Random AVM badges
@@ -387,6 +413,7 @@ If API not ready, `generateMockData()` provides 20 sample listings:
 ## 🔄 Next Steps
 
 ### Step 3 - Report Detail Page
+
 - Media gallery with lightbox
 - KPI cards (price, AVM, TTS, yield, seismic)
 - Sticky CTA row (Save, Share, Contact)
@@ -396,6 +423,7 @@ If API not ready, `generateMockData()` provides 20 sample listings:
 - Area insights
 
 ### Step 4 - Area Pages
+
 - Hero with area KPIs (median price, €/m², TTS)
 - "Best listings" grid (inject SponsoredCard)
 - Top banner AdSlot
@@ -403,6 +431,7 @@ If API not ready, `generateMockData()` provides 20 sample listings:
 - Schools, metro, POIs
 
 ### Future Enhancements
+
 - **Virtualization**: Use `@tanstack/virtual` for 1000+ listings
 - **Infinite scroll**: Load more on scroll
 - **Map clustering**: Group nearby markers

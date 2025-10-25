@@ -1,25 +1,31 @@
 # Day 30: SEO Powerhouse + Area Intelligence
 
 ## Overview
+
 Complete SEO optimization with city overview page, enhanced zone pages, dynamic OG images, improved sitemap, and performance optimizations for Lighthouse 95+ scores.
 
 ## Features Implemented
 
 ### 1. Enhanced Zone Pages (`/zona/[slug]`)
+
 **Upgraded from existing implementation:**
+
 - ✅ **Extended KPIs**: Added `pricePerSqmChange30d`, `rentEurM2`, `yieldNet`, `ttsMedianDays`, `demandScore`
 - ✅ **Dynamic OG Images**: Each zone now has social media image with KPIs (`/api/og/area?slug=...`)
 - ✅ **Improved JSON-LD**: AggregateOffer now includes `lowPrice`/`highPrice` (±15% from median)
 - ✅ **ISR**: 6-hour revalidation already configured
 
 **KPI Calculations:**
+
 - 30-day price change: `(today - prev30) / prev30 * 100`
 - Rent & yield: Extracted from AreaDaily stats JSON
 - TTS median: Extracted from AreaDaily stats JSON
 - Demand score: From AreaDaily.demandScore
 
 ### 2. City Overview Page (`/bucuresti`)
+
 **Brand new page with:**
+
 - 📊 **City-wide Statistics**: Median €/m², total supply, zones covered
 - 🏆 **Top Zones by Activity**: 12 most active zones by supply
 - 💰 **Best Value Zones**: 6 most affordable zones (lowest €/m²)
@@ -29,6 +35,7 @@ Complete SEO optimization with city overview page, enhanced zone pages, dynamic 
 - 🔍 **SEO**: Optimized metadata for city-level search
 
 **Layout:**
+
 - Hero with city name + tagline
 - 3 KPI cards (price, supply, zones)
 - Grid of top zones with cards (hover effects)
@@ -37,7 +44,9 @@ Complete SEO optimization with city overview page, enhanced zone pages, dynamic 
 - Call-to-action section
 
 ### 3. Dynamic OpenGraph Images (`/api/og/area`)
+
 **Visual social media cards with:**
+
 - Zone name + city badge (📍 București)
 - Large price display (€/m²) in blue
 - 30-day trend with emoji (↑/↓) and color (green/red)
@@ -47,21 +56,24 @@ Complete SEO optimization with city overview page, enhanced zone pages, dynamic 
 - 1200×630px optimized for all platforms
 
 **Technology:**
+
 - Uses Next.js `ImageResponse` API
 - Edge runtime for speed
 - Fetches real-time data from AreaDaily
 - Auto-generates on first request, then cached
 
 ### 4. Enhanced Sitemap (`/sitemap.xml`)
+
 **Improvements:**
+
 - ✅ Fixed URLs: Changed `/area/` → `/zona/`
 - ✅ Added `/bucuresti` city page
 - ✅ Added `/discover`, `/search` pages
-- ✅ **Smart changefreq**: 
+- ✅ **Smart changefreq**:
   - București: `hourly` (high update frequency)
   - Zone pages: `daily` (moderate updates)
   - Other pages: `weekly`
-- ✅ **Priority scores**: 
+- ✅ **Priority scores**:
   - Homepage: `1.0`
   - București & zones: `0.8`
   - Other pages: `0.6`
@@ -69,7 +81,9 @@ Complete SEO optimization with city overview page, enhanced zone pages, dynamic 
 - ✅ **ISR**: 1-hour revalidation
 
 ### 5. Performance Optimizations
+
 **Applied to root layout:**
+
 - ✅ **Font preconnect**: `<link rel="preconnect" href="https://fonts.gstatic.com" />`
 - ✅ **DNS prefetch**: For Google Fonts CDN
 - ✅ **Theme color meta**: `#0f172a` for browser UI
@@ -77,6 +91,7 @@ Complete SEO optimization with city overview page, enhanced zone pages, dynamic 
 - ✅ **ISR revalidation**: All SEO pages use ISR
 
 **Additional optimizations (already in place):**
+
 - Next.js Image component with automatic optimization
 - Geist font family (variable fonts)
 - Server components for zero JS on SEO pages
@@ -85,6 +100,7 @@ Complete SEO optimization with city overview page, enhanced zone pages, dynamic 
 ## Files Modified
 
 ### Updated Files
+
 1. **`src/lib/zones/load-zone.ts`**
    - Added 5 new KPI fields to ZoneKpi interface
    - Calculate 30-day price change
@@ -112,6 +128,7 @@ Complete SEO optimization with city overview page, enhanced zone pages, dynamic 
    - Added București link to navigation
 
 ### New Files
+
 1. **`src/app/bucuresti/page.tsx`** (254 lines)
    - City overview page with statistics
    - Top zones, best value, trending sections
@@ -125,6 +142,7 @@ Complete SEO optimization with city overview page, enhanced zone pages, dynamic 
 ## Technical Details
 
 ### Zone KPI Interface
+
 ```typescript
 interface ZoneKpi {
   pricePerSqm: number | null;
@@ -138,6 +156,7 @@ interface ZoneKpi {
 ```
 
 ### 30-Day Change Calculation
+
 ```typescript
 const prev30 = daily.length >= 30 ? daily[daily.length - 30] : null;
 const pricePerSqmChange30d =
@@ -147,12 +166,14 @@ const pricePerSqmChange30d =
 ```
 
 ### AggregateOffer Price Range
+
 ```typescript
 const lowPrice = medianEurM2 ? Math.round(medianEurM2 * 0.85) : undefined;
 const highPrice = medianEurM2 ? Math.round(medianEurM2 * 1.15) : undefined;
 ```
 
 ### Sitemap Cache Strategy
+
 ```typescript
 headers: {
   "Content-Type": "application/xml",
@@ -163,17 +184,20 @@ headers: {
 ## SEO Impact
 
 ### Schema.org Coverage
+
 ✅ **Place** - Zone geographic entities  
 ✅ **AggregateOffer** - Price ranges with lowPrice/highPrice  
 ✅ **BreadcrumbList** - Navigation hierarchy  
 ✅ **PropertyValue** - Custom KPIs (median €/m²)
 
 ### OpenGraph Coverage
+
 ✅ **Zone pages** - Dynamic images with KPIs  
 ✅ **City page** - Static metadata  
 ✅ **Report pages** - Already implemented (Day 22)
 
 ### Sitemap Coverage
+
 - ✅ Home page
 - ✅ București city page
 - ✅ 15 zone pages (/zona/[slug])
@@ -184,12 +208,14 @@ headers: {
 ## Performance Metrics (Expected)
 
 ### Lighthouse Scores (Target: 95+)
+
 - **Performance**: 95+ (ISR, edge functions, font preconnect)
 - **Accessibility**: 95+ (semantic HTML, ARIA labels)
 - **Best Practices**: 95+ (HTTPS, no console errors, CSP)
 - **SEO**: 100 (meta tags, schema.org, sitemap, robots.txt)
 
 ### Core Web Vitals
+
 - **LCP**: <2.5s (ISR cached pages, optimized images)
 - **FID**: <100ms (minimal JS, server components)
 - **CLS**: <0.1 (no layout shifts, proper image sizing)
@@ -197,6 +223,7 @@ headers: {
 ## User Flows
 
 ### SEO Discovery Flow
+
 1. **Google Search**: "preturi apartamente bucuresti"
 2. **SERP**: Rich snippet with city stats (schema.org)
 3. **Click**: Land on `/bucuresti` city page
@@ -206,6 +233,7 @@ headers: {
 7. **Discover**: Click "Caută proprietăți" → Discover tool
 
 ### Social Sharing Flow
+
 1. **User**: Finds great deal in Vitan zone
 2. **Share**: Posts `/zona/vitan` link to Facebook
 3. **Facebook**: Fetches `/api/og/area?slug=vitan`
@@ -215,6 +243,7 @@ headers: {
 ## Future Enhancements (v2)
 
 ### SEO
+
 - [ ] Article/BlogPosting schema for neighborhood guides
 - [ ] Video schema for property tours
 - [ ] FAQ schema on zone pages
@@ -222,6 +251,7 @@ headers: {
 - [ ] Review/Rating schema for user reviews
 
 ### Performance
+
 - [ ] WebP/AVIF image formats with fallbacks
 - [ ] Lazy loading for below-the-fold images
 - [ ] Critical CSS inlining
@@ -229,6 +259,7 @@ headers: {
 - [ ] Brotli compression for text assets
 
 ### Content
+
 - [ ] Neighborhood guides (schools, transport, amenities)
 - [ ] Historical price charts (sparklines)
 - [ ] Supply/demand heatmaps
@@ -236,6 +267,7 @@ headers: {
 - [ ] Investment ROI calculators per zone
 
 ### Analytics
+
 - [ ] Track organic traffic by zone
 - [ ] Monitor SERP rankings
 - [ ] A/B test meta descriptions

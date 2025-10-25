@@ -19,24 +19,24 @@ export interface NudgeProps {
 
 /**
  * Nudge - Lightweight onboarding bubble
- * 
+ *
  * Features:
  * - Auto-hides after localStorage dismiss
  * - Respects prefers-reduced-motion
  * - Keyboard accessible (Escape to dismiss)
  * - Arrow pointer for visual context
- * 
+ *
  * Usage:
  * <Nudge storageKey="discover-filters" position="bottom">
  *   Filtre rapide. Apasă pentru a seta bugete și zone
  * </Nudge>
  */
-export function Nudge({ 
-  storageKey, 
-  children, 
+export function Nudge({
+  storageKey,
+  children,
   position = "bottom",
   className,
-  onDismiss 
+  onDismiss,
 }: NudgeProps) {
   const [isVisible, setIsVisible] = React.useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = React.useState(false);
@@ -91,20 +91,18 @@ export function Nudge({
 
   const arrowPointer = {
     top: "top-full left-1/2 -translate-x-1/2 border-t-[rgb(var(--primary))] border-x-transparent border-x-8 border-t-8 border-b-0",
-    bottom: "bottom-full left-1/2 -translate-x-1/2 border-b-[rgb(var(--primary))] border-x-transparent border-x-8 border-b-8 border-t-0",
+    bottom:
+      "bottom-full left-1/2 -translate-x-1/2 border-b-[rgb(var(--primary))] border-x-transparent border-x-8 border-b-8 border-t-0",
     left: "left-full top-1/2 -translate-y-1/2 border-l-[rgb(var(--primary))] border-y-transparent border-y-8 border-l-8 border-r-0",
-    right: "right-full top-1/2 -translate-y-1/2 border-r-[rgb(var(--primary))] border-y-transparent border-y-8 border-r-8 border-l-0",
+    right:
+      "right-full top-1/2 -translate-y-1/2 border-r-[rgb(var(--primary))] border-y-transparent border-y-8 border-r-8 border-l-0",
   };
 
   return (
     <div
       role="tooltip"
       aria-live="polite"
-      className={cn(
-        "absolute z-50",
-        arrowStyles[position],
-        className
-      )}
+      className={cn("absolute z-50", arrowStyles[position], className)}
     >
       <div
         className={cn(
@@ -115,16 +113,11 @@ export function Nudge({
           "text-white text-sm leading-relaxed",
           "rounded-[var(--r-md)]",
           "shadow-[var(--elev2)]",
-          !prefersReducedMotion && "animate-in fade-in-0 zoom-in-95 duration-300"
+          !prefersReducedMotion && "animate-in fade-in-0 zoom-in-95 duration-300",
         )}
       >
         {/* Arrow */}
-        <div
-          className={cn(
-            "absolute w-0 h-0",
-            arrowPointer[position]
-          )}
-        />
+        <div className={cn("absolute w-0 h-0", arrowPointer[position])} />
 
         {/* Content */}
         <div className="flex-1">{children}</div>
@@ -139,7 +132,7 @@ export function Nudge({
             "hover:text-white",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50",
             "rounded-[var(--r-sm)]",
-            "transition-colors duration-[var(--duration-fast)]"
+            "transition-colors duration-[var(--duration-fast)]",
           )}
           aria-label="Închide"
         >

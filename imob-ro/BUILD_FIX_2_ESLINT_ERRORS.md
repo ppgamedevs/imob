@@ -29,6 +29,7 @@ After fixing all Prettier formatting errors in Build #1, the build still failed 
 **Rule:** `react/no-unescaped-entities`
 
 **Before:**
+
 ```tsx
 <p className="text-xs mt-2">
   Apasă pe butonul "Compară" de pe orice proprietate pentru a o adăuga.
@@ -36,6 +37,7 @@ After fixing all Prettier formatting errors in Build #1, the build still failed 
 ```
 
 **After:**
+
 ```tsx
 <p className="text-xs mt-2">
   Apasă pe butonul &ldquo;Compară&rdquo; de pe orice proprietate pentru a o adăuga.
@@ -52,11 +54,13 @@ After fixing all Prettier formatting errors in Build #1, the build still failed 
 **Rule:** `@typescript-eslint/no-empty-object-type`
 
 **Before:**
+
 ```tsx
 export interface AppFooterProps extends React.HTMLAttributes<HTMLElement> {}
 ```
 
 **After:**
+
 ```tsx
 export type AppFooterProps = React.HTMLAttributes<HTMLElement>;
 ```
@@ -101,17 +105,20 @@ There are ~120 ESLint **warnings** in the build log, but these are:
 ## Commands Used
 
 ### Fix unescaped quotes:
+
 ```tsx
 // Changed: "text" → &ldquo;text&rdquo;
 ```
 
 ### Fix empty interface:
+
 ```tsx
 // Changed: export interface Foo extends Bar {}
 // To: export type Foo = Bar;
 ```
 
 ### Verify fixes:
+
 ```bash
 get_errors CompareDrawer.tsx AppFooter.tsx
 # Result: No errors found ✅

@@ -5,6 +5,7 @@
 ### 1. Design Tokens v2 (`src/styles/tokens.css`)
 
 **CSS Custom Properties:**
+
 - **Colors**: `--bg`, `--surface`, `--surface-2`, `--border`, `--text`, `--muted`, `--primary`, `--success`, `--warn`, `--danger`, `--ad-tint`, `--chart-1` through `--chart-6`
 - **Radii**: `--r-sm` (10px), `--r-md` (16px), `--r-xl` (24px)
 - **Shadows**: `--elev0` through `--elev3` (progressive elevation)
@@ -13,23 +14,28 @@
 - **Spacing**: `--space-1` through `--space-8`, `--header-height`, `--page-max-width`
 
 **Dark Mode Support:**
+
 - Automatic via `@media (prefers-color-scheme: dark)`
 - Manual via `.theme-dark` or `[data-theme="dark"]` classes
 - All colors adjust automatically with proper contrast
 
 **Brand Override:**
+
 - `[data-brand]` attribute enables brand color override
 - Controlled via BrandProvider component
 - Works with Developer, Owner, and Org settings
 
 **Reduced Motion:**
+
 - `@media (prefers-reduced-motion: reduce)` disables animations
 - All transitions respect user preferences
 
 ### 2. Core Components
 
 #### Surface (`src/components/ui/Surface.tsx`)
+
 Base container with elevation levels (0-3) and rounded corners.
+
 ```tsx
 <Surface elevation={1} rounded="md">
   Content here
@@ -37,7 +43,9 @@ Base container with elevation levels (0-3) and rounded corners.
 ```
 
 #### KpiTile (`src/components/ui/kpi-tile.tsx`)
+
 Display key metrics with icon, label, value, and optional delta.
+
 ```tsx
 <KpiTile
   icon={TrendingUp}
@@ -49,13 +57,17 @@ Display key metrics with icon, label, value, and optional delta.
 ```
 
 #### InlineStat (`src/components/ui/inline-stat.tsx`)
+
 Compact label/value pairs for dense layouts.
+
 ```tsx
 <InlineStat label="Units" value="24" />
 ```
 
 #### Empty (`src/components/ui/empty.tsx`)
+
 Consistent empty states with icon, title, description, and optional action.
+
 ```tsx
 <Empty
   icon={Search}
@@ -66,11 +78,14 @@ Consistent empty states with icon, title, description, and optional action.
 ```
 
 #### Badge (`src/components/ui/badge.tsx`)
+
 Updated with new variants: `default`, `neutral`, `success`, `warn`, `danger`, `sponsored`, `outline`.
 Backward compatible with `secondary` (→ `neutral`) and `destructive` (→ `danger`).
 
 #### Segmented (`src/components/ui/segmented.tsx`)
+
 iOS-style segmented control for mutually exclusive options.
+
 ```tsx
 <Segmented
   options={[
@@ -85,29 +100,31 @@ iOS-style segmented control for mutually exclusive options.
 ### 3. Theming System
 
 #### BrandProvider (`src/components/theme/BrandProvider.tsx`)
+
 Applies brand theming via CSS custom properties.
 
 **Usage:**
+
 ```tsx
 import { BrandProvider, getBrandFromDeveloper } from "@/components/theme/BrandProvider";
 
 const brand = getBrandFromDeveloper(developer);
 
-<BrandProvider brand={brand}>
-  {children}
-</BrandProvider>
+<BrandProvider brand={brand}>{children}</BrandProvider>;
 ```
 
 **Brand Config:**
+
 ```typescript
 interface BrandConfig {
-  color?: string;  // Hex color e.g., "#ff5733"
+  color?: string; // Hex color e.g., "#ff5733"
   logoUrl?: string; // URL to logo
-  tone?: string;    // Brand tone (for context)
+  tone?: string; // Brand tone (for context)
 }
 ```
 
 **Helper Functions:**
+
 - `getBrandFromDeveloper(developer)` - Extract brand from Developer model
 - `getBrandFromOwner(owner)` - Extract brand from Owner (future)
 - `getBrandFromOrg(org)` - Extract brand from Org settings
@@ -115,18 +132,22 @@ interface BrandConfig {
 ### 4. Ad System
 
 #### AdSlot (`src/components/ads/AdSlot.tsx`)
+
 Updated with Step 12 specs:
+
 - **Fixed height**: Prevents layout shift (CLS)
 - **Impression tracking**: 50% visible for 800ms (was 1000ms)
 - **Token-based styling**: Uses `--ad-bg`, `--ad-border`, `--ad-label`
 - **Proper labeling**: "Spațiu publicitar" with complementary role
 
 **Sizes:**
+
 - `banner`: 728×90 (desktop), 320×100 (mobile)
 - `rectangle`: 300×250
 - `skyscraper`: 300×600 (desktop), 300×250 (mobile)
 
 **Usage:**
+
 ```tsx
 <AdSlot
   id="discover-inline-1"
@@ -140,6 +161,7 @@ Updated with Step 12 specs:
 ### 5. Global Styles (`src/app/globals.css`)
 
 Updated to use new token system:
+
 - Background: `rgb(var(--bg))`
 - Text color: `rgb(var(--text))`
 - Typography: `var(--font-sans)`, `var(--fs-base)`, `var(--lh-normal)`
@@ -150,37 +172,44 @@ Updated to use new token system:
 ### Page-Specific Polish
 
 #### `/discover` - Not started
+
 - [ ] Update cards to v3 (Surface + fixed ratio + badges)
 - [ ] Add ad slots after cards 3 & 10
 - [ ] Update filter chips with Popover and Segmented
 
 #### `/report` - Not started
+
 - [ ] Update KPI row with big numbers + deltas
 - [ ] Update right rail cards ordering
 - [ ] Add photo grid masonry
 - [ ] Add ad slot in right rail
 
 #### `/area` - Not started
+
 - [ ] Apply KpiTile components
 - [ ] Update tabs styling
 - [ ] Add ad slots (banner under hero, rectangle after listings)
 
 #### `/developments` - Not started
+
 - [ ] Add density toggle to Unit Finder
 - [ ] Consistent button widths
 - [ ] Proper hover states
 
 #### `/owners` - Not started
+
 - [ ] Update wizard header
 - [ ] ROI checklist with icons
 - [ ] Score dial styling
 
 #### `/agent` (/a) - Not started
+
 - [ ] Dense table theme
 - [ ] Pill badges for Underpriced/Overpriced
 - [ ] Monospace numeric columns
 
 ### Accessibility
+
 - [ ] Verify color contrast ≥ 4.5:1
 - [ ] Ensure 44×44 touch targets
 - [ ] Add proper aria labels
@@ -188,6 +217,7 @@ Updated to use new token system:
 - [ ] Audit with Lighthouse
 
 ### Performance
+
 - [ ] Verify SSR above the fold
 - [ ] Optimize next/image usage
 - [ ] Preload fonts (Inter variable)
@@ -198,6 +228,7 @@ Updated to use new token system:
 ### Using Design Tokens in Components
 
 **With Tailwind (recommended):**
+
 ```tsx
 <div className="bg-[rgb(var(--surface))] text-[rgb(var(--text))] rounded-[var(--r-md)]">
   Content
@@ -205,12 +236,15 @@ Updated to use new token system:
 ```
 
 **With inline styles:**
+
 ```tsx
-<div style={{
-  backgroundColor: 'rgb(var(--surface))',
-  color: 'rgb(var(--text))',
-  borderRadius: 'var(--r-md)'
-}}>
+<div
+  style={{
+    backgroundColor: "rgb(var(--surface))",
+    color: "rgb(var(--text))",
+    borderRadius: "var(--r-md)",
+  }}
+>
   Content
 </div>
 ```
@@ -234,6 +268,7 @@ Updated to use new token system:
 ### Dark Mode
 
 Components automatically adapt to dark mode. To force a theme:
+
 ```tsx
 <body data-theme="dark">
   <!-- All children will use dark mode -->
@@ -243,6 +278,7 @@ Components automatically adapt to dark mode. To force a theme:
 ### Brand Theming
 
 Wrap project pages with BrandProvider:
+
 ```tsx
 // In /developments/[slug]/page.tsx
 const brand = getBrandFromDeveloper(development.developer);
@@ -266,6 +302,7 @@ return (
 ## 🔧 Tailwind Configuration
 
 Update `tailwind.config.ts` to use tokens (if needed):
+
 ```typescript
 theme: {
   extend: {

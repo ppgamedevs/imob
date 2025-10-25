@@ -5,12 +5,14 @@
 ### 1. Admin Guards (COMPLETE)
 
 **Middleware Protection** (`src/middleware.ts`):
+
 - Protects all `/admin/*` routes
 - Redirects unauthenticated users to `/auth/signin`
 - Returns 403 for non-admin users
 - Also protects `/dashboard` routes
 
 **Server Action Guards** (`src/lib/auth-guards.ts`):
+
 - `requireAdmin()` - Throws if user is not admin
 - `requireAuth()` - Throws if user is not authenticated
 - `getCurrentUser()` - Returns user or null
@@ -18,8 +20,9 @@
 - `isAuthenticated()` - Boolean check without throwing
 
 **Applied to All Admin Routes:**
+
 - ✅ `/admin/api-keys/*` - API key management actions
-- ✅ `/admin/extractors/*` - Extractor profile actions  
+- ✅ `/admin/extractors/*` - Extractor profile actions
 - ✅ `/api/admin/groups/set-canonical` - Group management
 - ✅ `/api/admin/groups/split` - Group management
 
@@ -28,11 +31,13 @@
 **Environment Variables** (`.env.example`):
 
 **Required:**
+
 - `DATABASE_URL` - PostgreSQL with pgbouncer
 - `NEXTAUTH_URL` - Application base URL
 - `NEXTAUTH_SECRET` - JWT signing secret
 
 **Optional but Recommended:**
+
 - `RESEND_API_KEY` - Email notifications
 - `STRIPE_SECRET_KEY` - Payments
 - `STRIPE_WEBHOOK_SECRET` - Payment webhooks
@@ -42,6 +47,7 @@
 - `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` - Google OAuth
 
 **Configuration:**
+
 - `RATE_LIMIT_WINDOW_MS` / `RATE_LIMIT_MAX`
 - `EXCHANGE_RATE_EUR_TO_RON`
 - `OFFICE_LAT` / `OFFICE_LNG`
@@ -55,6 +61,7 @@
 **Zod Schemas Added:**
 
 **API Endpoints:**
+
 ```typescript
 // src/app/api/analyze/client-push/route.ts
 const analyzeRequestSchema = z.object({
@@ -69,6 +76,7 @@ const analyzeRequestSchema = z.object({
 ```
 
 **Server Actions:**
+
 ```typescript
 // src/app/admin/api-keys/actions.ts
 const createApiKeySchema = z.object({
@@ -100,6 +108,7 @@ const splitGroupSchema = z.object({
 ```
 
 **Coverage:**
+
 - ✅ All admin server actions
 - ✅ All admin API routes
 - ✅ Main analyze endpoint (client-push)
@@ -111,6 +120,7 @@ const splitGroupSchema = z.object({
 **DOMPurify Integration** (`src/lib/sanitize.ts`):
 
 **Core Functions:**
+
 ```typescript
 sanitizeHTML(dirty, options?) // Allows safe HTML tags
 stripHTML(html)                // Removes all HTML
@@ -122,12 +132,14 @@ sanitizeListing(listing)       // Sanitizes entire listing object
 ```
 
 **Applied To:**
+
 - ✅ `src/app/api/analyze/client-push/route.ts` - All extracted listing data
 - ✅ Titles, descriptions, addresses sanitized before storage
 - ✅ URLs validated to prevent XSS via javascript: protocol
 - ✅ Photo URLs filtered for safety
 
 **Allowed HTML Tags (descriptions only):**
+
 - Formatting: `<p>`, `<br>`, `<strong>`, `<em>`, `<u>`
 - Lists: `<ul>`, `<ol>`, `<li>`
 - Headings: `<h1>` through `<h6>`
@@ -135,6 +147,7 @@ sanitizeListing(listing)       // Sanitizes entire listing object
 - Links: `<a>` with `href`, `title`, `target`, `rel` attributes only
 
 **Blocked:**
+
 - All `<script>` tags
 - All `<iframe>` tags
 - All event handlers (`onclick`, etc.)
@@ -146,26 +159,31 @@ sanitizeListing(listing)       // Sanitizes entire listing object
 ### Defense in Depth
 
 **Layer 1: Middleware**
+
 - Route-level protection for all `/admin/*` and `/dashboard` paths
 - Executes before page rendering
 - Fast rejection of unauthorized requests
 
 **Layer 2: Server Actions**
+
 - Function-level protection with `requireAdmin()`
 - Used in all admin server actions
 - Prevents unauthorized mutations
 
 **Layer 3: Input Validation**
+
 - Zod schemas for all user input
 - Type-safe validation with descriptive errors
 - Prevents malformed data from reaching database
 
 **Layer 4: Data Sanitization**
+
 - HTML/XSS prevention via DOMPurify
 - URL protocol validation
 - Applied at data ingestion point
 
 **Layer 5: Rate Limiting**
+
 - Per-IP and per-endpoint limits (from Day 36)
 - 429 responses with Retry-After headers
 - Prevents abuse and DoS attacks
@@ -183,12 +201,14 @@ Request → Middleware → requireAdmin() → Zod Validation → Sanitization �
 ### 🔒 Admin Access Control
 
 **Test 1: Unauthenticated Access**
+
 ```bash
 curl http://localhost:3000/admin/groups
 # Expected: Redirect to /auth/signin
 ```
 
 **Test 2: Non-Admin Access**
+
 ```bash
 # Sign in as regular user, then:
 curl http://localhost:3000/admin/groups \
@@ -197,6 +217,7 @@ curl http://localhost:3000/admin/groups \
 ```
 
 **Test 3: Admin Access**
+
 ```bash
 # Sign in as admin, then:
 curl http://localhost:3000/admin/groups \
@@ -207,6 +228,7 @@ curl http://localhost:3000/admin/groups \
 ### ✅ Input Validation
 
 **Test 4: Invalid URL**
+
 ```bash
 curl -X POST http://localhost:3000/api/analyze/client-push \
   -H "Content-Type: application/json" \
@@ -215,6 +237,7 @@ curl -X POST http://localhost:3000/api/analyze/client-push \
 ```
 
 **Test 5: Missing Required Fields**
+
 ```bash
 curl -X POST http://localhost:3000/api/analyze/client-push \
   -H "Content-Type: application/json" \
@@ -223,6 +246,7 @@ curl -X POST http://localhost:3000/api/analyze/client-push \
 ```
 
 **Test 6: Invalid UUID**
+
 ```bash
 curl -X POST http://localhost:3000/api/admin/groups/split \
   -H "Content-Type: application/x-www-form-urlencoded" \
@@ -233,6 +257,7 @@ curl -X POST http://localhost:3000/api/admin/groups/split \
 ### 🛡️ XSS Prevention
 
 **Test 7: Script Injection in Title**
+
 ```bash
 curl -X POST http://localhost:3000/api/analyze/client-push \
   -H "Content-Type: application/json" \
@@ -246,6 +271,7 @@ curl -X POST http://localhost:3000/api/analyze/client-push \
 ```
 
 **Test 8: JavaScript Protocol in URL**
+
 ```bash
 curl -X POST http://localhost:3000/api/analyze/client-push \
   -H "Content-Type: application/json" \
@@ -259,6 +285,7 @@ curl -X POST http://localhost:3000/api/analyze/client-push \
 ```
 
 **Test 9: HTML in Description**
+
 ```bash
 curl -X POST http://localhost:3000/api/analyze/client-push \
   -H "Content-Type: application/json" \
@@ -274,6 +301,7 @@ curl -X POST http://localhost:3000/api/analyze/client-push \
 ### 🔑 Environment Variables
 
 **Test 10: Missing Critical Variables**
+
 ```bash
 # Remove DATABASE_URL from .env.local
 npm run build
@@ -281,6 +309,7 @@ npm run build
 ```
 
 **Test 11: Production Environment**
+
 ```bash
 # In Vercel dashboard:
 # 1. Verify all variables from .env.example are set
@@ -304,12 +333,14 @@ npm run build
 ## Compliance Considerations
 
 ### GDPR / Privacy
+
 - ✅ User data sanitized before storage
 - ✅ No sensitive data in logs
 - ✅ API keys can be revoked by users
 - ⚠️ TODO: Add data export/deletion endpoints
 
 ### OWASP Top 10 (2021)
+
 1. ✅ **Broken Access Control** - Middleware + role checks
 2. ✅ **Cryptographic Failures** - NEXTAUTH_SECRET, HTTPS enforced
 3. ✅ **Injection** - Zod validation + Prisma ORM
@@ -324,18 +355,21 @@ npm run build
 ## Next Steps
 
 ### Immediate (Before UI Work)
+
 - [x] Test admin access control locally
 - [ ] Test input validation with malicious payloads
 - [ ] Test XSS prevention in production
 - [ ] Verify all environment variables in Vercel
 
 ### Short-term (Next Sprint)
+
 - [ ] Add 2FA for admin accounts
 - [ ] Implement audit logging for all admin actions
 - [ ] Add data export/deletion for GDPR compliance
 - [ ] Set up dependency vulnerability scanning (Snyk/Dependabot)
 
 ### Long-term
+
 - [ ] Security penetration testing
 - [ ] Bug bounty program
 - [ ] Compliance certification (if needed)
@@ -351,9 +385,10 @@ npm run build
 
 ## Summary
 
-🎉 **Security lock-down is complete!** 
+🎉 **Security lock-down is complete!**
 
 **What's Protected:**
+
 - ✅ All admin routes require authentication + admin role
 - ✅ All user input validated with Zod schemas
 - ✅ All user-generated content sanitized with DOMPurify
@@ -362,6 +397,7 @@ npm run build
 - ✅ Multiple layers of defense (middleware → guards → validation → sanitization)
 
 **Ready for Production:**
+
 - Backend stability features deployed
 - Security essentials implemented
 - Environment variables documented

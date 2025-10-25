@@ -23,10 +23,10 @@ export interface EmptyProps {
 
 /**
  * Empty - Consistent empty state component
- * 
+ *
  * Used when there's no data to display (empty search, no results, etc.)
  * Provides clear messaging and optional action button.
- * 
+ *
  * @example
  * <Empty
  *   icon={Search}
@@ -57,14 +57,12 @@ export function Empty({ icon: Icon, title, description, action, className }: Emp
 
       {/* Description */}
       {description && (
-        <p className="text-[var(--fs-sm)] text-[rgb(var(--muted))] mb-6 max-w-sm">
-          {description}
-        </p>
+        <p className="text-[var(--fs-sm)] text-[rgb(var(--muted))] mb-6 max-w-sm">{description}</p>
       )}
 
       {/* Action */}
-      {action && (
-        action.href ? (
+      {action &&
+        (action.href ? (
           <Button asChild variant="outline">
             <Link href={action.href}>{action.label}</Link>
           </Button>
@@ -72,8 +70,7 @@ export function Empty({ icon: Icon, title, description, action, className }: Emp
           <Button onClick={action.onClick} variant="outline">
             {action.label}
           </Button>
-        )
-      )}
+        ))}
     </div>
   );
 }

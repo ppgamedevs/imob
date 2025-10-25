@@ -1,11 +1,13 @@
 # Day 29: Buyer Portal - Saved Searches, Watchlist, Compare & Mortgage Calculator
 
 ## Overview
+
 Complete buyer retention system with personalized portal for saving searches, tracking favorites, comparing properties, and calculating mortgage affordability.
 
 ## Features Implemented
 
 ### 1. Saved Searches v2
+
 - **Query Schema**: Complete filter support (areas, price, m², rooms, year, metro, underpriced, TTS, keywords)
 - **Zod Validation**: Type-safe query parsing with coercion
 - **Search Runner**: Reuses Discover logic + budget filtering
@@ -13,6 +15,7 @@ Complete buyer retention system with personalized portal for saving searches, tr
 - **Cron Runner**: Batch process searches for notifications (API: `/api/cron/saved-search`)
 
 ### 2. Watchlist (Favorite Properties)
+
 - **Group-Based**: Track DedupGroups (not individual listings)
 - **Price Tracking**: Detect price changes via GroupSnapshot comparison
 - **Notes**: Optional user notes per property
@@ -20,6 +23,7 @@ Complete buyer retention system with personalized portal for saving searches, tr
 - **UI Component**: WatchButton with star icon toggle
 
 ### 3. Compare Properties
+
 - **Side-by-Side**: Up to 4 properties in table format
 - **Metrics**: Price, €/m², AVM range, rooms, year, TTS, yield, metro, risk, condition, duplicates
 - **Winners**: Auto-detect "Best Value", "Fastest to Sell", "Best Yield"
@@ -27,6 +31,7 @@ Complete buyer retention system with personalized portal for saving searches, tr
 - **Page**: `/compare/[id]` with full comparison table
 
 ### 4. Mortgage & Affordability
+
 - **Calculator**: Monthly payment (P&I), fixed costs, total
 - **DTI Ratio**: Debt-to-income with affordability badge
 - **Formula**: Amortization with configurable down payment, rate, term
@@ -34,6 +39,7 @@ Complete buyer retention system with personalized portal for saving searches, tr
 - **UI Component**: MortgageCalculator with interactive inputs
 
 ### 5. Buyer Portal Dashboard
+
 - **Page**: `/me/buyer` - personalized hub
 - **Sections**:
   - Saved Searches with "Run Search" buttons
@@ -44,6 +50,7 @@ Complete buyer retention system with personalized portal for saving searches, tr
 - **Components**: SavedSearchCard, WatchlistCard
 
 ### 6. UI Integration
+
 - **BuyerToolbar**: Save search + Compare selection toolbar
 - **WatchButton**: Star favorite toggle on property cards
 - **MortgageCalculator**: Embedded calculator widget
@@ -124,8 +131,9 @@ src/
 ## Key Calculations
 
 ### Mortgage Payment
+
 ```typescript
-const r = (ratePct / 100) / 12; // monthly rate
+const r = ratePct / 100 / 12; // monthly rate
 const n = years * 12; // total payments
 const monthly = (principal * r) / (1 - Math.pow(1 + r, -n));
 const dti = totalMonthly / incomeNet;
@@ -133,6 +141,7 @@ const affordable = dti <= 0.4;
 ```
 
 ### Budget Filtering
+
 ```typescript
 // In runSavedSearch
 if (query.budget) {
@@ -144,6 +153,7 @@ if (query.budget) {
 ```
 
 ### Price Change Detection
+
 ```typescript
 // In WatchlistCard
 const snapshots = group.snapshots; // [latest, previous]
@@ -153,6 +163,7 @@ const priceDropped = snapshots[0]?.price < snapshots[1]?.price;
 ## User Flows
 
 ### Save Search Flow
+
 1. User searches in Discover with filters
 2. Clicks "Save Search" in BuyerToolbar
 3. Enters optional name
@@ -161,6 +172,7 @@ const priceDropped = snapshots[0]?.price < snapshots[1]?.price;
 6. Click "Run Search" → redirects to Discover with filters
 
 ### Watchlist Flow
+
 1. User views property in Discover/Report
 2. Clicks star WatchButton
 3. Property added to WatchItem table (by groupId)
@@ -169,6 +181,7 @@ const priceDropped = snapshots[0]?.price < snapshots[1]?.price;
 6. Badge shown: "Price Dropped!"
 
 ### Compare Flow
+
 1. User selects 2-4 properties (checkboxes in Discover)
 2. Clicks "Compare" in BuyerToolbar
 3. CompareSet created with CSV groupIds
@@ -177,6 +190,7 @@ const priceDropped = snapshots[0]?.price < snapshots[1]?.price;
 6. Winners highlighted: Best Value, Fastest, Best Yield
 
 ### Mortgage Flow
+
 1. User views property report
 2. MortgageCalculator shown below property details
 3. Adjusts inputs: down %, rate, term, income
@@ -186,16 +200,19 @@ const priceDropped = snapshots[0]?.price < snapshots[1]?.price;
 ## Integration Points
 
 ### With Discover (Day 15)
+
 - SavedQuery → URLSearchParams conversion
 - Reuses `discoverSearch()` function
 - Budget filter wraps Discover results
 
 ### With Dedup (Day 26-27)
+
 - Watchlist tracks DedupGroups (not Analysis)
 - Compare uses canonicalAnalysis from group
 - Price changes via GroupSnapshot
 
 ### With Scoring (Day 22)
+
 - Recommendations filter by priceBadge="underpriced"
 - TTS bucket for "Fast TTS" recommendations
 - Yield for "Best Investment" ranking
@@ -203,12 +220,15 @@ const priceDropped = snapshots[0]?.price < snapshots[1]?.price;
 ## Cron Setup
 
 Add to Vercel Cron (vercel.json):
+
 ```json
 {
-  "crons": [{
-    "path": "/api/cron/saved-search",
-    "schedule": "0 */6 * * *"
-  }]
+  "crons": [
+    {
+      "path": "/api/cron/saved-search",
+      "schedule": "0 */6 * * *"
+    }
+  ]
 }
 ```
 

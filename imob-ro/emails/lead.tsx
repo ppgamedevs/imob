@@ -36,7 +36,7 @@ export function LeadEmail({
   senderPhone,
   message = "Bună ziua, sunt interesat de acest apartament. Aș dori mai multe detalii despre starea sa.",
   viewUrl = "https://example.com/dashboard/leads/123",
-  brandName = "imob.ro"
+  brandName = "imob.ro",
 }: LeadEmailProps) {
   return (
     <Html>
@@ -52,7 +52,7 @@ export function LeadEmail({
           {/* Content */}
           <Section style={content}>
             <Heading style={h2}>Ai primit un mesaj nou</Heading>
-            
+
             <Text style={paragraph}>
               <strong>Proprietate:</strong> {propertyTitle}
             </Text>
@@ -63,11 +63,17 @@ export function LeadEmail({
             <Text style={paragraph}>
               <strong>{senderName}</strong>
               <br />
-              Email: <a href={`mailto:${senderEmail}`} style={link}>{senderEmail}</a>
+              Email:{" "}
+              <a href={`mailto:${senderEmail}`} style={link}>
+                {senderEmail}
+              </a>
               {senderPhone && (
                 <>
                   <br />
-                  Telefon: <a href={`tel:${senderPhone}`} style={link}>{senderPhone}</a>
+                  Telefon:{" "}
+                  <a href={`tel:${senderPhone}`} style={link}>
+                    {senderPhone}
+                  </a>
                 </>
               )}
             </Text>
@@ -105,7 +111,8 @@ export default LeadEmail;
 // Styles
 const main = {
   backgroundColor: "#f6f9fc",
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
+  fontFamily:
+    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
 };
 
 const container = {

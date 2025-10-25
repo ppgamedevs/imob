@@ -18,9 +18,9 @@ interface MagicLinkEmailProps {
   brandName?: string;
 }
 
-export function MagicLinkEmail({ 
+export function MagicLinkEmail({
   magicLink = "https://example.com/auth/verify?token=abc123",
-  brandName = "imob.ro"
+  brandName = "imob.ro",
 }: MagicLinkEmailProps) {
   return (
     <Html>
@@ -36,7 +36,7 @@ export function MagicLinkEmail({
           {/* Content */}
           <Section style={content}>
             <Text style={paragraph}>Salut!</Text>
-            
+
             <Text style={paragraph}>
               Apasă pe butonul de mai jos pentru a te conecta. Linkul expiră în 15 minute.
             </Text>
@@ -45,10 +45,8 @@ export function MagicLinkEmail({
               Conectează-te
             </Button>
 
-            <Text style={paragraphSmall}>
-              Sau copiază acest link în browser:
-            </Text>
-            
+            <Text style={paragraphSmall}>Sau copiază acest link în browser:</Text>
+
             <Link href={magicLink} style={link}>
               {magicLink}
             </Link>
@@ -57,9 +55,7 @@ export function MagicLinkEmail({
           {/* Footer */}
           <Hr style={hr} />
           <Section style={footer}>
-            <Text style={footerText}>
-              Dacă nu ai cerut acest email, ignoră-l.
-            </Text>
+            <Text style={footerText}>Dacă nu ai cerut acest email, ignoră-l.</Text>
             <Text style={footerText}>
               © {new Date().getFullYear()} {brandName}. Toate drepturile rezervate.
             </Text>
@@ -75,7 +71,8 @@ export default MagicLinkEmail;
 // Styles
 const main = {
   backgroundColor: "#f6f9fc",
-  fontFamily: '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
+  fontFamily:
+    '-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Ubuntu,sans-serif',
 };
 
 const container = {
