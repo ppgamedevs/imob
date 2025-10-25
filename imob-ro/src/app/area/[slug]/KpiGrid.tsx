@@ -1,59 +1,13 @@
 import { AlertTriangle, Clock, DollarSign, Home, TrendingDown, TrendingUp } from "lucide-react";
 import * as React from "react";
 
+import { KpiTile } from "@/components/ui/kpi-tile";
 import type { AreaKpis } from "@/lib/areas/dto";
 import { formatChange, formatNumber } from "@/lib/areas/series";
 import { cn } from "@/lib/utils";
 
 export interface KpiGridProps {
   kpis: AreaKpis;
-}
-
-interface KpiTileProps {
-  icon: React.ElementType;
-  label: string;
-  value: string | React.ReactNode;
-  change?: string;
-  changeType?: "positive" | "negative" | "neutral";
-  subtitle?: string;
-  className?: string;
-}
-
-function KpiTile({
-  icon: Icon,
-  label,
-  value,
-  change,
-  changeType,
-  subtitle,
-  className,
-}: KpiTileProps) {
-  return (
-    <div className={cn("p-4 rounded-lg border border-border bg-surface", className)}>
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="h-4 w-4 text-muted" />
-        <span className="text-sm text-muted">{label}</span>
-      </div>
-      <div className="text-2xl font-bold text-fg mb-1">{value}</div>
-      {change && (
-        <div
-          className={cn(
-            "text-sm font-medium flex items-center gap-1",
-            changeType === "positive"
-              ? "text-green-600 dark:text-green-400"
-              : changeType === "negative"
-                ? "text-red-600 dark:text-red-400"
-                : "text-muted",
-          )}
-        >
-          {changeType === "positive" && <TrendingUp className="h-3 w-3" />}
-          {changeType === "negative" && <TrendingDown className="h-3 w-3" />}
-          {change}
-        </div>
-      )}
-      {subtitle && <div className="text-xs text-muted mt-1">{subtitle}</div>}
-    </div>
-  );
 }
 
 export default function KpiGrid({ kpis }: KpiGridProps) {
@@ -113,7 +67,7 @@ export default function KpiGrid({ kpis }: KpiGridProps) {
           icon={Home}
           label="Preț median"
           value={`${formatNumber(kpis.medianEurM2)} €/m²`}
-          subtitle="În ultimele 30 zile"
+          size="md"
         />
 
         {/* 12-Month Change */}
@@ -121,8 +75,8 @@ export default function KpiGrid({ kpis }: KpiGridProps) {
           icon={TrendingUp}
           label="Creștere 12 luni"
           value={formatChange(kpis.medianEurM2Change12m)}
-          changeType={priceChangeType}
-          subtitle="An la an"
+          deltaVariant={priceChangeType as any}
+          size="md"
         />
 
         {/* Rent */}
@@ -131,10 +85,10 @@ export default function KpiGrid({ kpis }: KpiGridProps) {
             icon={DollarSign}
             label="Chirie medie"
             value={`${formatNumber(kpis.medianRentEurM2)} €/m²`}
-            subtitle="Pe lună"
+            size="md"
           />
         ) : (
-          <KpiTile icon={DollarSign} label="Chirie medie" value="—" subtitle="Date insuficiente" />
+          <KpiTile icon={DollarSign} label="Chirie medie" value="—" size="md" />
         )}
 
         {/* Yield */}
@@ -143,13 +97,13 @@ export default function KpiGrid({ kpis }: KpiGridProps) {
             icon={TrendingUp}
             label="Randament net"
             value={`${(kpis.yieldNet * 100).toFixed(1)}%`}
-            changeType={
+            deltaVariant={
               kpis.yieldNet > 0.06 ? "positive" : kpis.yieldNet < 0.04 ? "negative" : "neutral"
             }
-            subtitle="Anual estimat"
+            size="md"
           />
         ) : (
-          <KpiTile icon={TrendingUp} label="Randament net" value="—" subtitle="Date insuficiente" />
+          <KpiTile icon={TrendingUp} label="Randament net" value="—" size="md" />
         )}
 
         {/* TTS */}
@@ -158,32 +112,35 @@ export default function KpiGrid({ kpis }: KpiGridProps) {
             icon={Clock}
             label="Timp până la vânzare"
             value={`${kpis.ttsMedianDays} zile`}
-            changeType={
+            deltaVariant={
               kpis.ttsMedianDays < 60
                 ? "positive"
                 : kpis.ttsMedianDays > 120
                   ? "negative"
                   : "neutral"
             }
-            subtitle="Median (TTS)"
+            size="md"
           />
         ) : (
-          <KpiTile
-            icon={Clock}
-            label="Timp până la vânzare"
-            value="—"
-            subtitle="Date insuficiente"
-          />
+          <KpiTile icon={Clock} label="Timp până la vânzare" value="—" size="md" />
         )}
 
         {/* Seismic */}
-        <div className="p-4 rounded-lg border border-border bg-surface">
+        <div className="p-4 rounded-[var(--r-md)] border border-[rgb(var(--border))] bg-[rgb(var(--surface))] shadow-[var(--elev1)]">
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="h-4 w-4 text-muted" />
-            <span className="text-sm text-muted">Risc seismic</span>
+            <AlertTriangle className="h-5 w-5 text-[rgb(var(--primary))]" />
+            <span className="text-[var(--fs-sm)] text-[rgb(var(--muted))] font-medium">
+              Risc seismic
+            </span>
           </div>
-          {seismicBar ? seismicBar : <div className="text-2xl font-bold text-fg mb-1">—</div>}
-          <div className="text-xs text-muted mt-2">Distribuția în zonă</div>
+          {seismicBar ? (
+            seismicBar
+          ) : (
+            <div className="text-2xl font-bold text-[rgb(var(--text))] mb-1">—</div>
+          )}
+          <div className="text-[var(--fs-xs)] text-[rgb(var(--muted))] mt-2">
+            Distribuția în zonă
+          </div>
         </div>
       </div>
     </div>
