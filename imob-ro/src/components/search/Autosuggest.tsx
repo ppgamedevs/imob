@@ -1,14 +1,15 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
+import { Bookmark, ExternalLink, FileText, Home, MapPin, Star } from "lucide-react";
 import Image from "next/image";
-import { MapPin, Home, FileText, Bookmark, Star, ExternalLink } from "lucide-react";
-import { cn } from "@/lib/utils";
+import Link from "next/link";
+import * as React from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { SuggestItem, SuggestSections } from "@/lib/search/types";
 import { formatNumber } from "@/lib/areas/series";
+import type { SuggestItem, SuggestSections } from "@/lib/search/types";
+import { cn } from "@/lib/utils";
 
 export interface AutosuggestProps {
   query: string;
@@ -58,7 +59,7 @@ export default function Autosuggest({
   if (loading) {
     return (
       <div className="w-full max-w-2xl bg-surface border border-border rounded-lg shadow-lg overflow-hidden">
-        <AutosuggestHeader query={query} />
+        <AutosuggestHeader />
         <div className="max-h-[500px] overflow-y-auto">
           {SECTION_ORDER.map((section) => (
             <SectionSkeleton key={section} label={SECTION_LABELS[section]} />
@@ -71,7 +72,7 @@ export default function Autosuggest({
   if (!hasResults) {
     return (
       <div className="w-full max-w-2xl bg-surface border border-border rounded-lg shadow-lg overflow-hidden">
-        <AutosuggestHeader query={query} />
+        <AutosuggestHeader />
         <div className="p-8 text-center text-muted">
           <p className="mb-2">Niciun rezultat pentru &quot;{query}&quot;</p>
           <p className="text-sm">Încearcă un termen diferit sau navighează către Descoperă</p>
@@ -82,7 +83,7 @@ export default function Autosuggest({
 
   return (
     <div className="w-full max-w-2xl bg-surface border border-border rounded-lg shadow-lg overflow-hidden">
-      <AutosuggestHeader query={query} />
+      <AutosuggestHeader />
       <div className="max-h-[500px] overflow-y-auto">
         {SECTION_ORDER.map((section) => {
           const items = sections[section];
@@ -106,7 +107,7 @@ export default function Autosuggest({
   );
 }
 
-function AutosuggestHeader({ query }: { query: string }) {
+function AutosuggestHeader() {
   return (
     <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-accent/50">
       <div className="text-sm font-medium text-fg">Căutare</div>
