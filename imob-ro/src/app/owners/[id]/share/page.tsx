@@ -14,10 +14,11 @@ export default async function OwnerSharePage({
   params,
   searchParams,
 }: {
-  params: { id: string };
-  searchParams: { token?: string };
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ token?: string }>;
 }) {
-  const { token } = searchParams;
+  const { id } = await params;
+  const { token } = await searchParams;
 
   if (!token) {
     notFound();
@@ -26,7 +27,7 @@ export default async function OwnerSharePage({
   // Validate token
   const draft = await prisma.ownerDraft.findUnique({
     where: {
-      analysisId: params.id,
+      analysisId: id,
       shareToken: token,
     },
   });
@@ -36,7 +37,7 @@ export default async function OwnerSharePage({
   }
 
   // Load dashboard data (without contact info)
-  const data = await loadOwnerDashboard(params.id);
+  const data = await loadOwnerDashboard(id);
 
   if (!data) {
     notFound();
