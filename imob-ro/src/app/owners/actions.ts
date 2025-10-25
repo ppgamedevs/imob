@@ -1,14 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/db";
-import { upsertAnalysisByUrl, startAnalysis } from "@/lib/analysis";
 
-type CreateDraftInput = {
-  sourceUrl?: string;
-  address?: string;
-  areaM2?: number;
-};
+import { startAnalysis, upsertAnalysisByUrl } from "@/lib/analysis";
+import { prisma } from "@/lib/db";
 
 export async function createOwnerDraft(prevState: any, formData: FormData) {
   const input = formData.get("input") as string;

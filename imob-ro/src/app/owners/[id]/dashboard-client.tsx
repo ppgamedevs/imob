@@ -1,16 +1,17 @@
 "use client";
 
+import { AlertTriangle, Check, Clock, Copy, Home, Share2, TrendingUp } from "lucide-react";
 import { useState } from "react";
-import type { OwnerDashboardData } from "@/types/owner";
-import { Surface } from "@/components/ui/Surface";
-import { Button } from "@/components/ui/button";
+
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, Clock, Home, AlertTriangle, Share2, Copy, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Surface } from "@/components/ui/Surface";
 import { getScoreTier } from "@/lib/owner/score";
+import type { OwnerDashboardData } from "@/types/owner";
+
 import { generateShareLink, toggleRoiFix } from "./actions";
 
 export function OwnerDashboardClient({ data }: { data: OwnerDashboardData }) {
-  const [shareToken, setShareToken] = useState(data.draft.shareToken);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [roiToggles, setRoiToggles] = useState(data.draft.roiToggles);
@@ -19,7 +20,6 @@ export function OwnerDashboardClient({ data }: { data: OwnerDashboardData }) {
     const result = await generateShareLink(data.analysisId);
     if (result.shareUrl) {
       setShareUrl(result.shareUrl);
-      setShareToken(result.shareToken);
     }
   };
 

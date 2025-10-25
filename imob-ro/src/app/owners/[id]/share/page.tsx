@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
+
 import { prisma } from "@/lib/db";
 import { loadOwnerDashboard } from "@/lib/owner/load";
+
 import { ShareViewClient } from "./share-view-client";
 
 export const metadata = {

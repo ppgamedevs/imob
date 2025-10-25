@@ -3,7 +3,7 @@
  * 0-100 readiness score for fast sale
  */
 
-import type { PreMarketScore, OwnerRoiItem } from "@/types/owner";
+import type { PreMarketScore } from "@/types/owner";
 
 type ScoreInputs = {
   avmMid?: number;

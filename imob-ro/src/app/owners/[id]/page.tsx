@@ -1,5 +1,7 @@
 import { notFound } from "next/navigation";
+
 import { loadOwnerDashboard } from "@/lib/owner/load";
+
 import { OwnerDashboardClient } from "./dashboard-client";
 
 export const metadata = {

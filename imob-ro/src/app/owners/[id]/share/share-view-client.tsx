@@ -1,11 +1,13 @@
 "use client";
 
-import type { OwnerDashboardData } from "@/types/owner";
-import { Surface } from "@/components/ui/Surface";
+import { AlertTriangle, Clock, Home, Mail, TrendingUp } from "lucide-react";
+import Link from "next/link";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Clock, Home, AlertTriangle, Mail } from "lucide-react";
+import { Surface } from "@/components/ui/Surface";
 import { getScoreTier } from "@/lib/owner/score";
+import type { OwnerDashboardData } from "@/types/owner";
 
 export function ShareViewClient({ data }: { data: OwnerDashboardData }) {
   const scoreTier = getScoreTier(data.preMarketScore.score);
@@ -216,7 +218,7 @@ export function ShareViewClient({ data }: { data: OwnerDashboardData }) {
                   Generează o estimare gratuită în 60 secunde
                 </p>
                 <Button asChild className="w-full">
-                  <a href="/owners">Estimează proprietatea</a>
+                  <Link href="/owners">Estimează proprietatea</Link>
                 </Button>
               </Surface>
 

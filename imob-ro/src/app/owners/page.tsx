@@ -1,10 +1,12 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
 import { useActionState } from "react";
-import { createOwnerDraft } from "./actions";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+
+import { createOwnerDraft } from "./actions";
 
 export default function OwnersLandingPage() {
   const [state, formAction, pending] = useActionState(createOwnerDraft, null);

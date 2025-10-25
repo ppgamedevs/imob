@@ -1,7 +1,8 @@
 "use server";
 
-import { prisma } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+
+import { prisma } from "@/lib/db";
 
 /**
  * Generate or retrieve share link for owner dashboard
