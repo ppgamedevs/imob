@@ -171,6 +171,7 @@ model Analysis {
   photoAssets      PhotoAsset[]
   provenanceEvents ProvenanceEvent[]
   trustSnapshot    TrustSnapshot?
+  ownerDraft       OwnerDraft?
 
   @@index([sourceUrl])
   @@index([userId])
@@ -998,5 +999,26 @@ model FeatureFlag {
   
   @@index([key])
   @@index([enabled])
+}
+
+// Day 30+: Owner Experience v2 (Self-serve valuation)
+model OwnerDraft {
+  id           String   @id @default(cuid())
+  analysisId   String   @unique
+  status       String   @default("draft") // draft | ready | shared
+  addressNote  String?
+  contactName  String?
+  contactPhone String?
+  contactEmail String?
+  shareToken   String   @unique @default(cuid())
+  roiToggles   Json?    // { photoProfi: true, paint: false, ... }
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  analysis     Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  
+  @@index([analysisId])
+  @@index([shareToken])
+  @@index([status, createdAt])
 }
 
