@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";
+import { GlossaryHint, type GlossaryTerm } from "./glossary-hint";
 
 export interface KpiTileProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {
   /** Icon component from lucide-react */
@@ -15,6 +16,8 @@ export interface KpiTileProps extends Omit<ComponentPropsWithoutRef<"div">, "chi
   deltaVariant?: "positive" | "negative" | "neutral";
   /** Size variant */
   size?: "sm" | "md" | "lg";
+  /** Optional glossary term for tooltip */
+  glossaryTerm?: GlossaryTerm;
 }
 
 /**
@@ -39,6 +42,7 @@ export function KpiTile({
   delta,
   deltaVariant = "neutral",
   size = "md",
+  glossaryTerm,
   className,
   ...props
 }: KpiTileProps) {
@@ -75,9 +79,12 @@ export function KpiTile({
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1">
           {/* Label */}
-          <p className="text-[var(--fs-sm)] text-[rgb(var(--muted))] font-medium mb-1">
-            {label}
-          </p>
+          <div className="flex items-center gap-1.5 mb-1">
+            <p className="text-[var(--fs-sm)] text-[rgb(var(--muted))] font-medium">
+              {label}
+            </p>
+            {glossaryTerm && <GlossaryHint term={glossaryTerm} />}
+          </div>
 
           {/* Value */}
           <p className={cn("text-[rgb(var(--text))] tabular-nums", valueSize[size])}>

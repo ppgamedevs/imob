@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "./button";
+import Link from "next/link";
 
 export interface EmptyProps {
   /** Icon to display */
@@ -12,7 +13,9 @@ export interface EmptyProps {
   /** Optional CTA button */
   action?: {
     label: string;
-    onClick: () => void;
+    onClick?: () => void;
+    /** Optional link href (if provided, renders Link instead of button) */
+    href?: string;
   };
   /** Additional class names */
   className?: string;
@@ -61,9 +64,15 @@ export function Empty({ icon: Icon, title, description, action, className }: Emp
 
       {/* Action */}
       {action && (
-        <Button onClick={action.onClick} variant="outline">
-          {action.label}
-        </Button>
+        action.href ? (
+          <Button asChild variant="outline">
+            <Link href={action.href}>{action.label}</Link>
+          </Button>
+        ) : (
+          <Button onClick={action.onClick} variant="outline">
+            {action.label}
+          </Button>
+        )
       )}
     </div>
   );

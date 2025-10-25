@@ -18,6 +18,7 @@ import AppFooter from "@/components/layout/AppFooter";
 import AppHeader from "@/components/layout/AppHeader";
 import MobileBar from "@/components/layout/MobileBar";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ToastProvider } from "@/components/ui/toaster";
 import { initSentry } from "@/lib/obs/sentry";
 
 // Initialize Sentry for error tracking
@@ -128,14 +129,16 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider>
-          <div className="flex min-h-screen flex-col pb-16 md:pb-0">
-            <AppHeader />
-            <main className="flex-1">{children}</main>
-            <AppFooter />
-            <MobileBar />
-          </div>
-          <Analytics />
-          <CookieBanner />
+          <ToastProvider>
+            <div className="flex min-h-screen flex-col pb-16 md:pb-0">
+              <AppHeader />
+              <main className="flex-1">{children}</main>
+              <AppFooter />
+              <MobileBar />
+            </div>
+            <Analytics />
+            <CookieBanner />
+          </ToastProvider>
         </ThemeProvider>
       </body>
     </html>
