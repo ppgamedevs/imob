@@ -1022,3 +1022,97 @@ model OwnerDraft {
   @@index([status, createdAt])
 }
 
+// ========================================
+// Step 10: Agent/Developer Workspace v1
+// ========================================
+
+model AgentUser {
+  id         String   @id @default(cuid())
+  email      String   @unique
+  orgId      String?
+  name       String?
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  
+  org        Org?     @relation(fields: [orgId], references: [id], onDelete: SetNull)
+  
+  @@index([email])
+  @@index([orgId])
+  @@index([lastSeenAt])
+}
+
+model Org {
+  id        String   @id @default(cuid())
+  name      String
+  brand     Json?    // { color: "#...", logoUrl: "https://...", slug: "remax-crangasi" }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  members   AgentUser[]
+  shares    PortfolioShare[]
+  
+  @@index([createdAt])
+}
+
+model MagicToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  email     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  
+  @@index([token])
+  @@index([email, expiresAt])
+}
+
+model PortfolioShare {
+  id         String   @id @default(cuid())
+  orgId      String
+  title      String
+  query      String   // saved filters, e.g. signals=underpriced&areas=...
+  visibleIds String?  // optional explicit selection (csv)
+  slug       String   @unique
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  org        Org      @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  
+  @@index([orgId, createdAt])
+  @@index([slug])
+}
+
+model BulkAnalysisJob {
+  id         String   @id @default(cuid())
+  agentEmail String
+  orgId      String?
+  total      Int      @default(0)
+  queued     Int      @default(0)
+  running    Int      @default(0)
+  done       Int      @default(0)
+  failed     Int      @default(0)
+  status     String   @default("queued") // queued | running | completed | failed
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  items      BulkAnalysisItem[]
+  
+  @@index([agentEmail, createdAt])
+  @@index([status, createdAt])
+}
+
+model BulkAnalysisItem {
+  id         String   @id @default(cuid())
+  jobId      String
+  url        String
+  status     String   @default("queued") // queued | running | done | failed
+  analysisId String?
+  error      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  job        BulkAnalysisJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  
+  @@index([jobId, status])
+  @@index([analysisId])
+}
+

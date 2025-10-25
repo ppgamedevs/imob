@@ -1,8 +1,9 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 
 /**
- * Middleware to protect admin routes and enforce authentication
+ * Middleware to protect admin and agent routes
  *
  * IMPORTANT: This middleware runs in Edge runtime and cannot use Prisma.
  * We only check for the presence of auth cookies here. Actual role verification
@@ -11,9 +12,42 @@ import { NextResponse } from "next/server";
  * Protected paths:
  * - /admin/* - Requires session cookie (role check in page)
  * - /dashboard - Requires session cookie
+ * - /a/* - Requires agent-session cookie (except /a/signin, /a/callback, /a/public/*)
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Agent workspace routes
+  if (pathname.startsWith("/a")) {
+    // Allow public routes
+    if (
+      pathname === "/a/signin" ||
+      pathname === "/a/callback" ||
+      pathname.startsWith("/a/public/")
+    ) {
+      return NextResponse.next();
+    }
+
+    // Check agent session
+    const agentToken = request.cookies.get("agent-session");
+
+    if (!agentToken) {
+      return NextResponse.redirect(new URL("/a/signin", request.url));
+    }
+
+    // Verify JWT (Edge-compatible)
+    try {
+      const secret = new TextEncoder().encode(
+        process.env.AGENT_SESSION_SECRET || "change-me-in-production",
+      );
+      await jwtVerify(agentToken.value, secret);
+      return NextResponse.next();
+    } catch {
+      const response = NextResponse.redirect(new URL("/a/signin", request.url));
+      response.cookies.delete("agent-session");
+      return response;
+    }
+  }
 
   // Check for NextAuth session cookie (Edge-compatible)
   // NextAuth v5 uses different cookie names depending on environment
