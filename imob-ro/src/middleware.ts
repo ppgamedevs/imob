@@ -1,6 +1,6 @@
+import { jwtVerify } from "jose";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
-import { jwtVerify } from "jose";
 
 /**
  * Middleware to protect admin and agent routes

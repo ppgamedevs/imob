@@ -29,16 +29,6 @@ export async function assertOrgQuota(
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Count jobs created today by this agent
-  const dailyCount = await prisma.bulkAnalysisJob.count({
-    where: {
-      agentEmail,
-      createdAt: {
-        gte: today,
-      },
-    },
-  });
-
   const dailyTotal = await prisma.bulkAnalysisJob.aggregate({
     where: {
       agentEmail,

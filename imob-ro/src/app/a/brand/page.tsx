@@ -1,9 +1,11 @@
-import { requireSession } from "@/lib/a/auth";
-import { prisma } from "@/lib/db";
 import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { requireSession } from "@/lib/a/auth";
+import { prisma } from "@/lib/db";
+
 import { saveBrand } from "./actions";
 
 export default async function BrandPage() {

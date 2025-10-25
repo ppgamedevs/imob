@@ -1,7 +1,8 @@
-import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+
 import { Badge } from "@/components/ui/badge";
+import { prisma } from "@/lib/db";
 
 export default async function PublicPortfolioPage({
   params,
@@ -113,7 +114,6 @@ export default async function PublicPortfolioPage({
                 {listing?.photos && Array.isArray(listing.photos) && listing.photos[0] && (
                   <div className="aspect-video relative">
                     <img
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       src={(listing.photos[0] as any).url || listing.photos[0]}
                       alt={listing.title || ""}
                       className="w-full h-full object-cover"

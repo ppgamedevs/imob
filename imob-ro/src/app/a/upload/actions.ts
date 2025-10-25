@@ -1,7 +1,7 @@
 "use server";
 
 import { requireSession } from "@/lib/a/auth";
-import { queueBulkAnalysis, getBulkJobStatus } from "@/lib/a/queue";
+import { getBulkJobStatus, queueBulkAnalysis } from "@/lib/a/queue";
 import { QuotaExceededError } from "@/lib/a/quotas";
 import type { BulkJobWithItems } from "@/types/agent";
 

@@ -1,8 +1,9 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+
+import { Button } from "@/components/ui/button";
 import { requireSession } from "@/lib/a/auth";
 import { prisma } from "@/lib/db";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { notFound } from "next/navigation";
 
 export default async function GroupDetailPage({
   params,
@@ -84,7 +85,6 @@ export default async function GroupDetailPage({
               <div key={analysis.id} className="flex items-center gap-4 p-4 rounded bg-white/5">
                 {listing?.photos && Array.isArray(listing.photos) && listing.photos[0] && (
                   <img
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     src={(listing.photos[0] as any).url || listing.photos[0]}
                     alt=""
                     className="w-20 h-20 object-cover rounded"

@@ -1,8 +1,9 @@
 "use server";
 
-import { prisma } from "@/lib/db";
-import { sendMagicLinkEmail } from "@/lib/a/email";
 import { randomBytes } from "crypto";
+
+import { sendMagicLinkEmail } from "@/lib/a/email";
+import { prisma } from "@/lib/db";
 
 export async function sendMagicLink(
   _prevState: unknown,

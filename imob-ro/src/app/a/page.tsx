@@ -1,10 +1,11 @@
+import Link from "next/link";
+import { redirect } from "next/navigation";
+
+import { Button } from "@/components/ui/button";
 import { requireSession } from "@/lib/a/auth";
+import { deleteSession } from "@/lib/a/auth";
 import { getQuotaUsage } from "@/lib/a/quotas";
 import { prisma } from "@/lib/db";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { deleteSession } from "@/lib/a/auth";
-import { redirect } from "next/navigation";
 
 async function signOut() {
   "use server";
@@ -63,7 +64,7 @@ export default async function AgentHomePage() {
         </div>
 
         <div className="bg-white/5 rounded-lg p-6">
-          <h3 className="text-sm font-medium text-gray-400 mb-2">Today's Usage</h3>
+          <h3 className="text-sm font-medium text-gray-400 mb-2">Today&apos;s Usage</h3>
           <p className="text-3xl font-bold">
             {quotas.dailyUsed}
             <span className="text-lg text-gray-500"> / {quotas.dailyLimit}</span>

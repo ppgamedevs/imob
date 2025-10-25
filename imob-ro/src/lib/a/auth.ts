@@ -1,7 +1,8 @@
 // Agent workspace authentication utilities
 
-import { SignJWT, jwtVerify } from "jose";
+import { jwtVerify, SignJWT } from "jose";
 import { cookies } from "next/headers";
+
 import { prisma } from "@/lib/db";
 import type { AgentSession } from "@/types/agent";
 

@@ -1,12 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { queueBulk, pollJobStatus } from "./actions";
 import type { BulkJobWithItems } from "@/types/agent";
-import Link from "next/link";
+
+import { pollJobStatus, queueBulk } from "./actions";
 
 export default function UploadPage() {
   const [state, formAction, pending] = useActionState(queueBulk, null);

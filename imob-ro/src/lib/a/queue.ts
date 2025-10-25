@@ -1,7 +1,8 @@
 // Bulk analysis queue system
 
-import { prisma } from "@/lib/db";
 import { startAnalysis } from "@/lib/analysis";
+import { prisma } from "@/lib/db";
+
 import { assertOrgQuota } from "./quotas";
 
 const CONCURRENT_LIMIT = 30;

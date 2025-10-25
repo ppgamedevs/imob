@@ -1,6 +1,7 @@
-import { requireSession } from "@/lib/a/auth";
 import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
+import { requireSession } from "@/lib/a/auth";
 
 export default async function ReportsPage() {
   await requireSession();

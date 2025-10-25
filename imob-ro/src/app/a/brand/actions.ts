@@ -1,8 +1,9 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { requireSession } from "@/lib/a/auth";
 import { prisma } from "@/lib/db";
-import { revalidatePath } from "next/cache";
 
 export async function saveBrand(formData: FormData) {
   const session = await requireSession();

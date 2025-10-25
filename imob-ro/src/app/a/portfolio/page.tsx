@@ -1,8 +1,9 @@
-import { requireSession } from "@/lib/a/auth";
-import { prisma } from "@/lib/db";
 import Link from "next/link";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { requireSession } from "@/lib/a/auth";
+import { prisma } from "@/lib/db";
 
 export default async function PortfolioPage() {
   const session = await requireSession();
@@ -101,7 +102,6 @@ export default async function PortfolioPage() {
                       <div className="flex items-center gap-3">
                         {listing?.photos && Array.isArray(listing.photos) && listing.photos[0] && (
                           <img
-                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
                             src={(listing.photos[0] as any).url || listing.photos[0]}
                             alt=""
                             className="w-12 h-12 object-cover rounded"
