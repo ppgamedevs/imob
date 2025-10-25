@@ -3,25 +3,26 @@ import Link from "next/link";
 
 export default function AppHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-[color:var(--color-bg)/.7] backdrop-blur supports-[backdrop-filter]:bg-[color:var(--color-bg)/.5]">
-      <div className="mx-auto max-w-[1200px] px-3 h-14 flex items-center gap-3">
-        <Link href="/" className="text-[15px] font-semibold tracking-tight focus-ring">
+    <header className="sticky top-0 z-40 border-b border-border bg-black/50 backdrop-blur">
+      <div className="mx-auto max-w-[1200px] px-4 h-14 flex items-center gap-4">
+        <Link href="/" className="text-[15px] font-semibold tracking-tight">
           iR
         </Link>
-        <nav className="ml-auto hidden md:flex items-center gap-6 text-sm text-[color:var(--color-text)]/80">
-          <Link className="hover:opacity-100 opacity-80 transition-opacity" href="/discover">
+
+        <nav className="ml-auto hidden md:flex items-center gap-6 text-sm text-white/80">
+          <Link className="hover:text-white transition-colors" href="/discover">
             Caută
           </Link>
-          <Link className="hover:opacity-100 opacity-80 transition-opacity" href="/area">
+          <Link className="hover:text-white transition-colors" href="/areas">
             Zone
           </Link>
-          <Link className="hover:opacity-100 opacity-80 transition-opacity" href="/owners">
-            Pentru proprietari
+          <Link className="hover:text-white transition-colors" href="/owners">
+            Proprietari
           </Link>
         </nav>
         <Link
           href="/discover"
-          className="ml-auto md:ml-4 rounded-lg px-3 py-1.5 text-sm bg-primary text-primaryFg focus-ring transition-colors hover:bg-primary/90"
+          className="ml-auto md:ml-2 rounded-lg px-3 py-1.5 text-sm bg-primary text-primaryFg hover:opacity-95 transition-opacity"
         >
           Caută acum
         </Link>
