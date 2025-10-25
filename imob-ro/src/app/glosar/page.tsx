@@ -1,8 +1,9 @@
+import { ArrowLeftIcon, BookOpenIcon } from "lucide-react";
 import { Metadata } from "next";
-import { ro } from "@/i18n/ro";
-import { Surface } from "@/components/ui/Surface";
-import { BookOpenIcon, ArrowLeftIcon } from "lucide-react";
 import Link from "next/link";
+
+import { Surface } from "@/components/ui/Surface";
+import { ro } from "@/i18n/ro";
 
 export const metadata: Metadata = {
   title: "Glosar — Termeni Imobiliari",

@@ -1,7 +1,9 @@
-import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
-import { Button } from "./button";
 import Link from "next/link";
+
+import { cn } from "@/lib/utils";
+
+import { Button } from "./button";
 
 export interface EmptyProps {
   /** Icon to display */

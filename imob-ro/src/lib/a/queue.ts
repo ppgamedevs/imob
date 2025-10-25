@@ -2,6 +2,11 @@
 
 import { startAnalysis } from "@/lib/analysis";
 import { prisma } from "@/lib/db";
+import type {
+  BulkAnalysisItemStatus,
+  BulkAnalysisJobStatus,
+  BulkJobWithItems,
+} from "@/types/agent";
 
 import { assertOrgQuota } from "./quotas";
 
@@ -221,7 +226,7 @@ function normalizeUrl(url: string): string | null {
   }
 }
 
-export async function getBulkJobStatus(jobId: string) {
+export async function getBulkJobStatus(jobId: string): Promise<BulkJobWithItems | null> {
   const job = await prisma.bulkAnalysisJob.findUnique({
     where: { id: jobId },
     include: {
@@ -232,5 +237,24 @@ export async function getBulkJobStatus(jobId: string) {
     },
   });
 
-  return job;
+  if (!job) return null;
+
+  // Map Prisma result to typed structure
+  return {
+    id: job.id,
+    total: job.total,
+    queued: job.queued,
+    running: job.running,
+    done: job.done,
+    failed: job.failed,
+    status: job.status as BulkAnalysisJobStatus,
+    createdAt: job.createdAt,
+    items: job.items.map((item) => ({
+      id: item.id,
+      url: item.url,
+      status: item.status as BulkAnalysisItemStatus,
+      analysisId: item.analysisId,
+      error: item.error,
+    })),
+  };
 }

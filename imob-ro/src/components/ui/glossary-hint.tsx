@@ -1,7 +1,8 @@
 "use client";
 
-import * as React from "react";
 import { InfoIcon } from "lucide-react";
+import * as React from "react";
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ro } from "@/i18n/ro";
 import { cn } from "@/lib/utils";

@@ -1,6 +1,8 @@
-import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
 import type { ComponentPropsWithoutRef } from "react";
+
+import { cn } from "@/lib/utils";
+
 import { GlossaryHint, type GlossaryTerm } from "./glossary-hint";
 
 export interface KpiTileProps extends Omit<ComponentPropsWithoutRef<"div">, "children"> {

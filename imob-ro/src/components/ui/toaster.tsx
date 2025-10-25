@@ -1,9 +1,10 @@
 "use client";
 
+import { AlertTriangleIcon, CheckCircleIcon, InfoIcon, XCircleIcon, XIcon } from "lucide-react";
 import * as React from "react";
-import { CheckCircleIcon, InfoIcon, AlertTriangleIcon, XCircleIcon, XIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { createPortal } from "react-dom";
+
+import { cn } from "@/lib/utils";
 
 export type ToastVariant = "success" | "info" | "warning" | "error";
 

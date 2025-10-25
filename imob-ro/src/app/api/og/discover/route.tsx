@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+
 import { renderOg } from "../_shared";
 
 export const runtime = "edge";

@@ -47,7 +47,8 @@ export async function loadOwnerDashboard(analysisId: string): Promise<OwnerDashb
   const features =
     (analysis.featureSnapshot?.features as Record<string, any> | null) ??
     ({} as Record<string, any>);
-  const explainQuality = analysis.scoreSnapshot?.explain?.quality as
+  const explain = analysis.scoreSnapshot?.explain as Record<string, any> | null | undefined;
+  const explainQuality = explain?.quality as
     | {
         photos?: { count: number; score: number };
         text?: { length: number; score: number };
