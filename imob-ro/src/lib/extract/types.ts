@@ -10,7 +10,7 @@ export type Extracted = {
   lat?: number | null;
   lng?: number | null;
   photos?: Array<{ url: string; width?: number; height?: number }>;
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+
   sourceMeta?: any;
 };
 

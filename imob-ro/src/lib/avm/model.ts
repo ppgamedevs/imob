@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Day 33: Ridge regression implementation in pure JavaScript
  * No external ML libraries - implements matrix math from scratch

@@ -96,9 +96,8 @@ export default async function SharePage(props: { params: Promise<{ slug: string 
   const opts = (sl.options as ShareOptions) || {};
   const scr = scrubReportData({ ...a }, opts);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const f: any = scr.featureSnapshot?.features ?? {};
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const s: any = scr.scoreSnapshot ?? {};
   const photos: string[] = Array.isArray(scr.extractedListing?.photos)
     ? (scr.extractedListing?.photos as string[])

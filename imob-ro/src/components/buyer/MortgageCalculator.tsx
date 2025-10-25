@@ -5,11 +5,12 @@
 
 "use client";
 
+import { useEffect, useState } from "react";
+
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { useState, useEffect } from "react";
 import { mortgageCalc } from "@/lib/finance/mortgage";
 
 type MortgageCalculatorProps = {

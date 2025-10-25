@@ -1,6 +1,8 @@
 import { Menu, Search } from "lucide-react";
 import Link from "next/link";
 
+import CommandPalette from "@/components/command/CommandPalette";
+import SearchBox from "@/components/search/SearchBox";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,8 +16,6 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { auth, signOut } from "@/lib/auth";
 import { getSubscription } from "@/lib/billing/entitlements";
-import SearchBox from "@/components/search/SearchBox";
-import CommandPalette from "@/components/command/CommandPalette";
 
 const navLinks = [
   { href: "/", label: "Acasă" },
@@ -35,7 +35,10 @@ export async function SiteHeader() {
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:h-16">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 text-lg font-semibold sm:text-2xl shrink-0">
+        <Link
+          href="/"
+          className="flex items-center gap-3 text-lg font-semibold sm:text-2xl shrink-0"
+        >
           <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center text-primary font-bold">
             iR
           </div>
@@ -170,7 +173,7 @@ export async function SiteHeader() {
           </Sheet>
         </div>
       </div>
-      
+
       {/* Command Palette (⌘K) */}
       <CommandPalette />
     </header>

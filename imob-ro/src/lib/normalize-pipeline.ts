@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { toEur } from "@/lib/currency";
 import { prisma } from "@/lib/db";
 import { gridSlug, nearestStationM, slugifyRo } from "@/lib/geo";

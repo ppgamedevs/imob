@@ -1,12 +1,14 @@
 "use client";
 
-import * as React from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { X, Command as CommandIcon } from 'lucide-react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
-import Autosuggest from '../search/Autosuggest';
-import { getSuggestCached } from '@/lib/search/cache';
-import type { SuggestItem, SuggestSections, CommandAction } from '@/lib/search/types';
+import { Command as CommandIcon, X } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import * as React from "react";
+
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { getSuggestCached } from "@/lib/search/cache";
+import type { CommandAction, SuggestItem, SuggestSections } from "@/lib/search/types";
+
+import Autosuggest from "../search/Autosuggest";
 
 const EMPTY_SECTIONS: SuggestSections = {
   areas: [],
@@ -20,7 +22,7 @@ export default function CommandPalette() {
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = React.useState(false);
-  const [query, setQuery] = React.useState('');
+  const [query, setQuery] = React.useState("");
   const [sections, setSections] = React.useState<SuggestSections>(EMPTY_SECTIONS);
   const [loading, setLoading] = React.useState(false);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
@@ -31,8 +33,8 @@ export default function CommandPalette() {
 
   // Load recent searches from localStorage
   React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('imob_recent_searches');
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("imob_recent_searches");
       if (saved) {
         try {
           setRecentSearches(JSON.parse(saved).slice(0, 8));
@@ -46,11 +48,11 @@ export default function CommandPalette() {
   // Save recent search
   const saveRecentSearch = React.useCallback((q: string) => {
     if (q.length < 2) return;
-    
+
     setRecentSearches((prev) => {
       const updated = [q, ...prev.filter((s) => s !== q)].slice(0, 8);
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('imob_recent_searches', JSON.stringify(updated));
+      if (typeof window !== "undefined") {
+        localStorage.setItem("imob_recent_searches", JSON.stringify(updated));
       }
       return updated;
     });
@@ -59,14 +61,14 @@ export default function CommandPalette() {
   // Global keyboard shortcut (⌘K / CTRL-K)
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setIsOpen(true);
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
   // Focus input when opened
@@ -74,7 +76,7 @@ export default function CommandPalette() {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 100);
     } else {
-      setQuery('');
+      setQuery("");
       setSections(EMPTY_SECTIONS);
       setSelectedIndex(0);
     }
@@ -95,7 +97,7 @@ export default function CommandPalette() {
       setSections(data.sections);
       setSelectedIndex(0);
     } catch (error) {
-      console.error('[CommandPalette] Fetch error:', error);
+      console.error("[CommandPalette] Fetch error:", error);
       setSections(EMPTY_SECTIONS);
     } finally {
       setLoading(false);
@@ -116,7 +118,7 @@ export default function CommandPalette() {
         fetchSuggestions(value);
       }, 120);
     },
-    [fetchSuggestions]
+    [fetchSuggestions],
   );
 
   // Handle item selection
@@ -126,7 +128,7 @@ export default function CommandPalette() {
       router.push(item.href);
       setIsOpen(false);
     },
-    [router, query, saveRecentSearch]
+    [router, query, saveRecentSearch],
   );
 
   // Get contextual actions based on current page
@@ -135,33 +137,33 @@ export default function CommandPalette() {
 
     // Common actions
     actions.push({
-      id: 'discover',
-      label: 'Deschide Descoperă',
-      icon: '🔍',
-      shortcut: 'D',
+      id: "discover",
+      label: "Deschide Descoperă",
+      icon: "🔍",
+      shortcut: "D",
       onExecute: () => {
-        router.push('/discover');
+        router.push("/discover");
         setIsOpen(false);
       },
     });
 
     actions.push({
-      id: 'areas',
-      label: 'Vezi toate zonele',
-      icon: '📍',
-      shortcut: 'A',
+      id: "areas",
+      label: "Vezi toate zonele",
+      icon: "📍",
+      shortcut: "A",
       onExecute: () => {
-        router.push('/area');
+        router.push("/area");
         setIsOpen(false);
       },
     });
 
     // Page-specific actions
-    if (pathname?.startsWith('/report/')) {
+    if (pathname?.startsWith("/report/")) {
       actions.push({
-        id: 'share',
-        label: 'Distribuie raportul',
-        icon: '📤',
+        id: "share",
+        label: "Distribuie raportul",
+        icon: "📤",
         onExecute: () => {
           if (navigator.share) {
             navigator.share({ url: window.location.href });
@@ -171,37 +173,37 @@ export default function CommandPalette() {
       });
 
       actions.push({
-        id: 'pdf',
-        label: 'Descarcă PDF',
-        icon: '📄',
+        id: "pdf",
+        label: "Descarcă PDF",
+        icon: "📄",
         onExecute: () => {
           // TODO: Implement PDF download
-          console.log('Download PDF');
+          console.log("Download PDF");
           setIsOpen(false);
         },
       });
     }
 
-    if (pathname?.startsWith('/area/')) {
+    if (pathname?.startsWith("/area/")) {
       actions.push({
-        id: 'charts-3m',
-        label: 'Grafice: 3 luni',
-        icon: '📊',
+        id: "charts-3m",
+        label: "Grafice: 3 luni",
+        icon: "📊",
         onExecute: () => {
           const url = new URL(window.location.href);
-          url.searchParams.set('range', '3m');
+          url.searchParams.set("range", "3m");
           router.push(url.pathname + url.search);
           setIsOpen(false);
         },
       });
 
       actions.push({
-        id: 'charts-12m',
-        label: 'Grafice: 12 luni',
-        icon: '📈',
+        id: "charts-12m",
+        label: "Grafice: 12 luni",
+        icon: "📈",
         onExecute: () => {
           const url = new URL(window.location.href);
-          url.searchParams.set('range', '12m');
+          url.searchParams.set("range", "12m");
           router.push(url.pathname + url.search);
           setIsOpen(false);
         },
@@ -214,7 +216,7 @@ export default function CommandPalette() {
   // Keyboard navigation
   const flatItems = React.useMemo(() => {
     const items: SuggestItem[] = [];
-    (['areas', 'addresses', 'listings', 'saved', 'pages'] as const).forEach((section) => {
+    (["areas", "addresses", "listings", "saved", "pages"] as const).forEach((section) => {
       items.push(...sections[section]);
     });
     return items;
@@ -223,21 +225,21 @@ export default function CommandPalette() {
   const handleKeyDown = React.useCallback(
     (e: React.KeyboardEvent) => {
       switch (e.key) {
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
           setSelectedIndex((prev) => Math.min(prev + 1, flatItems.length - 1));
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           e.preventDefault();
           setSelectedIndex((prev) => Math.max(prev - 1, 0));
           break;
-        case 'Enter':
+        case "Enter":
           e.preventDefault();
           if (flatItems[selectedIndex]) {
             handleSelect(flatItems[selectedIndex]);
           }
           break;
-        case 'Escape':
+        case "Escape":
           e.preventDefault();
           setIsOpen(false);
           break;
@@ -245,7 +247,7 @@ export default function CommandPalette() {
           break;
       }
     },
-    [flatItems, selectedIndex, handleSelect]
+    [flatItems, selectedIndex, handleSelect],
   );
 
   // Execute action by shortcut
@@ -262,8 +264,8 @@ export default function CommandPalette() {
       }
     };
 
-    document.addEventListener('keydown', handleActionKey);
-    return () => document.removeEventListener('keydown', handleActionKey);
+    document.addEventListener("keydown", handleActionKey);
+    return () => document.removeEventListener("keydown", handleActionKey);
   }, [isOpen, contextActions]);
 
   return (
@@ -299,7 +301,7 @@ export default function CommandPalette() {
               onSelect={handleSelect}
               selectedIndex={selectedIndex}
               onKeyboardNav={(direction) => {
-                if (direction === 'down') {
+                if (direction === "down") {
                   setSelectedIndex((prev) => Math.min(prev + 1, flatItems.length - 1));
                 } else {
                   setSelectedIndex((prev) => Math.max(prev - 1, 0));

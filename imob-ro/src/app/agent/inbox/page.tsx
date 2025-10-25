@@ -17,7 +17,7 @@ export default async function AgentInboxPage() {
     <div className="max-w-5xl mx-auto p-6">
       <h1 className="text-xl font-semibold">Lead-urile mele</h1>
       <div className="mt-4 space-y-2">
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        {}
         {leads.map((l: any) => (
           <div key={l.id} className="border rounded-xl p-3 text-sm">
             <div className="flex justify-between">

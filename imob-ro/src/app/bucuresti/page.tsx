@@ -4,10 +4,11 @@
  */
 
 import type { Metadata } from "next";
-import { prisma } from "@/lib/db";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "Prețuri imobiliare București · Statistici & tendințe 2024",

@@ -1,12 +1,13 @@
 "use client";
 
-import * as React from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import type { AreaSeries, ChartTab, ChartRange } from '@/lib/areas/dto';
-import { filterSeriesByRange, formatNumber } from '@/lib/areas/series';
+import { useRouter, useSearchParams } from "next/navigation";
+import * as React from "react";
+
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { AreaSeries, ChartRange, ChartTab } from "@/lib/areas/dto";
+import { filterSeriesByRange, formatNumber } from "@/lib/areas/series";
+import { cn } from "@/lib/utils";
 
 export interface ChartsProps {
   series: AreaSeries[];
@@ -25,11 +26,9 @@ export default function Charts({ series, areaName, defaultView, defaultRange }: 
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [activeTab, setActiveTab] = React.useState<ChartTab>(
-    (defaultView as ChartTab) || 'price'
-  );
+  const [activeTab, setActiveTab] = React.useState<ChartTab>((defaultView as ChartTab) || "price");
   const [activeRange, setActiveRange] = React.useState<ChartRange>(
-    (defaultRange as ChartRange) || '6m'
+    (defaultRange as ChartRange) || "6m",
   );
 
   const handleTabChange = (value: string) => {
@@ -44,8 +43,8 @@ export default function Charts({ series, areaName, defaultView, defaultRange }: 
 
   const updateUrl = (tab: ChartTab, range: ChartRange) => {
     const params = new URLSearchParams(searchParams.toString());
-    params.set('view', tab);
-    params.set('range', range);
+    params.set("view", tab);
+    params.set("range", range);
     router.replace(`?${params.toString()}`, { scroll: false });
   };
 
@@ -55,35 +54,35 @@ export default function Charts({ series, areaName, defaultView, defaultRange }: 
   // Prepare data for active tab
   const chartData: ChartDataPoint[] = React.useMemo(() => {
     switch (activeTab) {
-      case 'price':
+      case "price":
         return filteredSeries.map((s) => ({
           date: s.date,
           value: s.eurM2 ?? null,
-          label: s.eurM2 ? `${formatNumber(s.eurM2)} €/m²` : '—',
+          label: s.eurM2 ? `${formatNumber(s.eurM2)} €/m²` : "—",
         }));
-      case 'rent':
+      case "rent":
         return filteredSeries.map((s) => ({
           date: s.date,
           value: s.rentEurM2 ?? null,
-          label: s.rentEurM2 ? `${formatNumber(s.rentEurM2)} €/m²` : '—',
+          label: s.rentEurM2 ? `${formatNumber(s.rentEurM2)} €/m²` : "—",
         }));
-      case 'yield':
+      case "yield":
         return filteredSeries.map((s) => ({
           date: s.date,
           value: s.yieldNet ? s.yieldNet * 100 : null,
-          label: s.yieldNet ? `${(s.yieldNet * 100).toFixed(1)}%` : '—',
+          label: s.yieldNet ? `${(s.yieldNet * 100).toFixed(1)}%` : "—",
         }));
-      case 'tts':
+      case "tts":
         return filteredSeries.map((s) => ({
           date: s.date,
           value: s.ttsDays ?? null,
-          label: s.ttsDays ? `${s.ttsDays} zile` : '—',
+          label: s.ttsDays ? `${s.ttsDays} zile` : "—",
         }));
-      case 'supply':
+      case "supply":
         return filteredSeries.map((s) => ({
           date: s.date,
           value: s.supply ?? null,
-          label: s.supply ? `${s.supply} anunțuri` : '—',
+          label: s.supply ? `${s.supply} anunțuri` : "—",
         }));
       default:
         return [];
@@ -92,11 +91,11 @@ export default function Charts({ series, areaName, defaultView, defaultRange }: 
 
   // Chart labels
   const chartLabels: Record<ChartTab, string> = {
-    price: 'Preț median €/m²',
-    rent: 'Chirie medie €/m²',
-    yield: 'Randament net %',
-    tts: 'Timp până la vânzare (zile)',
-    supply: 'Anunțuri active',
+    price: "Preț median €/m²",
+    rent: "Chirie medie €/m²",
+    yield: "Randament net %",
+    tts: "Timp până la vânzare (zile)",
+    supply: "Anunțuri active",
   };
 
   return (
@@ -104,27 +103,27 @@ export default function Charts({ series, areaName, defaultView, defaultRange }: 
       <div className="rounded-lg border border-border bg-surface p-6">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
           <h2 className="text-xl font-bold text-fg">Evoluție {areaName}</h2>
-          
+
           {/* Range Controls */}
           <div className="flex items-center gap-2">
             <Button
-              variant={activeRange === '3m' ? 'default' : 'outline'}
+              variant={activeRange === "3m" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleRangeChange('3m')}
+              onClick={() => handleRangeChange("3m")}
             >
               3 luni
             </Button>
             <Button
-              variant={activeRange === '6m' ? 'default' : 'outline'}
+              variant={activeRange === "6m" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleRangeChange('6m')}
+              onClick={() => handleRangeChange("6m")}
             >
               6 luni
             </Button>
             <Button
-              variant={activeRange === '12m' ? 'default' : 'outline'}
+              variant={activeRange === "12m" ? "default" : "outline"}
               size="sm"
-              onClick={() => handleRangeChange('12m')}
+              onClick={() => handleRangeChange("12m")}
             >
               12 luni
             </Button>
@@ -192,9 +191,9 @@ function LineChart({ data, areaName }: LineChartProps) {
       const originalIndex = data.indexOf(d);
       const x = xScale(originalIndex);
       const y = yScale(d.value);
-      return `${i === 0 ? 'M' : 'L'} ${x},${y}`;
+      return `${i === 0 ? "M" : "L"} ${x},${y}`;
     })
-    .join(' ');
+    .join(" ");
 
   // Handle mouse move for tooltip
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
@@ -230,13 +229,7 @@ function LineChart({ data, areaName }: LineChartProps) {
           {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
             const y = padding.top + ratio * chartHeight;
             return (
-              <line
-                key={ratio}
-                x1={padding.left}
-                y1={y}
-                x2={padding.left + chartWidth}
-                y2={y}
-              />
+              <line key={ratio} x1={padding.left} y1={y} x2={padding.left + chartWidth} y2={y} />
             );
           })}
         </g>
@@ -303,14 +296,8 @@ function LineChart({ data, areaName }: LineChartProps) {
               const originalIndex = data.indexOf(d);
               const x = padding.left + xScale(originalIndex);
               return (
-                <text
-                  key={i}
-                  x={x}
-                  y={height - 10}
-                  textAnchor="middle"
-                  fill="currentColor"
-                >
-                  {new Date(d.date).toLocaleDateString('ro-RO', { month: 'short', day: 'numeric' })}
+                <text key={i} x={x} y={height - 10} textAnchor="middle" fill="currentColor">
+                  {new Date(d.date).toLocaleDateString("ro-RO", { month: "short", day: "numeric" })}
                 </text>
               );
             })}
@@ -321,10 +308,10 @@ function LineChart({ data, areaName }: LineChartProps) {
       {hoveredPoint && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-surface border border-border rounded-lg px-3 py-2 shadow-lg pointer-events-none">
           <div className="text-xs text-muted mb-1">
-            {new Date(hoveredPoint.date).toLocaleDateString('ro-RO', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
+            {new Date(hoveredPoint.date).toLocaleDateString("ro-RO", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
             })}
           </div>
           <div className="text-sm font-medium text-fg">{hoveredPoint.label}</div>

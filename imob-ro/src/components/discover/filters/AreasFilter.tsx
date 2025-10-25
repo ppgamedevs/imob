@@ -1,10 +1,12 @@
 "use client";
 
+import { Check, ChevronDown, Search } from "lucide-react";
 import * as React from "react";
-import { FilterPopover, FilterLabel } from "./FilterPopover";
-import { ChevronDown, Search, Check } from "lucide-react";
+
 import { BUCURESTI_AREAS } from "@/lib/discover/filters";
 import { cn } from "@/lib/utils";
+
+import { FilterLabel, FilterPopover } from "./FilterPopover";
 
 export interface AreasFilterProps {
   value: string[];
@@ -15,7 +17,7 @@ export interface AreasFilterProps {
 
 export function AreasFilter({ value, onChange, count, countLoading }: AreasFilterProps) {
   const [open, setOpen] = React.useState(false);
-  const [search, setSearch] = React.useState('');
+  const [search, setSearch] = React.useState("");
   const [localSelected, setLocalSelected] = React.useState<Set<string>>(new Set(value));
 
   React.useEffect(() => {
@@ -25,8 +27,8 @@ export function AreasFilter({ value, onChange, count, countLoading }: AreasFilte
   const filteredAreas = React.useMemo(() => {
     if (!search) return BUCURESTI_AREAS;
     const query = search.toLowerCase();
-    return BUCURESTI_AREAS.filter((area) =>
-      area.name.toLowerCase().includes(query) || area.slug.toLowerCase().includes(query)
+    return BUCURESTI_AREAS.filter(
+      (area) => area.name.toLowerCase().includes(query) || area.slug.toLowerCase().includes(query),
     );
   }, [search]);
 
@@ -53,7 +55,7 @@ export function AreasFilter({ value, onChange, count, countLoading }: AreasFilte
   }, [onChange]);
 
   const isActive = value.length > 0;
-  const summary = isActive ? `${value.length} zone` : 'Zone';
+  const summary = isActive ? `${value.length} zone` : "Zone";
 
   return (
     <FilterPopover
@@ -87,9 +89,7 @@ export function AreasFilter({ value, onChange, count, countLoading }: AreasFilte
         {/* Checkboxes */}
         <div className="max-h-60 overflow-y-auto space-y-1">
           {filteredAreas.length === 0 ? (
-            <div className="py-4 text-center text-sm text-muted">
-              Nicio zonă găsită
-            </div>
+            <div className="py-4 text-center text-sm text-muted">Nicio zonă găsită</div>
           ) : (
             filteredAreas.map((area) => {
               const isSelected = localSelected.has(area.slug);
@@ -99,15 +99,13 @@ export function AreasFilter({ value, onChange, count, countLoading }: AreasFilte
                   className={cn(
                     "flex items-center gap-3 p-2 rounded-md cursor-pointer",
                     "hover:bg-surface/50 transition-colors",
-                    isSelected && "bg-primary/5"
+                    isSelected && "bg-primary/5",
                   )}
                 >
                   <div
                     className={cn(
                       "w-4 h-4 flex items-center justify-center rounded border transition-colors",
-                      isSelected
-                        ? "bg-primary border-primary"
-                        : "bg-bg border-border"
+                      isSelected ? "bg-primary border-primary" : "bg-bg border-border",
                     )}
                   >
                     {isSelected && <Check className="h-3 w-3 text-primary-fg" />}
@@ -127,9 +125,7 @@ export function AreasFilter({ value, onChange, count, countLoading }: AreasFilte
 
         {/* Selected count */}
         {localSelected.size > 0 && (
-          <div className="text-xs text-muted">
-            {localSelected.size} zone selectate
-          </div>
+          <div className="text-xs text-muted">{localSelected.size} zone selectate</div>
         )}
       </div>
     </FilterPopover>

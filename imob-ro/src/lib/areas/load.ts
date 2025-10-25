@@ -1,12 +1,13 @@
 /**
  * Area Pages v2 - Server Data Loader
- * 
+ *
  * Fetch and compute all data needed for area detail pages.
  */
 
-import { prisma } from '@/lib/db';
-import type { AreaPageData, AreaKpis, AreaTilesSummary, ListingSummary, NeighborArea } from './dto';
-import { toSeries, calculateChange, getValueNDaysAgo } from './series';
+import { prisma } from "@/lib/db";
+
+import type { AreaKpis, AreaPageData, AreaTilesSummary, ListingSummary, NeighborArea } from "./dto";
+import { calculateChange, getValueNDaysAgo, toSeries } from "./series";
 
 /**
  * Load complete area page data (SSR)
@@ -36,7 +37,7 @@ export async function loadAreaPage(slug: string): Promise<AreaPageData | null> {
       areaSlug: slug,
       date: { gte: cutoffDate },
     },
-    orderBy: { date: 'asc' },
+    orderBy: { date: "asc" },
     select: {
       date: true,
       medianEurM2: true,
@@ -48,7 +49,7 @@ export async function loadAreaPage(slug: string): Promise<AreaPageData | null> {
 
   // Compute KPIs
   const kpis = await computeKpis(area, daily);
-  
+
   // Transform series
   const series = toSeries(daily);
 
@@ -85,23 +86,24 @@ async function computeKpis(
     supply?: number | null;
     demandScore?: number | null;
     stats?: any;
-  }>
+  }>,
 ): Promise<AreaKpis> {
   const stats = (area.stats as any) || {};
   const series = toSeries(daily);
 
   // Get latest median €/m²
-  const latestEurM2 = series
-    .slice()
-    .reverse()
-    .find((s) => s.eurM2 !== undefined)?.eurM2 ?? 0;
+  const latestEurM2 =
+    series
+      .slice()
+      .reverse()
+      .find((s) => s.eurM2 !== undefined)?.eurM2 ?? 0;
 
   // Calculate 30-day change
-  const eurM230DaysAgo = getValueNDaysAgo(series, 30, 'eurM2') ?? latestEurM2;
+  const eurM230DaysAgo = getValueNDaysAgo(series, 30, "eurM2") ?? latestEurM2;
   const change30d = calculateChange(latestEurM2, eurM230DaysAgo);
 
   // Calculate 12-month change
-  const eurM212MonthsAgo = getValueNDaysAgo(series, 365, 'eurM2') ?? latestEurM2;
+  const eurM212MonthsAgo = getValueNDaysAgo(series, 365, "eurM2") ?? latestEurM2;
   const change12m = calculateChange(latestEurM2, eurM212MonthsAgo);
 
   // Get current supply
@@ -139,10 +141,10 @@ async function loadAreaTiles(slug: string, area: any): Promise<AreaTilesSummary>
   // Fetch listings in area
   const analyses = await prisma.analysis.findMany({
     where: {
-      status: 'done',
+      status: "done",
       featureSnapshot: {
         features: {
-          path: ['areaSlug'],
+          path: ["areaSlug"],
           equals: slug,
         },
       },
@@ -188,7 +190,7 @@ async function loadAreaTiles(slug: string, area: any): Promise<AreaTilesSummary>
 
   // Create simple grid (5x5)
   const gridSize = { cols: 5, rows: 5, cellSizeM: 500 };
-  const cells: AreaTilesSummary['cells'] = [];
+  const cells: AreaTilesSummary["cells"] = [];
 
   for (let y = 0; y < gridSize.rows; y++) {
     for (let x = 0; x < gridSize.cols; x++) {
@@ -197,18 +199,21 @@ async function loadAreaTiles(slug: string, area: any): Promise<AreaTilesSummary>
 
       // Find points in this cell
       const cellPoints = points.filter((p) => {
-        const inX = p.lng! >= minLng + (x / gridSize.cols) * (maxLng - minLng) &&
-                    p.lng! < minLng + ((x + 1) / gridSize.cols) * (maxLng - minLng);
-        const inY = p.lat! >= minLat + (y / gridSize.rows) * (maxLat - minLat) &&
-                    p.lat! < minLat + ((y + 1) / gridSize.rows) * (maxLat - minLat);
+        const inX =
+          p.lng! >= minLng + (x / gridSize.cols) * (maxLng - minLng) &&
+          p.lng! < minLng + ((x + 1) / gridSize.cols) * (maxLng - minLng);
+        const inY =
+          p.lat! >= minLat + (y / gridSize.rows) * (maxLat - minLat) &&
+          p.lat! < minLat + ((y + 1) / gridSize.rows) * (maxLat - minLat);
         return inX && inY;
       });
 
       if (cellPoints.length > 0) {
-        const avgEurM2 = cellPoints.reduce((sum, p) => {
-          const eurM2 = (p.priceEur! / p.areaM2!);
-          return sum + eurM2;
-        }, 0) / cellPoints.length;
+        const avgEurM2 =
+          cellPoints.reduce((sum, p) => {
+            const eurM2 = p.priceEur! / p.areaM2!;
+            return sum + eurM2;
+          }, 0) / cellPoints.length;
 
         cells.push({
           x,
@@ -223,7 +228,7 @@ async function loadAreaTiles(slug: string, area: any): Promise<AreaTilesSummary>
   }
 
   // Load metro stations (TODO: from database)
-  const metro: AreaTilesSummary['metro'] = [];
+  const metro: AreaTilesSummary["metro"] = [];
 
   return {
     bounds: [minLng, minLat, maxLng, maxLat],
@@ -239,10 +244,10 @@ async function loadAreaTiles(slug: string, area: any): Promise<AreaTilesSummary>
 async function loadBestListings(slug: string): Promise<ListingSummary[]> {
   const analyses = await prisma.analysis.findMany({
     where: {
-      status: 'done',
+      status: "done",
       featureSnapshot: {
         features: {
-          path: ['areaSlug'],
+          path: ["areaSlug"],
           equals: slug,
         },
       },
@@ -252,7 +257,7 @@ async function loadBestListings(slug: string): Promise<ListingSummary[]> {
       scoreSnapshot: true,
       extractedListing: true,
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
     take: 50, // Get more to filter and rank
   });
 
@@ -276,10 +281,10 @@ async function loadBestListings(slug: string): Promise<ListingSummary[]> {
 
       // Calculate score (higher = better)
       let score = 0;
-      if (priceBadge === 'Underpriced') score += 100;
+      if (priceBadge === "Underpriced") score += 100;
       if (yieldNet && yieldNet > 0.06) score += 50;
-      if (ttsBucket === 'fast') score += 30;
-      if (ttsBucket === 'medium') score += 15;
+      if (ttsBucket === "fast") score += 30;
+      if (ttsBucket === "medium") score += 15;
 
       return {
         id: a.id,
@@ -288,8 +293,8 @@ async function loadBestListings(slug: string): Promise<ListingSummary[]> {
         mediaUrl: photos[0],
         priceEur: Math.round(priceEur),
         eurM2: Math.round(eurM2),
-        avmBadge: priceBadge === 'Underpriced' ? ('under' as const) : undefined,
-        tts: ttsBucket === 'fast' ? 'sub 60 zile' : undefined,
+        avmBadge: priceBadge === "Underpriced" ? ("under" as const) : undefined,
+        tts: ttsBucket === "fast" ? "sub 60 zile" : undefined,
         yieldNet,
         seismic: s.riskClass as string | undefined,
         distMetroM: f.distMetroM as number | undefined,
@@ -360,23 +365,28 @@ function getAreaFaq(areaName: string): Array<{ question: string; answer: string 
     },
     {
       question: 'Ce înseamnă "Underpriced" (sub AVM)?',
-      answer: 'Un anunț este marcat "Underpriced" când prețul solicitat este cu cel puțin 10% sub valoarea de piață estimată de modelul nostru AVM (Automated Valuation Model). Aceste proprietăți pot reprezenta oportunități de achiziție.',
+      answer:
+        'Un anunț este marcat "Underpriced" când prețul solicitat este cu cel puțin 10% sub valoarea de piață estimată de modelul nostru AVM (Automated Valuation Model). Aceste proprietăți pot reprezenta oportunități de achiziție.',
     },
     {
-      question: 'Cum estimați randamentul net?',
-      answer: 'Randamentul net este calculat ca: (Chirie lunară × 12 - Cheltuieli anuale) / Preț achiziție. Cheltuielile includ taxe, întreținere, asigurări și un buffer pentru perioade fără chiriași (8% din venitul anual).',
+      question: "Cum estimați randamentul net?",
+      answer:
+        "Randamentul net este calculat ca: (Chirie lunară × 12 - Cheltuieli anuale) / Preț achiziție. Cheltuielile includ taxe, întreținere, asigurări și un buffer pentru perioade fără chiriași (8% din venitul anual).",
     },
     {
-      question: 'Ce este Time-to-Sell (TTS)?',
-      answer: 'TTS reprezintă timpul estimat până la vânzarea unei proprietăți, bazat pe analiza istorică a anunțurilor similare. "Fast TTS" înseamnă sub 60 de zile, "Medium" 60-120 zile, "Slow" peste 120 de zile.',
+      question: "Ce este Time-to-Sell (TTS)?",
+      answer:
+        'TTS reprezintă timpul estimat până la vânzarea unei proprietăți, bazat pe analiza istorică a anunțurilor similare. "Fast TTS" înseamnă sub 60 de zile, "Medium" 60-120 zile, "Slow" peste 120 de zile.',
     },
     {
-      question: 'Ce înseamnă clasele de risc seismic (RS1, RS2, RS3)?',
-      answer: 'Clasele de risc seismic indică vulnerabilitatea clădirii în caz de cutremur: RS1 (risc ridicat, necesită consolidare urgentă), RS2 (risc mediu), RS3 (risc scăzut). "None" înseamnă că clădirea nu are risc seismic semnificativ sau nu este evaluată.',
+      question: "Ce înseamnă clasele de risc seismic (RS1, RS2, RS3)?",
+      answer:
+        'Clasele de risc seismic indică vulnerabilitatea clădirii în caz de cutremur: RS1 (risc ridicat, necesită consolidare urgentă), RS2 (risc mediu), RS3 (risc scăzut). "None" înseamnă că clădirea nu are risc seismic semnificativ sau nu este evaluată.',
     },
     {
-      question: 'Cât de actuale sunt datele?',
-      answer: 'Datele noastre sunt actualizate zilnic prin crawlere automate care monitorizează principalele portaluri imobiliare din România. Graficele și statisticile reflectă situația din ultimele 24 de ore.',
+      question: "Cât de actuale sunt datele?",
+      answer:
+        "Datele noastre sunt actualizate zilnic prin crawlere automate care monitorizează principalele portaluri imobiliare din România. Graficele și statisticile reflectă situația din ultimele 24 de ore.",
     },
   ];
 }
@@ -386,7 +396,7 @@ function getAreaFaq(areaName: string): Array<{ question: string; answer: string 
  */
 export async function getAllAreaSlugs(): Promise<string[]> {
   const areas = await prisma.area.findMany({
-    where: { city: 'București' }, // Only București for now
+    where: { city: "București" }, // Only București for now
     select: { slug: true },
   });
 

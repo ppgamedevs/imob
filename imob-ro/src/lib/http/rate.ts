@@ -21,11 +21,7 @@ const MAX_ENTRIES = 10000; // LRU size
  * @param windowMs - Time window in milliseconds
  * @throws Error if rate limit exceeded
  */
-export async function rateLimit(
-  key: string,
-  maxRequests: number,
-  windowMs: number,
-): Promise<void> {
+export async function rateLimit(key: string, maxRequests: number, windowMs: number): Promise<void> {
   const now = Date.now();
   const entry = limiter.get(key);
 
@@ -46,9 +42,7 @@ export async function rateLimit(
 
   if (entry.count >= maxRequests) {
     const resetIn = Math.ceil((entry.resetAt - now) / 1000);
-    throw new Error(
-      `Rate limit exceeded. Try again in ${resetIn} seconds.`,
-    );
+    throw new Error(`Rate limit exceeded. Try again in ${resetIn} seconds.`);
   }
 
   // Add new request
@@ -61,18 +55,12 @@ export async function rateLimit(
 /**
  * Check if key is rate limited without incrementing
  */
-export function isRateLimited(
-  key: string,
-  maxRequests: number,
-  windowMs: number,
-): boolean {
+export function isRateLimited(key: string, maxRequests: number, windowMs: number): boolean {
   const entry = limiter.get(key);
   if (!entry) return false;
 
   const now = Date.now();
-  const validRequests = entry.requests.filter(
-    (time) => time > now - windowMs,
-  );
+  const validRequests = entry.requests.filter((time) => time > now - windowMs);
   return validRequests.length >= maxRequests;
 }
 
@@ -90,9 +78,7 @@ export function getRemainingRequests(
   }
 
   const now = Date.now();
-  const validRequests = entry.requests.filter(
-    (time) => time > now - windowMs,
-  );
+  const validRequests = entry.requests.filter((time) => time > now - windowMs);
   const remaining = Math.max(0, maxRequests - validRequests.length);
 
   return { remaining, resetAt: entry.resetAt };
@@ -120,9 +106,7 @@ function evictOldEntries(): void {
 
   // Remove oldest 10% of entries
   const toRemove = Math.floor(MAX_ENTRIES * 0.1);
-  const entries = Array.from(limiter.entries()).sort(
-    (a, b) => a[1].resetAt - b[1].resetAt,
-  );
+  const entries = Array.from(limiter.entries()).sort((a, b) => a[1].resetAt - b[1].resetAt);
 
   for (let i = 0; i < toRemove; i++) {
     limiter.delete(entries[i][0]);

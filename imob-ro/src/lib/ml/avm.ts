@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // AVM v1: baseline = median €/m2 în areaSlug (din AreaDaily de azi sau ultima zi disponibilă)
 // Interval = [mid*(1 - spread), mid*(1 + spread)] unde spread scade când avem features bune.
 // Adjustări multiplicative simple pentru etaj, an, distanță metrou, condiție.
@@ -138,7 +137,6 @@ export async function estimateAvm(features: NormalizedFeatures): Promise<AvmResu
  * estimatePriceRange(features, areaStats|areaStats[]) -> { low, high, mid, conf }
  * areaStats can be a single object or an array (recent grid cells / timeseries).
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
 export type AreaStats = {
   medianEurPerM2: number;

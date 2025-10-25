@@ -1,7 +1,8 @@
+import { ArrowLeftRight, Heart, Mail, Share2 } from "lucide-react";
 import * as React from "react";
-import { Heart, Share2, Mail, ArrowLeftRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 /**
  * StickyActions - Save, Compare, Share, Contact

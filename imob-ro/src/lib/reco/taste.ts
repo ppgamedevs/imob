@@ -18,8 +18,9 @@
  * Decay: 7-day half-life (0.5^(daysSince/7))
  */
 
-import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+
+import { prisma } from "@/lib/db";
 
 // Event weights for taste updates
 export const EVENT_WEIGHTS = {

@@ -1,5 +1,6 @@
-import * as React from "react";
 import { MapPin, Navigation } from "lucide-react";
+import * as React from "react";
+
 import { cn } from "@/lib/utils";
 
 /**

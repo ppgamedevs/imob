@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Day 23 - Stripe Webhook v2
  * Handles subscription lifecycle events with signature verification
@@ -54,7 +53,7 @@ export async function POST(req: Request) {
           // Create Subscription record
           if (session.subscription) {
             const stripeSub = await stripe.subscriptions.retrieve(session.subscription as string);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
             await (prisma as any).subscription.upsert({
               where: { userId },
               create: {
@@ -101,7 +100,6 @@ export async function POST(req: Request) {
           const planCode =
             stripeSub.status === "active" || stripeSub.status === "trialing" ? "pro" : "free";
 
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await (prisma as any).subscription.upsert({
             where: { userId: user.id },
             update: {

@@ -1,12 +1,14 @@
 "use client";
 
+import { Check, ChevronDown } from "lucide-react";
 import * as React from "react";
-import { FilterPopover } from "./FilterPopover";
-import { ChevronDown, Check } from "lucide-react";
+
 import { SIGNALS } from "@/lib/discover/filters";
 import { cn } from "@/lib/utils";
 
-type SignalKey = 'underpriced' | 'fast_tts' | 'yield_high' | 'seismic_low';
+import { FilterPopover } from "./FilterPopover";
+
+type SignalKey = "underpriced" | "fast_tts" | "yield_high" | "seismic_low";
 
 export interface SignalsFilterProps {
   value: SignalKey[];
@@ -46,7 +48,7 @@ export function SignalsFilter({ value, onChange, count, countLoading }: SignalsF
   }, [onChange]);
 
   const isActive = value.length > 0;
-  const summary = isActive ? `${value.length} semnale` : 'Semnale';
+  const summary = isActive ? `${value.length} semnale` : "Semnale";
 
   return (
     <FilterPopover
@@ -78,15 +80,13 @@ export function SignalsFilter({ value, onChange, count, countLoading }: SignalsF
                 "flex items-start gap-3 p-3 rounded-md cursor-pointer border transition-colors",
                 isSelected
                   ? "bg-primary/5 border-primary"
-                  : "bg-surface border-border hover:bg-surface/50"
+                  : "bg-surface border-border hover:bg-surface/50",
               )}
             >
               <div
                 className={cn(
                   "w-4 h-4 flex items-center justify-center rounded border mt-0.5 transition-colors shrink-0",
-                  isSelected
-                    ? "bg-primary border-primary"
-                    : "bg-bg border-border"
+                  isSelected ? "bg-primary border-primary" : "bg-bg border-border",
                 )}
               >
                 {isSelected && <Check className="h-3 w-3 text-primary-fg" />}

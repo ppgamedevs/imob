@@ -1,11 +1,12 @@
 "use client";
 
-import * as React from "react";
-import { X, ArrowRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowRight, X } from "lucide-react";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
+import * as React from "react";
+
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 /**
  * CompareDrawer - Global comparison drawer

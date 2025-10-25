@@ -1,8 +1,9 @@
 "use client";
 
-import * as React from "react";
-import { FilterPopover, FilterLabel } from "./FilterPopover";
 import { ChevronDown } from "lucide-react";
+import * as React from "react";
+
+import { FilterLabel, FilterPopover } from "./FilterPopover";
 
 export interface SizeFilterProps {
   value: { min?: number; max?: number };
@@ -13,12 +14,12 @@ export interface SizeFilterProps {
 
 export function SizeFilter({ value, onChange, count, countLoading }: SizeFilterProps) {
   const [open, setOpen] = React.useState(false);
-  const [localMin, setLocalMin] = React.useState(value.min?.toString() || '');
-  const [localMax, setLocalMax] = React.useState(value.max?.toString() || '');
+  const [localMin, setLocalMin] = React.useState(value.min?.toString() || "");
+  const [localMax, setLocalMax] = React.useState(value.max?.toString() || "");
 
   React.useEffect(() => {
-    setLocalMin(value.min?.toString() || '');
-    setLocalMax(value.max?.toString() || '');
+    setLocalMin(value.min?.toString() || "");
+    setLocalMax(value.max?.toString() || "");
   }, [value.min, value.max]);
 
   const handleApply = React.useCallback(() => {
@@ -29,15 +30,13 @@ export function SizeFilter({ value, onChange, count, countLoading }: SizeFilterP
   }, [localMin, localMax, onChange]);
 
   const handleReset = React.useCallback(() => {
-    setLocalMin('');
-    setLocalMax('');
+    setLocalMin("");
+    setLocalMax("");
     onChange({ min: undefined, max: undefined });
   }, [onChange]);
 
   const isActive = Boolean(value.min || value.max);
-  const summary = isActive
-    ? `${value.min || ''}–${value.max || ''} m²`
-    : 'Suprafață';
+  const summary = isActive ? `${value.min || ""}–${value.max || ""} m²` : "Suprafață";
 
   return (
     <FilterPopover

@@ -1,7 +1,8 @@
+import { AlertTriangle, ExternalLink, Info, ShieldCheck } from "lucide-react";
 import * as React from "react";
-import { AlertTriangle, ShieldCheck, ExternalLink, Info } from "lucide-react";
-import { cn } from "@/lib/utils";
+
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 /**
  * RiskCard - Seismic risk explanation

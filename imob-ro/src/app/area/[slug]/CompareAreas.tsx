@@ -1,17 +1,14 @@
 "use client";
 
-import * as React from 'react';
-import Link from 'next/link';
-import { Check, ChevronsUpDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { cn } from '@/lib/utils';
-import type { NeighborArea } from '@/lib/areas/dto';
-import { formatNumber, formatChange } from '@/lib/areas/series';
+import { Check, ChevronsUpDown } from "lucide-react";
+import Link from "next/link";
+import * as React from "react";
+
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import type { NeighborArea } from "@/lib/areas/dto";
+import { formatChange, formatNumber } from "@/lib/areas/series";
+import { cn } from "@/lib/utils";
 
 export interface CompareAreasProps {
   currentSlug: string;
@@ -25,7 +22,7 @@ export default function CompareAreas({ currentSlug, currentName, neighbors }: Co
 
   const toggleArea = (slug: string) => {
     setSelectedSlugs((prev) =>
-      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug].slice(0, 3)
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug].slice(0, 3),
     );
   };
 
@@ -33,8 +30,8 @@ export default function CompareAreas({ currentSlug, currentName, neighbors }: Co
 
   const compareUrl =
     selectedSlugs.length > 0
-      ? `/compare/areas?areas=${[currentSlug, ...selectedSlugs].join(',')}`
-      : '#';
+      ? `/compare/areas?areas=${[currentSlug, ...selectedSlugs].join(",")}`
+      : "#";
 
   return (
     <div className="container py-8">
@@ -56,7 +53,7 @@ export default function CompareAreas({ currentSlug, currentName, neighbors }: Co
                 >
                   {selectedSlugs.length > 0
                     ? `${selectedSlugs.length} zone selectate`
-                    : 'Alege zone...'}
+                    : "Alege zone..."}
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -67,16 +64,16 @@ export default function CompareAreas({ currentSlug, currentName, neighbors }: Co
                       key={area.slug}
                       onClick={() => toggleArea(area.slug)}
                       className={cn(
-                        'w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors',
-                        selectedSlugs.includes(area.slug) && 'bg-accent'
+                        "w-full flex items-center gap-2 rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors",
+                        selectedSlugs.includes(area.slug) && "bg-accent",
                       )}
                     >
                       <div
                         className={cn(
-                          'flex h-4 w-4 items-center justify-center rounded border border-primary',
+                          "flex h-4 w-4 items-center justify-center rounded border border-primary",
                           selectedSlugs.includes(area.slug)
-                            ? 'bg-primary text-primary-foreground'
-                            : 'opacity-50'
+                            ? "bg-primary text-primary-foreground"
+                            : "opacity-50",
                         )}
                       >
                         {selectedSlugs.includes(area.slug) && <Check className="h-3 w-3" />}
@@ -159,7 +156,7 @@ interface ComparisonBarProps {
   currentValue: number;
   currentName: string;
   areas: NeighborArea[];
-  valueKey?: 'medianEurM2' | 'listingsNow';
+  valueKey?: "medianEurM2" | "listingsNow";
 }
 
 function ComparisonBar({
@@ -167,13 +164,13 @@ function ComparisonBar({
   currentValue,
   currentName,
   areas,
-  valueKey = 'medianEurM2',
+  valueKey = "medianEurM2",
 }: ComparisonBarProps) {
   const allValues = [
     { name: currentName, value: currentValue, isCurrent: true },
     ...areas.map((a) => ({
       name: a.name,
-      value: valueKey === 'medianEurM2' ? a.medianEurM2 : (a.listingsNow || 0),
+      value: valueKey === "medianEurM2" ? a.medianEurM2 : a.listingsNow || 0,
       isCurrent: false,
     })),
   ];
@@ -189,11 +186,11 @@ function ComparisonBar({
           return (
             <div key={item.name} className="space-y-1">
               <div className="flex items-center justify-between text-xs">
-                <span className={cn('text-muted', item.isCurrent && 'font-medium text-fg')}>
+                <span className={cn("text-muted", item.isCurrent && "font-medium text-fg")}>
                   {item.name}
                 </span>
                 <span className="font-medium text-fg">
-                  {valueKey === 'medianEurM2'
+                  {valueKey === "medianEurM2"
                     ? `${formatNumber(item.value)} €/m²`
                     : item.value.toString()}
                 </span>
@@ -201,8 +198,8 @@ function ComparisonBar({
               <div className="h-6 w-full bg-muted rounded-md overflow-hidden">
                 <div
                   className={cn(
-                    'h-full transition-all',
-                    item.isCurrent ? 'bg-primary' : 'bg-primary/60'
+                    "h-full transition-all",
+                    item.isCurrent ? "bg-primary" : "bg-primary/60",
                   )}
                   style={{ width: `${percentage}%` }}
                 />

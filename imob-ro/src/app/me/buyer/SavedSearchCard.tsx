@@ -4,12 +4,14 @@
 
 "use client";
 
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { deleteSavedSearchAction } from "./saved.actions";
 import { useState } from "react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
+import { deleteSavedSearchAction } from "./saved.actions";
 
 type SavedSearchCardProps = {
   search: {

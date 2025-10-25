@@ -1,17 +1,18 @@
 "use client";
 
-import * as React from 'react';
-import Link from 'next/link';
-import { ChevronRight, Save, Share2, Search } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import type { AreaKpis, AreaSeries } from '@/lib/areas/dto';
+import { ChevronRight, Save, Search, Share2 } from "lucide-react";
+import Link from "next/link";
+import * as React from "react";
+
+import { Button } from "@/components/ui/button";
+import type { AreaKpis, AreaSeries } from "@/lib/areas/dto";
 import {
-  generateSparklinePath,
   calculateTrend,
-  formatNumber,
   formatChange,
-} from '@/lib/areas/series';
+  formatNumber,
+  generateSparklinePath,
+} from "@/lib/areas/series";
+import { cn } from "@/lib/utils";
 
 export interface HeroProps {
   kpis: AreaKpis;
@@ -19,12 +20,12 @@ export interface HeroProps {
 }
 
 export default function Hero({ kpis, series }: HeroProps) {
-  const trend = calculateTrend(series, 'eurM2');
-  const sparklinePath = generateSparklinePath(series.slice(-90), 'eurM2', 200, 40);
+  const trend = calculateTrend(series, "eurM2");
+  const sparklinePath = generateSparklinePath(series.slice(-90), "eurM2", 200, 40);
 
   const handleSave = () => {
     // TODO: Implement save to user's saved areas
-    console.log('[Area] Save area:', kpis.slug);
+    console.log("[Area] Save area:", kpis.slug);
   };
 
   const handleShare = async () => {
@@ -40,7 +41,7 @@ export default function Hero({ kpis, series }: HeroProps) {
     } else {
       // Fallback: copy to clipboard
       await navigator.clipboard.writeText(url);
-      alert('Link copiat în clipboard!');
+      alert("Link copiat în clipboard!");
     }
   };
 
@@ -74,12 +75,12 @@ export default function Hero({ kpis, series }: HeroProps) {
                 </div>
                 <div
                   className={cn(
-                    'text-sm font-medium mt-1',
+                    "text-sm font-medium mt-1",
                     kpis.medianEurM2Change30d > 0
-                      ? 'text-green-600 dark:text-green-400'
+                      ? "text-green-600 dark:text-green-400"
                       : kpis.medianEurM2Change30d < 0
-                      ? 'text-red-600 dark:text-red-400'
-                      : 'text-muted'
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-muted",
                   )}
                 >
                   {formatChange(kpis.medianEurM2Change30d)} în 30 zile
@@ -146,19 +147,19 @@ export default function Hero({ kpis, series }: HeroProps) {
                   d={sparklinePath}
                   fill="none"
                   stroke={
-                    trend === 'up'
-                      ? 'currentColor'
-                      : trend === 'down'
-                      ? 'currentColor'
-                      : 'currentColor'
+                    trend === "up"
+                      ? "currentColor"
+                      : trend === "down"
+                        ? "currentColor"
+                        : "currentColor"
                   }
                   strokeWidth="2"
                   className={cn(
-                    trend === 'up'
-                      ? 'text-green-500'
-                      : trend === 'down'
-                      ? 'text-red-500'
-                      : 'text-muted'
+                    trend === "up"
+                      ? "text-green-500"
+                      : trend === "down"
+                        ? "text-red-500"
+                        : "text-muted",
                   )}
                 />
               </svg>
@@ -166,15 +167,15 @@ export default function Hero({ kpis, series }: HeroProps) {
                 <span className="text-xs text-muted">Trend:</span>
                 <span
                   className={cn(
-                    'text-xs font-medium',
-                    trend === 'up'
-                      ? 'text-green-600 dark:text-green-400'
-                      : trend === 'down'
-                      ? 'text-red-600 dark:text-red-400'
-                      : 'text-muted'
+                    "text-xs font-medium",
+                    trend === "up"
+                      ? "text-green-600 dark:text-green-400"
+                      : trend === "down"
+                        ? "text-red-600 dark:text-red-400"
+                        : "text-muted",
                   )}
                 >
-                  {trend === 'up' ? '↗ Creștere' : trend === 'down' ? '↘ Scădere' : '→ Stabil'}
+                  {trend === "up" ? "↗ Creștere" : trend === "down" ? "↘ Scădere" : "→ Stabil"}
                 </span>
               </div>
             </div>

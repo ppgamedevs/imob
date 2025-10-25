@@ -1,10 +1,12 @@
 "use client";
 
-import * as React from "react";
-import { FilterPopover, FilterLabel } from "./FilterPopover";
 import { ChevronDown } from "lucide-react";
-import { PRICE_PRESETS } from "@/lib/discover/filters";
+import * as React from "react";
+
 import type { FilterState } from "@/lib/discover/filters";
+import { PRICE_PRESETS } from "@/lib/discover/filters";
+
+import { FilterLabel, FilterPopover } from "./FilterPopover";
 
 export interface PriceFilterProps {
   value: { min?: number; max?: number };
@@ -15,13 +17,13 @@ export interface PriceFilterProps {
 
 export function PriceFilter({ value, onChange, count, countLoading }: PriceFilterProps) {
   const [open, setOpen] = React.useState(false);
-  const [localMin, setLocalMin] = React.useState(value.min?.toString() || '');
-  const [localMax, setLocalMax] = React.useState(value.max?.toString() || '');
+  const [localMin, setLocalMin] = React.useState(value.min?.toString() || "");
+  const [localMax, setLocalMax] = React.useState(value.max?.toString() || "");
 
   // Sync local state when value changes externally
   React.useEffect(() => {
-    setLocalMin(value.min?.toString() || '');
-    setLocalMax(value.max?.toString() || '');
+    setLocalMin(value.min?.toString() || "");
+    setLocalMax(value.max?.toString() || "");
   }, [value.min, value.max]);
 
   const handleApply = React.useCallback(() => {
@@ -32,13 +34,13 @@ export function PriceFilter({ value, onChange, count, countLoading }: PriceFilte
   }, [localMin, localMax, onChange]);
 
   const handleReset = React.useCallback(() => {
-    setLocalMin('');
-    setLocalMax('');
+    setLocalMin("");
+    setLocalMax("");
     onChange({ min: undefined, max: undefined });
   }, [onChange]);
 
-  const handlePreset = React.useCallback((preset: number, type: 'min' | 'max') => {
-    if (type === 'min') {
+  const handlePreset = React.useCallback((preset: number, type: "min" | "max") => {
+    if (type === "min") {
       setLocalMin(String(preset));
     } else {
       setLocalMax(String(preset));
@@ -46,9 +48,7 @@ export function PriceFilter({ value, onChange, count, countLoading }: PriceFilte
   }, []);
 
   const isActive = Boolean(value.min || value.max);
-  const summary = isActive
-    ? `${formatPrice(value.min)} – ${formatPrice(value.max)}`
-    : 'Preț';
+  const summary = isActive ? `${formatPrice(value.min)} – ${formatPrice(value.max)}` : "Preț";
 
   return (
     <FilterPopover
@@ -84,7 +84,7 @@ export function PriceFilter({ value, onChange, count, countLoading }: PriceFilte
               <button
                 key={preset.value}
                 type="button"
-                onClick={() => handlePreset(preset.value, 'min')}
+                onClick={() => handlePreset(preset.value, "min")}
                 className="h-6 px-2 text-xs font-medium rounded border border-border bg-surface hover:bg-primary/5 hover:border-primary transition-colors"
               >
                 {preset.label}
@@ -110,7 +110,7 @@ export function PriceFilter({ value, onChange, count, countLoading }: PriceFilte
               <button
                 key={preset.value}
                 type="button"
-                onClick={() => handlePreset(preset.value, 'max')}
+                onClick={() => handlePreset(preset.value, "max")}
                 className="h-6 px-2 text-xs font-medium rounded border border-border bg-surface hover:bg-primary/5 hover:border-primary transition-colors"
               >
                 {preset.label}
@@ -124,7 +124,7 @@ export function PriceFilter({ value, onChange, count, countLoading }: PriceFilte
 }
 
 function formatPrice(value: number | undefined): string {
-  if (!value) return '';
+  if (!value) return "";
   if (value >= 1000) {
     return `${Math.round(value / 1000)}k`;
   }

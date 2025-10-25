@@ -1,7 +1,8 @@
+import { ExternalLink, MapPin } from "lucide-react";
 import * as React from "react";
-import { MapPin, ExternalLink } from "lucide-react";
-import { cn } from "@/lib/utils";
+
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 /**
  * ReportSummary - Property header with key info

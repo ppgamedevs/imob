@@ -3,7 +3,7 @@
  * Reduces API calls for repeated queries
  */
 
-import type { SuggestResponse } from './types';
+import type { SuggestResponse } from "./types";
 
 export class SearchCache {
   private cache: Map<string, { data: SuggestResponse; timestamp: number }>;

@@ -25,7 +25,6 @@ type Item = {
 };
 
 export function DiscoverClient() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [params, setParams] = useState<any>({ pageSize: 20, underpriced: false });
   const [items, setItems] = useState<Item[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);

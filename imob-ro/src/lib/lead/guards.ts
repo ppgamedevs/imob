@@ -41,10 +41,7 @@ export function sanitizeMessage(message: string): string {
   let sanitized = message;
 
   // Strip URLs (http/https)
-  sanitized = sanitized.replace(
-    /https?:\/\/[^\s]+/gi,
-    "[link eliminat]",
-  );
+  sanitized = sanitized.replace(/https?:\/\/[^\s]+/gi, "[link eliminat]");
 
   // Strip www. domains
   sanitized = sanitized.replace(/www\.[^\s]+/gi, "[link eliminat]");

@@ -23,7 +23,7 @@ export async function getSubscription(userId: string) {
  */
 export async function getPlanLimits(planCode: string): Promise<Limits> {
   const plan = await prisma.plan.findUnique({ where: { code: planCode } });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const f = (plan?.features as any) || {};
   return {
     analyze: Number(f.analyze ?? 20),

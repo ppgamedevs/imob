@@ -5,9 +5,10 @@
 
 "use server";
 
-import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { updateUserTaste } from "@/lib/reco/taste";
 
 export async function addWatchAction(groupId: string, note?: string) {

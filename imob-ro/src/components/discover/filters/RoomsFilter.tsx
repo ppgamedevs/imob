@@ -1,9 +1,11 @@
 "use client";
 
-import * as React from "react";
-import { FilterPopover } from "./FilterPopover";
 import { ChevronDown } from "lucide-react";
+import * as React from "react";
+
 import { cn } from "@/lib/utils";
+
+import { FilterPopover } from "./FilterPopover";
 
 export interface RoomsFilterProps {
   value: number[];
@@ -13,10 +15,10 @@ export interface RoomsFilterProps {
 }
 
 const ROOM_OPTIONS = [
-  { value: 1, label: '1' },
-  { value: 2, label: '2' },
-  { value: 3, label: '3' },
-  { value: 4, label: '4+' },
+  { value: 1, label: "1" },
+  { value: 2, label: "2" },
+  { value: 3, label: "3" },
+  { value: 4, label: "4+" },
 ];
 
 export function RoomsFilter({ value, onChange, count, countLoading }: RoomsFilterProps) {
@@ -54,7 +56,7 @@ export function RoomsFilter({ value, onChange, count, countLoading }: RoomsFilte
     ? value.length === 1
       ? `${value[0]} camere`
       : `${value.length} opțiuni`
-    : 'Camere';
+    : "Camere";
 
   return (
     <FilterPopover
@@ -73,9 +75,7 @@ export function RoomsFilter({ value, onChange, count, countLoading }: RoomsFilte
       isActive={isActive}
     >
       <div className="space-y-3">
-        <p className="text-xs text-muted">
-          Selectează numărul de camere (poți alege mai multe)
-        </p>
+        <p className="text-xs text-muted">Selectează numărul de camere (poți alege mai multe)</p>
 
         {/* Segmented buttons */}
         <div className="grid grid-cols-4 gap-2">
@@ -92,7 +92,7 @@ export function RoomsFilter({ value, onChange, count, countLoading }: RoomsFilte
                   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                   isSelected
                     ? "bg-primary border-primary text-primary-fg"
-                    : "bg-surface border-border text-fg hover:bg-surface/50"
+                    : "bg-surface border-border text-fg hover:bg-surface/50",
                 )}
               >
                 {option.label}

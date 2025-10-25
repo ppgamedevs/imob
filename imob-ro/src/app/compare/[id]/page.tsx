@@ -3,13 +3,14 @@
  * Side-by-side comparison of up to 4 properties
  */
 
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 
 type ComparePageProps = {
   params: Promise<{ id: string }>;

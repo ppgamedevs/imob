@@ -6,7 +6,6 @@ export function ResultsList({
   onHover,
   loading,
 }: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   items: any[];
   onHover?: (id: string | null) => void;
   loading?: boolean;

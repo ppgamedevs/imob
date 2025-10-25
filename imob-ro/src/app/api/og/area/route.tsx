@@ -4,6 +4,7 @@
  */
 
 import { ImageResponse } from "next/og";
+
 import { prisma } from "@/lib/db";
 
 // Use Node.js runtime instead of Edge to avoid 1MB size limit

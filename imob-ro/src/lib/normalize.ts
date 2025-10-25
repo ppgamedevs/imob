@@ -2,7 +2,6 @@
 // - normalizeExtracted(ex) => canonical features JSON
 // - normalizeAddress(addressRaw) => { lat, lng, areaSlug, components }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const DEFAULT_EUR_TO_RON = Number(process.env.EXCHANGE_RATE_EUR_TO_RON) || 4.9;
 const MAPBOX_TOKEN = process.env.MAPBOX_API_TOKEN || "";
 

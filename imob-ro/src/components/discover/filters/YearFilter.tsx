@@ -1,10 +1,12 @@
 "use client";
 
-import * as React from "react";
-import { FilterPopover, FilterLabel } from "./FilterPopover";
 import { ChevronDown } from "lucide-react";
+import * as React from "react";
+
 import { YEAR_RANGES } from "@/lib/discover/filters";
 import { cn } from "@/lib/utils";
+
+import { FilterLabel, FilterPopover } from "./FilterPopover";
 
 export interface YearFilterProps {
   value: { min?: number; max?: number };
@@ -15,32 +17,35 @@ export interface YearFilterProps {
 
 export function YearFilter({ value, onChange, count, countLoading }: YearFilterProps) {
   const [open, setOpen] = React.useState(false);
-  const [mode, setMode] = React.useState<'preset' | 'custom'>('preset');
-  const [customMin, setCustomMin] = React.useState(value.min?.toString() || '');
-  const [customMax, setCustomMax] = React.useState(value.max?.toString() || '');
+  const [mode, setMode] = React.useState<"preset" | "custom">("preset");
+  const [customMin, setCustomMin] = React.useState(value.min?.toString() || "");
+  const [customMax, setCustomMax] = React.useState(value.max?.toString() || "");
   const [selectedPreset, setSelectedPreset] = React.useState<number>(-1);
 
   React.useEffect(() => {
     // Check if current value matches a preset
     const presetIndex = YEAR_RANGES.findIndex(
-      (range) => range.min === value.min && range.max === value.max
+      (range) => range.min === value.min && range.max === value.max,
     );
     if (presetIndex !== -1) {
-      setMode('preset');
+      setMode("preset");
       setSelectedPreset(presetIndex);
     } else if (value.min || value.max) {
-      setMode('custom');
-      setCustomMin(value.min?.toString() || '');
-      setCustomMax(value.max?.toString() || '');
+      setMode("custom");
+      setCustomMin(value.min?.toString() || "");
+      setCustomMax(value.max?.toString() || "");
     }
   }, [value.min, value.max]);
 
-  const handlePresetSelect = React.useCallback((index: number) => {
-    const range = YEAR_RANGES[index];
-    setSelectedPreset(index);
-    setMode('preset');
-    onChange({ min: range.min, max: range.max });
-  }, [onChange]);
+  const handlePresetSelect = React.useCallback(
+    (index: number) => {
+      const range = YEAR_RANGES[index];
+      setSelectedPreset(index);
+      setMode("preset");
+      onChange({ min: range.min, max: range.max });
+    },
+    [onChange],
+  );
 
   const handleCustomApply = React.useCallback(() => {
     const min = customMin ? Number(customMin) : undefined;
@@ -50,8 +55,8 @@ export function YearFilter({ value, onChange, count, countLoading }: YearFilterP
   }, [customMin, customMax, onChange]);
 
   const handleReset = React.useCallback(() => {
-    setCustomMin('');
-    setCustomMax('');
+    setCustomMin("");
+    setCustomMax("");
     setSelectedPreset(-1);
     onChange({ min: undefined, max: undefined });
   }, [onChange]);
@@ -61,9 +66,9 @@ export function YearFilter({ value, onChange, count, countLoading }: YearFilterP
     ? value.min && !value.max
       ? `din ${value.min}+`
       : value.min && value.max
-      ? `${value.min}–${value.max}`
-      : 'An personalizat'
-    : 'An construcție';
+        ? `${value.min}–${value.max}`
+        : "An personalizat"
+    : "An construcție";
 
   return (
     <FilterPopover
@@ -75,7 +80,7 @@ export function YearFilter({ value, onChange, count, countLoading }: YearFilterP
       }
       open={open}
       onOpenChange={setOpen}
-      onApply={mode === 'preset' ? () => setOpen(false) : handleCustomApply}
+      onApply={mode === "preset" ? () => setOpen(false) : handleCustomApply}
       onReset={isActive ? handleReset : undefined}
       count={count}
       countLoading={countLoading}
@@ -86,24 +91,20 @@ export function YearFilter({ value, onChange, count, countLoading }: YearFilterP
         <div className="flex gap-2 p-1 bg-surface rounded-lg border border-border">
           <button
             type="button"
-            onClick={() => setMode('preset')}
+            onClick={() => setMode("preset")}
             className={cn(
               "flex-1 h-7 text-xs font-medium rounded transition-colors",
-              mode === 'preset'
-                ? "bg-primary text-primary-fg"
-                : "text-muted hover:text-fg"
+              mode === "preset" ? "bg-primary text-primary-fg" : "text-muted hover:text-fg",
             )}
           >
             Intervale predefinite
           </button>
           <button
             type="button"
-            onClick={() => setMode('custom')}
+            onClick={() => setMode("custom")}
             className={cn(
               "flex-1 h-7 text-xs font-medium rounded transition-colors",
-              mode === 'custom'
-                ? "bg-primary text-primary-fg"
-                : "text-muted hover:text-fg"
+              mode === "custom" ? "bg-primary text-primary-fg" : "text-muted hover:text-fg",
             )}
           >
             Custom
@@ -111,7 +112,7 @@ export function YearFilter({ value, onChange, count, countLoading }: YearFilterP
         </div>
 
         {/* Preset ranges */}
-        {mode === 'preset' && (
+        {mode === "preset" && (
           <div className="space-y-2">
             {YEAR_RANGES.map((range, index) => (
               <label
@@ -120,7 +121,7 @@ export function YearFilter({ value, onChange, count, countLoading }: YearFilterP
                   "flex items-center gap-3 p-2.5 rounded-md cursor-pointer border transition-colors",
                   selectedPreset === index
                     ? "bg-primary/5 border-primary"
-                    : "bg-surface border-border hover:bg-surface/50"
+                    : "bg-surface border-border hover:bg-surface/50",
                 )}
               >
                 <input
@@ -133,14 +134,10 @@ export function YearFilter({ value, onChange, count, countLoading }: YearFilterP
                 <div
                   className={cn(
                     "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors",
-                    selectedPreset === index
-                      ? "border-primary"
-                      : "border-border"
+                    selectedPreset === index ? "border-primary" : "border-border",
                   )}
                 >
-                  {selectedPreset === index && (
-                    <div className="w-2 h-2 rounded-full bg-primary" />
-                  )}
+                  {selectedPreset === index && <div className="w-2 h-2 rounded-full bg-primary" />}
                 </div>
                 <span className="text-sm text-fg">{range.label}</span>
               </label>
@@ -149,7 +146,7 @@ export function YearFilter({ value, onChange, count, countLoading }: YearFilterP
         )}
 
         {/* Custom inputs */}
-        {mode === 'custom' && (
+        {mode === "custom" && (
           <div className="space-y-3">
             <div>
               <FilterLabel htmlFor="year-min">An minim</FilterLabel>

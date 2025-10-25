@@ -1,7 +1,8 @@
-import * as React from "react";
 import Image from "next/image";
-import { Surface } from "@/components/ui/Surface";
+import * as React from "react";
+
 import { SponsoredLabel } from "@/components/ui/SponsoredLabel";
+import { Surface } from "@/components/ui/Surface";
 import { cn } from "@/lib/utils";
 
 /**

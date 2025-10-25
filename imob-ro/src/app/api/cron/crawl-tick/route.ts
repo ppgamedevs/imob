@@ -4,14 +4,15 @@
  */
 
 import { NextResponse } from "next/server";
+
 import { startAnalysis } from "@/lib/analysis";
-import { sleep } from "@/lib/crawl/helpers";
-import { prisma } from "@/lib/db";
 import { pickAdapter } from "@/lib/crawl/adapters";
-import { takeBatch, markDone, hashContent, hasContentChanged } from "@/lib/crawl/queue";
 import { fetchWithCache } from "@/lib/crawl/fetcher";
-import { normalizeUrl } from "@/lib/url";
+import { sleep } from "@/lib/crawl/helpers";
+import { hasContentChanged, hashContent, markDone, takeBatch } from "@/lib/crawl/queue";
+import { prisma } from "@/lib/db";
 import { withCronTracking } from "@/lib/obs/cron-tracker";
+import { normalizeUrl } from "@/lib/url";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;

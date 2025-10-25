@@ -3,8 +3,8 @@
  * Seeds ListingSources and discovers URLs from sitemaps for București
  */
 
-import { prisma } from "@/lib/db";
 import { pickAdapter } from "@/lib/crawl/adapters";
+import { prisma } from "@/lib/db";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // 60 seconds for sitemap processing

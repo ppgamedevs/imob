@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const TOKEN = process.env.MAPBOX_TOKEN || process.env.MAPBOX_API_TOKEN || "";
 const base = "https://api.mapbox.com/geocoding/v5/mapbox.places";
 

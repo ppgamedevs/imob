@@ -1,7 +1,8 @@
+import { AlertCircle, CheckCircle2, FileText, Image as ImageIcon } from "lucide-react";
 import * as React from "react";
-import { CheckCircle2, AlertCircle, Image as ImageIcon, FileText } from "lucide-react";
-import { cn } from "@/lib/utils";
+
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 /**
  * QualityCard - Data quality assessment

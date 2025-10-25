@@ -5,10 +5,11 @@
 
 "use server";
 
-import { prisma } from "@/lib/db";
-import { auth } from "@/lib/auth";
-import { SavedQuerySchema } from "@/lib/saved-search/validate";
 import { revalidatePath } from "next/cache";
+
+import { auth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { SavedQuerySchema } from "@/lib/saved-search/validate";
 
 export async function createSavedSearchAction(name: string, q: any) {
   const session = await auth();

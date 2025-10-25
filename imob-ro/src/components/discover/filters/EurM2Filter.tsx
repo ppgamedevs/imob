@@ -1,8 +1,9 @@
 "use client";
 
-import * as React from "react";
-import { FilterPopover, FilterLabel } from "./FilterPopover";
 import { ChevronDown } from "lucide-react";
+import * as React from "react";
+
+import { FilterLabel, FilterPopover } from "./FilterPopover";
 
 export interface EurM2FilterProps {
   value: { min?: number; max?: number };
@@ -13,12 +14,12 @@ export interface EurM2FilterProps {
 
 export function EurM2Filter({ value, onChange, count, countLoading }: EurM2FilterProps) {
   const [open, setOpen] = React.useState(false);
-  const [localMin, setLocalMin] = React.useState(value.min?.toString() || '');
-  const [localMax, setLocalMax] = React.useState(value.max?.toString() || '');
+  const [localMin, setLocalMin] = React.useState(value.min?.toString() || "");
+  const [localMax, setLocalMax] = React.useState(value.max?.toString() || "");
 
   React.useEffect(() => {
-    setLocalMin(value.min?.toString() || '');
-    setLocalMax(value.max?.toString() || '');
+    setLocalMin(value.min?.toString() || "");
+    setLocalMax(value.max?.toString() || "");
   }, [value.min, value.max]);
 
   const handleApply = React.useCallback(() => {
@@ -29,15 +30,13 @@ export function EurM2Filter({ value, onChange, count, countLoading }: EurM2Filte
   }, [localMin, localMax, onChange]);
 
   const handleReset = React.useCallback(() => {
-    setLocalMin('');
-    setLocalMax('');
+    setLocalMin("");
+    setLocalMax("");
     onChange({ min: undefined, max: undefined });
   }, [onChange]);
 
   const isActive = Boolean(value.min || value.max);
-  const summary = isActive
-    ? `${value.min || ''}–${value.max || ''} €/m²`
-    : '€/m²';
+  const summary = isActive ? `${value.min || ""}–${value.max || ""} €/m²` : "€/m²";
 
   return (
     <FilterPopover
@@ -89,7 +88,7 @@ export function EurM2Filter({ value, onChange, count, countLoading }: EurM2Filte
           <div className="p-3 rounded-md bg-primary/5 border border-primary/20">
             <div className="text-xs text-muted mb-1">Interval selectat:</div>
             <div className="text-sm font-medium text-fg">
-              {localMin || '0'} – {localMax || '∞'} €/m²
+              {localMin || "0"} – {localMax || "∞"} €/m²
             </div>
           </div>
         )}

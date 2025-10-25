@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Day 28 - AVM estimation for owner-provided features
  * Pure function version that doesn't require an existing Analysis

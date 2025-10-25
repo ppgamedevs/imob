@@ -43,14 +43,13 @@ export default async function AgentPublicPage({ params }: { params: Promise<{ ha
       <div>
         <h2 className="font-medium mb-2">Listări</h2>
         <div className="grid md:grid-cols-3 gap-3">
-          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          {}
           {claims.map((c: any) => {
             const a = c.analysis;
             const photos = Array.isArray(a.extractedListing?.photos)
-              ? /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-                (a.extractedListing?.photos as any[])
+              ? (a.extractedListing?.photos as any[])
               : [];
-            /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+
             const f: any = a.featureSnapshot?.features ?? {};
             return (
               <a

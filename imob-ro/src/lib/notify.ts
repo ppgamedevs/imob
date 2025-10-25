@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from "@/lib/db";
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 

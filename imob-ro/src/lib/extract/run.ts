@@ -12,7 +12,6 @@ function domainOf(u: string) {
   }
 }
 
-/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 const builtins: Record<string, any> = {
   "imobiliare.ro": imobiliareRo,
   "storia.ro": storiaRo,
@@ -26,8 +25,7 @@ export async function runExtractor(html: string, url: string) {
 
   const rules =
     dbp?.active && dbp?.rules
-      ? /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-        (dbp.rules as any)
+      ? (dbp.rules as any)
       : builtins[domain]
         ? builtins[domain]
         : defaultProfile;
@@ -52,7 +50,6 @@ export async function runExtractor(html: string, url: string) {
           yearBuilt: result.yearBuilt,
           addressRaw: result.addressRaw,
           photos: (result.photos || []).length,
-          /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
         } as any,
       },
     })

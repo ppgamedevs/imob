@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Day 33: Feature extraction for ML-based AVM
  * Builds numeric feature vector from FeatureSnapshot for ridge regression

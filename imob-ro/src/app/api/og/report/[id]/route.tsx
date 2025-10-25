@@ -21,9 +21,8 @@ export default async function GET(req: Request, { params }: { params: Promise<{ 
       return new Response("Not found", { status: 404 });
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const f: any = a.featureSnapshot?.features ?? {};
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const s: any = a.scoreSnapshot ?? {};
 
     const title = a.extractedListing?.title ?? "Analiză ImobIntel";

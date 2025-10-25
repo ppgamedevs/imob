@@ -49,7 +49,7 @@ export function distanceM(lat1: number, lng1: number, lat2: number, lng2: number
 }
 
 // Composite fuzzy score for identifying same property across sources
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export function fuzzyScore(a: any, b: any) {
   // Weighted: title 25%, geo 25%, photo 20%, contact 15%, area 10%, price 5%
   let s = 0;

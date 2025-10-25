@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+
 import { decayAllTastes } from "@/lib/reco/taste";
 
 export async function GET(req: NextRequest) {

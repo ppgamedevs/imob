@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
-import { logger, logCron } from "./logger";
+
+import { logCron, logger } from "./logger";
 import { captureException } from "./sentry";
 
 /**

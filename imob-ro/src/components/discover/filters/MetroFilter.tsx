@@ -1,10 +1,12 @@
 "use client";
 
-import * as React from "react";
-import { FilterPopover } from "./FilterPopover";
 import { ChevronDown } from "lucide-react";
+import * as React from "react";
+
 import { METRO_OPTIONS } from "@/lib/discover/filters";
 import { cn } from "@/lib/utils";
+
+import { FilterPopover } from "./FilterPopover";
 
 export interface MetroFilterProps {
   value: number | undefined;
@@ -21,11 +23,14 @@ export function MetroFilter({ value, onChange, count, countLoading }: MetroFilte
     setLocalValue(value);
   }, [value]);
 
-  const handleSelect = React.useCallback((option: number | undefined) => {
-    setLocalValue(option);
-    onChange(option);
-    setOpen(false);
-  }, [onChange]);
+  const handleSelect = React.useCallback(
+    (option: number | undefined) => {
+      setLocalValue(option);
+      onChange(option);
+      setOpen(false);
+    },
+    [onChange],
+  );
 
   const handleReset = React.useCallback(() => {
     setLocalValue(undefined);
@@ -33,9 +38,7 @@ export function MetroFilter({ value, onChange, count, countLoading }: MetroFilte
   }, [onChange]);
 
   const isActive = value !== undefined;
-  const summary = isActive
-    ? `Max ${value}m metrou`
-    : 'Metrou';
+  const summary = isActive ? `Max ${value}m metrou` : "Metrou";
 
   return (
     <FilterPopover
@@ -65,7 +68,7 @@ export function MetroFilter({ value, onChange, count, countLoading }: MetroFilte
               "flex items-center gap-3 p-2.5 rounded-md cursor-pointer border transition-colors",
               localValue === option.value
                 ? "bg-primary/5 border-primary"
-                : "bg-surface border-border hover:bg-surface/50"
+                : "bg-surface border-border hover:bg-surface/50",
             )}
           >
             <input
@@ -78,14 +81,10 @@ export function MetroFilter({ value, onChange, count, countLoading }: MetroFilte
             <div
               className={cn(
                 "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-colors",
-                localValue === option.value
-                  ? "border-primary"
-                  : "border-border"
+                localValue === option.value ? "border-primary" : "border-border",
               )}
             >
-              {localValue === option.value && (
-                <div className="w-2 h-2 rounded-full bg-primary" />
-              )}
+              {localValue === option.value && <div className="w-2 h-2 rounded-full bg-primary" />}
             </div>
             <span className="text-sm text-fg">{option.label}</span>
           </label>

@@ -80,7 +80,7 @@ export async function loadZone(slug: string): Promise<ZoneData | null> {
 
   // Extract stats from latest AreaDaily (Day 30: rent, yield, TTS)
   const latestAreaDaily = rawDaily[rawDaily.length - 1];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   const stats = (latestAreaDaily?.stats as any) ?? {};
   const rentEurM2 = typeof stats.rentEurM2 === "number" ? stats.rentEurM2 : null;
   const yieldNet = typeof stats.yieldNet === "number" ? stats.yieldNet : null;

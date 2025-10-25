@@ -1,7 +1,7 @@
 import { revalidatePath } from "next/cache";
 
+import { revalidateAllZones, revalidateZone } from "@/lib/cache-tags";
 import { prisma } from "@/lib/db";
-import { revalidateZone, revalidateAllZones } from "@/lib/cache-tags";
 
 const TOP_N = 40;
 

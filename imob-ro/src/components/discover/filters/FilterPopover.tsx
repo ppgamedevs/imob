@@ -1,12 +1,13 @@
 "use client";
 
-import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
+import * as React from "react";
+
 import { cn } from "@/lib/utils";
 
 /**
  * FilterPopover - Base popover component for all filters
- * 
+ *
  * Features:
  * - Portal mounting (no CLS)
  * - Focus trap & keyboard controls (Esc/Enter)
@@ -48,14 +49,14 @@ export function FilterPopover({
 }: FilterPopoverProps) {
   const handleKeyDown = React.useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         onApply?.();
-      } else if (e.key === 'Escape') {
+      } else if (e.key === "Escape") {
         onOpenChange?.(false);
       }
     },
-    [onApply, onOpenChange]
+    [onApply, onOpenChange],
   );
 
   return (
@@ -70,7 +71,7 @@ export function FilterPopover({
             "hover:bg-surface/50",
             isActive
               ? "border-primary bg-primary/5 text-primary"
-              : "border-border bg-surface text-fg"
+              : "border-border bg-surface text-fg",
           )}
           aria-expanded={open}
         >
@@ -93,9 +94,7 @@ export function FilterPopover({
           onKeyDown={handleKeyDown}
         >
           {/* Scrollable Content */}
-          <div className="max-h-[60vh] overflow-y-auto p-4">
-            {children}
-          </div>
+          <div className="max-h-[60vh] overflow-y-auto p-4">{children}</div>
 
           {/* Footer with Count & Actions */}
           <div className="border-t border-border bg-surface/95 backdrop-blur-sm px-4 py-3 flex items-center justify-between gap-3">
@@ -131,7 +130,7 @@ export function FilterPopover({
                 className={cn(
                   "h-7 px-3 text-xs font-medium rounded-md",
                   "bg-primary text-primary-fg hover:bg-primary/90",
-                  "transition-colors"
+                  "transition-colors",
                 )}
               >
                 Aplică
@@ -147,7 +146,13 @@ export function FilterPopover({
 /**
  * FilterLabel - Accessible label for form fields
  */
-export function FilterLabel({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) {
+export function FilterLabel({
+  children,
+  htmlFor,
+}: {
+  children: React.ReactNode;
+  htmlFor?: string;
+}) {
   return (
     <label htmlFor={htmlFor} className="block text-xs font-medium text-fg mb-1.5">
       {children}

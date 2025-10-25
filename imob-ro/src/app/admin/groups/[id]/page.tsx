@@ -35,10 +35,9 @@ export default async function AdminGroupDetailPage({
   if (!group) notFound();
 
   const members = group.analyses.map((a) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const f = (a.featureSnapshot as any)?.features ?? {};
     const e = a.extractedListing;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     const score = (a.scoreSnapshot as any)?.trustScore ?? null;
 
     let domain = "unknown";

@@ -1,11 +1,12 @@
 import * as React from "react";
-import { Container } from "@/components/layout/Container";
-import { Surface } from "@/components/ui/Surface";
-import { SponsoredLabel } from "@/components/ui/SponsoredLabel";
+
 import { AdSlot } from "@/components/ads/AdSlot";
 import { SponsoredCard } from "@/components/ads/SponsoredCard";
-import { Button } from "@/components/ui/button";
+import { Container } from "@/components/layout/Container";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { SponsoredLabel } from "@/components/ui/SponsoredLabel";
+import { Surface } from "@/components/ui/Surface";
 
 /**
  * UI Showcase - Visual QA for design system primitives

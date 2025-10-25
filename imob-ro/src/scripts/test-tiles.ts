@@ -3,7 +3,7 @@
  * Tests getNearestCell with known coordinates
  */
 
-import { getNearestCell, getIntelligenceScore, getPOISummary } from "../lib/tiles/loader";
+import { getIntelligenceScore, getNearestCell, getPOISummary } from "../lib/tiles/loader";
 
 async function testTileSystem() {
   console.log("[Test] Testing tile system...\n");

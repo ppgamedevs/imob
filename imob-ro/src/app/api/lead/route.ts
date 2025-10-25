@@ -20,7 +20,7 @@ async function resolveAssignee(analysisId: string) {
 async function notifyUser(
   userId: string | null,
   analysisId: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   payload: any,
 ) {
   // află emailul userului
@@ -80,9 +80,8 @@ export async function POST(req: Request) {
         userId: assignedTo ?? "",
         analysisId,
         action: "CONTACT_REQUEST",
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
         meta: { name, email, phone } as any,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any,
     })
     .catch(() => {});

@@ -49,7 +49,6 @@ export async function POST(req: Request) {
   if (!allowRequest(ip)) {
     // record audit
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (prisma as any).apiAudit.create({
         data: { ip, endpoint: "/api/analyze", action: "rate_limited", details: getBucketInfo(ip) },
       });
@@ -59,7 +58,6 @@ export async function POST(req: Request) {
 
   // record received
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (prisma as any).apiAudit.create({
       data: { ip, endpoint: "/api/analyze", action: "request_received", details: body ?? {} },
     });

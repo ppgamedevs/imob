@@ -2,15 +2,15 @@
  * Step 7: Search types and interfaces
  */
 
-export type SuggestKind = 
-  | 'area'
-  | 'address'
-  | 'listing'
-  | 'group'
-  | 'developer'
-  | 'saved'
-  | 'page'
-  | 'sponsored';
+export type SuggestKind =
+  | "area"
+  | "address"
+  | "listing"
+  | "group"
+  | "developer"
+  | "saved"
+  | "page"
+  | "sponsored";
 
 export type SuggestItemBase = {
   kind: SuggestKind;
@@ -19,7 +19,7 @@ export type SuggestItemBase = {
 };
 
 export type AreaSuggestItem = SuggestItemBase & {
-  kind: 'area';
+  kind: "area";
   slug: string;
   name: string;
   city: string;
@@ -27,7 +27,7 @@ export type AreaSuggestItem = SuggestItemBase & {
 };
 
 export type AddressSuggestItem = SuggestItemBase & {
-  kind: 'address';
+  kind: "address";
   name: string;
   lat: number;
   lng: number;
@@ -35,17 +35,17 @@ export type AddressSuggestItem = SuggestItemBase & {
 };
 
 export type ListingSuggestItem = SuggestItemBase & {
-  kind: 'listing';
+  kind: "listing";
   id: string;
   title: string;
   priceEur: number;
   eurM2: number;
-  avmBadge?: 'under' | 'fair' | 'over';
+  avmBadge?: "under" | "fair" | "over";
   thumb?: string;
 };
 
 export type GroupSuggestItem = SuggestItemBase & {
-  kind: 'group';
+  kind: "group";
   id: string;
   title: string;
   priceEur: number;
@@ -55,25 +55,25 @@ export type GroupSuggestItem = SuggestItemBase & {
 };
 
 export type DeveloperSuggestItem = SuggestItemBase & {
-  kind: 'developer';
+  kind: "developer";
   id: string;
   name: string;
 };
 
 export type SavedSuggestItem = SuggestItemBase & {
-  kind: 'saved';
-  type: 'filter' | 'area';
+  kind: "saved";
+  type: "filter" | "area";
   label: string;
 };
 
 export type PageSuggestItem = SuggestItemBase & {
-  kind: 'page';
+  kind: "page";
   title: string;
 };
 
 export type SponsoredSuggestItem = SuggestItemBase & {
-  kind: 'sponsored';
-  section: 'listings' | 'areas';
+  kind: "sponsored";
+  section: "listings" | "areas";
   payload: AreaSuggestItem | ListingSuggestItem | GroupSuggestItem;
 };
 

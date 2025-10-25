@@ -19,7 +19,7 @@ export interface ShareOptions {
  * - Hides price/AVM if hidePrice enabled
  * - Removes source URLs if hideSource enabled
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+
 export function scrubReportData(report: any, opts: ShareOptions): any {
   const clone = structuredClone(report);
 

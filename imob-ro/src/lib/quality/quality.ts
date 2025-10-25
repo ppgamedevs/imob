@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 export type PhotoMeta = { url?: string; width?: number; height?: number };
 export type QualityInput = {
   extracted?: {

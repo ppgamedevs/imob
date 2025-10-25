@@ -1,5 +1,6 @@
+import { Calculator, Home, TrendingUp } from "lucide-react";
 import * as React from "react";
-import { TrendingUp, Home, Calculator } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 /**

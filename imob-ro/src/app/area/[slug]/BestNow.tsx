@@ -1,11 +1,12 @@
-import * as React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { ArrowRight, Star } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import type { ListingSummary } from '@/lib/areas/dto';
-import { formatNumber } from '@/lib/areas/series';
+import { ArrowRight, Star } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import * as React from "react";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import type { ListingSummary } from "@/lib/areas/dto";
+import { formatNumber } from "@/lib/areas/series";
 
 export interface BestNowProps {
   listings: ListingSummary[];
@@ -18,9 +19,7 @@ export default function BestNow({ listings, areaName, slug }: BestNowProps) {
     return (
       <div className="container py-8">
         <div className="rounded-lg border border-border bg-surface p-8">
-          <div className="text-center text-muted">
-            Niciun anunț disponibil în acest moment
-          </div>
+          <div className="text-center text-muted">Niciun anunț disponibil în acest moment</div>
         </div>
       </div>
     );
@@ -32,7 +31,9 @@ export default function BestNow({ listings, areaName, slug }: BestNowProps) {
     <div className="container py-8">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
-          <h2 className="text-xl font-bold text-fg mb-1">Cele mai bune oferte acum în {areaName}</h2>
+          <h2 className="text-xl font-bold text-fg mb-1">
+            Cele mai bune oferte acum în {areaName}
+          </h2>
           <p className="text-sm text-muted">
             Sortate după: Preț subapreciat → Randament ridicat → Vânzare rapidă
           </p>
@@ -47,11 +48,7 @@ export default function BestNow({ listings, areaName, slug }: BestNowProps) {
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {listings.map((listing, index) => (
-          <ListingCardV3
-            key={listing.id}
-            listing={listing}
-            priority={index < 3}
-          />
+          <ListingCardV3 key={listing.id} listing={listing} priority={index < 3} />
         ))}
       </div>
     </div>
@@ -66,9 +63,9 @@ interface ListingCardV3Props {
 
 function ListingCardV3({ listing, priority }: ListingCardV3Props) {
   const avmBadgeConfig = {
-    under: { label: 'Subapreciat', variant: 'default' as const },
-    fair: { label: 'Preț corect', variant: 'secondary' as const },
-    over: { label: 'Supraevaluat', variant: 'destructive' as const },
+    under: { label: "Subapreciat", variant: "default" as const },
+    fair: { label: "Preț corect", variant: "secondary" as const },
+    over: { label: "Supraevaluat", variant: "destructive" as const },
   };
 
   const badgeInfo = listing.avmBadge ? avmBadgeConfig[listing.avmBadge] : null;
@@ -86,7 +83,7 @@ function ListingCardV3({ listing, priority }: ListingCardV3Props) {
             alt={listing.title}
             fill
             className="object-cover"
-            loading={priority ? 'eager' : 'lazy'}
+            loading={priority ? "eager" : "lazy"}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />
         ) : (
@@ -106,18 +103,12 @@ function ListingCardV3({ listing, priority }: ListingCardV3Props) {
       <div className="p-4">
         {/* Price */}
         <div className="mb-2">
-          <div className="text-2xl font-bold text-fg">
-            {formatNumber(listing.priceEur)} €
-          </div>
-          <div className="text-sm text-muted">
-            {formatNumber(listing.eurM2)} €/m²
-          </div>
+          <div className="text-2xl font-bold text-fg">{formatNumber(listing.priceEur)} €</div>
+          <div className="text-sm text-muted">{formatNumber(listing.eurM2)} €/m²</div>
         </div>
 
         {/* Title */}
-        <h3 className="font-medium text-fg mb-2 line-clamp-2">
-          {listing.title}
-        </h3>
+        <h3 className="font-medium text-fg mb-2 line-clamp-2">{listing.title}</h3>
 
         {/* Details */}
         <div className="flex items-center gap-4 text-sm text-muted mb-3">
@@ -131,9 +122,7 @@ function ListingCardV3({ listing, priority }: ListingCardV3Props) {
           {listing.yieldNet && (
             <div className="flex items-center gap-1">
               <span className="text-muted">Rand.:</span>
-              <span className="font-medium text-fg">
-                {(listing.yieldNet * 100).toFixed(1)}%
-              </span>
+              <span className="font-medium text-fg">{(listing.yieldNet * 100).toFixed(1)}%</span>
             </div>
           )}
           {listing.tts && (

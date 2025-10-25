@@ -1,12 +1,12 @@
 "use server";
 
+import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
-import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth-guards";
-import { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/db";
 
 // Validation schema for extractor profile
 const extractorProfileSchema = z.object({

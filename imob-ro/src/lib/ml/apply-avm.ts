@@ -1,11 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Prisma } from "@prisma/client";
 
-import { prisma } from "@/lib/db";
-import { computePriceBadge } from "@/lib/price-badge";
 import { buildFeatureVector } from "@/lib/avm/features";
 import { predictRidge } from "@/lib/avm/model";
 import { getLatestModel } from "@/lib/avm/store";
+import { prisma } from "@/lib/db";
+import { computePriceBadge } from "@/lib/price-badge";
 
 import { estimateAvm } from "./avm";
 

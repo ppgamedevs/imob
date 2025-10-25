@@ -82,7 +82,7 @@ export async function createShareLink(
       analysisId,
       userId: session.user.id,
       meta: { kind: "report", createdBy: session.user.email || "" },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       options: (options || {}) as any,
       enabled: true,
       expiresAt,

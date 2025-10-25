@@ -3,19 +3,20 @@
  * Returns areas, addresses, listings, saved items, and pages
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db';
-import type { SuggestResponse, SuggestItem } from '@/lib/search/types';
+import { NextRequest, NextResponse } from "next/server";
 
-export const runtime = 'nodejs';
+import { prisma } from "@/lib/db";
+import type { SuggestItem, SuggestResponse } from "@/lib/search/types";
+
+export const runtime = "nodejs";
 
 export async function GET(request: NextRequest) {
   const startTime = Date.now();
 
   try {
     const { searchParams } = request.url ? new URL(request.url) : request.nextUrl;
-    const q = searchParams.get('q') || '';
-    const limit = parseInt(searchParams.get('limit') || '24', 10);
+    const q = searchParams.get("q") || "";
+    // const limit = parseInt(searchParams.get("limit") || "24", 10); // TODO: Use for pagination
 
     if (!q || q.length < 2) {
       return NextResponse.json({
@@ -63,15 +64,12 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response, {
       headers: {
-        'Cache-Control': 's-maxage=60, stale-while-revalidate=900',
+        "Cache-Control": "s-maxage=60, stale-while-revalidate=900",
       },
     });
   } catch (error) {
-    console.error('[Search API] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    console.error("[Search API] Error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -82,14 +80,12 @@ async function searchAreas(q: string, limit: number): Promise<SuggestItem[]> {
   const areas = await prisma.area.findMany({
     where: {
       OR: [
-        { name: { contains: q, mode: 'insensitive' } },
-        { slug: { contains: q, mode: 'insensitive' } },
+        { name: { contains: q, mode: "insensitive" } },
+        { slug: { contains: q, mode: "insensitive" } },
       ],
-      city: 'București', // Focus on București for now
+      city: "București", // Focus on București for now
     },
-    orderBy: [
-      { name: 'asc' },
-    ],
+    orderBy: [{ name: "asc" }],
     take: limit,
     select: {
       slug: true,
@@ -102,7 +98,7 @@ async function searchAreas(q: string, limit: number): Promise<SuggestItem[]> {
   return areas.map((area) => {
     const stats = area.stats as any;
     return {
-      kind: 'area' as const,
+      kind: "area" as const,
       slug: area.slug,
       name: area.name,
       city: area.city,
@@ -120,13 +116,11 @@ async function searchListings(q: string, limit: number): Promise<SuggestItem[]> 
   const analyses = await prisma.analysis.findMany({
     where: {
       AND: [
-        { extractedListing: { title: { contains: q, mode: 'insensitive' } } },
-        { status: 'done' },
+        { extractedListing: { title: { contains: q, mode: "insensitive" } } },
+        { status: "done" },
       ],
     },
-    orderBy: [
-      { createdAt: 'desc' },
-    ],
+    orderBy: [{ createdAt: "desc" }],
     take: limit * 2, // Get more for scoring
     select: {
       id: true,
@@ -152,40 +146,40 @@ async function searchListings(q: string, limit: number): Promise<SuggestItem[]> 
 
   // Score and sort
   const scored = analyses.map((a) => {
-    const title = a.extractedListing?.title || 'Apartament';
+    const title = a.extractedListing?.title || "Apartament";
     const price = a.extractedListing?.price || 0;
     const areaM2 = a.extractedListing?.areaM2 || 1;
     const photos = a.extractedListing?.photos as string[] | null;
     const scores = a.scoreSnapshot;
-    
+
     let score = 0;
-    
+
     // Boost underpriced
-    if (scores?.priceBadge === 'Underpriced') score += 100;
-    
+    if (scores?.priceBadge === "Underpriced") score += 100;
+
     // Boost high yield
     if (scores?.yieldNet && scores.yieldNet > 0.06) score += 50;
-    
+
     // Boost fast TTS
-    if (scores?.ttsBucket === 'fast') score += 30;
-    
+    if (scores?.ttsBucket === "fast") score += 30;
+
     // Recent listings get small boost
     const ageHours = (Date.now() - new Date(a.createdAt).getTime()) / (1000 * 60 * 60);
     if (ageHours < 24) score += 10;
 
     const eurM2 = Math.round(price / areaM2);
-    
-    const avmBadge: 'under' | 'fair' | 'over' | undefined = 
-      scores?.priceBadge === 'Underpriced' 
-        ? 'under' 
-        : scores?.priceBadge === 'Overpriced' 
-        ? 'over' 
-        : scores?.priceBadge === 'Fair'
-        ? 'fair'
-        : undefined;
+
+    const avmBadge: "under" | "fair" | "over" | undefined =
+      scores?.priceBadge === "Underpriced"
+        ? "under"
+        : scores?.priceBadge === "Overpriced"
+          ? "over"
+          : scores?.priceBadge === "Fair"
+            ? "fair"
+            : undefined;
 
     return {
-      kind: 'listing' as const,
+      kind: "listing" as const,
       id: a.id,
       title,
       priceEur: price,
@@ -193,13 +187,14 @@ async function searchListings(q: string, limit: number): Promise<SuggestItem[]> 
       avmBadge,
       thumb: Array.isArray(photos) && photos.length > 0 ? photos[0] : undefined,
       href: `/report/${a.id}`,
-      score,
+      score, // Include for sorting
     };
   });
 
   scored.sort((a, b) => b.score - a.score);
 
-  return scored.slice(0, limit).map(({ score, ...item }) => item);
+  // Remove score before returning
+  return scored.slice(0, 5).map(({ score: _score, ...item }) => item);
 }
 
 /**
@@ -207,10 +202,22 @@ async function searchListings(q: string, limit: number): Promise<SuggestItem[]> 
  */
 async function searchPages(q: string, limit: number): Promise<SuggestItem[]> {
   const staticPages = [
-    { title: 'Descoperă proprietăți', href: '/discover', keywords: ['descopera', 'proprietati', 'anunturi', 'cautare'] },
-    { title: 'Zone București', href: '/area', keywords: ['zone', 'cartiere', 'bucure', 'quartiere'] },
-    { title: 'Pentru proprietari', href: '/owners', keywords: ['proprietari', 'vanzare', 'estimare', 'evaluare'] },
-    { title: 'Despre imob.ro', href: '/about', keywords: ['despre', 'about', 'echipa', 'contact'] },
+    {
+      title: "Descoperă proprietăți",
+      href: "/discover",
+      keywords: ["descopera", "proprietati", "anunturi", "cautare"],
+    },
+    {
+      title: "Zone București",
+      href: "/area",
+      keywords: ["zone", "cartiere", "bucure", "quartiere"],
+    },
+    {
+      title: "Pentru proprietari",
+      href: "/owners",
+      keywords: ["proprietari", "vanzare", "estimare", "evaluare"],
+    },
+    { title: "Despre imob.ro", href: "/about", keywords: ["despre", "about", "echipa", "contact"] },
   ];
 
   const matches = staticPages.filter((page) => {
@@ -221,7 +228,7 @@ async function searchPages(q: string, limit: number): Promise<SuggestItem[]> {
   });
 
   return matches.slice(0, limit).map((page) => ({
-    kind: 'page' as const,
+    kind: "page" as const,
     title: page.title,
     href: page.href,
   }));

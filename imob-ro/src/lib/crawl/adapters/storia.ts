@@ -3,9 +3,10 @@
  * Sitemap discovery + HTML extraction for storia.ro (formerly OLX Imobiliare)
  */
 
-import { XMLParser } from "fast-xml-parser";
 import * as cheerio from "cheerio";
-import type { SourceAdapter, DiscoverResult } from "../types";
+import { XMLParser } from "fast-xml-parser";
+
+import type { DiscoverResult, SourceAdapter } from "../types";
 
 export const adapterStoria: SourceAdapter = {
   domain: "storia.ro",

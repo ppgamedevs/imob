@@ -5,13 +5,14 @@
 
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+
 import {
   addWatchAction,
-  removeWatchAction,
   checkIsWatchedAction,
+  removeWatchAction,
 } from "@/app/me/buyer/watch.actions";
+import { Button } from "@/components/ui/button";
 
 type WatchButtonProps = {
   groupId: string;

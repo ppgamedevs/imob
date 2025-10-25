@@ -14,10 +14,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import CookieBanner from "@/components/CookieBanner";
+import MobileBar from "@/components/layout/MobileBar";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
-import MobileBar from "@/components/layout/MobileBar";
 import { initSentry } from "@/lib/obs/sentry";
 
 // Initialize Sentry for error tracking

@@ -35,7 +35,7 @@ export default function Autosuggest({
   loading,
   onSelect,
   selectedIndex,
-  onKeyboardNav,
+  // onKeyboardNav, // Future: keyboard navigation callback
 }: AutosuggestProps) {
   const flatItems = React.useMemo(() => {
     const items: { section: keyof SuggestSections; item: SuggestItem }[] = [];

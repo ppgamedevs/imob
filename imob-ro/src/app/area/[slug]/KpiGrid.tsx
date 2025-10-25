@@ -1,8 +1,9 @@
-import * as React from 'react';
-import { TrendingUp, TrendingDown, Home, DollarSign, Clock, AlertTriangle } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import type { AreaKpis } from '@/lib/areas/dto';
-import { formatNumber, formatChange } from '@/lib/areas/series';
+import { AlertTriangle, Clock, DollarSign, Home, TrendingDown, TrendingUp } from "lucide-react";
+import * as React from "react";
+
+import type { AreaKpis } from "@/lib/areas/dto";
+import { formatChange, formatNumber } from "@/lib/areas/series";
+import { cn } from "@/lib/utils";
 
 export interface KpiGridProps {
   kpis: AreaKpis;
@@ -13,14 +14,22 @@ interface KpiTileProps {
   label: string;
   value: string | React.ReactNode;
   change?: string;
-  changeType?: 'positive' | 'negative' | 'neutral';
+  changeType?: "positive" | "negative" | "neutral";
   subtitle?: string;
   className?: string;
 }
 
-function KpiTile({ icon: Icon, label, value, change, changeType, subtitle, className }: KpiTileProps) {
+function KpiTile({
+  icon: Icon,
+  label,
+  value,
+  change,
+  changeType,
+  subtitle,
+  className,
+}: KpiTileProps) {
   return (
-    <div className={cn('p-4 rounded-lg border border-border bg-surface', className)}>
+    <div className={cn("p-4 rounded-lg border border-border bg-surface", className)}>
       <div className="flex items-center gap-2 mb-2">
         <Icon className="h-4 w-4 text-muted" />
         <span className="text-sm text-muted">{label}</span>
@@ -29,16 +38,16 @@ function KpiTile({ icon: Icon, label, value, change, changeType, subtitle, class
       {change && (
         <div
           className={cn(
-            'text-sm font-medium flex items-center gap-1',
-            changeType === 'positive'
-              ? 'text-green-600 dark:text-green-400'
-              : changeType === 'negative'
-              ? 'text-red-600 dark:text-red-400'
-              : 'text-muted'
+            "text-sm font-medium flex items-center gap-1",
+            changeType === "positive"
+              ? "text-green-600 dark:text-green-400"
+              : changeType === "negative"
+                ? "text-red-600 dark:text-red-400"
+                : "text-muted",
           )}
         >
-          {changeType === 'positive' && <TrendingUp className="h-3 w-3" />}
-          {changeType === 'negative' && <TrendingDown className="h-3 w-3" />}
+          {changeType === "positive" && <TrendingUp className="h-3 w-3" />}
+          {changeType === "negative" && <TrendingDown className="h-3 w-3" />}
           {change}
         </div>
       )}
@@ -50,7 +59,11 @@ function KpiTile({ icon: Icon, label, value, change, changeType, subtitle, class
 export default function KpiGrid({ kpis }: KpiGridProps) {
   // Determine change type for 12-month change
   const priceChangeType =
-    kpis.medianEurM2Change12m > 0 ? 'positive' : kpis.medianEurM2Change12m < 0 ? 'negative' : 'neutral';
+    kpis.medianEurM2Change12m > 0
+      ? "positive"
+      : kpis.medianEurM2Change12m < 0
+        ? "negative"
+        : "neutral";
 
   // Seismic mix visualization (if available)
   const seismicBar = kpis.seismicMix ? (
@@ -121,12 +134,7 @@ export default function KpiGrid({ kpis }: KpiGridProps) {
             subtitle="Pe lună"
           />
         ) : (
-          <KpiTile
-            icon={DollarSign}
-            label="Chirie medie"
-            value="—"
-            subtitle="Date insuficiente"
-          />
+          <KpiTile icon={DollarSign} label="Chirie medie" value="—" subtitle="Date insuficiente" />
         )}
 
         {/* Yield */}
@@ -135,16 +143,13 @@ export default function KpiGrid({ kpis }: KpiGridProps) {
             icon={TrendingUp}
             label="Randament net"
             value={`${(kpis.yieldNet * 100).toFixed(1)}%`}
-            changeType={kpis.yieldNet > 0.06 ? 'positive' : kpis.yieldNet < 0.04 ? 'negative' : 'neutral'}
+            changeType={
+              kpis.yieldNet > 0.06 ? "positive" : kpis.yieldNet < 0.04 ? "negative" : "neutral"
+            }
             subtitle="Anual estimat"
           />
         ) : (
-          <KpiTile
-            icon={TrendingUp}
-            label="Randament net"
-            value="—"
-            subtitle="Date insuficiente"
-          />
+          <KpiTile icon={TrendingUp} label="Randament net" value="—" subtitle="Date insuficiente" />
         )}
 
         {/* TTS */}
@@ -154,7 +159,11 @@ export default function KpiGrid({ kpis }: KpiGridProps) {
             label="Timp până la vânzare"
             value={`${kpis.ttsMedianDays} zile`}
             changeType={
-              kpis.ttsMedianDays < 60 ? 'positive' : kpis.ttsMedianDays > 120 ? 'negative' : 'neutral'
+              kpis.ttsMedianDays < 60
+                ? "positive"
+                : kpis.ttsMedianDays > 120
+                  ? "negative"
+                  : "neutral"
             }
             subtitle="Median (TTS)"
           />
@@ -173,11 +182,7 @@ export default function KpiGrid({ kpis }: KpiGridProps) {
             <AlertTriangle className="h-4 w-4 text-muted" />
             <span className="text-sm text-muted">Risc seismic</span>
           </div>
-          {seismicBar ? (
-            seismicBar
-          ) : (
-            <div className="text-2xl font-bold text-fg mb-1">—</div>
-          )}
+          {seismicBar ? seismicBar : <div className="text-2xl font-bold text-fg mb-1">—</div>}
           <div className="text-xs text-muted mt-2">Distribuția în zonă</div>
         </div>
       </div>

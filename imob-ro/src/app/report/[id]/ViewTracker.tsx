@@ -6,7 +6,9 @@
  */
 
 import { useEffect, useRef } from "react";
+
 import { DwellTracker } from "@/components/DwellTracker";
+
 import { trackPropertyView } from "./track.actions";
 
 interface ViewTrackerProps {

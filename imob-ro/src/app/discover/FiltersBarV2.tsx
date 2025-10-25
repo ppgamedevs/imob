@@ -1,32 +1,32 @@
 "use client";
 
+import { Star, StarOff, X } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
-import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { X, Star, StarOff } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  parseFiltersFromURL,
-  serializeFiltersToURL,
-  hasActiveFilters,
-  clearAllFilters,
-  type FilterState,
-} from "@/lib/discover/filters";
 
+import { AreasFilter } from "@/components/discover/filters/AreasFilter";
+import { EurM2Filter } from "@/components/discover/filters/EurM2Filter";
+import { MetroFilter } from "@/components/discover/filters/MetroFilter";
 // Individual filter components
 import { PriceFilter } from "@/components/discover/filters/PriceFilter";
-import { EurM2Filter } from "@/components/discover/filters/EurM2Filter";
-import { AreasFilter } from "@/components/discover/filters/AreasFilter";
 import { RoomsFilter } from "@/components/discover/filters/RoomsFilter";
-import { SizeFilter } from "@/components/discover/filters/SizeFilter";
-import { YearFilter } from "@/components/discover/filters/YearFilter";
-import { MetroFilter } from "@/components/discover/filters/MetroFilter";
 import { SignalsFilter } from "@/components/discover/filters/SignalsFilter";
+import { SizeFilter } from "@/components/discover/filters/SizeFilter";
 import { SortSelect } from "@/components/discover/filters/SortSelect";
+import { YearFilter } from "@/components/discover/filters/YearFilter";
+import { Button } from "@/components/ui/button";
+import {
+  clearAllFilters,
+  type FilterState,
+  hasActiveFilters,
+  parseFiltersFromURL,
+  serializeFiltersToURL,
+} from "@/lib/discover/filters";
+import { cn } from "@/lib/utils";
 
 /**
  * FiltersBar v2 - URL-as-truth filter chips with popovers
- * 
+ *
  * Features:
  * - URL-based state (deep linkable, back/forward works)
  * - Chip-based UI with popovers (no CLS)
@@ -45,12 +45,9 @@ export default function FiltersBarV2({ onFilterChange }: FiltersBarV2Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  
+
   // Parse filters from URL (source of truth)
-  const filters = React.useMemo(
-    () => parseFiltersFromURL(searchParams),
-    [searchParams]
-  );
+  const filters = React.useMemo(() => parseFiltersFromURL(searchParams), [searchParams]);
 
   // Live count state (debounced)
   const [count, setCount] = React.useState<number | null>(null);
@@ -64,7 +61,7 @@ export default function FiltersBarV2({ onFilterChange }: FiltersBarV2Props) {
       router.push(newUrl, { scroll: false });
       onFilterChange?.(newFilters);
     },
-    [pathname, router, onFilterChange]
+    [pathname, router, onFilterChange],
   );
 
   // Individual filter change handlers
@@ -77,7 +74,7 @@ export default function FiltersBarV2({ onFilterChange }: FiltersBarV2Props) {
         page: 1, // Reset to page 1
       });
     },
-    [filters, updateFilters]
+    [filters, updateFilters],
   );
 
   const handleEurM2Change = React.useCallback(
@@ -89,7 +86,7 @@ export default function FiltersBarV2({ onFilterChange }: FiltersBarV2Props) {
         page: 1,
       });
     },
-    [filters, updateFilters]
+    [filters, updateFilters],
   );
 
   const handleAreasChange = React.useCallback(
@@ -100,7 +97,7 @@ export default function FiltersBarV2({ onFilterChange }: FiltersBarV2Props) {
         page: 1,
       });
     },
-    [filters, updateFilters]
+    [filters, updateFilters],
   );
 
   const handleRoomsChange = React.useCallback(
@@ -111,7 +108,7 @@ export default function FiltersBarV2({ onFilterChange }: FiltersBarV2Props) {
         page: 1,
       });
     },
-    [filters, updateFilters]
+    [filters, updateFilters],
   );
 
   const handleSizeChange = React.useCallback(
@@ -123,7 +120,7 @@ export default function FiltersBarV2({ onFilterChange }: FiltersBarV2Props) {
         page: 1,
       });
     },
-    [filters, updateFilters]
+    [filters, updateFilters],
   );
 
   const handleYearChange = React.useCallback(
@@ -135,7 +132,7 @@ export default function FiltersBarV2({ onFilterChange }: FiltersBarV2Props) {
         page: 1,
       });
     },
-    [filters, updateFilters]
+    [filters, updateFilters],
   );
 
   const handleMetroChange = React.useCallback(
@@ -146,29 +143,29 @@ export default function FiltersBarV2({ onFilterChange }: FiltersBarV2Props) {
         page: 1,
       });
     },
-    [filters, updateFilters]
+    [filters, updateFilters],
   );
 
   const handleSignalsChange = React.useCallback(
-    (value: Array<'underpriced' | 'fast_tts' | 'yield_high' | 'seismic_low'>) => {
+    (value: Array<"underpriced" | "fast_tts" | "yield_high" | "seismic_low">) => {
       updateFilters({
         ...filters,
         signals: value.length > 0 ? value : undefined,
         page: 1,
       });
     },
-    [filters, updateFilters]
+    [filters, updateFilters],
   );
 
   const handleSortChange = React.useCallback(
-    (value: NonNullable<FilterState['sort']>) => {
+    (value: NonNullable<FilterState["sort"]>) => {
       updateFilters({
         ...filters,
-        sort: value === 'relevance' ? undefined : value,
+        sort: value === "relevance" ? undefined : value,
         page: 1,
       });
     },
-    [filters, updateFilters]
+    [filters, updateFilters],
   );
 
   // Clear all filters
@@ -188,11 +185,11 @@ export default function FiltersBarV2({ onFilterChange }: FiltersBarV2Props) {
       try {
         const query = serializeFiltersToURL(filters);
         const res = await fetch(`/api/discover/search?${query}&take=0`);
-        if (!res.ok) throw new Error('Failed to fetch count');
+        if (!res.ok) throw new Error("Failed to fetch count");
         const data = await res.json();
         setCount(data.items?.length ?? 0);
       } catch (error) {
-        console.error('[FiltersBar] Count fetch error:', error);
+        console.error("[FiltersBar] Count fetch error:", error);
         setCount(null);
       } finally {
         setCountLoading(false);
@@ -275,16 +272,14 @@ export default function FiltersBarV2({ onFilterChange }: FiltersBarV2Props) {
 
           {/* Sort */}
           <SortSelect
-            value={filters.sort || 'relevance'}
+            value={filters.sort || "relevance"}
             onChange={handleSortChange}
             count={count}
             countLoading={countLoading}
           />
 
           {/* Divider */}
-          {activeFiltersCount && (
-            <div className="h-6 w-px bg-border shrink-0 mx-1" />
-          )}
+          {activeFiltersCount && <div className="h-6 w-px bg-border shrink-0 mx-1" />}
 
           {/* Clear all */}
           {activeFiltersCount && (
@@ -305,7 +300,7 @@ export default function FiltersBarV2({ onFilterChange }: FiltersBarV2Props) {
             className={cn(
               "h-8 w-8 flex items-center justify-center rounded-lg shrink-0",
               "border border-border bg-surface hover:bg-surface/50 transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
             )}
             aria-label="Salvează filtrul curent"
             title="Salvează filtrul curent"

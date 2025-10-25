@@ -5,8 +5,9 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+
+import { trackApiUsage, validateApiKey } from "@/lib/api/validate-key";
 import { prisma } from "@/lib/db";
-import { validateApiKey, trackApiUsage } from "@/lib/api/validate-key";
 
 export const runtime = "nodejs";
 

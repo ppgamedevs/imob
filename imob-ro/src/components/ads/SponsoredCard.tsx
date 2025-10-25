@@ -1,10 +1,11 @@
 "use client";
 
-import * as React from "react";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import * as React from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { SponsoredLabel } from "@/components/ui/SponsoredLabel";
+import { cn } from "@/lib/utils";
 
 /**
  * SponsoredCard - Listing card variant for sponsored/promoted content

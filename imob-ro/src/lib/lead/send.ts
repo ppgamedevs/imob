@@ -30,9 +30,7 @@ export async function sendOwnerEmail(
   // Skip if no Resend API key or recipient email
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey || !recipientEmail) {
-    console.warn(
-      `[Lead] No email sent for ${analysisId} - missing API key or recipient`,
-    );
+    console.warn(`[Lead] No email sent for ${analysisId} - missing API key or recipient`);
     return false;
   }
 
@@ -70,10 +68,7 @@ export async function sendOwnerEmail(
 /**
  * Generate HTML email template
  */
-function generateEmailHTML(
-  lead: LeadEmailData,
-  property: PropertyContext,
-): string {
+function generateEmailHTML(lead: LeadEmailData, property: PropertyContext): string {
   const { name, contact, message } = lead;
   const { title, priceEur, area, reportUrl } = property;
 

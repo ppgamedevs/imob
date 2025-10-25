@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from "./db";
 import { Extracted, maybeFetchServer } from "./extractors";
 import { applyAvmToAnalysis } from "./ml/apply-avm";

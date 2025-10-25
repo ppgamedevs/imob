@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { prisma } from "@/lib/db";
 import { revalidateGroup } from "@/lib/cache-tags";
+import { prisma } from "@/lib/db";
 
 import { canonicalSignature, fuzzyScore } from "./similarity";
 import { rebuildGroupSnapshot } from "./snapshot";

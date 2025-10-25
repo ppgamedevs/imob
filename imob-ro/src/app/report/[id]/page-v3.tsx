@@ -1,22 +1,23 @@
-import * as React from "react";
 import { Metadata } from "next";
+import * as React from "react";
 
-// Step 3 components
-import Gallery from "./Gallery";
-import ReportSummary from "./ReportSummary";
-import KpiGrid from "./KpiGrid";
-import AvmCard from "./cards/AvmCard";
-import TtsCard from "./cards/TtsCard";
-import YieldCard from "./cards/YieldCard";
-import RiskCard from "./cards/RiskCard";
-import QualityCard from "./cards/QualityCard";
-import CompsCard, { type CompProperty } from "./cards/CompsCard";
-import MapCard from "./cards/MapCard";
-import StickyActions from "./StickyActions";
-import { Container } from "@/components/layout/Container";
 import { AdSlot } from "@/components/ads/AdSlot";
 import { SponsoredCard } from "@/components/ads/SponsoredCard";
+import { Container } from "@/components/layout/Container";
 import { Surface } from "@/components/ui/Surface";
+
+import AvmCard from "./cards/AvmCard";
+import CompsCard, { type CompProperty } from "./cards/CompsCard";
+import MapCard from "./cards/MapCard";
+import QualityCard from "./cards/QualityCard";
+import RiskCard from "./cards/RiskCard";
+import TtsCard from "./cards/TtsCard";
+import YieldCard from "./cards/YieldCard";
+// Step 3 components
+import Gallery from "./Gallery";
+import KpiGrid from "./KpiGrid";
+import ReportSummary from "./ReportSummary";
+import StickyActions from "./StickyActions";
 
 /**
  * Report Page v3 - Trust-building detail page

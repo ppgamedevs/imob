@@ -14,8 +14,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
-import { createLogger } from "@/lib/obs/logger";
 import { withCronTracking } from "@/lib/obs/cron-tracker";
+import { createLogger } from "@/lib/obs/logger";
 
 // Simple backup to JSON (for databases without native export tools)
 async function exportDatabaseToJSON() {

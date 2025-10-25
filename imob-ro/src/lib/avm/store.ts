@@ -1,10 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Day 33: Model persistence for ML-based AVM
  * Stores and retrieves trained models from ModelSnapshot table
  */
 
 import { prisma } from "@/lib/db";
+
 import type { RidgeModel, TrainingMetrics } from "./model";
 
 export type ModelKind = "avm" | "tts" | "rent";

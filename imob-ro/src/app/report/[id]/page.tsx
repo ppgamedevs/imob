@@ -20,9 +20,9 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import estimatePriceRange, { type AreaStats } from "@/lib/ml/avm";
 import estimateTTS from "@/lib/ml/tts";
-import { getNearestCell, type TileCell } from "@/lib/tiles/loader";
 import { computeYield, estimateRent, type YieldResult } from "@/lib/ml/yield";
 import { matchSeismic } from "@/lib/risk/seismic";
+import { getNearestCell, type TileCell } from "@/lib/tiles/loader";
 import type { NormalizedFeatures } from "@/types/analysis";
 import type { ScoreExplain } from "@/types/score-explain";
 
@@ -956,7 +956,7 @@ export default async function ReportPage({ params }: Props) {
         <div className="mt-6 border rounded-xl p-4">
           <div className="font-medium mb-3">Cereri de revendicare</div>
           <div className="space-y-3">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+            {}
             {claims.map((c: any) => (
               <form
                 key={c.id}

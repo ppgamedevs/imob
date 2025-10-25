@@ -1,7 +1,8 @@
+import { Calendar, Clock, TrendingDown, TrendingUp } from "lucide-react";
 import * as React from "react";
-import { Clock, TrendingUp, TrendingDown, Calendar } from "lucide-react";
-import { cn } from "@/lib/utils";
+
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 /**
  * TtsCard - Time to Sell explanation

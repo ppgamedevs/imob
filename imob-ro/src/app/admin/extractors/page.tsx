@@ -17,7 +17,7 @@ export default async function AdminExtractorsPage() {
         </Button>
       </div>
       <div className="space-y-2">
-        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+        {}
         {profiles.map((p: any) => (
           <Link
             key={p.id}

@@ -11,7 +11,7 @@ export async function POST(req: Request) {
 
     const slug = nanoid(7);
     // prisma client may be out-of-date in developer env; cast to any for this write
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
     await (prisma as any).shortLink.create({ data: { slug, targetUrl: target } });
 
     const base =

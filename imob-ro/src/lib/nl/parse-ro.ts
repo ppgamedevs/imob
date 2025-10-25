@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 // Lightweight Romanian NL parser for property search queries.
 // Exports: parseRomanianQuery(text: string) => { filters, score, original }
 // Filters shape (partial): { price?: { op: 'lt'|'gt'|'between', value?: number, low?: number, high?: number },

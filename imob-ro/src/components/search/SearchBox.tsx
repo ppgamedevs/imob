@@ -1,12 +1,14 @@
 "use client";
 
-import * as React from 'react';
-import { useRouter } from 'next/navigation';
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import Autosuggest from './Autosuggest';
-import { getSuggestCached } from '@/lib/search/cache';
-import type { SuggestItem, SuggestSections } from '@/lib/search/types';
+import { Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+
+import { Input } from "@/components/ui/input";
+import { getSuggestCached } from "@/lib/search/cache";
+import type { SuggestItem, SuggestSections } from "@/lib/search/types";
+
+import Autosuggest from "./Autosuggest";
 
 export interface SearchBoxProps {
   placeholder?: string;
@@ -24,13 +26,13 @@ const EMPTY_SECTIONS: SuggestSections = {
 };
 
 export default function SearchBox({
-  placeholder = 'Caută zone, adrese, proprietăți...',
+  placeholder = "Caută zone, adrese, proprietăți...",
   className,
   onOpen,
   onClose,
 }: SearchBoxProps) {
   const router = useRouter();
-  const [query, setQuery] = React.useState('');
+  const [query, setQuery] = React.useState("");
   const [isOpen, setIsOpen] = React.useState(false);
   const [sections, setSections] = React.useState<SuggestSections>(EMPTY_SECTIONS);
   const [loading, setLoading] = React.useState(false);
@@ -44,7 +46,7 @@ export default function SearchBox({
   // Flatten items for keyboard navigation
   const flatItems = React.useMemo(() => {
     const items: SuggestItem[] = [];
-    (['areas', 'addresses', 'listings', 'saved', 'pages'] as const).forEach((section) => {
+    (["areas", "addresses", "listings", "saved", "pages"] as const).forEach((section) => {
       items.push(...sections[section]);
     });
     return items;
@@ -71,7 +73,7 @@ export default function SearchBox({
       setSections(data.sections);
       setSelectedIndex(0);
     } catch (error) {
-      console.error('[SearchBox] Fetch error:', error);
+      console.error("[SearchBox] Fetch error:", error);
       setSections(EMPTY_SECTIONS);
     } finally {
       setLoading(false);
@@ -92,7 +94,7 @@ export default function SearchBox({
         fetchSuggestions(value);
       }, 120);
     },
-    [fetchSuggestions]
+    [fetchSuggestions],
   );
 
   // Handle focus
@@ -114,11 +116,11 @@ export default function SearchBox({
     (item: SuggestItem) => {
       router.push(item.href);
       setIsOpen(false);
-      setQuery('');
+      setQuery("");
       inputRef.current?.blur();
       onClose?.();
     },
-    [router, onClose]
+    [router, onClose],
   );
 
   // Keyboard navigation
@@ -127,34 +129,34 @@ export default function SearchBox({
       if (!isOpen) return;
 
       switch (e.key) {
-        case 'ArrowDown':
+        case "ArrowDown":
           e.preventDefault();
           setSelectedIndex((prev) => Math.min(prev + 1, flatItems.length - 1));
           break;
-        case 'ArrowUp':
+        case "ArrowUp":
           e.preventDefault();
           setSelectedIndex((prev) => Math.max(prev - 1, 0));
           break;
-        case 'Enter':
+        case "Enter":
           e.preventDefault();
           if (flatItems[selectedIndex]) {
             handleSelect(flatItems[selectedIndex]);
           }
           break;
-        case 'Escape':
+        case "Escape":
           e.preventDefault();
           setIsOpen(false);
           inputRef.current?.blur();
           onClose?.();
           break;
-        case 'Tab':
+        case "Tab":
           // Allow default tab behavior
           break;
         default:
           break;
       }
     },
-    [isOpen, flatItems, selectedIndex, handleSelect, onClose]
+    [isOpen, flatItems, selectedIndex, handleSelect, onClose],
   );
 
   // Click outside to close
@@ -167,11 +169,11 @@ export default function SearchBox({
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen, onClose]);
 
@@ -205,7 +207,7 @@ export default function SearchBox({
             onSelect={handleSelect}
             selectedIndex={selectedIndex}
             onKeyboardNav={(direction) => {
-              if (direction === 'down') {
+              if (direction === "down") {
                 setSelectedIndex((prev) => Math.min(prev + 1, flatItems.length - 1));
               } else {
                 setSelectedIndex((prev) => Math.max(prev - 1, 0));

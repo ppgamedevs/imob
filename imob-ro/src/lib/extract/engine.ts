@@ -77,9 +77,7 @@ export function extractWithProfile(html: string, rules: ExtractProfileRules): Ex
     priceVal = pm.value;
     currency = pm.currency;
   }
-  if (!currency && curRaw)
-    /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-    currency = runTransform("detectCurrency", curRaw) as any;
+  if (!currency && curRaw) currency = runTransform("detectCurrency", curRaw) as any;
 
   // area
   let areaM2: number | null = null;

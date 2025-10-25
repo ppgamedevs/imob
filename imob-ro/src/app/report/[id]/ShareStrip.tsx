@@ -11,9 +11,10 @@
  * - Analytics events
  */
 
+import { Link2, Mail, MessageCircle, Share2, Twitter } from "lucide-react";
 import * as React from "react";
+
 import { Button } from "@/components/ui/button";
-import { Link2, Share2, MessageCircle, Mail, Twitter } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface ShareStripProps {
@@ -94,9 +95,7 @@ export function ShareStrip({
 
   const handleEmail = () => {
     const subject = encodeURIComponent(title);
-    const body = encodeURIComponent(
-      `${description || ""}\n\nVezi detalii: ${shareUrl}`,
-    );
+    const body = encodeURIComponent(`${description || ""}\n\nVezi detalii: ${shareUrl}`);
     window.open(`mailto:?subject=${subject}&body=${body}`);
     trackShare("email");
   };
@@ -163,8 +162,7 @@ export function ShareStrip({
             onClick={handleTwitter}
             className="flex-1 min-w-[100px]"
           >
-            <Twitter className="h-4 w-4 mr-2" />
-            X
+            <Twitter className="h-4 w-4 mr-2" />X
           </Button>
 
           {/* Email */}

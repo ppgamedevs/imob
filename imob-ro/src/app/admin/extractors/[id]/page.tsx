@@ -13,7 +13,7 @@ interface Params {
 export default async function ExtractorEditorPage(props: { params: Promise<Params> }) {
   await requireAdmin();
   const { id } = await props.params;
-  /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+
   let profile: any = null;
   if (id !== "new") {
     profile = await prisma.extractorProfile.findUnique({ where: { id } });

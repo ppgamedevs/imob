@@ -1,9 +1,10 @@
-import * as React from "react";
 import { ChevronLeft, ChevronRight, Table as TableIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
 import Image from "next/image";
+import * as React from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 /**
  * CompsCard - Comparable properties

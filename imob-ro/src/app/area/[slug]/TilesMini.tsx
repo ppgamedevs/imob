@@ -1,10 +1,11 @@
-import * as React from 'react';
-import Link from 'next/link';
-import { Map } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import type { AreaTilesSummary } from '@/lib/areas/dto';
-import { formatNumber } from '@/lib/areas/series';
+import { Map } from "lucide-react";
+import Link from "next/link";
+import * as React from "react";
+
+import { Button } from "@/components/ui/button";
+import type { AreaTilesSummary } from "@/lib/areas/dto";
+import { formatNumber } from "@/lib/areas/series";
+import { cn } from "@/lib/utils";
 
 export interface TilesMiniProps {
   tiles: AreaTilesSummary;
@@ -19,9 +20,7 @@ export default function TilesMini({ tiles, areaName, slug }: TilesMiniProps) {
     return (
       <div className="container py-8">
         <div className="rounded-lg border border-border bg-surface p-8">
-          <div className="text-center text-muted">
-            Date insuficiente pentru harta termică
-          </div>
+          <div className="text-center text-muted">Date insuficiente pentru harta termică</div>
         </div>
       </div>
     );
@@ -35,7 +34,7 @@ export default function TilesMini({ tiles, areaName, slug }: TilesMiniProps) {
 
   // Color interpolation (green → yellow → red)
   const getColor = (eurM2: number | undefined | null): string => {
-    if (eurM2 === undefined || eurM2 === null) return '#e5e7eb'; // gray for no data
+    if (eurM2 === undefined || eurM2 === null) return "#e5e7eb"; // gray for no data
 
     const ratio = (eurM2 - minPrice) / priceRange;
 
@@ -135,7 +134,7 @@ export default function TilesMini({ tiles, areaName, slug }: TilesMiniProps) {
                       fontSize="10"
                       fill="#fff"
                       fontWeight="600"
-                      style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
+                      style={{ textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}
                     >
                       {formatNumber(cell.eurM2!)}
                     </text>
@@ -149,14 +148,7 @@ export default function TilesMini({ tiles, areaName, slug }: TilesMiniProps) {
               const { x, y } = getMetroPosition(station.lat, station.lng);
               return (
                 <g key={idx}>
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r="6"
-                    fill="#1e40af"
-                    stroke="#fff"
-                    strokeWidth="2"
-                  >
+                  <circle cx={x} cy={y} r="6" fill="#1e40af" stroke="#fff" strokeWidth="2">
                     <title>{station.name}</title>
                   </circle>
                   <text

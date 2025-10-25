@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+
 import { Container } from "@/components/layout/Container";
-import FiltersBar from "./FiltersBar";
+
 import DiscoverClient from "./DiscoverClient";
+import FiltersBar from "./FiltersBar";
 
 export const metadata: Metadata = {
   title: "Descoperă proprietăți în București – imob.ro",

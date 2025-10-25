@@ -1,10 +1,12 @@
 "use client";
 
 import * as React from "react";
-import ListingCard, { ListingCardProps } from "@/components/listing/ListingCard";
+
 import { AdSlot } from "@/components/ads/AdSlot";
-import MapPanel, { MapItem } from "./MapPanel";
+import ListingCard, { ListingCardProps } from "@/components/listing/ListingCard";
+
 import type { FilterState } from "./FiltersBar";
+import MapPanel, { MapItem } from "./MapPanel";
 
 /**
  * DiscoverClient - Client-side list+map with ad injection

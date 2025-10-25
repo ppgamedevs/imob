@@ -1,16 +1,18 @@
-import type { Metadata } from 'next';
-import { notFound } from 'next/navigation';
-import { loadAreaPage } from '@/lib/areas/load';
-import { formatNumber, formatChange } from '@/lib/areas/series';
-import { Container } from '@/components/layout/Container';
-import { AdSlot } from '@/components/ads/AdSlot';
-import Hero from './Hero';
-import KpiGrid from './KpiGrid';
-import Charts from './Charts';
-import TilesMini from './TilesMini';
-import BestNow from './BestNow';
-import CompareAreas from './CompareAreas';
-import FaqSeo from './FaqSeo';
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+
+import { AdSlot } from "@/components/ads/AdSlot";
+import { Container } from "@/components/layout/Container";
+import { loadAreaPage } from "@/lib/areas/load";
+import { formatChange, formatNumber } from "@/lib/areas/series";
+
+import BestNow from "./BestNow";
+import Charts from "./Charts";
+import CompareAreas from "./CompareAreas";
+import FaqSeo from "./FaqSeo";
+import Hero from "./Hero";
+import KpiGrid from "./KpiGrid";
+import TilesMini from "./TilesMini";
 
 export const revalidate = 900; // 15 minutes
 
@@ -25,18 +27,18 @@ export async function generateMetadata({ params }: AreaPageProps): Promise<Metad
 
   if (!data) {
     return {
-      title: 'Zonă negăsită – imob.ro',
+      title: "Zonă negăsită – imob.ro",
     };
   }
 
   const { kpis } = data;
   const change30dText = formatChange(kpis.medianEurM2Change30d);
-  
+
   const title = `${kpis.name} — Prețuri, Chirii, Randament | București | imob.ro`;
   const description = `${kpis.name}, București: preț median ${formatNumber(kpis.medianEurM2)} €/m² (${change30dText} în 30 zile)${
-    kpis.medianRentEurM2 ? `, chirie ${formatNumber(kpis.medianRentEurM2)} €/m²` : ''
+    kpis.medianRentEurM2 ? `, chirie ${formatNumber(kpis.medianRentEurM2)} €/m²` : ""
   }${
-    kpis.yieldNet ? `, randament ${(kpis.yieldNet * 100).toFixed(1)}%` : ''
+    kpis.yieldNet ? `, randament ${(kpis.yieldNet * 100).toFixed(1)}%` : ""
   }. Analize AVM, TTS, și risc seismic pentru ${kpis.listingsNow} proprietăți.`;
 
   return {
@@ -49,7 +51,7 @@ export async function generateMetadata({ params }: AreaPageProps): Promise<Metad
       title: `${kpis.name} — Date imobiliare în timp real`,
       description,
       url: `/area/${slug}`,
-      type: 'website',
+      type: "website",
       images: [
         {
           url: `/api/og/area?slug=${slug}`,
@@ -60,7 +62,7 @@ export async function generateMetadata({ params }: AreaPageProps): Promise<Metad
       ],
     },
     twitter: {
-      card: 'summary_large_image',
+      card: "summary_large_image",
       title,
       description,
       images: [`/api/og/area?slug=${slug}`],
@@ -70,7 +72,7 @@ export async function generateMetadata({ params }: AreaPageProps): Promise<Metad
 
 export default async function AreaPage({ params, searchParams }: AreaPageProps) {
   const { slug } = await params;
-  const { view = 'price', range = '6m' } = await searchParams;
+  const { view = "price", range = "6m" } = await searchParams;
 
   const data = await loadAreaPage(slug);
 
@@ -82,50 +84,51 @@ export default async function AreaPage({ params, searchParams }: AreaPageProps) 
 
   // Generate JSON-LD structured data
   const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Place',
+    "@context": "https://schema.org",
+    "@type": "Place",
     name: kpis.name,
     address: {
-      '@type': 'PostalAddress',
+      "@type": "PostalAddress",
       addressLocality: kpis.name,
-      addressRegion: 'București',
-      addressCountry: 'RO',
+      addressRegion: "București",
+      addressCountry: "RO",
     },
     geo: tiles.bounds
       ? {
-          '@type': 'GeoCoordinates',
+          "@type": "GeoCoordinates",
           latitude: (tiles.bounds[1] + tiles.bounds[3]) / 2,
           longitude: (tiles.bounds[0] + tiles.bounds[2]) / 2,
         }
       : undefined,
-    aggregateRating: kpis.listingsNow > 0
-      ? {
-          '@type': 'AggregateOffer',
-          offerCount: kpis.listingsNow,
-          priceCurrency: 'EUR',
-          offers: best.slice(0, 3).map((listing) => ({
-            '@type': 'Offer',
-            price: listing.priceEur,
-            priceCurrency: 'EUR',
-            url: `https://imob.ro${listing.href}`,
-            availability: 'https://schema.org/InStock',
-          })),
-        }
-      : undefined,
+    aggregateRating:
+      kpis.listingsNow > 0
+        ? {
+            "@type": "AggregateOffer",
+            offerCount: kpis.listingsNow,
+            priceCurrency: "EUR",
+            offers: best.slice(0, 3).map((listing) => ({
+              "@type": "Offer",
+              price: listing.priceEur,
+              priceCurrency: "EUR",
+              url: `https://imob.ro${listing.href}`,
+              availability: "https://schema.org/InStock",
+            })),
+          }
+        : undefined,
   };
 
   const breadcrumbJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
     itemListElement: [
       {
-        '@type': 'ListItem',
+        "@type": "ListItem",
         position: 1,
-        name: 'București',
-        item: 'https://imob.ro/area',
+        name: "București",
+        item: "https://imob.ro/area",
       },
       {
-        '@type': 'ListItem',
+        "@type": "ListItem",
         position: 2,
         name: kpis.name,
         item: `https://imob.ro/area/${slug}`,

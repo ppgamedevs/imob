@@ -11,17 +11,19 @@
  * - Trust indicators
  */
 
+import { AlertCircle, Check, Mail, MessageCircle, Phone, Send } from "lucide-react";
 import * as React from "react";
 import { useActionState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Surface } from "@/components/ui/Surface";
-import { Phone, Mail, MessageCircle, Send, Check, AlertCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { formatPhoneDisplay, getWhatsAppLink } from "@/lib/lead/guards";
 import { cn } from "@/lib/utils";
+
 import { createLeadAction, trackChannelClick } from "./lead.actions";
-import { getWhatsAppLink, formatPhoneDisplay } from "@/lib/lead/guards";
 
 export interface ContactPanelProps {
   analysisId: string;
@@ -50,13 +52,7 @@ const PRESET_MESSAGES = [
   "Sunt investitor și mă interesează potențialul de închiriere.",
 ];
 
-export function ContactPanel({
-  analysisId,
-  seller,
-  channels,
-  kpis,
-  className,
-}: ContactPanelProps) {
+export function ContactPanel({ analysisId, seller, channels, kpis, className }: ContactPanelProps) {
   const [state, formAction, isPending] = useActionState(createLeadAction, null);
   const [showForm, setShowForm] = React.useState(false);
   const [mountTime] = React.useState(() => Date.now());
@@ -79,23 +75,13 @@ export function ContactPanel({
       {seller && (
         <div className="p-4 border-b border-border bg-muted/30">
           <div className="flex items-center gap-3">
-            {seller.avatar && (
-              <img
-                src={seller.avatar}
-                alt=""
-                className="w-10 h-10 rounded-full"
-              />
-            )}
+            {seller.avatar && <img src={seller.avatar} alt="" className="w-10 h-10 rounded-full" />}
             <div className="flex-1 min-w-0">
               <div className="text-sm font-medium truncate">
                 {seller.name || "Proprietar"}
-                {seller.verified && (
-                  <span className="ml-2 text-xs text-success">✓ Verificat</span>
-                )}
+                {seller.verified && <span className="ml-2 text-xs text-success">✓ Verificat</span>}
               </div>
-              {seller.source && (
-                <div className="text-xs text-muted truncate">{seller.source}</div>
-              )}
+              {seller.source && <div className="text-xs text-muted truncate">{seller.source}</div>}
             </div>
           </div>
         </div>
@@ -105,9 +91,7 @@ export function ContactPanel({
       {kpis && (
         <div className="px-4 py-3 border-b border-border bg-surface">
           <div className="flex items-center gap-4 text-xs">
-            <span className="font-bold text-base">
-              €{kpis.priceEur.toLocaleString("ro-RO")}
-            </span>
+            <span className="font-bold text-base">€{kpis.priceEur.toLocaleString("ro-RO")}</span>
             <span className="text-muted">{kpis.areaM2} m²</span>
             <span className="text-muted">{kpis.rooms} camere</span>
           </div>
@@ -117,9 +101,7 @@ export function ContactPanel({
       {/* Channel Buttons */}
       {(channels?.phone || channels?.email || channels?.whatsapp) && (
         <div className="p-4 border-b border-border space-y-2">
-          <div className="text-xs font-medium text-muted mb-3">
-            Contactează direct:
-          </div>
+          <div className="text-xs font-medium text-muted mb-3">Contactează direct:</div>
           <div className="flex flex-col gap-2">
             {channels.phone && (
               <Button
@@ -158,9 +140,7 @@ export function ContactPanel({
                 variant="outline"
                 size="sm"
                 className="w-full justify-start"
-                onClick={() =>
-                  handleChannelClick("email", `mailto:${channels.email}`)
-                }
+                onClick={() => handleChannelClick("email", `mailto:${channels.email}`)}
               >
                 <Mail className="h-4 w-4 mr-2" />
                 Email
@@ -173,11 +153,7 @@ export function ContactPanel({
       {/* Lead Form Toggle */}
       <div className="p-4">
         {!showForm ? (
-          <Button
-            onClick={() => setShowForm(true)}
-            className="w-full"
-            variant="default"
-          >
+          <Button onClick={() => setShowForm(true)} className="w-full" variant="default">
             <Send className="h-4 w-4 mr-2" />
             Trimite Mesaj
           </Button>
@@ -267,9 +243,7 @@ function LeadForm({
           <Check className="h-4 w-4 mt-0.5 flex-shrink-0" />
           <div>
             <div className="font-medium">{state.message}</div>
-            <div className="text-xs mt-1 opacity-80">
-              Cod referință: {state.leadId}
-            </div>
+            <div className="text-xs mt-1 opacity-80">Cod referință: {state.leadId}</div>
           </div>
         </div>
       )}
@@ -304,9 +278,7 @@ function LeadForm({
               disabled={isPending}
               className={cn(state?.errors?.name && "border-danger")}
             />
-            {state?.errors?.name && (
-              <p className="text-xs text-danger">{state.errors.name[0]}</p>
-            )}
+            {state?.errors?.name && <p className="text-xs text-danger">{state.errors.name[0]}</p>}
           </div>
 
           {/* Contact Field */}
@@ -363,10 +335,7 @@ function LeadForm({
               required
               rows={4}
               disabled={isPending}
-              className={cn(
-                "resize-none",
-                state?.errors?.message && "border-danger",
-              )}
+              className={cn("resize-none", state?.errors?.message && "border-danger")}
             />
             {state?.errors?.message && (
               <p className="text-xs text-danger">{state.errors.message[0]}</p>
@@ -394,11 +363,7 @@ function LeadForm({
                   Termenii și Condițiile
                 </a>{" "}
                 și{" "}
-                <a
-                  href="/confidentialitate"
-                  className="underline hover:text-text"
-                  target="_blank"
-                >
+                <a href="/confidentialitate" className="underline hover:text-text" target="_blank">
                   Politica de Confidențialitate
                 </a>
                 . <span className="text-danger">*</span>
@@ -423,12 +388,7 @@ function LeadForm({
                 Anulează
               </Button>
             )}
-            <Button
-              type="submit"
-              size="sm"
-              disabled={isPending}
-              className="flex-1"
-            >
+            <Button type="submit" size="sm" disabled={isPending} className="flex-1">
               {isPending ? (
                 "Se trimite..."
               ) : (

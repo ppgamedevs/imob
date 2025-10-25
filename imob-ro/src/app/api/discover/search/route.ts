@@ -11,9 +11,9 @@ export async function GET(req: Request) {
     return NextResponse.json({ ok: result.ok, error: result.error }, { status: 400 });
   }
   return NextResponse.json(
-    { 
-      ok: result.ok, 
-      items: result.items, 
+    {
+      ok: result.ok,
+      items: result.items,
       nextCursor: result.nextCursor,
       countApprox: result.countApprox,
     },

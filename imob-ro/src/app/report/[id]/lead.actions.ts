@@ -12,13 +12,14 @@
  */
 
 import { z } from "zod";
+
 import { prisma } from "@/lib/db";
 import { rateLimit, rateLimitComposite } from "@/lib/http/rate";
 import {
+  detectSuspiciousContent,
   isHoneypot,
   isTooFast,
   sanitizeMessage,
-  detectSuspiciousContent,
   validateContact,
 } from "@/lib/lead/guards";
 import { sendOwnerEmail, sendUserConfirmation } from "@/lib/lead/send";
@@ -28,7 +29,10 @@ const LeadSchema = z.object({
   analysisId: z.string().min(1, "ID analiză lipsă"),
   name: z.string().optional(),
   contact: z.string().min(3, "Contact invalid"),
-  message: z.string().min(10, "Mesajul trebuie să aibă minim 10 caractere").max(800, "Mesajul este prea lung"),
+  message: z
+    .string()
+    .min(10, "Mesajul trebuie să aibă minim 10 caractere")
+    .max(800, "Mesajul este prea lung"),
   consent: z.string().refine((val) => val === "true", {
     message: "Trebuie să accepți termenii și condițiile",
   }),
@@ -68,15 +72,11 @@ export async function createLeadAction(
     if (!parsed.success) {
       return {
         ok: false,
-        errors: parsed.error.flatten().fieldErrors as Record<
-          string,
-          string[]
-        >,
+        errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
       };
     }
 
-    const { analysisId, name, contact, message, hp, _timestamp } =
-      parsed.data;
+    const { analysisId, name, contact, message, hp, _timestamp } = parsed.data;
 
     // 2. Anti-spam guards
 
@@ -115,8 +115,7 @@ export async function createLeadAction(
       return {
         ok: false,
         rateLimited: true,
-        message:
-          "Ai trimis prea multe cereri. Te rog încearcă din nou peste 30 de minute.",
+        message: "Ai trimis prea multe cereri. Te rog încearcă din nou peste 30 de minute.",
       };
     }
 
@@ -191,9 +190,7 @@ export async function createLeadAction(
 
     // 8. Send confirmation to user (if email)
     if (validatedContact.type === "email") {
-      sendUserConfirmation(validatedContact.value, propertyTitle, leadId).catch(
-        () => {},
-      );
+      sendUserConfirmation(validatedContact.value, propertyTitle, leadId).catch(() => {});
     }
 
     // 9. Log success
@@ -208,8 +205,7 @@ export async function createLeadAction(
     console.error("[Lead] Create action error:", error);
     return {
       ok: false,
-      message:
-        "A apărut o eroare. Te rog încearcă din nou sau contactează-ne direct.",
+      message: "A apărut o eroare. Te rog încearcă din nou sau contactează-ne direct.",
     };
   }
 }

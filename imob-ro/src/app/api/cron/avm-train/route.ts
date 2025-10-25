@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Day 33: AVM Training Cron Endpoint
  * Trains ridge regression model nightly on 90-day historical data
@@ -6,10 +5,11 @@
  */
 
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
+
 import { buildFeatureVector } from "@/lib/avm/features";
-import { trainRidge, evaluateModel } from "@/lib/avm/model";
-import { saveModel, getLatestModel } from "@/lib/avm/store";
+import { evaluateModel, trainRidge } from "@/lib/avm/model";
+import { getLatestModel, saveModel } from "@/lib/avm/store";
+import { prisma } from "@/lib/db";
 
 /**
  * Shuffle array using Fisher-Yates algorithm

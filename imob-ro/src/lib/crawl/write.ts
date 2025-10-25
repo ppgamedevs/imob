@@ -13,7 +13,7 @@ import { prisma } from "@/lib/db";
  */
 export async function upsertAnalysisFromExtract(
   originUrl: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   extracted: any,
 ) {
   const sourceUrl = originUrl.trim();

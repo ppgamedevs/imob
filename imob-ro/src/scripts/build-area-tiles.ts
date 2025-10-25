@@ -10,11 +10,12 @@
  * Output: JSON tiles in public/data/tiles/bucharest-z14/
  */
 
+import { PrismaClient } from "@prisma/client";
 import fs from "fs/promises";
 import path from "path";
-import { PrismaClient } from "@prisma/client";
-import { haversineM } from "../lib/geo";
+
 import { METRO_STATIONS } from "../lib/data/metro";
+import { haversineM } from "../lib/geo";
 
 const prisma = new PrismaClient();
 

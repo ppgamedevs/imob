@@ -3,9 +3,10 @@
  * Sitemap discovery + HTML extraction for olx.ro
  */
 
-import { XMLParser } from "fast-xml-parser";
 import * as cheerio from "cheerio";
-import type { SourceAdapter, DiscoverResult } from "../types";
+import { XMLParser } from "fast-xml-parser";
+
+import type { DiscoverResult, SourceAdapter } from "../types";
 
 export const adapterOlx: SourceAdapter = {
   domain: "olx.ro",

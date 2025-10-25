@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { parsePageSize, getTakePlusOne } from "@/lib/pagination";
+import { getTakePlusOne, parsePageSize } from "@/lib/pagination";
 
 import { discoverSchema } from "./validate";
 
@@ -35,7 +35,6 @@ export async function discoverSearch(raw: URLSearchParams) {
     sort: p.sort,
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: any = {}; // v1: afișăm toate analizele din DB (București filtrat în JS)
 
   const cursor = p.cursor ? { id: p.cursor } : undefined;
@@ -63,9 +62,8 @@ export async function discoverSearch(raw: URLSearchParams) {
 
   const rows = list
     .map((a) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const f = (a.featureSnapshot?.features ?? {}) as any;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const s = a.scoreSnapshot as any;
       const photos = Array.isArray(a.extractedListing?.photos)
         ? (a.extractedListing?.photos as string[])
@@ -81,7 +79,7 @@ export async function discoverSearch(raw: URLSearchParams) {
       const flags = trustReasons?.minus ?? [];
 
       // Get source count from group snapshot (Day 26)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
       const groupSnapshot = (a.group as any)?.snapshots?.[0];
       const sourceCount = groupSnapshot?.sources ?? null;
       const dupCount = sourceCount && sourceCount > 1 ? sourceCount - 1 : 0;
@@ -141,14 +139,14 @@ export async function discoverSearch(raw: URLSearchParams) {
     // Signals filters
     .filter((r) => {
       if (!filters.signals || filters.signals.length === 0) return true;
-      
+
       for (const signal of filters.signals) {
-        if (signal === 'underpriced' && r.priceBadge !== 'Underpriced') return false;
-        if (signal === 'fast_tts' && !['fast', 'medium'].includes(r.ttsBucket || '')) return false;
-        if (signal === 'yield_high' && (r.yieldNet ?? 0) < 0.06) return false;
-        if (signal === 'seismic_low' && !['none', 'RS3'].includes(r.riskClass || '')) return false;
+        if (signal === "underpriced" && r.priceBadge !== "Underpriced") return false;
+        if (signal === "fast_tts" && !["fast", "medium"].includes(r.ttsBucket || "")) return false;
+        if (signal === "yield_high" && (r.yieldNet ?? 0) < 0.06) return false;
+        if (signal === "seismic_low" && !["none", "RS3"].includes(r.riskClass || "")) return false;
       }
-      
+
       return true;
     })
     // Legacy underpriced filter
@@ -158,20 +156,20 @@ export async function discoverSearch(raw: URLSearchParams) {
   if (filters.sort) {
     rows.sort((a, b) => {
       switch (filters.sort) {
-        case 'price_asc':
+        case "price_asc":
           return (a.priceEur ?? 0) - (b.priceEur ?? 0);
-        case 'price_desc':
+        case "price_desc":
           return (b.priceEur ?? 0) - (a.priceEur ?? 0);
-        case 'eurm2_asc':
+        case "eurm2_asc":
           return (a.eurm2 ?? 0) - (b.eurm2 ?? 0);
-        case 'eurm2_desc':
+        case "eurm2_desc":
           return (b.eurm2 ?? 0) - (a.eurm2 ?? 0);
-        case 'yield_desc':
+        case "yield_desc":
           return (b.yieldNet ?? 0) - (a.yieldNet ?? 0);
-        case 'tts_asc':
+        case "tts_asc":
           // Fast < Medium < Slow
           const ttsOrder: Record<string, number> = { fast: 1, medium: 2, slow: 3 };
-          return (ttsOrder[a.ttsBucket || ''] ?? 999) - (ttsOrder[b.ttsBucket || ''] ?? 999);
+          return (ttsOrder[a.ttsBucket || ""] ?? 999) - (ttsOrder[b.ttsBucket || ""] ?? 999);
         default:
           return 0; // relevance = default order
       }

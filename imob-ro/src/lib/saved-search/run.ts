@@ -4,9 +4,10 @@
  */
 
 import { prisma } from "@/lib/db";
-import { SavedQuerySchema, type SavedQueryValidated } from "./validate";
 import { discoverSearch } from "@/lib/discover/search";
 import { mortgageCalc } from "@/lib/finance/mortgage";
+
+import { SavedQuerySchema, type SavedQueryValidated } from "./validate";
 
 export async function runSavedSearch(userId: string, queryJson: any) {
   const q = SavedQuerySchema.parse(queryJson) as SavedQueryValidated;

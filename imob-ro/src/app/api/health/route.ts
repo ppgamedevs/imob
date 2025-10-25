@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { prisma } from "@/lib/db";
 import { getLastCronExecution } from "@/lib/obs/cron-tracker";
 

@@ -8,8 +8,9 @@
  */
 
 import { NextResponse } from "next/server";
-import { buildAreaTiles } from "@/scripts/build-area-tiles";
+
 import { clearTileCache } from "@/lib/tiles/loader";
+import { buildAreaTiles } from "@/scripts/build-area-tiles";
 
 export async function GET() {
   const startTime = Date.now();
