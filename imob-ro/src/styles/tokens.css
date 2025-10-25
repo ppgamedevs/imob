@@ -1,44 +1,82 @@
 /**
- * Design Tokens - Single Source of Truth
- * 
- * All design values defined here as CSS custom properties.
- * Supports dark mode via prefers-color-scheme.
- * Used by Tailwind config and runtime theming.
+ * Design Tokens v2 - Step 12
+ * Single source of truth for colors, spacing, typography, motion, and theming.
+ * Supports dark mode, brand override, and reduced motion.
  */
 
 :root {
-  /* === Brand === */
-  --brand-h: 252; /* deep indigo baseline */
-  --brand-s: 85%;
-  --brand-l: 55%;
+  /* === Colors - Light Mode (default) === */
+  --bg: 250 250 250; /* #fafafa */
+  --surface: 255 255 255; /* #ffffff */
+  --surface-2: 249 249 249; /* #f9f9f9 */
+  --border: 229 229 229; /* #e5e5e5 */
+  --text: 23 23 23; /* #171717 */
+  --muted: 115 115 115; /* #737373 */
 
-  /* === Palette (Dark Mode) === */
-  --color-bg: #0b0c10;
-  --color-surface: #0f1116;
-  --color-muted: #1a1e27;
-  --color-border: #232838;
-  --color-text: #eef2ff;
+  /* Brand */
+  --primary: 37 99 235; /* #2563eb - blue */
+  --primary-contrast: 255 255 255; /* white */
 
-  --color-primary: hsl(var(--brand-h) var(--brand-s) var(--brand-l));
-  --color-primary-foreground: #0b0c10;
+  /* Semantic */
+  --success: 34 197 94; /* #22c55e - green */
+  --warn: 251 146 60; /* #fb923c - orange */
+  --danger: 239 68 68; /* #ef4444 - red */
 
-  --color-success: #16a34a;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-info: #38bdf8;
+  /* Special */
+  --ad-tint: 147 51 234; /* #9333ea - purple for sponsored */
 
-  /* === Elevation (Soft, Modern) === */
-  --elev-0: 0 0 0 1px rgba(255, 255, 255, 0.03);
-  --elev-1: 0 6px 18px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.04);
-  --elev-2: 0 14px 40px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  /* Charts */
+  --chart-1: 37 99 235; /* blue */
+  --chart-2: 34 197 94; /* green */
+  --chart-3: 251 146 60; /* orange */
+  --chart-4: 239 68 68; /* red */
+  --chart-5: 168 85 247; /* purple */
+  --chart-6: 236 72 153; /* pink */
 
-  /* === Radius === */
-  --radius-sm: 10px;
-  --radius-md: 16px;
-  --radius-lg: 20px;
-  --radius-xl: 24px;
+  /* === Radii === */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-xl: 24px;
 
-  /* === Spacing (4px base) === */
+  /* === Shadows (Elevation) === */
+  --elev0: 0 0 0 1px rgb(var(--border) / 0.1);
+  --elev1: 0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px rgb(var(--border) / 0.1);
+  --elev2: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1),
+    0 0 0 1px rgb(var(--border) / 0.1);
+  --elev3: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1),
+    0 0 0 1px rgb(var(--border) / 0.1);
+
+  /* === Typography === */
+  --font-sans: ui-sans-serif, Inter, system-ui, -apple-system, Segoe UI, Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+  --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas,
+    "Liberation Mono", monospace;
+
+  --fs-xs: 0.75rem; /* 12px */
+  --fs-sm: 0.875rem; /* 14px */
+  --fs-base: 1rem; /* 16px */
+  --fs-lg: 1.125rem; /* 18px */
+  --fs-xl: 1.25rem; /* 20px */
+  --fs-2xl: 1.5rem; /* 24px */
+  --fs-4xl: 2.25rem; /* 36px */
+  --fs-6xl: 3.5rem; /* 56px */
+
+  --lh-tight: 1.2;
+  --lh-normal: 1.5;
+  --lh-relaxed: 1.75;
+
+  /* === Motion === */
+  --ease-smooth: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+
+  /* === Spacing === */
+  --header-height: 64px;
+  --page-max-width: 1200px;
+  --section-gap: 32px;
+  --card-gap: 16px;
+
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
@@ -48,61 +86,87 @@
   --space-7: 28px;
   --space-8: 32px;
 
-  /* === Typography === */
-  --font-sans:
-    ui-sans-serif, Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial,
-    "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
-  --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-
-  --fs-xs: 12px;
-  --fs-sm: 14px;
-  --fs-md: 16px;
-  --fs-lg: 18px;
-  --fs-xl: 20px;
-  --fs-2xl: 24px;
-  --fs-3xl: 28px;
-  --lh-tight: 1.2;
-  --lh-normal: 1.5;
-
-  /* === Motion === */
-  --ease-emph: cubic-bezier(0.2, 0.8, 0.2, 1);
-  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  --dur-fast: 120ms;
-  --dur-med: 220ms;
-  --dur-slow: 400ms;
+  /* === Brand Override (initially empty, set via [data-brand]) === */
+  --brand-color: rgb(var(--primary));
+  --brand-logo-url: none;
 
   /* === Ad Tokens === */
-  --ad-bg: #0c0f16;
-  --ad-border: #2a3246;
-  --ad-label: #93c5fd; /* readable, neutral */
+  --ad-bg: rgb(var(--surface-2));
+  --ad-border: rgb(var(--border));
+  --ad-label: rgb(var(--ad-tint));
 }
 
-/* === Light Mode Override === */
-@media (prefers-color-scheme: light) {
-  :root {
-    --color-bg: #ffffff;
-    --color-surface: #f8fafc;
-    --color-muted: #f1f5f9;
-    --color-border: #e2e8f0;
-    --color-text: #0b1220;
+/* === Dark Mode === */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: 10 10 10; /* #0a0a0a */
+    --surface: 23 23 23; /* #171717 */
+    --surface-2: 38 38 38; /* #262626 */
+    --border: 64 64 64; /* #404040 */
+    --text: 250 250 250; /* #fafafa */
+    --muted: 163 163 163; /* #a3a3a3 */
 
-    --elev-0: 0 0 0 1px rgba(0, 0, 0, 0.06);
-    --elev-1: 0 2px 8px rgba(0, 0, 0, 0.1);
-    --elev-2: 0 8px 24px rgba(0, 0, 0, 0.18);
+    --primary: 59 130 246; /* #3b82f6 - lighter blue */
+    --primary-contrast: 23 23 23; /* dark text */
 
-    --ad-bg: #f9fbff;
-    --ad-border: #dbeafe;
+    --success: 74 222 128; /* #4ade80 */
+    --warn: 251 191 36; /* #fbbf24 */
+    --danger: 248 113 113; /* #f87171 */
+
+    --ad-tint: 192 132 252; /* #c084fc - lighter purple */
+
+    /* Stronger shadows for dark mode */
+    --elev0: 0 0 0 1px rgb(var(--border) / 0.2);
+    --elev1: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 0 0 1px rgb(var(--border) / 0.2);
+    --elev2: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3),
+      0 0 0 1px rgb(var(--border) / 0.2);
+    --elev3: 0 10px 15px -3px rgb(0 0 0 / 0.5),
+      0 4px 6px -4px rgb(0 0 0 / 0.4), 0 0 0 1px rgb(var(--border) / 0.2);
+
+    --ad-bg: rgb(var(--surface-2));
+    --ad-border: rgb(var(--border));
+    --ad-label: rgb(var(--ad-tint));
   }
 }
 
-/* === Accessibility Utilities === */
-.focus-ring {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm);
+
+/* === Explicit Dark Theme Class === */
+.theme-dark,
+[data-theme="dark"] {
+  --bg: 10 10 10;
+  --surface: 23 23 23;
+  --surface-2: 38 38 38;
+  --border: 64 64 64;
+  --text: 250 250 250;
+  --muted: 163 163 163;
+
+  --primary: 59 130 246;
+  --primary-contrast: 23 23 23;
+
+  --success: 74 222 128;
+  --warn: 251 191 36;
+  --danger: 248 113 113;
+
+  --ad-tint: 192 132 252;
+
+  --elev0: 0 0 0 1px rgb(var(--border) / 0.2);
+  --elev1: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 0 0 1px rgb(var(--border) / 0.2);
+  --elev2: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3),
+    0 0 0 1px rgb(var(--border) / 0.2);
+  --elev3: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4),
+    0 0 0 1px rgb(var(--border) / 0.2);
 }
 
-/* Reduced Motion Support */
+/* === Brand Override Hook === */
+[data-brand] {
+  --primary: var(--brand-color);
+}
+
+[data-brand][data-logo-url] {
+  --brand-logo-url: var(--data-logo-url);
+}
+
+/* === Reduced Motion === */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -110,13 +174,25 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
 
-/* === Base Focus Styles === */
+/* === Focus Styles === */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 2px color-mix(in oklab, rgb(var(--primary)), white 20%);
+  border-radius: var(--r-sm);
+}
+
+/* === Accessibility: Ensure interactive targets are minimum size === */
+button:not(.btn-sm),
+a:not(.link-sm),
+input,
+select,
+textarea {
+  min-width: 44px;
+  min-height: 44px;
 }
 
 /* === Density Modes === */

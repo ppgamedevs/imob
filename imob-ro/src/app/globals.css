@@ -8,25 +8,34 @@
 /* Override base styles with design tokens */
 html,
 body {
-  background: var(--color-bg);
-  color: var(--color-text);
+  background: rgb(var(--bg));
+  color: rgb(var(--text));
   font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: var(--lh-normal);
 }
 
-/* Hero / container utility */
+/* Page container utility */
 .container {
-  max-width: 1100px;
+  max-width: var(--page-max-width);
   margin-left: auto;
   margin-right: auto;
   padding-left: 1rem;
   padding-right: 1rem;
 }
 
+/* Glass card effect */
 .glass-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.6));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.7),
+    rgba(255, 255, 255, 0.6)
+  );
   backdrop-filter: blur(6px) saturate(120%);
   -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--elev1);
+  border-radius: var(--r-md);
 }
 
 /* Copilot: CSS vars for light/dark per shadcn preset (rounded-2xl, card shadows) */

@@ -7,9 +7,10 @@ import { cn } from "@/lib/utils";
  * Surface - Base container primitive with elevation levels
  *
  * Provides consistent styling for cards, panels, and containers with:
- * - Elevation levels (0/1/2) for depth hierarchy
+ * - Elevation levels (0/1/2/3) for depth hierarchy
  * - Border and radius from design tokens
  * - Support for polymorphic rendering via asChild
+ * - Smooth motion transitions
  */
 
 export interface SurfaceProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -17,9 +18,10 @@ export interface SurfaceProps extends React.HTMLAttributes<HTMLDivElement> {
    * Elevation level affects shadow depth
    * - 0: minimal border only (subtle)
    * - 1: small shadow (cards, dropdowns)
-   * - 2: large shadow (modals, popovers)
+   * - 2: medium shadow (popovers)
+   * - 3: large shadow (modals, dialogs)
    */
-  elevation?: 0 | 1 | 2;
+  elevation?: 0 | 1 | 2 | 3;
 
   /**
    * If true, merges props into immediate child instead of rendering a div
@@ -33,34 +35,37 @@ export interface SurfaceProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Surface = React.forwardRef<HTMLDivElement, SurfaceProps>(
-  ({ className, elevation = 0, asChild = false, rounded = "xl", children, ...props }, ref) => {
+  ({ className, elevation = 1, asChild = false, rounded = "md", children, ...props }, ref) => {
     const Comp = asChild ? Slot : "div";
 
     const elevationStyles = {
-      0: "shadow-elev0",
-      1: "shadow-elev1",
-      2: "shadow-elev2",
+      0: "shadow-[var(--elev0)]",
+      1: "shadow-[var(--elev1)]",
+      2: "shadow-[var(--elev2)]",
+      3: "shadow-[var(--elev3)]",
     };
 
     const roundedStyles = {
-      sm: "rounded-sm",
-      md: "rounded-md",
-      lg: "rounded-lg",
-      xl: "rounded-xl",
+      sm: "rounded-[var(--r-sm)]",
+      md: "rounded-[var(--r-md)]",
+      lg: "rounded-[var(--r-md)]", // Alias for backward compatibility
+      xl: "rounded-[var(--r-xl)]",
     };
 
     return (
       <Comp
         ref={ref}
         className={cn(
-          // Base styles
-          "bg-surface border border-border",
+          // Base styles using tokens
+          "bg-[rgb(var(--surface))] border border-[rgb(var(--border))]",
           // Elevation
           elevationStyles[elevation],
           // Radius
           roundedStyles[rounded],
-          // Motion (hover elevation increase)
-          "transition-shadow duration-med ease-inout",
+          // Smooth motion transition
+          "transition-[shadow,transform] duration-[var(--duration-base)] ease-[var(--ease-smooth)]",
+          // Hover lift effect
+          "hover:-translate-y-0.5 hover:shadow-[var(--elev2)]",
           className,
         )}
         {...props}

@@ -87,7 +87,7 @@ const AdSlot = React.forwardRef<HTMLDivElement, AdSlotProps>(
       return () => observer.disconnect();
     }, []);
 
-    // Track impression after 1s of visibility
+    // Track impression after 800ms of visibility (Step 12 spec)
     React.useEffect(() => {
       if (!isVisible || hasTrackedImpression) return;
 
@@ -105,7 +105,7 @@ const AdSlot = React.forwardRef<HTMLDivElement, AdSlotProps>(
         }).catch(console.error);
 
         setHasTrackedImpression(true);
-      }, 1000);
+      }, 800); // 800ms dwell time
 
       return () => clearTimeout(timer);
     }, [isVisible, hasTrackedImpression, id, position, size]);
@@ -138,14 +138,15 @@ const AdSlot = React.forwardRef<HTMLDivElement, AdSlotProps>(
         ref={containerRef}
         className={cn(
           "flex items-center justify-center",
-          "bg-adBg border border-adBorder rounded-md overflow-hidden",
+          "bg-[var(--ad-bg)] border border-[var(--ad-border)] rounded-[var(--r-md)] overflow-hidden",
+          "transition-opacity duration-[var(--duration-base)]",
           className,
         )}
         style={{
           width: "100%",
           maxWidth: `${currentSize.width}px`,
           height: `${currentSize.height}px`,
-          minHeight: `${currentSize.height}px`, // Prevent CLS
+          minHeight: `${currentSize.height}px`, // Prevent CLS - fixed height
         }}
         aria-label="Spațiu publicitar"
         role="complementary"
@@ -174,9 +175,9 @@ const AdSlot = React.forwardRef<HTMLDivElement, AdSlotProps>(
             </button>
           ) : (
             <div className="flex flex-col items-center justify-center gap-2 text-center">
-              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-[rgb(var(--surface-2))] flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 text-adLabel"
+                  className="w-6 h-6 text-[var(--ad-label)]"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -189,7 +190,9 @@ const AdSlot = React.forwardRef<HTMLDivElement, AdSlotProps>(
                   />
                 </svg>
               </div>
-              <p className="text-xs text-adLabel font-medium">Spațiu rezervat publicitate</p>
+              <p className="text-[var(--fs-xs)] text-[var(--ad-label)] font-medium">
+                Spațiu rezervat publicitate
+              </p>
             </div>
           )}
         </div>
