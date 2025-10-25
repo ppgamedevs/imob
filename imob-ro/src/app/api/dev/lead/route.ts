@@ -4,6 +4,7 @@
 // Validates token, stores DevLead, optional CRM forwarding
 
 import { NextRequest, NextResponse } from "next/server";
+
 import { prisma } from "@/lib/db";
 import type { LeadRequest, LeadResponse } from "@/types/development";
 
@@ -18,7 +19,7 @@ export async function POST(req: NextRequest) {
     if (!developmentId || !contact) {
       return NextResponse.json(
         { ok: false, error: "Missing required fields: developmentId, contact" } as LeadResponse,
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -29,10 +30,9 @@ export async function POST(req: NextRequest) {
     });
 
     if (!development) {
-      return NextResponse.json(
-        { ok: false, error: "Development not found" } as LeadResponse,
-        { status: 404 }
-      );
+      return NextResponse.json({ ok: false, error: "Development not found" } as LeadResponse, {
+        status: 404,
+      });
     }
 
     // 3. Optional: Validate developer token if provided
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
       if (!developer || developer.apiToken !== token) {
         return NextResponse.json(
           { ok: false, error: "Invalid developer authentication" } as LeadResponse,
-          { status: 401 }
+          { status: 401 },
         );
       }
 
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
       if (development.developerId && development.developerId !== devId) {
         return NextResponse.json(
           { ok: false, error: "Development not owned by this developer" } as LeadResponse,
-          { status: 403 }
+          { status: 403 },
         );
       }
     }
@@ -67,8 +67,11 @@ export async function POST(req: NextRequest) {
 
       if (!unit || unit.developmentId !== developmentId) {
         return NextResponse.json(
-          { ok: false, error: "Unit not found or does not belong to this development" } as LeadResponse,
-          { status: 404 }
+          {
+            ok: false,
+            error: "Unit not found or does not belong to this development",
+          } as LeadResponse,
+          { status: 404 },
         );
       }
     }
@@ -124,10 +127,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error("[lead] Error:", error);
-    return NextResponse.json(
-      { ok: false, error: "Internal server error" } as LeadResponse,
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: false, error: "Internal server error" } as LeadResponse, {
+      status: 500,
+    });
   }
 }
 

@@ -5,6 +5,7 @@
 // Upserts by (developmentId, label), enqueues enrichment
 
 import { NextRequest, NextResponse } from "next/server";
+
 import { prisma } from "@/lib/db";
 import { enrichUnit } from "@/lib/dev/enrich";
 import type { BulkUnitInput, BulkUnitsResponse } from "@/types/development";
@@ -46,10 +47,7 @@ export async function POST(req: NextRequest) {
 
     // 2. Validate auth
     if (!devId || !token) {
-      return NextResponse.json(
-        { ok: false, error: "Missing devId or token" },
-        { status: 400 }
-      );
+      return NextResponse.json({ ok: false, error: "Missing devId or token" }, { status: 400 });
     }
 
     const developer = await prisma.developer.findUnique({
@@ -58,10 +56,7 @@ export async function POST(req: NextRequest) {
     });
 
     if (!developer || developer.apiToken !== token) {
-      return NextResponse.json(
-        { ok: false, error: "Invalid authentication" },
-        { status: 401 }
-      );
+      return NextResponse.json({ ok: false, error: "Invalid authentication" }, { status: 401 });
     }
 
     // 3. Validate development exists
@@ -71,17 +66,14 @@ export async function POST(req: NextRequest) {
     });
 
     if (!development) {
-      return NextResponse.json(
-        { ok: false, error: "Development not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ ok: false, error: "Development not found" }, { status: 404 });
     }
 
     // Optional: check developer owns this development
     if (development.developerId && development.developerId !== devId) {
       return NextResponse.json(
         { ok: false, error: "Development not owned by this developer" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -94,16 +86,13 @@ export async function POST(req: NextRequest) {
     } else if (jsonUnits) {
       parsedUnits = jsonUnits;
     } else {
-      return NextResponse.json(
-        { ok: false, error: "No units data provided" },
-        { status: 400 }
-      );
+      return NextResponse.json({ ok: false, error: "No units data provided" }, { status: 400 });
     }
 
     if (parsedUnits.length === 0) {
       return NextResponse.json(
         { ok: false, error: "No valid units to process", errors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -186,10 +175,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error("[bulk] Error:", error);
-    return NextResponse.json(
-      { ok: false, error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
   }
 }
 

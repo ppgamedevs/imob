@@ -3,6 +3,7 @@
 
 import { ImageResponse } from "@vercel/og";
 import { NextRequest } from "next/server";
+
 import { prisma } from "@/lib/db";
 
 export const runtime = "edge";
@@ -152,9 +153,7 @@ export async function GET(req: NextRequest) {
                     }}
                   >
                     <div style={{ fontSize: "20px", opacity: 0.8 }}>Livrare</div>
-                    <div style={{ fontSize: "40px", fontWeight: "bold" }}>
-                      {deliveryYear}
-                    </div>
+                    <div style={{ fontSize: "40px", fontWeight: "bold" }}>{deliveryYear}</div>
                   </div>
                 )}
               </div>
@@ -179,7 +178,7 @@ export async function GET(req: NextRequest) {
       {
         width: 1200,
         height: 630,
-      }
+      },
     );
   } catch (error) {
     console.error("[og] Error generating image:", error);

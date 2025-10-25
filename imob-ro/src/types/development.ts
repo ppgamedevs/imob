@@ -1,6 +1,6 @@
 // Step 11: Development types and DTOs
 
-import type { Developer, Development, Unit, DevLead } from "@prisma/client";
+import type { Developer, Development, Unit } from "@prisma/client";
 
 // ========================================
 // DTOs
@@ -57,6 +57,7 @@ export interface ProjectDetailDTO extends ProjectDTO {
 export interface UnitWithMetrics extends Unit {
   // All metrics already in Unit model
   // eurM2, yieldNet, ttsBucket, riskClass, explain
+  development?: { lat?: number | null; lng?: number | null };
 }
 
 export interface UnitFilters {

@@ -1,14 +1,13 @@
 // Step 11: Unit enrichment pipeline
 // Computes derived metrics: eurM2, yieldNet, ttsBucket, riskClass
 
-import { prisma } from "@/lib/db";
 import type { Unit } from "@prisma/client";
 
+import { prisma } from "@/lib/db";
 // Import existing engines
 import { estimateRent } from "@/lib/ml/rent";
-import { estimateTTS } from "@/lib/ml/tts";
 import { estimateSeismic } from "@/lib/ml/seismic";
-import type { NormalizedFeatures } from "@/types/analysis";
+import { estimateTTS } from "@/lib/ml/tts";
 
 export interface UnitFeatures {
   areaM2: number;
@@ -41,7 +40,7 @@ export interface EnrichmentResult {
  */
 export async function computeUnitMetrics(
   unit: Unit,
-  development: { lat?: number | null; lng?: number | null; areaSlug?: string | null }
+  development: { lat?: number | null; lng?: number | null; areaSlug?: string | null },
 ): Promise<EnrichmentResult> {
   // 1. Compute €/m²
   const eurM2 = unit.areaM2 > 0 ? unit.priceEur / unit.areaM2 : 0;
@@ -215,14 +214,6 @@ function parseRoomsFromTypology(typology: string): number {
   if (typology.toLowerCase().includes("penthouse")) return 3;
   if (typology.toLowerCase().includes("duplex")) return 3;
   return 2; // default
-}
-
-function bucketizeTTS(days: number): string {
-  if (days <= 30) return "< 1 month";
-  if (days <= 60) return "1-2 months";
-  if (days <= 90) return "2-3 months";
-  if (days <= 180) return "3-6 months";
-  return "> 6 months";
 }
 
 function classifySeismicRisk(score: number): string {

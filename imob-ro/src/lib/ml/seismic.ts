@@ -16,11 +16,7 @@ export async function estimateSeismic(input: SeismicInput): Promise<number> {
 
   // Base risk from location (București center vs periphery)
   // București center roughly: lat 44.43-44.44, lng 26.08-26.11
-  const isCentral =
-    lat >= 44.42 &&
-    lat <= 44.45 &&
-    lng >= 26.08 &&
-    lng <= 26.12;
+  const isCentral = lat >= 44.42 && lat <= 44.45 && lng >= 26.08 && lng <= 26.12;
 
   let baseRisk = isCentral ? 0.5 : 0.3;
 

@@ -2,19 +2,20 @@
 
 import { prisma } from "@/lib/db";
 import type {
+  CatalogProject,
   DevelopmentFilters,
-  ProjectDTO,
   ProjectDetailDTO,
   UnitStats,
   UnitWithMetrics,
-  CatalogProject,
 } from "@/types/development";
+
+/**
 
 /**
  * Load developments for catalog page with filters
  */
 export async function loadDevelopments(
-  filters: DevelopmentFilters
+  filters: DevelopmentFilters,
 ): Promise<{ projects: CatalogProject[]; total: number; hasMore: boolean }> {
   const {
     areas,
@@ -126,7 +127,10 @@ export async function loadProjectDetail(slug: string): Promise<ProjectDetailDTO 
   const maxPrice = units.length > 0 ? Math.max(...units.map((u) => u.priceEur)) : 0;
 
   const eurM2Values = units.filter((u) => u.eurM2).map((u) => u.eurM2!);
-  const avgEurM2 = eurM2Values.length > 0 ? Math.round(eurM2Values.reduce((a, b) => a + b, 0) / eurM2Values.length) : 0;
+  const avgEurM2 =
+    eurM2Values.length > 0
+      ? Math.round(eurM2Values.reduce((a, b) => a + b, 0) / eurM2Values.length)
+      : 0;
 
   const yieldValues = units.filter((u) => u.yieldNet).map((u) => u.yieldNet!);
   const medianYield = yieldValues.length > 0 ? median(yieldValues) : undefined;
@@ -177,7 +181,10 @@ function computeUnitMix(units: any[]): UnitStats[] {
     count: data.count,
     minPrice: Math.min(...data.prices),
     maxPrice: Math.max(...data.prices),
-    avgEurM2: data.eurM2s.length > 0 ? Math.round(data.eurM2s.reduce((a, b) => a + b, 0) / data.eurM2s.length) : 0,
+    avgEurM2:
+      data.eurM2s.length > 0
+        ? Math.round(data.eurM2s.reduce((a, b) => a + b, 0) / data.eurM2s.length)
+        : 0,
   }));
 }
 
@@ -204,7 +211,7 @@ function computeBadges(dev: any, units: any[]): string[] {
   // Delivery soon
   if (dev.deliveryAt) {
     const monthsUntil = Math.round(
-      (new Date(dev.deliveryAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30)
+      (new Date(dev.deliveryAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30),
     );
     if (monthsUntil <= 6 && monthsUntil > 0) {
       badges.push("Delivery soon");

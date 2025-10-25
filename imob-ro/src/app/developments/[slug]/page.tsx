@@ -2,14 +2,15 @@
 // /developments/[slug] - premium project page with hero, KPIs, unit finder, lead form
 
 import { notFound } from "next/navigation";
-import { loadProjectDetail } from "@/lib/dev/load";
-import { trackProjectView } from "@/lib/dev/analytics";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { trackProjectView } from "@/lib/dev/analytics";
+import { loadProjectDetail } from "@/lib/dev/load";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -35,7 +36,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   };
 }
 
-export default async function DevelopmentDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function DevelopmentDetailPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
   const { slug } = await params;
   const project = await loadProjectDetail(slug);
 
@@ -43,7 +48,20 @@ export default async function DevelopmentDetailPage({ params }: { params: Promis
     notFound();
   }
 
-  const { development, developer, units, photos, amenities, minPrice, maxPrice, avgEurM2, totalUnits, availableUnits, medianYield, seismicClass } = project;
+  const {
+    development,
+    developer,
+    units,
+    photos,
+    amenities,
+    minPrice,
+    maxPrice,
+    avgEurM2,
+    totalUnits,
+    availableUnits,
+    medianYield,
+    seismicClass,
+  } = project;
 
   // Track project view
   trackProjectView(development.id).catch(console.error);
@@ -142,9 +160,7 @@ export default async function DevelopmentDetailPage({ params }: { params: Promis
                   <h2 className="text-xl font-semibold">Despre proiect</h2>
                 </CardHeader>
                 <CardContent>
-                  <p className="whitespace-pre-line text-gray-700">
-                    {development.description}
-                  </p>
+                  <p className="whitespace-pre-line text-gray-700">{development.description}</p>
                 </CardContent>
               </Card>
             )}
@@ -158,7 +174,7 @@ export default async function DevelopmentDetailPage({ params }: { params: Promis
                 </p>
               </CardHeader>
               <CardContent>
-                <UnitFinderTable units={units} developmentId={development.id} />
+                <UnitFinderTable units={units} />
               </CardContent>
             </Card>
 
@@ -215,7 +231,8 @@ export default async function DevelopmentDetailPage({ params }: { params: Promis
                 <div>
                   <h3 className="font-medium">Sunt eligibile pentru ipotecă verde?</h3>
                   <p className="text-sm text-gray-600">
-                    {development.deliveryAt && new Date(development.deliveryAt) >= new Date("2021-01-01")
+                    {development.deliveryAt &&
+                    new Date(development.deliveryAt) >= new Date("2021-01-01")
                       ? "Da, proiectul este eligibil pentru ipotecă verde conform criteriilor nZEB."
                       : "Verificați cu dezvoltatorul pentru certificările specifice."}
                   </p>
@@ -263,7 +280,7 @@ export default async function DevelopmentDetailPage({ params }: { params: Promis
 // Unit Finder Table
 // ========================================
 
-function UnitFinderTable({ units, developmentId }: { units: any[]; developmentId: string }) {
+function UnitFinderTable({ units }: { units: any[] }) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -332,7 +349,13 @@ function formatStage(stage: string | null): string {
 // Lead Form
 // ========================================
 
-function LeadForm({ developmentId, developerBrand }: { developmentId: string; developerBrand: any }) {
+function LeadForm({
+  developmentId,
+  developerBrand,
+}: {
+  developmentId: string;
+  developerBrand: any;
+}) {
   const brandColor = developerBrand?.color || "#000000";
 
   return (
@@ -364,11 +387,7 @@ function LeadForm({ developmentId, developerBrand }: { developmentId: string; de
         />
       </div>
 
-      <Button
-        type="submit"
-        className="w-full"
-        style={{ backgroundColor: brandColor }}
-      >
+      <Button type="submit" className="w-full" style={{ backgroundColor: brandColor }}>
         Trimite solicitare
       </Button>
 

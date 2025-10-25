@@ -9,11 +9,7 @@ export const metadata = {
   description: "Valoare estimată, viteza vânzării și ROI fixes pentru proprietatea ta",
 };
 
-export default async function OwnerDashboardPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function OwnerDashboardPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const data = await loadOwnerDashboard(id);
 

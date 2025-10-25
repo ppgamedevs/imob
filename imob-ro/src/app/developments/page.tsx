@@ -1,14 +1,15 @@
 // Step 11: Developments catalog page
 // /developments - filterable, paginated catalog with sponsored cards
 
-import { Suspense } from "react";
 import Link from "next/link";
-import { loadDevelopments } from "@/lib/dev/load";
-import { trackCatalogView } from "@/lib/dev/analytics";
-import type { DevelopmentFilters } from "@/types/development";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Suspense } from "react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { trackCatalogView } from "@/lib/dev/analytics";
+import { loadDevelopments } from "@/lib/dev/load";
+import type { DevelopmentFilters } from "@/types/development";
 
 export const metadata = {
   title: "Dezvoltări noi în București – prețuri, livrare, unit mix | iR",
@@ -22,7 +23,7 @@ interface PageProps {
 
 export default async function DevelopmentsPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  
+
   // Parse filters from query params
   const filters: DevelopmentFilters = {
     areas: params.areas ? (Array.isArray(params.areas) ? params.areas : [params.areas]) : undefined,
@@ -52,9 +53,7 @@ export default async function DevelopmentsPage({ searchParams }: PageProps) {
       <header className="border-b bg-white">
         <div className="container mx-auto px-4 py-6">
           <h1 className="text-3xl font-bold">Dezvoltări Noi</h1>
-          <p className="mt-2 text-gray-600">
-            {total} proiecte disponibile în București
-          </p>
+          <p className="mt-2 text-gray-600">{total} proiecte disponibile în București</p>
         </div>
       </header>
 
@@ -113,13 +112,7 @@ export default async function DevelopmentsPage({ searchParams }: PageProps) {
 // Components
 // ========================================
 
-function ProjectCard({
-  project,
-  sponsored,
-}: {
-  project: any;
-  sponsored?: boolean;
-}) {
+function ProjectCard({ project, sponsored }: { project: any; sponsored?: boolean }) {
   const minPriceFormatted = new Intl.NumberFormat("ro-RO").format(project.minPrice);
 
   return (
@@ -149,9 +142,7 @@ function ProjectCard({
           <div className="mb-2 flex items-start justify-between gap-2">
             <div className="flex-1">
               <h3 className="font-semibold text-gray-900">{project.name}</h3>
-              {project.areaName && (
-                <p className="text-sm text-gray-600">{project.areaName}</p>
-              )}
+              {project.areaName && <p className="text-sm text-gray-600">{project.areaName}</p>}
             </div>
             {project.developerLogo && (
               <img
@@ -297,10 +288,7 @@ function FiltersSkeleton() {
 
 function SortDropdown({ currentSort }: { currentSort: string }) {
   return (
-    <select
-      className="rounded border px-3 py-1 text-sm"
-      defaultValue={currentSort}
-    >
+    <select className="rounded border px-3 py-1 text-sm" defaultValue={currentSort}>
       <option value="relevance">Relevante</option>
       <option value="price_asc">Preț crescător</option>
       <option value="price_desc">Preț descrescător</option>

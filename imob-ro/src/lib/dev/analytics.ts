@@ -95,7 +95,7 @@ export async function trackUnitRowClick(developmentId: string, unitId: string): 
 export async function trackLeadSubmit(
   developmentId: string,
   unitId: string | undefined,
-  success: boolean
+  success: boolean,
 ): Promise<void> {
   await trackDevelopmentEvent({
     kind: success ? "dev_lead_submit" : "dev_lead_blocked",
@@ -126,12 +126,7 @@ export async function getDevelopmentAnalytics(developmentId: string): Promise<{
   const events = await prisma.buyerEvent.findMany({
     where: {
       kind: {
-        in: [
-          "dev_project_view",
-          "dev_lead_submit",
-          "dev_unit_row_click",
-          "dev_brochure_download",
-        ],
+        in: ["dev_project_view", "dev_lead_submit", "dev_unit_row_click", "dev_brochure_download"],
       },
       meta: {
         path: ["developmentId"],
