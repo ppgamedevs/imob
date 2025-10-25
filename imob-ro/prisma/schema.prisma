@@ -1116,3 +1116,95 @@ model BulkAnalysisItem {
   @@index([analysisId])
 }
 
+// ========================================
+// Step 11: New Developments (Projects) v1
+// ========================================
+
+model Developer {
+  id           String        @id @default(cuid())
+  name         String
+  siteUrl      String?
+  logoUrl      String?
+  brand        Json?         // {color, tone}
+  apiToken     String?       @unique // for /api/dev/lead receiver
+  createdAt    DateTime      @default(now())
+  
+  developments Development[]
+  
+  @@index([apiToken])
+}
+
+model Development {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  name        String
+  developerId String?
+  addressRaw  String?
+  lat         Float?
+  lng         Float?
+  areaSlug    String?
+  deliveryAt  DateTime? // delivery/phase handover
+  description String?   @db.Text
+  photos      Json?     // string[]
+  amenities   Json?     // string[] (parking, gym, playground…)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  developer   Developer? @relation(fields: [developerId], references: [id], onDelete: SetNull)
+  units       Unit[]
+  leads       DevLead[]
+  
+  @@index([slug])
+  @@index([developerId])
+  @@index([areaSlug])
+  @@index([deliveryAt])
+}
+
+model Unit {
+  id            String      @id @default(cuid())
+  developmentId String
+  label         String      // A12, Scara 2-14, etc.
+  typology      String      // studio|1|2|3|4|penthouse|duplex
+  areaM2        Float
+  priceEur      Int
+  floor         String?
+  rooms         Float?
+  orientation   String?
+  parkingAvail  Boolean?    // optional
+  stage         String?     // in_sales|reserved|sold
+  photos        Json?
+  sourceMeta    Json?
+  // Derived
+  eurM2         Float?
+  yieldNet      Float?
+  ttsBucket     String?
+  riskClass     String?
+  explain       Json?
+  updatedAt     DateTime    @updatedAt
+  createdAt     DateTime    @default(now())
+  
+  development   Development @relation(fields: [developmentId], references: [id], onDelete: Cascade)
+  leads         DevLead[]
+  
+  @@index([developmentId])
+  @@index([typology, priceEur])
+  @@index([stage])
+}
+
+model DevLead {
+  id            String      @id @default(cuid())
+  developmentId String
+  unitId        String?
+  name          String?
+  contact       String
+  message       String?     @db.Text
+  utm           Json?
+  createdAt     DateTime    @default(now())
+  
+  development   Development @relation(fields: [developmentId], references: [id], onDelete: Cascade)
+  unit          Unit?       @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  
+  @@index([developmentId, createdAt])
+  @@index([unitId])
+}
+

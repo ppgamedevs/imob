@@ -40,6 +40,7 @@
     "@tensorflow/tfjs-node": "^4.22.0",
     "@vercel/analytics": "^1.5.0",
     "@vercel/blob": "^2.0.0",
+    "@vercel/og": "^0.8.5",
     "cheerio": "^1.1.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
