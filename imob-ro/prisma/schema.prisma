@@ -852,6 +852,17 @@ model SavedSearch {
   @@index([userId, updatedAt])
 }
 
+model SavedFilterSet {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  urlQuery    String   // Serialized filter URL query string
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([userId, createdAt])
+}
+
 model WatchItem {
   id          String   @id @default(cuid())
   userId      String

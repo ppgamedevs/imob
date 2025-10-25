@@ -17,6 +17,7 @@ import CookieBanner from "@/components/CookieBanner";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
+import MobileBar from "@/components/layout/MobileBar";
 import { initSentry } from "@/lib/obs/sentry";
 
 // Initialize Sentry for error tracking
@@ -127,10 +128,11 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider>
-          <div className="flex min-h-screen flex-col">
+          <div className="flex min-h-screen flex-col pb-16 md:pb-0">
             <SiteHeader />
             <main className="flex-1">{children}</main>
             <SiteFooter />
+            <MobileBar />
           </div>
           <Analytics />
           <CookieBanner />

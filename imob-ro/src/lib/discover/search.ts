@@ -15,6 +15,26 @@ export async function discoverSearch(raw: URLSearchParams) {
   const p = parsed.data;
   const take = parsePageSize(p.pageSize); // Cap at 50
 
+  // Merge compound params (price, eurm2, m2, year, metro, areas, rooms)
+  const filters = {
+    areas: p.areas || p.area || undefined,
+    priceMin: p.price?.min || p.priceMin,
+    priceMax: p.price?.max || p.priceMax,
+    eurm2Min: p.eurm2?.min || p.eurm2Min,
+    eurm2Max: p.eurm2?.max || p.eurm2Max,
+    m2Min: p.m2?.min || p.m2Min,
+    m2Max: p.m2?.max || p.m2Max,
+    rooms: p.rooms,
+    roomsMin: p.roomsMin,
+    roomsMax: p.roomsMax,
+    yearMin: p.year?.min || p.yearMin,
+    yearMax: p.year?.max || p.yearMax,
+    metroMaxM: p.metro || p.metroMaxM,
+    signals: p.signals,
+    underpriced: p.underpriced,
+    sort: p.sort,
+  };
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const where: any = {}; // v1: afișăm toate analizele din DB (București filtrat în JS)
 
@@ -90,25 +110,73 @@ export async function discoverSearch(raw: URLSearchParams) {
         trustBadge,
         flags,
         dupCount,
+        ttsBucket: s?.ttsBucket ?? null,
+        yieldNet: n(s?.yieldNet),
+        riskClass: s?.riskClass ?? null,
       };
     })
     // Bucharest-only (dacă city e setat)
     .filter((r) => !r.city || r.city.toLowerCase() === "bucurești")
-    // area slugs
-    .filter((r) => !p.area || (r.areaSlug && p.area.includes(r.areaSlug)))
+    // area slugs (support multiple areas)
+    .filter((r) => !filters.areas || !r.areaSlug || filters.areas.includes(r.areaSlug))
     // numeric filters
-    .filter((r) => p.priceMin == null || (r.priceEur ?? 0) >= p.priceMin!)
-    .filter((r) => p.priceMax == null || (r.priceEur ?? 0) <= p.priceMax!)
-    .filter((r) => p.m2Min == null || (r.areaM2 ?? 0) >= p.m2Min!)
-    .filter((r) => p.m2Max == null || (r.areaM2 ?? 0) <= p.m2Max!)
-    .filter((r) => p.roomsMin == null || (r.rooms ?? 0) >= p.roomsMin!)
-    .filter((r) => p.roomsMax == null || (r.rooms ?? 0) <= p.roomsMax!)
-    .filter((r) => p.yearMin == null || (r.yearBuilt ?? 0) >= p.yearMin!)
-    .filter((r) => p.yearMax == null || (r.yearBuilt ?? 0) <= p.yearMax!)
-    .filter((r) => p.metroMaxM == null || (r.distMetroM ?? 1e9) <= p.metroMaxM!)
-    .filter((r) => p.eurm2Min == null || (r.eurm2 ?? 0) >= p.eurm2Min!)
-    .filter((r) => p.eurm2Max == null || (r.eurm2 ?? 0) <= p.eurm2Max!)
-    .filter((r) => !p.underpriced || r.priceBadge === "Underpriced");
+    .filter((r) => filters.priceMin == null || (r.priceEur ?? 0) >= filters.priceMin!)
+    .filter((r) => filters.priceMax == null || (r.priceEur ?? 0) <= filters.priceMax!)
+    .filter((r) => filters.m2Min == null || (r.areaM2 ?? 0) >= filters.m2Min!)
+    .filter((r) => filters.m2Max == null || (r.areaM2 ?? 0) <= filters.m2Max!)
+    // Rooms (support multiple values: [2,3])
+    .filter((r) => {
+      if (filters.rooms && filters.rooms.length > 0) {
+        return filters.rooms.includes(r.rooms ?? 0);
+      }
+      if (filters.roomsMin != null && (r.rooms ?? 0) < filters.roomsMin) return false;
+      if (filters.roomsMax != null && (r.rooms ?? 0) > filters.roomsMax) return false;
+      return true;
+    })
+    .filter((r) => filters.yearMin == null || (r.yearBuilt ?? 0) >= filters.yearMin!)
+    .filter((r) => filters.yearMax == null || (r.yearBuilt ?? 0) <= filters.yearMax!)
+    .filter((r) => filters.metroMaxM == null || (r.distMetroM ?? 1e9) <= filters.metroMaxM!)
+    .filter((r) => filters.eurm2Min == null || (r.eurm2 ?? 0) >= filters.eurm2Min!)
+    .filter((r) => filters.eurm2Max == null || (r.eurm2 ?? 0) <= filters.eurm2Max!)
+    // Signals filters
+    .filter((r) => {
+      if (!filters.signals || filters.signals.length === 0) return true;
+      
+      for (const signal of filters.signals) {
+        if (signal === 'underpriced' && r.priceBadge !== 'Underpriced') return false;
+        if (signal === 'fast_tts' && !['fast', 'medium'].includes(r.ttsBucket || '')) return false;
+        if (signal === 'yield_high' && (r.yieldNet ?? 0) < 0.06) return false;
+        if (signal === 'seismic_low' && !['none', 'RS3'].includes(r.riskClass || '')) return false;
+      }
+      
+      return true;
+    })
+    // Legacy underpriced filter
+    .filter((r) => !filters.underpriced || r.priceBadge === "Underpriced");
+
+  // Apply sorting
+  if (filters.sort) {
+    rows.sort((a, b) => {
+      switch (filters.sort) {
+        case 'price_asc':
+          return (a.priceEur ?? 0) - (b.priceEur ?? 0);
+        case 'price_desc':
+          return (b.priceEur ?? 0) - (a.priceEur ?? 0);
+        case 'eurm2_asc':
+          return (a.eurm2 ?? 0) - (b.eurm2 ?? 0);
+        case 'eurm2_desc':
+          return (b.eurm2 ?? 0) - (a.eurm2 ?? 0);
+        case 'yield_desc':
+          return (b.yieldNet ?? 0) - (a.yieldNet ?? 0);
+        case 'tts_asc':
+          // Fast < Medium < Slow
+          const ttsOrder: Record<string, number> = { fast: 1, medium: 2, slow: 3 };
+          return (ttsOrder[a.ttsBucket || ''] ?? 999) - (ttsOrder[b.ttsBucket || ''] ?? 999);
+        default:
+          return 0; // relevance = default order
+      }
+    });
+  }
 
   // Day 26: Collapse by groupId (show 1 per group, pick most recent)
   const grouped = new Map<string, (typeof rows)[0]>();
@@ -124,5 +192,5 @@ export async function discoverSearch(raw: URLSearchParams) {
   const items = collapsed.slice(0, take);
   const nextCursor = hasNext ? items[items.length - 1]?.id : null;
 
-  return { ok: true as const, items, nextCursor };
+  return { ok: true as const, items, nextCursor, countApprox: collapsed.length };
 }

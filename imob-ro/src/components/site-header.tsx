@@ -1,4 +1,4 @@
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import Link from "next/link";
 
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -14,6 +14,8 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { auth, signOut } from "@/lib/auth";
 import { getSubscription } from "@/lib/billing/entitlements";
+import SearchBox from "@/components/search/SearchBox";
+import CommandPalette from "@/components/command/CommandPalette";
 
 const navLinks = [
   { href: "/", label: "Acasă" },
@@ -31,30 +33,60 @@ export async function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:h-16">
+      <div className="container mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-4 sm:h-16">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 text-lg font-semibold sm:text-2xl">
+        <Link href="/" className="flex items-center gap-3 text-lg font-semibold sm:text-2xl shrink-0">
           <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center text-primary font-bold">
             iR
           </div>
           <span className="hidden sm:inline">imob.ro</span>
         </Link>
 
+        {/* Search Box - Desktop (centered) */}
+        <div className="hidden lg:flex flex-1 max-w-xl mx-4">
+          <SearchBox placeholder="Caută zone, adrese, proprietăți..." className="w-full relative" />
+        </div>
+
         {/* Desktop Navigation */}
-        <NavigationMenu className="hidden md:flex">
+        <NavigationMenu className="hidden md:flex shrink-0">
           <NavigationMenuList>
-            {navLinks.map((link) => (
-              <NavigationMenuItem key={link.href}>
-                <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-                  <Link href={link.href}>{link.label}</Link>
-                </NavigationMenuLink>
-              </NavigationMenuItem>
-            ))}
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link href="/discover">Descoperă</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link href="/area">Zone</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
+                <Link href="/vinde">Vinde</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
 
         {/* Right side - Auth + Theme Toggle + Mobile Menu */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Mobile Search Icon */}
+          <Sheet>
+            <SheetTrigger asChild className="lg:hidden">
+              <Button variant="ghost" size="icon">
+                <Search className="h-5 w-5" />
+                <span className="sr-only">Caută</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="top" className="h-full">
+              <SheetHeader>
+                <SheetTitle>Căutare</SheetTitle>
+              </SheetHeader>
+              <div className="mt-6">
+                <SearchBox placeholder="Caută zone, adrese, proprietăți..." className="relative" />
+              </div>
+            </SheetContent>
+          </Sheet>
           {session?.user ? (
             <div className="hidden items-center gap-2 md:flex">
               {/* Day 23 - Plan Badge */}
@@ -138,6 +170,9 @@ export async function SiteHeader() {
           </Sheet>
         </div>
       </div>
+      
+      {/* Command Palette (⌘K) */}
+      <CommandPalette />
     </header>
   );
 }
