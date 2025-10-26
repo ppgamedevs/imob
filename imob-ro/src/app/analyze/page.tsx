@@ -1,16 +1,26 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import Hero from "@/components/ui/hero";
 import { Input } from "@/components/ui/input";
 
-export default function AnalyzePage() {
-  const [url, setUrl] = useState("");
+function AnalyzePageContent() {
+  const searchParams = useSearchParams();
+  const urlParam = searchParams.get("url");
+  const [url, setUrl] = useState(urlParam || "");
   const [status, setStatus] = useState<"idle" | "fetching" | "done">("idle");
   const router = useRouter();
+
+  // Auto-submit if URL is provided in query params
+  useEffect(() => {
+    if (urlParam && status === "idle") {
+      handleSubmit(new Event("submit") as any);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlParam]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,5 +75,13 @@ export default function AnalyzePage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AnalyzePage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto max-w-2xl py-12">Se încarcă...</div>}>
+      <AnalyzePageContent />
+    </Suspense>
   );
 }
