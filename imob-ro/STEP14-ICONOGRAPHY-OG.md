@@ -9,9 +9,11 @@
 ## 📦 What Was Built
 
 ### 1. Icon System (7 files)
+
 Unified iconography system with lucide-react wrapper and custom real-estate icons.
 
 #### Core Components
+
 - **`src/components/ui/Icon.tsx`** - Lucide wrapper with consistent sizing
   - Props: `as` (LucideIcon), `size` (16/18/20/24), `title`, `className`
   - 1.5px stroke weight for readability
@@ -26,6 +28,7 @@ Unified iconography system with lucide-react wrapper and custom real-estate icon
   - Requires `aria-label` for accessibility
 
 #### Custom Icons (5 real-estate specific)
+
 1. **`AvmBadge.tsx`** - Checkmark in rounded square (Automated Valuation Model)
 2. **`TtsBolt.tsx`** - Lightning bolt (Time to Sell)
 3. **`Metro.tsx`** - M in circle (Metro station proximity)
@@ -33,15 +36,18 @@ Unified iconography system with lucide-react wrapper and custom real-estate icon
 5. **`SeismicRisk.tsx`** - Building with warning dot (RS1/RS2/RS3 classifications)
 
 All custom icons:
+
 - 20x20 viewBox
 - 1.5px stroke
 - Inherit `currentColor`
 - Optimized paths
 
 ### 2. Open Graph Image System (6 files)
+
 Dynamic server-rendered social media preview images using `@vercel/og` Edge runtime.
 
 #### Shared Infrastructure
+
 - **`src/app/api/og/_shared.tsx`** - Common OG renderer
   - 1200x630 resolution
   - Dark gradient background (0b0f1a → 101828 → 0b0f1a)
@@ -51,6 +57,7 @@ Dynamic server-rendered social media preview images using `@vercel/og` Edge runt
   - Edge runtime for fast generation
 
 #### OG Endpoints
+
 1. **Report OG** (`/api/og/report/[id]`)
    - Analysis with extracted listing + scores
    - Title, address, AVM mid, €/m²
@@ -85,12 +92,14 @@ Dynamic server-rendered social media preview images using `@vercel/og` Edge runt
 ## 🎨 Design Principles
 
 ### Icons
+
 - **Consistency:** All icons use same stroke width (1.5px) and sizing system
 - **Accessibility:** Proper `aria-label` and `role` attributes
 - **Flexibility:** Inherit `currentColor` for easy theming
 - **Touch-friendly:** 40x40px minimum touch targets
 
 ### OG Images
+
 - **Branding:** Support for custom colors, logos, and title suffixes
 - **Performance:** Edge runtime for <50ms generation
 - **Data-driven:** Pull live data from Prisma/database
@@ -111,6 +120,7 @@ Dynamic server-rendered social media preview images using `@vercel/og` Edge runt
 ## 🚀 Usage Examples
 
 ### Icons
+
 ```tsx
 import { Icon } from "@/components/ui/Icon";
 import { Home, Search } from "lucide-react";
@@ -123,7 +133,7 @@ import { AvmBadge, TtsBolt } from "@/components/ui/icons";
 <AvmBadge className="text-green-500" />
 
 // Icon button
-<IconButton 
+<IconButton
   aria-label="Search properties"
   size="md"
   variant="primary"
@@ -133,7 +143,9 @@ import { AvmBadge, TtsBolt } from "@/components/ui/icons";
 ```
 
 ### OG Images
+
 Add to page metadata:
+
 ```tsx
 export const metadata = {
   openGraph: {
@@ -165,6 +177,7 @@ export const metadata = {
 ## 📝 Files Created/Modified
 
 ### New Files (12)
+
 1. `src/components/ui/Icon.tsx` (47 lines)
 2. `src/components/ui/icons/AvmBadge.tsx` (20 lines)
 3. `src/components/ui/icons/TtsBolt.tsx` (20 lines)
@@ -186,6 +199,7 @@ export const metadata = {
 ## 🎯 Next Steps
 
 ### Immediate
+
 1. Update page metadata to use new OG endpoints:
    - `/report/[id]/page.tsx` → `openGraph.images`
    - `/area/[slug]/page.tsx` → area OG
@@ -198,6 +212,7 @@ export const metadata = {
    - Wrap with `<Icon as={...} />` for consistency
 
 ### Future Enhancements
+
 - Add more custom icons as needed (e.g., Quality, Trust badges)
 - A/B test OG image variations
 - Add QR codes to OG images for mobile sharing
@@ -208,17 +223,20 @@ export const metadata = {
 ## 📚 Documentation
 
 ### Icon Sizes
+
 - **16px** - Dense tables, compact UI
 - **18px** - Default body text (buttons, cards)
 - **20px** - Emphasized buttons, headings
 - **24px** - Hero sections, large CTAs
 
 ### OG Query Params
+
 - `brand` - Hex color for brand accent (e.g., `#6A1B9A`)
 - `logo` - URL to brand logo (max 100x32)
 - `title` - Custom footer text (default: "imob.ro — insight engine")
 
 ### Performance
+
 - OG image generation: ~30-50ms (Edge runtime)
 - Cache TTL: 600s (10 minutes)
 - Stale-while-revalidate: 86400s (24 hours)

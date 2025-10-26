@@ -1,0 +1,222 @@
+/**
+ * Print & PDF styles - Editorial feel
+ * Step 15: Final Polish
+ */
+
+@media print {
+  /* Page setup */
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+
+  /* Base typography */
+  body {
+    background: white !important;
+    color: #111 !important;
+    font:
+      12pt Inter,
+      system-ui,
+      sans-serif !important;
+  }
+
+  /* Hide UI elements */
+  header,
+  nav,
+  .no-print,
+  .site-header,
+  .site-footer,
+  .mobile-bar,
+  button:not(.print-keep),
+  [data-no-print] {
+    display: none !important;
+  }
+
+  /* Links */
+  a:link::after {
+    content: " (" attr(href) ")";
+    font-size: 9pt;
+    color: #666;
+  }
+
+  /* Prevent page breaks inside cards */
+  .card,
+  .kpi,
+  .kpi-tile,
+  .report-section {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Typography scale */
+  h1 {
+    font-size: 18pt;
+    margin: 0 0 8pt;
+    font-weight: 600;
+  }
+
+  h2 {
+    font-size: 14pt;
+    margin: 14pt 0 6pt;
+    font-weight: 600;
+  }
+
+  h3 {
+    font-size: 12pt;
+    margin: 10pt 0 4pt;
+    font-weight: 600;
+  }
+
+  /* Card styles */
+  .card {
+    border: 1pt solid #ddd;
+    padding: 10pt;
+    border-radius: 6pt;
+    margin-bottom: 8pt;
+    background: white;
+  }
+
+  /* KPI tiles */
+  .kpi,
+  .kpi-tile {
+    border: 1pt solid #ddd;
+    padding: 8pt;
+    border-radius: 6pt;
+    margin-bottom: 6pt;
+    background: #fafafa;
+  }
+
+  .kpi-label,
+  .kpi-tile-label {
+    font-size: 9pt;
+    color: #666;
+    margin-bottom: 2pt;
+  }
+
+  .kpi-value,
+  .kpi-tile-value {
+    font-size: 14pt;
+    font-weight: 600;
+    color: #111;
+  }
+
+  /* Images */
+  img {
+    max-width: 100%;
+    height: auto;
+    break-inside: avoid;
+  }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8pt 0;
+  }
+
+  th,
+  td {
+    border: 1pt solid #ddd;
+    padding: 6pt;
+    text-align: left;
+  }
+
+  th {
+    background: #f5f5f5;
+    font-weight: 600;
+  }
+
+  /* Charts (hide or show static version) */
+  .chart,
+  canvas,
+  svg.recharts-surface {
+    display: none;
+  }
+
+  /* Badges */
+  .badge {
+    border: 1pt solid #ddd;
+    padding: 2pt 6pt;
+    border-radius: 4pt;
+    font-size: 9pt;
+    display: inline-block;
+  }
+
+  /* Grid layouts */
+  .grid {
+    display: grid;
+    gap: 8pt;
+  }
+
+  /* Hide shadows */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Force black text on white */
+  p,
+  span,
+  div:not(.badge) {
+    color: #111 !important;
+  }
+
+  /* Report-specific */
+  .report-header {
+    border-bottom: 2pt solid #111;
+    padding-bottom: 8pt;
+    margin-bottom: 12pt;
+  }
+
+  .report-summary {
+    background: #f9f9f9;
+    padding: 10pt;
+    border-radius: 6pt;
+    margin-bottom: 12pt;
+  }
+
+  .report-photo {
+    width: 100%;
+    max-height: 200pt;
+    object-fit: cover;
+    border-radius: 6pt;
+  }
+
+  /* Owner estimation specific */
+  .owner-lead-summary {
+    border: 2pt solid #111;
+    padding: 12pt;
+    border-radius: 6pt;
+    background: #fafafa;
+    margin-bottom: 12pt;
+  }
+
+  /* Comparisons */
+  .compare-table {
+    font-size: 10pt;
+  }
+
+  .compare-table th {
+    background: #111;
+    color: white;
+  }
+
+  /* Footer info */
+  .print-footer {
+    margin-top: 16pt;
+    padding-top: 8pt;
+    border-top: 1pt solid #ddd;
+    font-size: 8pt;
+    color: #666;
+    text-align: center;
+  }
+
+  /* Page numbers */
+  @page {
+    @bottom-right {
+      content: counter(page) " / " counter(pages);
+      font-size: 8pt;
+      color: #666;
+    }
+  }
+}

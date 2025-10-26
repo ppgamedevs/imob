@@ -14,6 +14,7 @@
     "analyze": "ANALYZE=true next build",
     "postinstall": "prisma generate",
     "seed": "node prisma/seed.js",
+    "seed:demo": "tsx prisma/seed.demo.ts",
     "prepare-extension": "node ./scripts/prepare-extension.js",
     "package-extension": "node ./scripts/package-extension.js",
     "package-extension2": "node ./scripts/package-extension.js",

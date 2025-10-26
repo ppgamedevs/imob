@@ -8,6 +8,7 @@
  * - Include Tailwind classes and shadcn/ui <NavigationMenu> for desktop; a <Sheet> menu for mobile
  */
 import "./globals.css";
+import "./print.css";
 
 import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
@@ -17,8 +18,11 @@ import CookieBanner from "@/components/CookieBanner";
 import AppFooter from "@/components/layout/AppFooter";
 import AppHeader from "@/components/layout/AppHeader";
 import MobileBar from "@/components/layout/MobileBar";
+import Tour from "@/components/onboarding/Tour";
+import WhatsNew from "@/components/system/WhatsNew";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/ui/toaster";
+import { flags } from "@/lib/flags";
 import { initSentry } from "@/lib/obs/sentry";
 
 // Initialize Sentry for error tracking
@@ -138,6 +142,8 @@ export default function RootLayout({
             </div>
             <Analytics />
             <CookieBanner />
+            {flags.tour && <Tour />}
+            {flags.whatsNew && <WhatsNew />}
           </ToastProvider>
         </ThemeProvider>
       </body>
