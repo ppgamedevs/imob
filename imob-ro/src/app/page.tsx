@@ -28,7 +28,7 @@ function Hero() {
       <h1 className="text-4xl md:text-6xl font-semibold tracking-tight">
         Caută, compară și vinde în <span className="text-primary">București</span>
       </h1>
-      <p className="mt-3 text-[15px] md:text-lg text-white/70">
+      <p className="mt-3 text-[15px] md:text-lg text-muted">
         Preț real de piață, viteza vânzării, randament și risc seismic — pe înțelesul tău.
       </p>
 
@@ -41,13 +41,13 @@ function Hero() {
           <input
             name="q"
             placeholder="ex: Floreasca, Crângași sau lipește un URL de anunț…"
-            className="flex-1 bg-transparent outline-none text-[15px] placeholder:text-white/40 px-3 py-3"
+            className="flex-1 bg-transparent outline-none text-[15px] placeholder:text-muted px-3 py-3"
           />
           <button className="rounded-xl px-4 py-3 bg-primary text-primaryFg text-sm font-medium hover:opacity-95 transition-opacity">
             Caută
           </button>
         </form>
-        <div className="mt-3 text-xs text-white/50">
+        <div className="mt-3 text-xs text-muted">
           Sau{" "}
           <Link className="underline hover:no-underline" href="/owners">
             estimează-ți proprietatea
@@ -69,10 +69,10 @@ function ValueProps() {
       {items.map((x) => (
         <div
           key={x.t}
-          className="rounded-2xl border border-border bg-[color:var(--color-surface)]/90 shadow-elev1 p-5 text-left"
+          className="rounded-2xl border border-border bg-surface/90 shadow-elev1 p-5 text-left"
         >
-          <div className="text-sm font-semibold">{x.t}</div>
-          <div className="mt-1.5 text-sm text-white/70">{x.d}</div>
+          <div className="text-sm font-semibold text-text">{x.t}</div>
+          <div className="mt-1.5 text-sm text-muted">{x.d}</div>
         </div>
       ))}
     </div>
@@ -82,8 +82,10 @@ function ValueProps() {
 function BelowFold() {
   return (
     <section className="mx-auto max-w-[1040px] px-4 py-14">
-      <h2 className="text-xl font-semibold">Datele tale imobiliare, la un click distanță</h2>
-      <p className="mt-2 text-sm text-white/70 max-w-[780px]">
+      <h2 className="text-xl font-semibold text-text">
+        Datele tale imobiliare, la un click distanță
+      </h2>
+      <p className="mt-2 text-sm text-muted max-w-[780px]">
         Analizăm mii de anunțuri în timp real pentru a-ți arăta prețul corect, timpul de vânzare,
         randamentul și riscul seismic.
       </p>
