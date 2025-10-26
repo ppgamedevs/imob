@@ -23,6 +23,24 @@ export default function HomePage() {
 }
 
 function Hero() {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+    const query = formData.get("q") as string;
+
+    if (!query) return;
+
+    // Check if query is a URL
+    try {
+      new URL(query);
+      // It's a valid URL - redirect to analyze page
+      window.location.href = `/analyze?url=${encodeURIComponent(query)}`;
+    } catch {
+      // Not a URL - normal search in discover
+      window.location.href = `/discover?q=${encodeURIComponent(query)}`;
+    }
+  };
+
   return (
     <>
       <h1 className="text-4xl md:text-6xl font-semibold tracking-tight">
@@ -35,7 +53,7 @@ function Hero() {
       {/* search card */}
       <div className="mx-auto mt-8 max-w-[760px]">
         <form
-          action="/discover"
+          onSubmit={handleSubmit}
           className="flex items-center gap-2 rounded-2xl border border-border bg-surface shadow-elev2 p-2"
         >
           <input

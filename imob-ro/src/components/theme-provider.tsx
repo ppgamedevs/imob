@@ -8,7 +8,7 @@ type ThemeProviderProps = React.ComponentProps<typeof NextThemesProvider>;
 
 export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
   return (
-    <NextThemesProvider attribute="class" defaultTheme="light" enableSystem {...props}>
+    <NextThemesProvider attribute="class" defaultTheme="light" enableSystem={false} {...props}>
       {children}
     </NextThemesProvider>
   );
