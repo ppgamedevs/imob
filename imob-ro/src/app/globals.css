@@ -1,10 +1,39 @@
 /* Cache bust: 2025-10-26 - Step 15 CSS fix */
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Poppins:wght@600;700&display=swap");
 @import "../styles/tokens.css";
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 @import "tw-animate-css";
+
+/* Tailwind v4 Theme Configuration */
+@theme {
+  /* Colors from design system tokens */
+  --color-bg: rgb(var(--bg) / <alpha-value>);
+  --color-surface: rgb(var(--surface) / <alpha-value>);
+  --color-surface-2: rgb(var(--surface-2) / <alpha-value>);
+  --color-muted: rgb(var(--muted) / <alpha-value>);
+  --color-border: rgb(var(--border) / <alpha-value>);
+  --color-text: rgb(var(--text) / <alpha-value>);
+  --color-primary: rgb(var(--primary) / <alpha-value>);
+  --color-primary-fg: rgb(var(--primary-contrast) / <alpha-value>);
+  --color-success: rgb(var(--success) / <alpha-value>);
+  --color-warning: rgb(var(--warn) / <alpha-value>);
+  --color-danger: rgb(var(--danger) / <alpha-value>);
+
+  /* Font families */
+  --font-family-sans: var(--font-geist-sans), Inter, system-ui, sans-serif;
+  --font-family-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Shadows */
+  --shadow-elev0: var(--elev0);
+  --shadow-elev1: var(--elev1);
+  --shadow-elev2: var(--elev2);
+  --shadow-elev3: var(--elev3);
+
+  /* Border radius */
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-xl: var(--r-xl);
+}
 
 /* Override base styles with design tokens */
 html,
