@@ -25,10 +25,10 @@ function AnalyzePageContent() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url) return;
-    
+
     console.log("🔍 Starting analysis for URL:", url);
     setStatus("fetching");
-    
+
     try {
       console.log("📡 Sending POST to /api/analyze...");
       const res = await fetch("/api/analyze", {
@@ -36,11 +36,11 @@ function AnalyzePageContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
       });
-      
+
       console.log("📥 Response status:", res.status);
       const data = await res.json();
       console.log("📦 Response data:", data);
-      
+
       if (res.ok && data?.id) {
         setStatus("done");
         console.log("✅ Success! Redirecting to report:", data.id);
