@@ -34,9 +34,11 @@ function Hero() {
     try {
       new URL(query);
       // It's a valid URL - redirect to analyze page
+      console.log("URL detected, redirecting to:", `/analyze?url=${encodeURIComponent(query)}`);
       window.location.href = `/analyze?url=${encodeURIComponent(query)}`;
     } catch {
       // Not a URL - normal search in discover
+      console.log("Text search, redirecting to:", `/discover?q=${encodeURIComponent(query)}`);
       window.location.href = `/discover?q=${encodeURIComponent(query)}`;
     }
   };

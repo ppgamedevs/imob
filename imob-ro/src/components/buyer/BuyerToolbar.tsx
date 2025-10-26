@@ -61,7 +61,7 @@ export function BuyerToolbar({
     try {
       const result = await createCompareSetAction(selectedGroupIds);
       if (result.ok && result.id) {
-        router.push(`/compare/${result.id}`);
+        router.push(`/compare/saved/${result.id}`);
       }
     } catch (err) {
       alert("Failed to create comparison. Please sign in.");

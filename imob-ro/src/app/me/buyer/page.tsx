@@ -178,7 +178,7 @@ export default async function BuyerPortalPage() {
               {compareSets.map((c) => {
                 const groupIds = c.groupIds.split(",").filter(Boolean);
                 return (
-                  <Link key={c.id} href={`/compare/${c.id}`}>
+                  <Link key={c.id} href={`/compare/saved/${c.id}`}>
                     <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors">
                       <div>
                         <p className="font-medium">{c.name || "Untitled Comparison"}</p>
