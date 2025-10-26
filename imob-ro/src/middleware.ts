@@ -49,6 +49,23 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // IMPORTANT: If there's an invalid agent-session cookie but we're NOT on /a/* routes,
+  // delete it to prevent redirect loops for public pages like /analyze
+  const agentToken = request.cookies.get("agent-session");
+  if (agentToken && !pathname.startsWith("/a")) {
+    try {
+      const secret = new TextEncoder().encode(
+        process.env.AGENT_SESSION_SECRET || "change-me-in-production",
+      );
+      await jwtVerify(agentToken.value, secret);
+    } catch {
+      // Invalid token on non-agent route - clean it up
+      const response = NextResponse.next();
+      response.cookies.delete("agent-session");
+      return response;
+    }
+  }
+
   // Check for NextAuth session cookie (Edge-compatible)
   // NextAuth v5 uses different cookie names depending on environment
   const sessionCookie =
