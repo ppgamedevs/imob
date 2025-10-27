@@ -17,8 +17,8 @@ import { NextResponse } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Agent workspace routes - handle these first
-  if (pathname.startsWith("/a")) {
+  // Agent workspace routes - handle these first (match exactly "/a" or any subpath like "/a/..."; but NOT "/analyze")
+  if (pathname === "/a" || pathname.startsWith("/a/")) {
     // Allow public agent routes
     if (
       pathname === "/a/signin" ||
