@@ -174,6 +174,24 @@ export async function startAnalysis(analysisId: string, url: string) {
           console.warn("updateFeatureSnapshot failed", err);
         }
       }
+      // Still nothing? Mark analysis as error so the UI can surface a helpful message
+      if (!serverData) {
+        try {
+          await prisma.analysis.update({ where: { id: analysisId }, data: { status: "error" } });
+          // best-effort provenance event for visibility
+          try {
+            await prisma.provenanceEvent.create({
+              data: {
+                analysisId,
+                kind: "NO_DATA",
+                happenedAt: new Date(),
+                payload: { note: "No client extract and server scrape disabled or blocked" } as any,
+              },
+            });
+          } catch {}
+        } catch {}
+        return; // abort further pipeline
+      }
     } else {
       // If a client provided extracted listing exists, run the normalization pipeline
       // Day 20: Log provenance first (Sight + PhotoAssets)
