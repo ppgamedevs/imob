@@ -17,9 +17,9 @@ import { NextResponse } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Agent workspace routes
+  // Agent workspace routes - handle these first
   if (pathname.startsWith("/a")) {
-    // Allow public routes
+    // Allow public agent routes
     if (
       pathname === "/a/signin" ||
       pathname === "/a/callback" ||
@@ -28,7 +28,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.next();
     }
 
-    // Check agent session
+    // Check agent session - only for protected /a/* routes
     const agentToken = request.cookies.get("agent-session");
 
     if (!agentToken) {
@@ -49,29 +49,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // IMPORTANT: If there's an invalid agent-session cookie but we're NOT on /a/* routes,
-  // delete it to prevent redirect loops for public pages like /analyze
-  const agentToken = request.cookies.get("agent-session");
-  if (agentToken && !pathname.startsWith("/a")) {
-    try {
-      const secret = new TextEncoder().encode(
-        process.env.AGENT_SESSION_SECRET || "change-me-in-production",
-      );
-      await jwtVerify(agentToken.value, secret);
-    } catch {
-      // Invalid token on non-agent route - clean it up
-      const response = NextResponse.next();
-      response.cookies.set("agent-session", "", {
-        path: "/",
-        expires: new Date(0),
-        maxAge: 0,
-      });
-      return response;
-    }
-  }
-
-  // Check for NextAuth session cookie (Edge-compatible)
-  // NextAuth v5 uses different cookie names depending on environment
+  // Check for NextAuth session cookie for admin/dashboard routes
   const sessionCookie =
     request.cookies.get("authjs.session-token") || // HTTP (dev)
     request.cookies.get("__Secure-authjs.session-token") || // HTTPS (production)
@@ -99,6 +77,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // All other routes are public (/, /analyze, /discover, etc.)
   return NextResponse.next();
 }
 
