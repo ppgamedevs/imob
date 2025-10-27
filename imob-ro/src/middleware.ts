@@ -61,7 +61,11 @@ export async function middleware(request: NextRequest) {
     } catch {
       // Invalid token on non-agent route - clean it up
       const response = NextResponse.next();
-      response.cookies.delete("agent-session");
+      response.cookies.set("agent-session", "", {
+        path: "/",
+        expires: new Date(0),
+        maxAge: 0,
+      });
       return response;
     }
   }
