@@ -417,6 +417,38 @@ export default async function ReportPage({ params }: Props) {
         </div>
       </div>
 
+      {/* Status banner: make the root-cause obvious when nothing is extracted yet */}
+      {!extracted ? (
+        <div className="mb-4 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm">
+          <div className="font-medium">Nu avem încă date extrase pentru acest raport.</div>
+          <div className="mt-1 text-muted-foreground">
+            Status analiză: <b>{analysis?.status ?? "—"}</b>
+          </div>
+          {events && events.length > 0 ? (
+            <div className="mt-1 text-muted-foreground">
+              Ultimul eveniment: <b>{events[events.length - 1]?.kind}</b>
+            </div>
+          ) : null}
+          {events && events.length > 0 && events[events.length - 1]?.kind === "NO_DATA" ? (
+            <div className="mt-2">
+              <p>Server-scrape pare dezactivat sau domeniul nu este în whitelist.</p>
+              <p>Configurează pe producție variabilele de mediu și redeploy,</p>
+              <p>apoi apasă &quot;Refresh&quot;:</p>
+              <ul className="mt-1 list-disc pl-5">
+                <li>
+                  <code>ALLOW_SERVER_SCRAPE=true</code>
+                </li>
+                <li>
+                  <code>SERVER_WHITELIST</code>
+                  <div className="text-muted-foreground">ex: imobiliare.ro, olx.ro, storia.ro</div>
+                  <div className="text-muted-foreground">homezz.ro, publi24.ro</div>
+                </li>
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       {/* Empty-state and guidance when we don't have extracted data yet */}
       {!extracted ? (
         <div className="mb-6 rounded-lg border bg-card p-4">
