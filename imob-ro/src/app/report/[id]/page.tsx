@@ -160,6 +160,22 @@ export default async function ReportPage({ params }: Props) {
 
   const extracted = analysis?.extractedListing ?? null;
   const f = (analysis?.featureSnapshot?.features ?? null) as NormalizedFeatures | null;
+  // Simple completeness heuristic for UX summaries
+  const fields = {
+    price: extracted?.price ?? (typeof f?.priceEur === "number" ? f.priceEur : null),
+    area: extracted?.areaM2 ?? (typeof f?.areaM2 === "number" ? f.areaM2 : null),
+    rooms: extracted?.rooms ?? (typeof f?.rooms === "number" ? f.rooms : null),
+    address: extracted?.addressRaw ?? (typeof f?.address === "string" ? f.address : null),
+    coords:
+      (typeof extracted?.lat === "number" && typeof extracted?.lng === "number") ||
+      (typeof f?.lat === "number" && typeof f?.lng === "number")
+        ? true
+        : null,
+    photos: Array.isArray(extracted?.photos) && extracted!.photos.length > 0 ? true : null,
+  } as const;
+  const totalFields = 6;
+  const presentFields = Object.values(fields).filter((v) => v != null && v !== "").length;
+  const completenessPct = Math.round((presentFields / totalFields) * 100);
   let yieldRes: YieldResult | null = null;
   let rentM2: number | null = null;
   const compsRentArr: number[] = [];
@@ -416,6 +432,68 @@ export default async function ReportPage({ params }: Props) {
           <ShareButton url={canonicalUrl} title={extracted?.title ?? "Raport analiză"} />
         </div>
       </div>
+
+      {/* Quick status strip: completeness · AVM confidence · comparables */}
+      <div className="mb-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div className="rounded-xl border border-border bg-surface p-3">
+          <div className="text-xs text-muted-foreground">Completitudine extragere</div>
+          <div className="mt-1 flex items-baseline justify-between">
+            <div className="text-xl font-semibold">{completenessPct}%</div>
+            <div className="text-xs text-muted-foreground">din câmpuri cheie</div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-surface p-3">
+          <div className="text-xs text-muted-foreground">Încredere AVM</div>
+          <div className="mt-1 flex items-baseline justify-between">
+            <div className="text-xl font-semibold">
+              {priceRange ? Math.round(priceRange.conf * 100) : "—"}%
+            </div>
+            <div className="text-xs text-muted-foreground">
+              interval{" "}
+              {priceRange
+                ? `${priceRange.low.toLocaleString()}–${priceRange.high.toLocaleString()} €`
+                : "n/a"}
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border bg-surface p-3">
+          <div className="text-xs text-muted-foreground">Comparabile găsite</div>
+          <div className="mt-1 flex items-baseline justify-between">
+            <div className="text-xl font-semibold">{comps.length}</div>
+            <div className="text-xs text-muted-foreground">în apropiere</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Empty/weak analysis helper */}
+      {/* eslint-disable prettier/prettier */}
+      {(!extracted || completenessPct < 40) && comps.length === 0 && (
+        <div className="mb-6 rounded-xl border border-warning/30 bg-warning/10 p-4">
+          <div className="font-medium text-warning">Analiză incompletă pentru acest anunț</div>
+          <div className="mt-1 text-sm text-muted-foreground">
+            Posibile cauze: pagina sursă e dinamică (JS), domeniul nu e în lista noastră permisă sau anunțul are puține detalii.
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {analysis?.sourceUrl ? (
+              <a
+                className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-sm hover:bg-accent"
+                href={analysis.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Deschide linkul sursă
+              </a>
+            ) : null}
+            <a
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-sm text-primary-foreground hover:bg-primary/90"
+              href="/feedback?topic=analiza"
+            >
+              Trimite feedback
+            </a>
+          </div>
+        </div>
+      )}
+      {/* eslint-enable prettier/prettier */}
 
       {/* Multi-source card (Day 26) */}
       {groupSnapshot && groupSources.length > 1 && (
