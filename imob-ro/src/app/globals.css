@@ -45,6 +45,30 @@ body {
   line-height: var(--lh-normal);
 }
 
+/* Force light mode - disable dark mode completely */
+html {
+  color-scheme: light;
+}
+
+/* Remove default focus outlines and add better ones */
+*:focus-visible {
+  outline: 2px solid rgb(var(--primary));
+  outline-offset: 2px;
+}
+
+a:focus-visible {
+  outline: 2px solid rgb(var(--primary));
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* Better button states */
+button:active,
+[role="button"]:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
 /* Page container utility */
 .container {
   max-width: var(--page-max-width);

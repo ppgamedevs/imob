@@ -3,7 +3,6 @@ import Link from "next/link";
 
 import CommandPalette from "@/components/command/CommandPalette";
 import SearchBox from "@/components/search/SearchBox";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -118,7 +117,6 @@ export async function SiteHeader() {
             </Button>
           )}
 
-          <ThemeToggle />
           {subscription?.planCode !== "pro" && (
             <Button variant="ghost" size="sm" asChild className="hidden md:inline-flex">
               <Link href="/pricing">Upgrade</Link>

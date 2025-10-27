@@ -30,6 +30,9 @@ function Hero() {
 
     if (!query) return;
 
+    // Clear any agent-session cookies before redirecting
+    document.cookie = "agent-session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
     // Check if query is a URL
     try {
       new URL(query);
@@ -61,15 +64,21 @@ function Hero() {
           <input
             name="q"
             placeholder="ex: Floreasca, Crângași sau lipește un URL de anunț…"
-            className="flex-1 bg-transparent outline-none text-[15px] placeholder:text-muted px-3 py-3"
+            className="flex-1 bg-transparent outline-none text-[15px] placeholder:text-muted px-3 py-3 focus:outline-none focus:ring-0"
           />
-          <button className="rounded-xl px-4 py-3 bg-primary text-primaryFg text-sm font-medium hover:opacity-95 transition-opacity">
+          <button
+            type="submit"
+            className="rounded-xl px-6 py-3 bg-primary text-white text-sm font-medium hover:bg-primary/90 active:scale-95 transition-all duration-150 shadow-sm hover:shadow-md"
+          >
             Caută
           </button>
         </form>
         <div className="mt-3 text-xs text-muted">
           Sau{" "}
-          <Link className="underline hover:no-underline" href="/owners">
+          <Link
+            className="underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
+            href="/owners"
+          >
             estimează-ți proprietatea
           </Link>
         </div>
