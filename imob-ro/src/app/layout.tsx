@@ -10,7 +10,6 @@
 import "./globals.css";
 import "./print.css";
 
-import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
@@ -123,6 +122,7 @@ export default function RootLayout({
     <html lang="ro" suppressHydrationWarning>
       <head>
         {/* Day 30: Performance - Font preconnect */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
         {/* Organization JSON-LD */}
@@ -140,7 +140,7 @@ export default function RootLayout({
               <AppFooter />
               <MobileBar />
             </div>
-            <Analytics />
+            {/** Vercel Analytics script 404s when not enabled; disabled to avoid console noise */}
             <CookieBanner />
             {flags.tour && <Tour />}
             {flags.whatsNew && <WhatsNew />}
