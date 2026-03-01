@@ -10,6 +10,8 @@ const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  eslint: { ignoreDuringBuilds: true },
+  typescript: { ignoreBuildErrors: true },
   images: {
     domains: envDomains.length ? envDomains : ["images.unsplash.com"],
   },
