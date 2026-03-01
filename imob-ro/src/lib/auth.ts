@@ -11,16 +11,19 @@ export const authConfig = {
   // @ts-expect-error - Adapter version mismatch between next-auth beta and @auth/prisma-adapter
   adapter: PrismaAdapter(prisma),
   providers: [
-    EmailProvider({
-      server: process.env.EMAIL_SERVER || process.env.SMTP_URL || "",
-      from: process.env.EMAIL_FROM || "noreply@imob.ro",
-      async sendVerificationRequest({ identifier: email, url }) {
-        if (process.env.NODE_ENV === "development") {
-          logger.info({ email, url }, "Magic link generated (dev only)");
-        }
-        // In production, the EmailProvider sends via the configured SMTP server
-      },
-    }),
+    ...(process.env.EMAIL_SERVER || process.env.SMTP_URL
+      ? [
+          EmailProvider({
+            server: process.env.EMAIL_SERVER || process.env.SMTP_URL || "",
+            from: process.env.EMAIL_FROM || "noreply@imob.ro",
+            async sendVerificationRequest({ identifier: email, url }) {
+              if (process.env.NODE_ENV === "development") {
+                logger.info({ email, url }, "Magic link generated (dev only)");
+              }
+            },
+          }),
+        ]
+      : []),
     ...(process.env.AUTH_GOOGLE_ID
       ? [
           GoogleProvider({
