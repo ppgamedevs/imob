@@ -19,7 +19,7 @@ export const maxDuration = 60;
 
 const BATCH_SIZE = 25;
 
-export const GET = withCronTracking("crawl-tick", async () => {
+export const GET = withCronTracking("crawl-tick", async (_req) => {
   // Take batch with domain diversity
   const batch = await takeBatch(BATCH_SIZE);
 

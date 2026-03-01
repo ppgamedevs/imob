@@ -1,19 +1,36 @@
 # ===========================================
 # VPS crontab for ImobIntel
 # Install with: crontab scripts/crontab.example
+#
+# NOTE: Replace YOUR_CRON_SECRET with the actual CRON_SECRET from .env
 # ===========================================
 
+CRON_SECRET=YOUR_CRON_SECRET
+API=http://localhost:3000
+
 # Crawl tick — every 5 minutes
-*/5 * * * * curl -sf --max-time 30 http://localhost:3000/api/cron/crawl-tick > /dev/null 2>&1
+*/5 * * * * curl -sf --max-time 30 -H "x-cron-secret: $CRON_SECRET" $API/api/cron/crawl-tick > /dev/null 2>&1
 
 # Dedup tick — every 15 minutes
-*/15 * * * * curl -sf --max-time 60 http://localhost:3000/api/cron/dedup-tick > /dev/null 2>&1
+*/15 * * * * curl -sf --max-time 60 -H "x-cron-secret: $CRON_SECRET" $API/api/cron/dedup-tick > /dev/null 2>&1
 
 # Area aggregator — daily at 3 AM
-0 3 * * * curl -sf --max-time 120 http://localhost:3000/api/cron/area-aggregator > /dev/null 2>&1
+0 3 * * * curl -sf --max-time 120 -H "x-cron-secret: $CRON_SECRET" $API/api/cron/area-aggregator > /dev/null 2>&1
 
-# Backup — daily at 4 AM
-0 4 * * * cd /home/deploy/imob/infra && docker compose --profile backup run --rm backup >> /var/log/imob-backup.log 2>&1
+# AVM training — daily at 4 AM
+0 4 * * * curl -sf --max-time 300 -H "x-cron-secret: $CRON_SECRET" $API/api/cron/avm-train > /dev/null 2>&1
+
+# Provenance backfill — every 10 minutes
+*/10 * * * * curl -sf --max-time 60 -H "x-cron-secret: $CRON_SECRET" $API/api/cron/provenance-tick > /dev/null 2>&1
+
+# Crawl refresh — daily at 2 AM
+0 2 * * * curl -sf --max-time 120 -H "x-cron-secret: $CRON_SECRET" $API/api/cron/crawl-refresh > /dev/null 2>&1
+
+# Tile rebuild — weekly on Sunday at 5 AM
+0 5 * * 0 curl -sf --max-time 300 -H "x-cron-secret: $CRON_SECRET" $API/api/cron/tiles/rebuild > /dev/null 2>&1
+
+# Backup — daily at 4:30 AM
+30 4 * * * cd /home/deploy/imob/infra && docker compose --profile backup run --rm backup >> /var/log/imob-backup.log 2>&1
 
 # Healthcheck — every 10 minutes
 */10 * * * * cd /home/deploy/imob/infra && ./scripts/healthcheck.sh >> /var/log/imob-health.log 2>&1

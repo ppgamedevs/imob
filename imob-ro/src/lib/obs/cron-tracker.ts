@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server";
+
 import { prisma } from "@/lib/db";
 
 import { logCron, logger } from "./logger";
@@ -106,25 +108,27 @@ export class CronTracker {
 }
 
 /**
- * Wrapper for cron job handlers with automatic tracking
+ * Wrapper for cron job handlers with automatic tracking.
+ * Auth is handled centrally by middleware (CRON_SECRET check on /api/cron/*).
  */
-export function withCronTracking<T extends (...args: any[]) => Promise<any>>(
+export function withCronTracking(
   name: string,
-  handler: T,
-): T {
-  return (async (...args: Parameters<T>): Promise<ReturnType<T>> => {
+  handler: (req: Request) => Promise<NextResponse>,
+): (req: Request) => Promise<NextResponse> {
+  return async (req: Request): Promise<NextResponse> => {
     const tracker = new CronTracker(name);
 
     try {
       await tracker.start();
-      const result = await handler(...args);
-      await tracker.complete(typeof result === "object" && result !== null ? result : undefined);
+      const result = await handler(req);
+      const body = result.status === 200 ? await result.clone().json().catch(() => null) : null;
+      await tracker.complete(body);
       return result;
     } catch (error) {
       await tracker.fail(error as Error);
-      throw error;
+      return NextResponse.json({ error: "cron_failed", message: (error as Error).message }, { status: 500 });
     }
-  }) as T;
+  };
 }
 
 /**

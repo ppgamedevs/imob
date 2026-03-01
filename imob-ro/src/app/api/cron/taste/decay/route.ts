@@ -9,17 +9,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { decayAllTastes } from "@/lib/reco/taste";
 
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   try {
-    // Verify cron secret
-    const authHeader = req.headers.get("authorization");
-    const expectedSecret = process.env.CRON_SECRET || "dev-secret";
-
-    if (authHeader !== `Bearer ${expectedSecret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // Run decay
     const stats = await decayAllTastes();
 
     return NextResponse.json({

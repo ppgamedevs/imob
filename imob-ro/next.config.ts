@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
     domains: envDomains.length ? envDomains : ["images.unsplash.com"],
   },
   async rewrites() {
+    // When NEXT_PUBLIC_API_BASE_URL is set (Vercel production), ALL /api/*
+    // requests are proxied to the VPS. This includes NextAuth — the VPS
+    // has NEXTAUTH_URL set to the Vercel domain so cookies and OAuth
+    // callbacks work correctly through the transparent proxy.
     if (!apiBaseUrl) return [];
     return [
       {

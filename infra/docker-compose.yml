@@ -48,7 +48,7 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+      DATABASE_URL: "postgresql://${IMOBINTEL_APP_USER:-imobintel}:${IMOBINTEL_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}"
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: "0.0.0.0"

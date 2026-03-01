@@ -17,6 +17,19 @@ import { NextResponse } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Cron routes — require CRON_SECRET (skipped in dev when not set)
+  if (pathname.startsWith("/api/cron/")) {
+    const secret = process.env.CRON_SECRET;
+    if (secret) {
+      const fromHeader = request.headers.get("x-cron-secret");
+      const bearer = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+      if (fromHeader !== secret && bearer !== secret) {
+        return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+      }
+    }
+    return NextResponse.next();
+  }
+
   // Agent workspace routes - handle these first (match exactly "/a" or any subpath like "/a/..."; but NOT "/analyze")
   if (pathname === "/a" || pathname.startsWith("/a/")) {
     // Allow public agent routes

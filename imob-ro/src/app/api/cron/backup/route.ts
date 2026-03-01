@@ -223,19 +223,7 @@ async function runBackup() {
   };
 }
 
-export async function POST(req: NextRequest) {
-  // Verify cron secret
-  const authHeader = req.headers.get("authorization");
-  const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
-
-  if (authHeader !== expectedAuth) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  // Run with tracking
-  const result = await withCronTracking("backup", async () => {
-    return await runBackup();
-  });
-
+export const POST = withCronTracking("backup", async (_req) => {
+  const result = await runBackup();
   return NextResponse.json(result);
-}
+});

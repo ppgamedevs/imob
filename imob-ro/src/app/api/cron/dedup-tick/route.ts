@@ -6,7 +6,7 @@ import { withCronTracking } from "@/lib/obs/cron-tracker";
 
 export const runtime = "nodejs";
 
-export const GET = withCronTracking("dedup-tick", async () => {
+export const GET = withCronTracking("dedup-tick", async (_req) => {
   // Process latest analyses without groupId
   const list = await prisma.analysis.findMany({
     where: { groupId: null },
