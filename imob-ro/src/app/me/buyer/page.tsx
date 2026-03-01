@@ -15,6 +15,8 @@ import { getPersonalizedRecommendations } from "@/lib/reco/rank";
 import { SavedSearchCard } from "./SavedSearchCard";
 import { WatchlistCard } from "./WatchlistCard";
 
+export const dynamic = "force-dynamic";
+
 export default async function BuyerPortalPage() {
   const session = await auth();
 

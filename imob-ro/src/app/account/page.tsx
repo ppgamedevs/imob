@@ -13,6 +13,8 @@ import { getPlanLimits, getSubscription, getUsage } from "@/lib/billing/entitlem
 
 import ManageSubscriptionButton from "./ManageSubscriptionButton";
 
+export const dynamic = "force-dynamic";
+
 export default async function AccountPage() {
   const session = await auth();
   if (!session?.user) {

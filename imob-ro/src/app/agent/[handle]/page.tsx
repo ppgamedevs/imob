@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function AgentPublicPage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
   const agent = await prisma.agentProfile.findUnique({

@@ -17,8 +17,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/bucuresti" },
 };
 
-// ISR: revalidate every 6 hours
-export const revalidate = 21600;
+export const dynamic = "force-dynamic";
 
 export default async function BucharestPage() {
   // Fetch latest AreaDaily for all Bucharest zones

@@ -3,6 +3,8 @@ import React from "react";
 import { disableAlertRule, listAlertRules } from "@/lib/alerts";
 import { auth } from "@/lib/auth";
 
+export const dynamic = "force-dynamic";
+
 export default async function AlertsPage() {
   const session = await auth();
   if (!session?.user?.id) return <div>Autentificare necesară</div>;

@@ -1,7 +1,9 @@
-﻿import { Suspense } from "react";
+import { Suspense } from "react";
 
 import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/db";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Cron Jobs Status - Admin",

@@ -7,7 +7,7 @@ import { scrubReportData, type ShareOptions } from "@/lib/share/scrub";
 import { LeadForm } from "./lead";
 import { ShareCTAs } from "./ShareCTAs";
 
-export const revalidate = 0;
+export const dynamic = "force-dynamic";
 
 async function loadBySlug(slug: string) {
   const sl = await prisma.shortLink.findUnique({ where: { slug } });

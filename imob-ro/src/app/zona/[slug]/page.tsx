@@ -11,8 +11,7 @@ const APP_URL =
   process.env.NEXTAUTH_URL ??
   "http://localhost:3000";
 
-// ISR: revalidate every 6 hours
-export const revalidate = 21600;
+export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ slug: string }> };
 

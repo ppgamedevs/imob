@@ -5,6 +5,8 @@ import { loadOwnerDashboard } from "@/lib/owner/load";
 
 import { ShareViewClient } from "./share-view-client";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Estimare Proprietate | iR",
   description: "Vezi estimarea de valoare și Pre-Market Score",

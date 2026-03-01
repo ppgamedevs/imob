@@ -7,6 +7,8 @@ import { deleteSession } from "@/lib/a/auth";
 import { getQuotaUsage } from "@/lib/a/quotas";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 async function signOut() {
   "use server";
   await deleteSession();

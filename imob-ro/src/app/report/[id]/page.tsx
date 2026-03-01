@@ -20,7 +20,7 @@ import TtsSection from "./sections/TtsSection";
 import VerdictSection from "./sections/VerdictSection";
 import { ViewTracker } from "./ViewTracker";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ id?: string | string[] }> };
 

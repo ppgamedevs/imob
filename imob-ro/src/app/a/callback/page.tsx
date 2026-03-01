@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { createSession, getOrCreateOrgForEmail } from "@/lib/a/auth";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function CallbackPage({
   searchParams,
 }: {

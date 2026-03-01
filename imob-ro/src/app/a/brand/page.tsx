@@ -8,6 +8,8 @@ import { prisma } from "@/lib/db";
 
 import { saveBrand } from "./actions";
 
+export const dynamic = "force-dynamic";
+
 export default async function BrandPage() {
   const session = await requireSession();
 

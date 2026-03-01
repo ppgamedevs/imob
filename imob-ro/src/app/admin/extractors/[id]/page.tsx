@@ -6,6 +6,8 @@ import { prisma } from "@/lib/db";
 
 import { upsertExtractorProfile } from "./actions";
 
+export const dynamic = "force-dynamic";
+
 interface Params {
   id: string;
 }

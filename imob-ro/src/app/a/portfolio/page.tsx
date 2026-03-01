@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { requireSession } from "@/lib/a/auth";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function PortfolioPage() {
   const session = await requireSession();
 

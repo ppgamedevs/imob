@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminExtractorsPage() {
   await requireAdmin();
   const profiles = await prisma.extractorProfile.findMany({ orderBy: { domain: "asc" } });

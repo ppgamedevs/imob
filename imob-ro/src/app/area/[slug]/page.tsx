@@ -14,7 +14,7 @@ import Hero from "./Hero";
 import KpiGrid from "./KpiGrid";
 import TilesMini from "./TilesMini";
 
-export const revalidate = 900; // 15 minutes
+export const dynamic = "force-dynamic";
 
 interface AreaPageProps {
   params: Promise<{ slug: string }>;

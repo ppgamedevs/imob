@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireAdmin } from "@/lib/auth-guards";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function CrawlAdminPage() {
   await requireAdmin();
   const [queued, running, errorJobs, recentFetches] = await Promise.all([

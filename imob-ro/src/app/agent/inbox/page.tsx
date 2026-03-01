@@ -3,6 +3,8 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export default async function AgentInboxPage() {
   const session = await auth();
   if (!session?.user?.id) return <div className="p-6">Autentifică-te.</div>;
