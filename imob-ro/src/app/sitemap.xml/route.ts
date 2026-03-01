@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/db";
 
-// Day 30: ISR revalidation
-export const revalidate = 3600; // 1 hour
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const base =

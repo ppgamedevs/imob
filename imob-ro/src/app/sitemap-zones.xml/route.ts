@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const areas = await prisma.area.findMany({
     select: {
