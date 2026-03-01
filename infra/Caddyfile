@@ -1,0 +1,22 @@
+{$DOMAIN:db.imob.ro} {
+	# Postgres is TCP — Caddy doesn't proxy raw TCP.
+	# This host serves a health-check endpoint and pgAdmin if enabled.
+
+	respond /health 200 {
+		body "ok"
+	}
+
+	log {
+		output file /data/caddy-access.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+	}
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+	}
+}
