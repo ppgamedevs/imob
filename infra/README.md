@@ -1,248 +1,330 @@
 # ImobIntel — VPS Infrastructure
 
-Production database infrastructure for ImobIntel.
-Frontend runs on **Vercel**; Postgres + Redis run on a **Hetzner VPS**.
+Production infrastructure for ImobIntel and future projects.
+
+- **Frontend** runs on Vercel (fast, zero-ops)
+- **API + DB + Redis + Workers** run on a Hetzner VPS (private, secure)
 
 ## Architecture
 
 ```
-┌──────────────┐         ┌─────────────────────────────────┐
-│   Vercel     │  SSL    │   Hetzner VPS (Ubuntu 22.04)    │
-│  (Next.js)   ├────────►│                                 │
-│              │  :5432   │  ┌───────────┐  ┌───────────┐  │
-└──────────────┘         │  │ Postgres  │  │  Redis    │  │
-                          │  │  16       │  │  7        │  │
-                          │  └───────────┘  └───────────┘  │
-                          │  ┌───────────┐                 │
-                          │  │  Caddy    │ ← health/TLS    │
-                          │  └───────────┘                 │
-                          └─────────────────────────────────┘
+  Users
+    │
+    ▼
+┌────────────────────┐           ┌────────────────────────────────────────┐
+│    Vercel           │   HTTPS   │    Hetzner VPS (Ubuntu 22.04)          │
+│   (Next.js SSR)     ├──────────►│                                        │
+│   imobintel.ro      │           │   ┌─────────┐                         │
+└────────────────────┘           │   │  Caddy   │ :443  (auto-TLS)       │
+                                  │   └────┬────┘                         │
+                                  │        │                               │
+                                  │   ┌────▼─────────────┐                │
+                                  │   │ imobintel-api     │                │
+                                  │   │ (Next.js :3000)   │                │
+                                  │   └────┬────────┬────┘                │
+                                  │        │        │                      │
+                                  │   ┌────▼───┐ ┌──▼────┐               │
+                                  │   │Postgres│ │ Redis  │   ← private   │
+                                  │   │  :5432 │ │ :6379  │     network   │
+                                  │   └────────┘ └───────┘               │
+                                  └────────────────────────────────────────┘
+
+  Postgres and Redis have NO public ports.
+  Only Caddy exposes 80/443 to the internet.
 ```
+
+## Why this architecture
+
+| Concern | Solution |
+|---------|----------|
+| DB security | Postgres is private, no public port, no Vercel IP allowlist drama |
+| Latency | API lives next to DB on same Docker network |
+| Serverless limits | No connection pool exhaustion from Vercel cold starts |
+| Workers/crons | Scrapers and cron jobs run on VPS, close to data |
+| Cost | One cheap VPS hosts DB + API for all projects |
+| Frontend speed | Vercel edge CDN for static/SSR pages |
+
+---
 
 ## Prerequisites
 
 - Hetzner Cloud account
-- Ubuntu 22.04 or 24.04 server (recommended: CX22 — 2 vCPU, 4 GB RAM, ~€4/mo)
-- A domain pointed to the VPS IP (optional, for Caddy TLS)
+- Ubuntu 22.04 or 24.04 (recommended: **CX22** — 2 vCPU, 4 GB RAM, ~€4/mo)
+- Domain DNS:
+  - `api.imobintel.ro` → VPS IP
+  - `status.imobintel.ro` → VPS IP (optional, for Uptime Kuma)
 
 ---
 
-## 1. Provision the Server
+## 1. Server Setup
 
-### Create the server on Hetzner
+### Create server on Hetzner
 
-1. Go to [console.hetzner.cloud](https://console.hetzner.cloud)
-2. Create a new project or select existing
-3. **Add Server:**
-   - Location: `Falkenstein` or `Helsinki` (EU, low latency)
-   - Image: **Ubuntu 22.04**
-   - Type: **CX22** (2 vCPU / 4 GB RAM / 40 GB SSD)
-   - SSH Key: add your public key
-4. Note the server IP
+1. [console.hetzner.cloud](https://console.hetzner.cloud) → Add Server
+2. Location: **Falkenstein** or **Helsinki** (EU)
+3. Image: **Ubuntu 22.04**
+4. Type: **CX22** (2 vCPU / 4 GB / 40 GB SSD)
+5. Add your SSH public key
+6. Note the IP
 
-### Initial server setup
+### Initial hardening
 
 ```bash
 ssh root@YOUR_VPS_IP
 
-# Update system
 apt update && apt upgrade -y
+apt install -y fail2ban unattended-upgrades curl git
 
-# Create a non-root user
+# Non-root user
 adduser deploy
 usermod -aG sudo deploy
-
-# Copy SSH key to new user
 mkdir -p /home/deploy/.ssh
 cp ~/.ssh/authorized_keys /home/deploy/.ssh/
 chown -R deploy:deploy /home/deploy/.ssh
 
-# Disable root SSH login
+# Disable root SSH
 sed -i 's/^PermitRootLogin yes/PermitRootLogin no/' /etc/ssh/sshd_config
+sed -i 's/^#PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
 systemctl restart sshd
+```
+
+### Firewall
+
+```bash
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+sudo ufw allow ssh
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+# Do NOT open 5432 or 6379
+sudo ufw enable
 ```
 
 ### Install Docker
 
 ```bash
-# Log in as deploy
 ssh deploy@YOUR_VPS_IP
 
-# Install Docker (official method)
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker deploy
 
-# Log out and back in for group to take effect
-exit
-ssh deploy@YOUR_VPS_IP
+# Re-login for group
+exit && ssh deploy@YOUR_VPS_IP
 
-# Verify
 docker --version
 docker compose version
 ```
 
 ---
 
-## 2. Configure Firewall
+## 2. Deploy
 
 ```bash
-# UFW firewall
-sudo ufw default deny incoming
-sudo ufw default allow outgoing
-sudo ufw allow ssh
-sudo ufw allow 80/tcp      # Caddy HTTP (for ACME challenge)
-sudo ufw allow 443/tcp     # Caddy HTTPS
-sudo ufw allow 5432/tcp    # Postgres (from Vercel)
-sudo ufw enable
-```
-
-> **Security note:** Ideally restrict port 5432 to Vercel's IP ranges.
-> Vercel egress IPs change, so at minimum enforce SSL + strong password.
-> For extra security, consider Tailscale/WireGuard VPN instead of exposing 5432.
-
----
-
-## 3. Deploy the Stack
-
-```bash
-# Clone the repo (or copy just the infra/ folder)
+# Clone repo
 git clone git@github.com:ppgamedevs/imob.git
 cd imob/infra
 
-# Create .env from example
+# Configure
 cp .env.example .env
-nano .env
-# Fill in:
-#   POSTGRES_PASSWORD  — strong random password (use: openssl rand -base64 32)
-#   REDIS_PASSWORD     — strong random password
-#   DOMAIN             — your domain (or remove Caddy if not needed)
+nano .env    # Fill in all passwords and secrets
 
-# Create backup directory
+# Create directories
 mkdir -p backups
 
 # Make scripts executable
 chmod +x scripts/*.sh
 
-# Start the stack
-docker compose up -d
-```
+# Build and start
+docker compose up -d --build
 
-### Verify services
-
-```bash
-# Check all containers are healthy
+# Verify
 docker compose ps
-
-# Test Postgres
-docker compose exec postgres pg_isready -U imobintel
-
-# Test Redis
-docker compose exec redis redis-cli -a YOUR_REDIS_PASSWORD ping
-
-# Check logs
 docker compose logs -f --tail=50
 ```
 
----
-
-## 4. Run Prisma Migrations
-
-From your local machine (or CI), point at the VPS database:
+### Enable monitoring (optional)
 
 ```bash
-# In imob-ro/ folder
-DATABASE_URL="postgresql://imobintel:YOUR_PASSWORD@YOUR_VPS_IP:5432/imobintel?sslmode=require" \
-  pnpm prisma migrate deploy
+docker compose --profile monitoring up -d
+```
+
+Then visit `https://status.imobintel.ro` to set up Uptime Kuma.
+
+---
+
+## 3. Database Migrations (via SSH tunnel)
+
+Since Postgres has no public port, use an SSH tunnel:
+
+**Terminal 1 — open the tunnel:**
+
+```bash
+ssh -N -L 5432:localhost:5432 deploy@YOUR_VPS_IP \
+  -o "ServerAliveInterval=60"
+```
+
+Wait — this won't work because Postgres isn't on localhost of the VPS either (it's in Docker). Use this instead:
+
+```bash
+ssh -N -L 5432:$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' infra-postgres-1):5432 deploy@YOUR_VPS_IP
+```
+
+Or simpler — exec into the API container:
+
+```bash
+ssh deploy@YOUR_VPS_IP
+
+# Run migrations from the API container (it has Prisma + network access)
+docker compose exec imobintel-api npx prisma migrate deploy
+```
+
+**This is the recommended approach.** No tunnel needed.
+
+**Terminal 2 (local) — for ad-hoc psql access via tunnel:**
+
+```bash
+# First, temporarily expose PG on VPS localhost
+ssh deploy@YOUR_VPS_IP
+docker compose exec postgres psql -U imobintel -d imobintel
 ```
 
 ---
 
-## 5. Configure Vercel
+## 4. Configure Vercel
 
-In your Vercel project settings → **Environment Variables**, set:
+In your Vercel project settings → **Environment Variables**:
 
 | Variable | Value |
 |----------|-------|
-| `DATABASE_URL` | `postgresql://imobintel:YOUR_PASSWORD@YOUR_VPS_IP:5432/imobintel?sslmode=require` |
+| `NEXT_PUBLIC_API_BASE_URL` | `https://api.imobintel.ro` |
+| `NEXTAUTH_SECRET` | Same as in VPS `.env` |
+| `NEXTAUTH_URL` | `https://imobintel.ro` |
 
-All other env vars (`NEXTAUTH_SECRET`, `STRIPE_*`, etc.) remain the same as before.
+The frontend no longer needs `DATABASE_URL`. All DB access goes through the API.
 
 ---
 
-## 6. Backups
+## 5. Backups
 
-### Manual backup
+### Manual
 
 ```bash
 docker compose --profile backup run --rm backup
 ```
 
-### Automated daily backup (cron)
+### Automated (daily at 3 AM)
 
 ```bash
 crontab -e
 ```
 
-Add:
-
-```
+```cron
 0 3 * * * cd /home/deploy/imob/infra && docker compose --profile backup run --rm backup >> /var/log/imob-backup.log 2>&1
 ```
 
-### Restore from backup
+### Restore
 
 ```bash
-docker compose exec -e PGPASSWORD=YOUR_PASSWORD postgres \
-  bash /scripts/restore.sh /backups/imobintel_20260301_030000.sql.gz
+docker compose exec -T postgres psql -U imobintel -d postgres \
+  -c "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'imobintel' AND pid <> pg_backend_pid();" \
+  -c "DROP DATABASE IF EXISTS imobintel;" \
+  -c "CREATE DATABASE imobintel OWNER imobintel;"
+
+gunzip -c backups/imobintel_20260301_030000.sql.gz | \
+  docker compose exec -T postgres psql -U imobintel -d imobintel
+```
+
+---
+
+## 6. Updating the API
+
+```bash
+cd ~/imob
+git pull
+
+cd infra
+docker compose up -d --build imobintel-api
+
+# Run migrations if schema changed
+docker compose exec imobintel-api npx prisma migrate deploy
 ```
 
 ---
 
 ## 7. Maintenance
 
-### Update containers
-
 ```bash
-cd ~/imob/infra
-docker compose pull
-docker compose up -d
-```
+# Logs
+docker compose logs imobintel-api --tail=100 -f
+docker compose logs postgres --tail=50
+docker compose logs caddy --tail=50
 
-### View logs
-
-```bash
-docker compose logs postgres --tail=100
-docker compose logs redis --tail=100
-docker compose logs caddy --tail=100
-```
-
-### Postgres shell
-
-```bash
+# Postgres shell
 docker compose exec postgres psql -U imobintel -d imobintel
-```
 
-### Monitor disk usage
+# Healthcheck
+./scripts/healthcheck.sh
 
-```bash
-df -h
-docker system df
+# Disk usage
+df -h && docker system df
+
+# Prune old images
+docker image prune -af --filter "until=168h"
 ```
 
 ---
 
-## 8. Security Checklist
+## 8. Multi-Project Setup
 
-- [x] Non-root user for SSH
+To host additional projects on the same VPS, uncomment the relevant
+variables in `.env`:
+
+```env
+ROMARKETCAP_DB_USER=romarketcap
+ROMARKETCAP_DB_PASSWORD=<strong-password>
+
+FLORISTMARKET_DB_USER=floristmarket
+FLORISTMARKET_DB_PASSWORD=<strong-password>
+
+FIVMATCH_DB_USER=fivmatch
+FIVMATCH_DB_PASSWORD=<strong-password>
+```
+
+Then recreate Postgres (first run only creates the DBs):
+
+```bash
+docker compose down
+docker volume rm infra_pg_data   # WARNING: destroys data. Backup first!
+docker compose up -d
+```
+
+Or if DB is already running, create manually:
+
+```bash
+docker compose exec postgres psql -U imobintel -d postgres -c "
+  CREATE ROLE romarketcap WITH LOGIN PASSWORD 'password';
+  CREATE DATABASE romarketcap OWNER romarketcap;
+"
+```
+
+---
+
+## 9. Security Checklist
+
+- [x] Postgres has no public port
+- [x] Redis has no public port
+- [x] `pg_hba.conf` rejects all non-Docker connections
+- [x] Redis requires password, dangerous commands disabled
+- [x] UFW firewall: only 22, 80, 443
 - [x] Root SSH login disabled
-- [x] UFW firewall enabled
-- [x] Postgres requires SSL for remote connections
-- [x] Strong passwords for Postgres and Redis
-- [x] Redis dangerous commands disabled (FLUSHDB, FLUSHALL, DEBUG)
-- [ ] Set up Fail2ban: `sudo apt install fail2ban`
-- [ ] Set up unattended upgrades: `sudo apt install unattended-upgrades`
-- [ ] Consider WireGuard/Tailscale instead of exposing port 5432
-- [ ] Set up monitoring (Uptime Kuma, Netdata, or similar)
+- [x] Password SSH login disabled
+- [x] Caddy auto-TLS with security headers
+- [x] CORS locked to `imobintel.ro`
+- [x] Fail2ban installed
+- [x] Unattended upgrades enabled
+- [ ] Set up Uptime Kuma monitors
+- [ ] Test backup + restore cycle
+- [ ] Set up off-site backup (optional: rsync to S3/B2)
 
 ---
 
@@ -250,18 +332,20 @@ docker system df
 
 ```
 infra/
-├── docker-compose.yml     # Postgres + Redis + Caddy + backup
-├── Caddyfile              # Reverse proxy / health endpoint
-├── .env.example           # Template for secrets
-├── .gitignore             # Excludes .env and backups
+├── docker-compose.yml          # Postgres + Redis + API + Caddy + Uptime Kuma
+├── Dockerfile                  # Multi-stage Next.js standalone build
+├── Caddyfile                   # Reverse proxy with auto-TLS, CORS, security headers
+├── .env.example                # All secrets and config
+├── .gitignore                  # Excludes .env, backups
 ├── postgres/
-│   ├── postgresql.conf    # PG tuning for 4 GB RAM
-│   └── pg_hba.conf        # Authentication rules (SSL required for remote)
+│   ├── postgresql.conf         # PG tuning for 4 GB RAM, private network
+│   └── pg_hba.conf             # Docker-only access, reject public
 ├── redis/
-│   └── redis.conf         # Redis tuning + auth
+│   └── redis.conf              # Auth, memory limits, persistence
 ├── scripts/
-│   ├── init-db.sh         # Auto-generates SSL cert on first run
-│   ├── backup.sh          # pg_dump + gzip + rotation
-│   └── restore.sh         # Restore from .sql.gz backup
-└── README.md              # This file
+│   ├── init-db.sh              # Multi-project DB + user creation
+│   ├── backup.sh               # pg_dump + gzip + rotation
+│   ├── restore.sh              # Restore from .sql.gz
+│   └── healthcheck.sh          # Verify PG, Redis, API, disk
+└── README.md
 ```

@@ -6,11 +6,21 @@ const envDomains = raw
   .map((d) => d.trim())
   .filter(Boolean);
 
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 const nextConfig: NextConfig = {
+  output: "standalone",
   images: {
-    // allow configuring external image domains at build time via
-    // NEXT_PUBLIC_IMAGE_DOMAINS="domain1.com,images.unsplash.com"
     domains: envDomains.length ? envDomains : ["images.unsplash.com"],
+  },
+  async rewrites() {
+    if (!apiBaseUrl) return [];
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${apiBaseUrl}/api/:path*`,
+      },
+    ];
   },
 };
 

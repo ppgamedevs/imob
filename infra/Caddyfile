@@ -1,22 +1,61 @@
-{$DOMAIN:db.imob.ro} {
-	# Postgres is TCP — Caddy doesn't proxy raw TCP.
-	# This host serves a health-check endpoint and pgAdmin if enabled.
+{
+	email {$ACME_EMAIL:admin@imob.ro}
+}
 
-	respond /health 200 {
-		body "ok"
-	}
-
-	log {
-		output file /data/caddy-access.log {
-			roll_size 10mb
-			roll_keep 5
-		}
-	}
+# ─── ImobIntel API ───────────────────────────────────────────
+{$API_DOMAIN:api.imobintel.ro} {
+	encode gzip zstd
 
 	header {
 		-Server
 		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
+		X-XSS-Protection "1; mode=block"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+	}
+
+	@cors_preflight method OPTIONS
+	handle @cors_preflight {
+		header Access-Control-Allow-Origin "{$CORS_ORIGIN:https://imobintel.ro}"
+		header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+		header Access-Control-Allow-Headers "Content-Type, Authorization"
+		header Access-Control-Max-Age "86400"
+		respond 204
+	}
+
+	header Access-Control-Allow-Origin "{$CORS_ORIGIN:https://imobintel.ro}"
+
+	reverse_proxy imobintel-api:3000 {
+		health_uri /api/health
+		health_interval 30s
+	}
+
+	log {
+		output file /data/api-access.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+	}
+}
+
+# ─── Uptime Kuma (optional, monitoring profile) ─────────────
+{$STATUS_DOMAIN:status.imobintel.ro} {
+	encode gzip zstd
+
+	header {
+		-Server
+		Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+		X-Content-Type-Options "nosniff"
+	}
+
+	reverse_proxy uptime-kuma:3001
+
+	log {
+		output file /data/status-access.log {
+			roll_size 5mb
+			roll_keep 3
+		}
 	}
 }
