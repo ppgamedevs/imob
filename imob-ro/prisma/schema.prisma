@@ -179,6 +179,7 @@ model Analysis {
   @@index([groupId])
   @@index([createdAt])
   @@index([contentHash])
+  @@index([status, createdAt])
 }
 
 model ExtractedListing {
@@ -352,6 +353,7 @@ model TtsLabel {
   analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
 
   @@index([analysisId])
+  @@index([censored])
 }
 
 // Per-model calibration & evaluation metrics

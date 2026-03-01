@@ -1,33 +1,41 @@
-// Simple in-memory rate limiter (token bucket) for quick anti-abuse protection.
-// Not suitable for multi-instance production; consider Redis-backed limiter for scale.
+import { RATE_BUCKET_MAX, RATE_MAX_REQUESTS, RATE_WINDOW_MS } from "@/lib/constants";
 
 type Bucket = { tokens: number; lastRefill: number };
 
-const buckets: Record<string, Bucket> = {};
+const buckets = new Map<string, Bucket>();
 
-const WINDOW_MS = parseInt(process.env.RATE_LIMIT_WINDOW_MS || "60000", 10); // refill window
-const MAX_TOKENS = parseInt(process.env.RATE_LIMIT_MAX || "30", 10); // tokens per window
+function evictStale(): void {
+  if (buckets.size <= RATE_BUCKET_MAX) return;
+  const now = Date.now();
+  const staleThreshold = now - RATE_WINDOW_MS * 5;
+  for (const [key, b] of buckets) {
+    if (b.lastRefill < staleThreshold) buckets.delete(key);
+    if (buckets.size <= RATE_BUCKET_MAX * 0.8) break;
+  }
+}
 
 export function allowRequest(key: string): boolean {
+  evictStale();
   const now = Date.now();
-  const b = buckets[key] || { tokens: MAX_TOKENS, lastRefill: now };
-  // refill proportionally
+  const b = buckets.get(key) ?? { tokens: RATE_MAX_REQUESTS, lastRefill: now };
+
   const elapsed = now - b.lastRefill;
   if (elapsed > 0) {
-    const refill = (elapsed / WINDOW_MS) * MAX_TOKENS;
-    b.tokens = Math.min(MAX_TOKENS, b.tokens + refill);
+    const refill = (elapsed / RATE_WINDOW_MS) * RATE_MAX_REQUESTS;
+    b.tokens = Math.min(RATE_MAX_REQUESTS, b.tokens + refill);
     b.lastRefill = now;
   }
+
   if (b.tokens >= 1) {
     b.tokens -= 1;
-    buckets[key] = b;
+    buckets.set(key, b);
     return true;
   }
-  buckets[key] = b;
+  buckets.set(key, b);
   return false;
 }
 
 export function getBucketInfo(key: string) {
-  const b = buckets[key] || { tokens: MAX_TOKENS, lastRefill: Date.now() };
-  return { tokens: b.tokens, lastRefill: b.lastRefill, max: MAX_TOKENS, windowMs: WINDOW_MS };
+  const b = buckets.get(key) ?? { tokens: RATE_MAX_REQUESTS, lastRefill: Date.now() };
+  return { tokens: b.tokens, lastRefill: b.lastRefill, max: RATE_MAX_REQUESTS, windowMs: RATE_WINDOW_MS };
 }

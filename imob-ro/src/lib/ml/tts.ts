@@ -1,8 +1,24 @@
-// Copilot: Implement a cheap TTS estimator.
-// Inputs: priceDelta (asking vs avmMid), demandScore (area), month (1..12), areaM2, conditionScore.
-// Output: { bucket: "<30"|"30-60"|"60-90"|"90+", scoreDays: number, explain:{} }
-
+import {
+  TTS_BASE_DAYS,
+  TTS_CONDITION_SENSITIVITY,
+  TTS_CONSERVATIVE_MULTIPLIER,
+  TTS_DEMAND_MAX,
+  TTS_DEMAND_MIN,
+  TTS_DEMAND_SENSITIVITY,
+  TTS_INTERVAL_SPREAD,
+  TTS_LARGE_AREA_PENALTY,
+  TTS_LARGE_AREA_THRESHOLD,
+  TTS_MAX_DAYS,
+  TTS_MIN_DAYS,
+  TTS_OVERPRICED_FACTOR,
+  TTS_SEASONALITY,
+  TTS_SMALL_AREA_BOOST,
+  TTS_SMALL_AREA_THRESHOLD,
+  TTS_UNDERPRICED_FACTOR,
+} from "@/lib/constants";
 import { prisma } from "@/lib/db";
+import { clamp } from "@/lib/math";
+import type { TtsResult } from "@/lib/types/pipeline";
 
 export type TtsInput = {
   avmMid?: number | null;
@@ -13,32 +29,6 @@ export type TtsInput = {
   conditionScore?: number | null;
 };
 
-export type TtsResult = {
-  bucket: "<30" | "30-60" | "60-90" | "90+";
-  scoreDays: number; // model point estimate (just for internal use)
-  explain: Record<string, unknown>;
-};
-
-const SEASONALITY: Record<number, number> = {
-  // multipliers (1 = neutral). Faster in spring, slower in Aug/Dec.
-  1: 1.1,
-  2: 0.98,
-  3: 0.92,
-  4: 0.9,
-  5: 0.92,
-  6: 0.96,
-  7: 1.04,
-  8: 1.14,
-  9: 0.94,
-  10: 0.96,
-  11: 1.02,
-  12: 1.12,
-};
-
-function clamp(n: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, n));
-}
-
 function bucketize(days: number): TtsResult["bucket"] {
   if (days < 30) return "<30";
   if (days < 60) return "30-60";
@@ -46,24 +36,16 @@ function bucketize(days: number): TtsResult["bucket"] {
   return "90+";
 }
 
-async function getDemandScore(areaSlug?: string | null) {
-  if (!areaSlug) return 1.0; // neutral
+async function getDemandScore(areaSlug?: string | null): Promise<number> {
+  if (!areaSlug) return 1.0;
   const row = await prisma.areaDaily.findFirst({
     where: { areaSlug },
     orderBy: { date: "desc" },
     select: { demandScore: true },
   });
-  return row?.demandScore ?? 1.0; // 1.0 = neutral; >1 more demand, <1 weak
+  return row?.demandScore ?? 1.0;
 }
 
-/**
- * Core heuristic:
- * - baseDays = 60 (neutral listing clears ~2 months)
- * - priceDelta% increases/decreases time: +1.2x per +10% overpriced, -0.8x per -10% underpriced
- * - demandScore scales inversely (higher demand => faster)
- * - seasonality multiplier
- * - small adjustment for condition and very small/very large area outliers
- */
 export async function estimateTTS(input: TtsInput): Promise<TtsResult> {
   const {
     avmMid,
@@ -75,53 +57,53 @@ export async function estimateTTS(input: TtsInput): Promise<TtsResult> {
   } = input;
 
   const explain: Record<string, unknown> = {};
+  let days = TTS_BASE_DAYS;
 
-  // base
-  let days = 60;
-
-  // price pressure
   let priceDelta = 0;
   if (avmMid && asking) priceDelta = (asking - avmMid) / avmMid;
   explain.priceDelta = priceDelta;
 
-  // adjust for priceDelta: +12% days per +10% overpriced; -8% per -10%
   if (priceDelta > 0) {
-    days *= 1 + 1.2 * priceDelta; // slower
+    days *= 1 + TTS_OVERPRICED_FACTOR * priceDelta;
   } else {
-    days *= 1 + 0.8 * priceDelta; // faster (priceDelta negative)
+    days *= 1 + TTS_UNDERPRICED_FACTOR * priceDelta;
   }
 
-  // demand
   const demand = await getDemandScore(areaSlug);
   explain.demandScore = demand;
-  // If demand=1.2 (20% above normal), cut days by ~15%; if 0.8, increase ~15%
-  days *= clamp(1.0 - (demand - 1.0) * 0.75, 0.7, 1.3);
+  days *= clamp(1.0 - (demand - 1.0) * TTS_DEMAND_SENSITIVITY, TTS_DEMAND_MIN, TTS_DEMAND_MAX);
 
-  // seasonality
-  const season = SEASONALITY[month] ?? 1.0;
+  const season = TTS_SEASONALITY[month] ?? 1.0;
   explain.seasonality = season;
   days *= season;
 
-  // condition
   if (conditionScore != null) {
-    // 0..1 -> map to [-8%, +8%]
-    days *= 1.0 + (0.5 - conditionScore) * 0.16;
-    explain.conditionAdj = (0.5 - conditionScore) * 0.16;
+    days *= 1.0 + (0.5 - conditionScore) * TTS_CONDITION_SENSITIVITY;
+    explain.conditionAdj = (0.5 - conditionScore) * TTS_CONDITION_SENSITIVITY;
   }
 
-  // area outliers (garsoniere vând mai repede, foarte mari mai greu)
   if (areaM2 != null) {
-    if (areaM2 <= 35) days *= 0.9;
-    else if (areaM2 >= 90) days *= 1.08;
-    explain.areaAdj = areaM2 <= 35 ? -0.1 : areaM2 >= 90 ? 0.08 : 0;
+    if (areaM2 <= TTS_SMALL_AREA_THRESHOLD) days *= TTS_SMALL_AREA_BOOST;
+    else if (areaM2 >= TTS_LARGE_AREA_THRESHOLD) days *= TTS_LARGE_AREA_PENALTY;
   }
 
-  // clamp and round
-  days = clamp(days, 10, 180);
-  const scoreDays = Math.round(days);
-  const bucket = bucketize(scoreDays);
+  // Conservative bias: better to overestimate TTS than underestimate
+  days *= TTS_CONSERVATIVE_MULTIPLIER;
+  days = clamp(days, TTS_MIN_DAYS, TTS_MAX_DAYS);
 
-  return { bucket, scoreDays, explain };
+  const scoreDays = Math.round(days);
+  const estimateMonths = Math.round((scoreDays / 30) * 10) / 10;
+  const minMonths = Math.max(0.5, Math.round((estimateMonths * (1 - TTS_INTERVAL_SPREAD)) * 10) / 10);
+  const maxMonths = Math.round((estimateMonths * (1 + TTS_INTERVAL_SPREAD)) * 10) / 10;
+
+  return {
+    bucket: bucketize(scoreDays),
+    scoreDays,
+    estimateMonths,
+    minMonths,
+    maxMonths,
+    explain,
+  };
 }
 
 export default estimateTTS;

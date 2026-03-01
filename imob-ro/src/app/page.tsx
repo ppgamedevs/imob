@@ -6,7 +6,6 @@ export default function HomePage() {
   return (
     <main className="min-h-[100dvh]">
       <section className="relative overflow-hidden">
-        {/* backdrop gradient */}
         <div
           className="pointer-events-none absolute inset-0
           bg-[radial-gradient(90%_60%_at_50%_0%,rgba(99,102,241,.25),transparent)]
@@ -26,36 +25,26 @@ function Hero() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const query = formData.get("q") as string;
-
+    const query = (formData.get("q") as string)?.trim();
     if (!query) return;
 
-    // Clear any agent-session cookies before redirecting
-    document.cookie = "agent-session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-
-    // Check if query is a URL
     try {
       new URL(query);
-      // It's a valid URL - redirect to analyze page
-      console.log("URL detected, redirecting to:", `/analyze?url=${encodeURIComponent(query)}`);
       window.location.href = `/analyze?url=${encodeURIComponent(query)}`;
     } catch {
-      // Not a URL - normal search in discover
-      console.log("Text search, redirecting to:", `/discover?q=${encodeURIComponent(query)}`);
-      window.location.href = `/discover?q=${encodeURIComponent(query)}`;
+      window.location.href = `/analyze?url=${encodeURIComponent(query)}`;
     }
   };
 
   return (
     <>
       <h1 className="text-4xl md:text-6xl font-semibold tracking-tight">
-        Caută, compară și vinde în <span className="text-primary">București</span>
+        Analiza imobiliara <span className="text-primary">inteligenta</span>
       </h1>
       <p className="mt-3 text-[15px] md:text-lg text-muted">
-        Preț real de piață, viteza vânzării, randament și risc seismic — pe înțelesul tău.
+        Lipeste un link de anunt si primesti pret estimat, comparabile, viteza vanzarii si risc seismic.
       </p>
 
-      {/* search card */}
       <div className="mx-auto mt-8 max-w-[760px]">
         <form
           onSubmit={handleSubmit}
@@ -63,25 +52,29 @@ function Hero() {
         >
           <input
             name="q"
-            placeholder="ex: Floreasca, Crângași sau lipește un URL de anunț…"
+            placeholder="Lipeste un URL de pe imobiliare.ro..."
             className="flex-1 bg-transparent outline-none text-[15px] placeholder:text-muted px-3 py-3 focus:outline-none focus:ring-0"
           />
           <button
             type="submit"
             className="rounded-xl px-6 py-3 bg-primary text-white text-sm font-medium hover:bg-primary/90 active:scale-95 transition-all duration-150 shadow-sm hover:shadow-md"
           >
-            Caută
+            Analizeaza
           </button>
         </form>
-        <div className="mt-3 text-xs text-muted">
-          Sau{" "}
-          <Link
-            className="underline hover:no-underline focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded"
-            href="/owners"
+        <p className="mt-3 text-xs text-muted">
+          Exemplu:{" "}
+          <button
+            type="button"
+            className="underline hover:no-underline"
+            onClick={() => {
+              const input = document.querySelector<HTMLInputElement>("input[name=q]");
+              if (input) input.value = "https://www.imobiliare.ro/vanzare-apartamente/bucuresti/floreasca/apartament-de-vanzare-2-camere-XY12345";
+            }}
           >
-            estimează-ți proprietatea
-          </Link>
-        </div>
+            imobiliare.ro/vanzare-apartamente/bucuresti/...
+          </button>
+        </p>
       </div>
     </>
   );
@@ -89,9 +82,9 @@ function Hero() {
 
 function ValueProps() {
   const items = [
-    { t: "Preț estimat", d: "AVM cu interval și comparații din zonă." },
-    { t: "Viteză la vânzare", d: "Estimăm în câte zile se vinde." },
-    { t: "Randament", d: "Chirie estimată și randament net." },
+    { t: "Pret estimat", d: "Interval de pret corect bazat pe comparabile din zona." },
+    { t: "Viteza la vanzare", d: "Estimare conservatoare in luni, cu interval." },
+    { t: "Risc seismic", d: "Indicator orientativ bazat pe anul constructiei." },
   ];
   return (
     <div className="mx-auto mt-10 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-[1000px]">
@@ -112,12 +105,30 @@ function BelowFold() {
   return (
     <section className="mx-auto max-w-[1040px] px-4 py-14">
       <h2 className="text-xl font-semibold text-text">
-        Datele tale imobiliare, la un click distanță
+        Cum functioneaza
       </h2>
-      <p className="mt-2 text-sm text-muted max-w-[780px]">
-        Analizăm mii de anunțuri în timp real pentru a-ți arăta prețul corect, timpul de vânzare,
-        randamentul și riscul seismic.
-      </p>
+      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <div className="text-2xl font-bold text-primary">1</div>
+          <p className="mt-1 text-sm text-muted">Lipeste un link de anunt de pe imobiliare.ro</p>
+        </div>
+        <div>
+          <div className="text-2xl font-bold text-primary">2</div>
+          <p className="mt-1 text-sm text-muted">Analizam pretul, comparabilele si zona</p>
+        </div>
+        <div>
+          <div className="text-2xl font-bold text-primary">3</div>
+          <p className="mt-1 text-sm text-muted">Primesti raport cu estimare, argumente de negociere si riscuri</p>
+        </div>
+      </div>
+      <div className="mt-8">
+        <Link
+          href="/analyze"
+          className="inline-block rounded-xl px-6 py-3 bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-all"
+        >
+          Incepe analiza gratuita
+        </Link>
+      </div>
     </section>
   );
 }

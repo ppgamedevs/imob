@@ -140,7 +140,6 @@ export default function RootLayout({
               <AppFooter />
               <MobileBar />
             </div>
-            {/** Vercel Analytics script 404s when not enabled; disabled to avoid console noise */}
             <CookieBanner />
             {flags.tour && <Tour />}
             {flags.whatsNew && <WhatsNew />}

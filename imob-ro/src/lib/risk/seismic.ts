@@ -1,32 +1,23 @@
 import fs from "fs";
 import path from "path";
 
+import { SEISMIC_GEO_MATCH_RADIUS_M, SEISMIC_LEGACY_MATCH_RADIUS_M } from "@/lib/constants";
+import { haversineM, slugifyRo } from "@/lib/geo";
+import type { SeismicResult } from "@/lib/types/pipeline";
+
 type SeismicRow = {
   lat: number;
   lng: number;
   address?: string;
-  // allow a few classes plus None
   level: "RS1" | "RS2" | "RS3" | "RS4" | "None";
   sourceUrl?: string;
 };
-
-// helpers for server-side public read
-function slugifyCity(s?: string | null) {
-  if (!s) return undefined;
-  return s
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)+/g, "");
-}
 
 function readPublicJsonSync(relPath: string): unknown | null {
   try {
     const p = path.join(process.cwd(), "public", relPath.replace(/^\/+/, ""));
     if (!fs.existsSync(p)) return null;
-    const raw = fs.readFileSync(p, "utf8");
-    return JSON.parse(raw);
+    return JSON.parse(fs.readFileSync(p, "utf8"));
   } catch {
     return null;
   }
@@ -34,78 +25,47 @@ function readPublicJsonSync(relPath: string): unknown | null {
 
 const CACHE_BY_CITY: Record<string, SeismicRow[]> = {};
 
-function haversineMeters(aLat: number, aLng: number, bLat: number, bLng: number) {
-  const toRad = (v: number) => (v * Math.PI) / 180;
-  const R = 6371000; // meters
-  const dLat = toRad(bLat - aLat);
-  const dLon = toRad(bLng - aLng);
-  const lat1 = toRad(aLat);
-  const lat2 = toRad(bLat);
-  const sinDLat = Math.sin(dLat / 2);
-  const sinDLon = Math.sin(dLon / 2);
-  const a = sinDLat * sinDLat + Math.cos(lat1) * Math.cos(lat2) * sinDLon * sinDLon;
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-function normalizeAddress(addr?: string) {
+function normalizeAddress(addr?: string): string {
   if (!addr) return "";
   return addr.toLowerCase().replace(/[.,]/g, "").replace(/\s+/g, " ").trim();
 }
 
+function parseRows(data: unknown[]): SeismicRow[] {
+  return data
+    .map((obj) => {
+      const o = obj as Record<string, unknown>;
+      const lvlRaw = String(o.rs_class ?? o.level ?? o.risk ?? "").toUpperCase();
+      const lvl =
+        lvlRaw === "RS1" || lvlRaw === "RS2" || lvlRaw === "RS3" || lvlRaw === "RS4"
+          ? (lvlRaw as SeismicRow["level"])
+          : ("None" as const);
+      return {
+        lat: Number(o.lat ?? o.latitude),
+        lng: Number(o.lng ?? o.longitude),
+        address: String(o.address ?? o.adresa ?? ""),
+        level: lvl,
+        sourceUrl: String(o.source_url ?? o.sourceUrl ?? o.url ?? "") || undefined,
+      };
+    })
+    .filter((r) => !Number.isNaN(r.lat) && !Number.isNaN(r.lng));
+}
+
 async function loadDataset(city?: string | null): Promise<SeismicRow[]> {
-  const slug = slugifyCity(city) || "bucuresti";
+  const slug = slugifyRo(city) || "bucuresti";
   if (CACHE_BY_CITY[slug]) return CACHE_BY_CITY[slug];
 
-  // 1) Try server-side FS from /public
   const primary = readPublicJsonSync(`/data/seismic/${slug}.json`);
   if (primary && Array.isArray(primary) && primary.length) {
-    const mapped: SeismicRow[] = primary
-      .map((obj: unknown) => {
-        const o = obj as Record<string, unknown>;
-        const lvlRaw = String(o.rs_class ?? o.level ?? o.risk ?? "").toUpperCase();
-        const lvl =
-          lvlRaw === "RS1" || lvlRaw === "RS2" || lvlRaw === "RS3" || lvlRaw === "RS4"
-            ? (lvlRaw as SeismicRow["level"])
-            : ("None" as SeismicRow["level"]);
-        return {
-          lat: Number(o.lat ?? o.latitude),
-          lng: Number(o.lng ?? o.longitude),
-          address: String(o.address ?? o.adresa ?? ""),
-          level: lvl,
-          sourceUrl: String(o.source_url ?? o.sourceUrl ?? o.url ?? "") || undefined,
-        };
-      })
-      .filter((r) => !Number.isNaN(r.lat) && !Number.isNaN(r.lng));
-    CACHE_BY_CITY[slug] = mapped;
-    return mapped;
+    CACHE_BY_CITY[slug] = parseRows(primary);
+    return CACHE_BY_CITY[slug];
   }
 
-  // 2) Fallback to bundled sample
   const fallback = readPublicJsonSync(`/data/seismic/bucuresti.sample.json`);
   if (fallback && Array.isArray(fallback) && fallback.length) {
-    const mapped: SeismicRow[] = fallback
-      .map((obj: unknown) => {
-        const o = obj as Record<string, unknown>;
-        const lvlRaw = String(o.rs_class ?? o.level ?? o.risk ?? "").toUpperCase();
-        const lvl =
-          lvlRaw === "RS1" || lvlRaw === "RS2" || lvlRaw === "RS3" || lvlRaw === "RS4"
-            ? (lvlRaw as SeismicRow["level"])
-            : ("None" as SeismicRow["level"]);
-        return {
-          lat: Number(o.lat ?? o.latitude),
-          lng: Number(o.lng ?? o.longitude),
-          address: String(o.address ?? o.adresa ?? ""),
-          level: lvl,
-          sourceUrl: String(o.source_url ?? o.sourceUrl ?? o.url ?? "") || undefined,
-        };
-      })
-      .filter((r) => !Number.isNaN(r.lat) && !Number.isNaN(r.lng));
-    CACHE_BY_CITY[slug] = mapped;
-    return mapped;
+    CACHE_BY_CITY[slug] = parseRows(fallback);
+    return CACHE_BY_CITY[slug];
   }
 
-  // 3) As a last resort, try fetch (client-side)
   try {
     const res = await fetch(`/data/seismic/${slug}.json`);
     if (res.ok) {
@@ -113,7 +73,7 @@ async function loadDataset(city?: string | null): Promise<SeismicRow[]> {
       CACHE_BY_CITY[slug] = data;
       return data;
     }
-  } catch {}
+  } catch { /* fallback to empty */ }
   return [];
 }
 
@@ -121,58 +81,36 @@ export async function matchSeismic(
   lat?: number | null,
   lng?: number | null,
   address?: string,
-): Promise<{ level: "RS1" | "RS2" | "none"; sourceUrl?: string }> {
+): Promise<{ level: "RS1" | "RS2" | "None"; sourceUrl?: string }> {
   const data = await loadDataset();
-  if ((!lat || !lng) && !address) return { level: "none" };
+  if ((!lat || !lng) && !address) return { level: "None" };
 
-  // If we have coordinates, try distance match (strict)
   if (typeof lat === "number" && typeof lng === "number") {
     let best: { row: SeismicRow; dist: number } | null = null;
     for (const row of data) {
-      const d = haversineMeters(lat, lng, row.lat, row.lng);
+      const d = haversineM(lat, lng, row.lat, row.lng);
       if (!best || d < best.dist) best = { row, dist: d };
     }
-    if (best && best.dist <= 100) {
-      const lvl = best.row.level === "RS1" || best.row.level === "RS2" ? best.row.level : "none";
+    if (best && best.dist <= SEISMIC_LEGACY_MATCH_RADIUS_M) {
+      const lvl = best.row.level === "RS1" || best.row.level === "RS2" ? best.row.level : "None";
       return { level: lvl, sourceUrl: best.row.sourceUrl };
     }
   }
 
-  // Try address correlation: normalize and search for street+number tokens
   if (address) {
     const norm = normalizeAddress(address);
     for (const row of data) {
       if (!row.address) continue;
       const rnorm = normalizeAddress(row.address);
-      // simple substring match
       if ((rnorm && norm.includes(rnorm)) || (rnorm && rnorm.includes(norm))) {
-        const lvl = row.level === "RS1" || row.level === "RS2" ? row.level : "none";
+        const lvl = row.level === "RS1" || row.level === "RS2" ? row.level : "None";
         return { level: lvl, sourceUrl: row.sourceUrl };
-      }
-      // match by street name token
-      const streetTokens = rnorm.split(" ");
-      for (const t of streetTokens) {
-        if (t.length > 3 && norm.includes(t)) {
-          const lvl = row.level === "RS1" || row.level === "RS2" ? row.level : "none";
-          return { level: lvl, sourceUrl: row.sourceUrl };
-        }
       }
     }
   }
 
-  return { level: "none" };
+  return { level: "None" };
 }
-
-// named export only
-
-// Extended estimator returning a richer result (confidence, method, note)
-export type SeismicResult = {
-  riskClass: "RS1" | "RS2" | "RS3" | "RS4" | "None" | "Unknown";
-  confidence: number; // 0..1
-  source?: string | null;
-  method: "dataset-geo" | "dataset-address" | "heuristic";
-  note?: string | null;
-};
 
 function heuristicByYear(yearBuilt?: number | null) {
   if (!yearBuilt) return { riskClass: "Unknown" as const, note: "no_year" };
@@ -183,22 +121,22 @@ function heuristicByYear(yearBuilt?: number | null) {
   return { riskClass: "None" as const, note: ">=1990" };
 }
 
-// This function implements the higher-level strategy described in the design.
-export async function estimateSeismic(features: unknown): Promise<SeismicResult> {
-  const f = (features as Record<string, unknown>) ?? {};
-  const rows: SeismicRow[] = await loadDataset((f.city as string) ?? null);
+export { type SeismicResult };
+
+export async function estimateSeismic(features: Record<string, unknown>): Promise<SeismicResult> {
+  const f = features ?? {};
+  const rows = await loadDataset((f.city as string) ?? null);
   const lat = (f.lat as number) ?? null;
   const lng = (f.lng as number) ?? null;
   const addressRaw = (f.addressRaw as string) ?? (f.address as string) ?? null;
 
-  // 1) Geo nearest within 40m
   if (lat != null && lng != null && rows.length) {
     let best: { row: SeismicRow; dist: number } | null = null;
     for (const r of rows) {
-      const d = haversineMeters(lat, lng, r.lat, r.lng);
+      const d = haversineM(lat, lng, r.lat, r.lng);
       if (!best || d < best.dist) best = { row: r, dist: d };
     }
-    if (best && best.dist <= 40) {
+    if (best && best.dist <= SEISMIC_GEO_MATCH_RADIUS_M) {
       return {
         riskClass: best.row.level ?? "Unknown",
         confidence: 0.95,
@@ -209,16 +147,13 @@ export async function estimateSeismic(features: unknown): Promise<SeismicResult>
     }
   }
 
-  // 2) Address fuzzy
   if (addressRaw && rows.length) {
     const q = normalizeAddress(addressRaw);
-    const hit = rows.find((r: SeismicRow) => {
+    const hit = rows.find((r) => {
       if (!r.address) return false;
       const rnorm = normalizeAddress(r.address);
       if (!rnorm) return false;
-      // check substring of the query or row
       if (q.includes(rnorm) || rnorm.includes(q)) return true;
-      // street token match
       const tokens = rnorm.split(" ");
       for (const t of tokens) {
         if (t.length > 3 && q.includes(t)) return true;
@@ -236,7 +171,6 @@ export async function estimateSeismic(features: unknown): Promise<SeismicResult>
     }
   }
 
-  // 3) Heuristic by yearBuilt
   const h = heuristicByYear((f.yearBuilt as number) ?? null);
   return {
     riskClass: h.riskClass,

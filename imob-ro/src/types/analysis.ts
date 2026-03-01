@@ -1,13 +1,5 @@
-export type NormalizedFeatures = {
-  areaSlug?: string | null;
-  city?: string | null;
-  areaM2?: number | null;
-  level?: number | null;
-  yearBuilt?: number | null;
-  distMetroM?: number | null;
-  conditionScore?: number | null;
-  priceEur?: number | null;
-  comps?: Array<Record<string, unknown>> | null;
-  photos?: string[] | null;
-  [key: string]: unknown;
-};
+/**
+ * Re-export from canonical pipeline types for backward compatibility.
+ * New code should import from @/lib/types/pipeline directly.
+ */
+export type { NormalizedFeatures } from "@/lib/types/pipeline";

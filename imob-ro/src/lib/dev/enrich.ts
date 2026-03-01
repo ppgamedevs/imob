@@ -6,7 +6,7 @@ import type { Unit } from "@prisma/client";
 import { prisma } from "@/lib/db";
 // Import existing engines
 import { estimateRent } from "@/lib/ml/rent";
-import { estimateSeismic } from "@/lib/ml/seismic";
+import { estimateSeismic } from "@/lib/risk/seismic";
 import { estimateTTS } from "@/lib/ml/tts";
 
 export interface UnitFeatures {

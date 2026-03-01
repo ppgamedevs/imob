@@ -1,11 +1,18 @@
 /**
- * Day 32: Queue Utilities
- * Content hashing and batch processing for crawl queue
+ * Queue utilities for crawl jobs with dual-priority support.
+ * High priority: user-submitted URLs (fast response needed).
+ * Low priority: background refresh, discover, seeds.
  */
 
 import { createHash } from "crypto";
 
 import { prisma } from "@/lib/db";
+import { logger } from "@/lib/obs/logger";
+
+export const PRIORITY_USER = 100;
+export const PRIORITY_REFRESH = 50;
+export const PRIORITY_SEED = 10;
+export const PRIORITY_DISCOVER = 0;
 
 /**
  * Calculate SHA-256 hash of content for change detection
@@ -40,7 +47,7 @@ export async function enqueueUrl(opts: {
     });
     return { ok: true };
   } catch (err) {
-    // Likely duplicate (unique constraint on normalized)
+    logger.debug({ url: opts.url, err }, "enqueueUrl failed (likely duplicate)");
     return { ok: false, error: String(err) };
   }
 }

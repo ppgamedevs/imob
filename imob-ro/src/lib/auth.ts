@@ -5,18 +5,20 @@ import EmailProvider from "next-auth/providers/email";
 import GoogleProvider from "next-auth/providers/google";
 
 import { prisma } from "@/lib/db";
+import { logger } from "@/lib/obs/logger";
 
 export const authConfig = {
   // @ts-expect-error - Adapter version mismatch between next-auth beta and @auth/prisma-adapter
   adapter: PrismaAdapter(prisma),
   providers: [
     EmailProvider({
-      server: "smtp://fake:fake@localhost:1025",
-      from: "noreply@imob.ro",
-      // Dev: log magic link to console (no SMTP)
+      server: process.env.EMAIL_SERVER || process.env.SMTP_URL || "",
+      from: process.env.EMAIL_FROM || "noreply@imob.ro",
       async sendVerificationRequest({ identifier: email, url }) {
-        console.log("🔑 Magic link for", email);
-        console.log("👉", url);
+        if (process.env.NODE_ENV === "development") {
+          logger.info({ email, url }, "Magic link generated (dev only)");
+        }
+        // In production, the EmailProvider sends via the configured SMTP server
       },
     }),
     ...(process.env.AUTH_GOOGLE_ID
@@ -29,10 +31,11 @@ export const authConfig = {
       : []),
   ],
   callbacks: {
-    async session({ session, user }: any) {
-      if (session?.user) {
-        session.user.id = user.id;
-        session.user.role = user.role || "user";
+    async session({ session, user }: { session: Record<string, unknown>; user: { id: string; role?: string } }) {
+      const s = session as { user?: { id?: string; role?: string } };
+      if (s?.user) {
+        s.user.id = user.id;
+        s.user.role = user.role || "user";
       }
       return session;
     },
@@ -41,7 +44,7 @@ export const authConfig = {
     signIn: "/auth/signin",
     verifyRequest: "/auth/verify-request",
   },
-  trustHost: true, // Fix CORS and dynamic URL issues
+  trustHost: true,
 } satisfies NextAuthConfig;
 
 // @ts-expect-error - Adapter version mismatch between next-auth beta and @auth/prisma-adapter

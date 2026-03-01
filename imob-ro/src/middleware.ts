@@ -37,9 +37,11 @@ export async function middleware(request: NextRequest) {
 
     // Verify JWT (Edge-compatible)
     try {
-      const secret = new TextEncoder().encode(
-        process.env.AGENT_SESSION_SECRET || "change-me-in-production",
-      );
+      const envSecret = process.env.AGENT_SESSION_SECRET;
+      if (!envSecret) {
+        return NextResponse.redirect(new URL("/a/signin", request.url));
+      }
+      const secret = new TextEncoder().encode(envSecret);
       await jwtVerify(agentToken.value, secret);
       return NextResponse.next();
     } catch {

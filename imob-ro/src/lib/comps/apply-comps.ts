@@ -1,21 +1,22 @@
 import type { Prisma } from "@prisma/client";
 
+import {
+  COMPS_AREA_RANGE_HIGH,
+  COMPS_AREA_RANGE_LOW,
+  COMPS_FETCH_LIMIT,
+  COMPS_MAX_AGE_DAYS,
+  COMPS_MAX_DISTANCE_M,
+  COMPS_TOP_N,
+} from "@/lib/constants";
 import { prisma } from "@/lib/db";
+import { filterOutliersIQR, median as calcMedian, percentile } from "@/lib/math";
+import { logger } from "@/lib/obs/logger";
+import { computeConfidence } from "@/lib/scoring/confidence";
+import type { NormalizedFeatures } from "@/lib/types/pipeline";
 
 import { eurM2, metersBetween, overallScore } from "./similarity";
 
-type Fs = {
-  priceEur?: number | null;
-  areaM2?: number | null;
-  rooms?: number | null;
-  yearBuilt?: number | null;
-  lat?: number | null;
-  lng?: number | null;
-  city?: string | null;
-  areaSlug?: string | null;
-};
-
-function inRange(v?: number | null, lo?: number, hi?: number) {
+function inRange(v?: number | null, lo?: number, hi?: number): boolean {
   if (v == null) return false;
   if (lo != null && v < lo) return false;
   if (hi != null && v > hi) return false;
@@ -23,39 +24,30 @@ function inRange(v?: number | null, lo?: number, hi?: number) {
 }
 
 export async function applyCompsToAnalysis(analysisId: string) {
-  // 1) subject
   const A = await prisma.analysis.findUnique({
     where: { id: analysisId },
     include: { extractedListing: true, featureSnapshot: true },
   });
-  const F = (A?.featureSnapshot?.features ?? {}) as Fs;
+  const F = (A?.featureSnapshot?.features ?? {}) as NormalizedFeatures;
   if (!A || !F?.areaM2 || !F.priceEur) return null;
 
   const refArea = F.areaM2!;
   const refRooms = F.rooms ?? null;
   const refYear = F.yearBuilt ?? null;
 
-  // 2) candidates (last 180 days)
   const since = new Date();
-  since.setDate(since.getDate() - 180);
+  since.setDate(since.getDate() - COMPS_MAX_AGE_DAYS);
+
   const candidates = await prisma.analysis.findMany({
     where: { id: { not: analysisId }, createdAt: { gte: since } },
     orderBy: { createdAt: "desc" },
-    take: 500,
+    take: COMPS_FETCH_LIMIT,
     include: { extractedListing: true, featureSnapshot: true },
   });
 
-  const sameCity = (x: { features?: { features?: unknown } | null }) => {
-    const features = x?.features?.features as Record<string, unknown> | undefined;
-    const c = features?.city;
-    const cityStr = typeof c === "string" ? c : undefined;
-    if (!F.city || !cityStr) return true;
-    return cityStr.toLowerCase() === F.city.toLowerCase();
-  };
-
   const pool = candidates
     .map((c) => {
-      const f = (c.featureSnapshot?.features ?? {}) as Fs;
+      const f = (c.featureSnapshot?.features ?? {}) as NormalizedFeatures;
       const meters = metersBetween({ lat: F.lat, lng: F.lng }, { lat: f.lat, lng: f.lng });
       const price = f.priceEur ?? null;
       const e2 = eurM2(price ?? undefined, f.areaM2 ?? undefined);
@@ -68,6 +60,7 @@ export async function applyCompsToAnalysis(analysisId: string) {
         yearRef: refYear ?? undefined,
         year: f.yearBuilt ?? undefined,
       });
+
       const photosArray = c.extractedListing?.photos;
       const photo =
         Array.isArray(photosArray) && photosArray.length > 0 ? (photosArray[0] as string) : null;
@@ -87,18 +80,35 @@ export async function applyCompsToAnalysis(analysisId: string) {
         eurM2: e2,
         score,
         city: f.city,
+        createdAt: c.createdAt,
       };
     })
     .filter((x) => x.priceEur && x.areaM2 && x.eurM2)
-    .filter((x) => sameCity({ features: { features: x } }))
-    .filter((x) => x.meters == null || x.meters <= 2500)
-    .filter((x) => inRange(x.areaM2, refArea * 0.7, refArea * 1.3))
+    .filter((x) => {
+      if (!F.city || !x.city) return true;
+      return x.city.toLowerCase() === F.city.toLowerCase();
+    })
+    .filter((x) => x.meters == null || x.meters <= COMPS_MAX_DISTANCE_M)
+    .filter((x) => inRange(x.areaM2, refArea * COMPS_AREA_RANGE_LOW, refArea * COMPS_AREA_RANGE_HIGH))
     .filter((x) => !refRooms || !x.rooms || Math.abs((refRooms ?? 0) - (x.rooms ?? 0)) <= 1)
-    .sort((a, b) => b.score! - a.score!);
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
 
-  const top = pool.slice(0, 12);
+  // IQR outlier filtering on EUR/m2
+  const rawEurM2s = pool.map((c) => c.eurM2!);
+  const { filtered: cleanEurM2s, excluded } = filterOutliersIQR(rawEurM2s);
 
-  // 3) write CompMatch
+  if (excluded.length > 0) {
+    logger.debug(
+      { analysisId, excludedCount: excluded.length, excluded },
+      "Outlier comps excluded by IQR",
+    );
+  }
+
+  const cleanSet = new Set(cleanEurM2s);
+  const filteredPool = pool.filter((c) => cleanSet.has(c.eurM2!));
+  const top = filteredPool.slice(0, COMPS_TOP_N);
+
+  // Write CompMatch records
   await prisma.compMatch.deleteMany({ where: { analysisId } });
   if (top.length) {
     await prisma.compMatch.createMany({
@@ -122,22 +132,39 @@ export async function applyCompsToAnalysis(analysisId: string) {
     });
   }
 
-  // 4) stats → ScoreSnapshot.explain.comps
-  const eurM2s = top.map((c) => c.eurM2!).sort((a, b) => a - b);
-  const median = eurM2s.length ? eurM2s[Math.floor(eurM2s.length / 2)] : null;
-  const q1 = eurM2s.length ? eurM2s[Math.floor(eurM2s.length / 4)] : null;
-  const q3 = eurM2s.length ? eurM2s[Math.floor((eurM2s.length * 3) / 4)] : null;
+  // Compute stats with IQR-filtered values
+  const eurM2Vals = top.map((c) => c.eurM2!).sort((a, b) => a - b);
+  const medianVal = calcMedian(eurM2Vals);
+  const q1 = percentile(eurM2Vals, 25);
+  const q3 = percentile(eurM2Vals, 75);
+
+  // Compute confidence
+  const oldestComp = top.length > 0
+    ? Math.max(...top.map((c) => Math.round((Date.now() - c.createdAt.getTime()) / 86400000)))
+    : undefined;
+  const confidence = computeConfidence(F, top.length, oldestComp);
+
+  // Persist to ScoreSnapshot
+  const existingScore = await prisma.scoreSnapshot.findUnique({ where: { analysisId } });
+  const existingExplain = (existingScore?.explain as Record<string, unknown>) ?? {};
 
   await prisma.scoreSnapshot.upsert({
     where: { analysisId },
     update: {
-      explain: { comps: { count: top.length, eurM2: { median, q1, q3 } } } as Prisma.JsonObject,
+      explain: {
+        ...existingExplain,
+        comps: { count: top.length, eurM2: { median: medianVal, q1, q3 }, outlierCount: excluded.length },
+        confidence,
+      } as Prisma.JsonObject,
     },
     create: {
       analysisId,
-      explain: { comps: { count: top.length, eurM2: { median, q1, q3 } } } as Prisma.JsonObject,
+      explain: {
+        comps: { count: top.length, eurM2: { median: medianVal, q1, q3 }, outlierCount: excluded.length },
+        confidence,
+      } as Prisma.JsonObject,
     },
   });
 
-  return { count: top.length, medianEurM2: median };
+  return { count: top.length, medianEurM2: medianVal, confidence };
 }
