@@ -6,7 +6,7 @@ FROM base AS deps
 WORKDIR /app
 
 COPY imob-ro/package.json imob-ro/pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --prod=false
+RUN pnpm install --frozen-lockfile --prod=false --ignore-scripts
 
 # ─── Builder ─────────────────────────────────────────────────
 FROM base AS builder
