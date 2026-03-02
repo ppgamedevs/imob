@@ -22,6 +22,7 @@ RUN pnpm next build
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV PATH="/app/node_modules/.bin:$PATH"
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
@@ -34,7 +35,7 @@ COPY --from=builder /app/node_modules/.pnpm/@prisma+client*/node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/prisma ./prisma
 
-RUN npm install -g prisma@6.17.1
+RUN cd /app && npm install --no-save prisma@6.17.1
 
 USER nextjs
 EXPOSE 3000
