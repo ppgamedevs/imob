@@ -34,6 +34,8 @@ COPY --from=builder /app/node_modules/.pnpm/@prisma+client*/node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/prisma ./prisma
 
+RUN npm install -g prisma@6.17.1
+
 USER nextjs
 EXPOSE 3000
 
