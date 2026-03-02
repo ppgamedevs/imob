@@ -71,10 +71,10 @@ Crawl-delay: 10`}
             <li>
               Contact us at{" "}
               <a
-                href="mailto:contact@imob.ro"
+                href="mailto:contact@imobintel.ro"
                 className="text-primary hover:underline"
               >
-                contact@imob.ro
+                contact@imobintel.ro
               </a>{" "}
               to discuss your concerns
             </li>
@@ -129,10 +129,10 @@ Crawl-delay: 10`}
           <p className="mt-2">
             <strong>Email:</strong>{" "}
             <a
-              href="mailto:contact@imob.ro"
+              href="mailto:contact@imobintel.ro"
               className="text-primary hover:underline"
             >
-              contact@imob.ro
+              contact@imobintel.ro
             </a>
           </p>
         </section>

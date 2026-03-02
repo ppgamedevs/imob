@@ -30,7 +30,7 @@ interface OgOptions {
  */
 export function renderOg(children: React.ReactNode, options: OgOptions = {}) {
   const brandColor = options.brand || "#2563eb"; // default blue
-  const footerText = options.titleSuffix || "imob.ro - insight engine";
+  const footerText = options.titleSuffix || "ImobIntel - analiza imobiliara";
 
   return new ImageResponse(
     (

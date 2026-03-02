@@ -42,7 +42,7 @@ export async function sendOwnerEmail(
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        from: process.env.EMAIL_FROM || "leads@imob.ro",
+        from: process.env.EMAIL_FROM || "leads@imobintel.ro",
         to: recipientEmail,
         reply_to: leadData.contact,
         subject: `Cerere de contact: ${propertyContext.title}`,
@@ -121,7 +121,7 @@ function generateEmailHTML(lead: LeadEmailData, property: PropertyContext): stri
     </div>
 
     <div class="footer">
-      <p>Acest email a fost generat automat de <strong>imob.ro</strong></p>
+      <p>Acest email a fost generat automat de <strong>ImobIntel</strong></p>
       <p>Răspunde direct la acest email pentru a contacta persoana interesată.</p>
     </div>
   </div>
@@ -149,7 +149,7 @@ export async function sendUserConfirmation(
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        from: process.env.EMAIL_FROM || "noreply@imob.ro",
+        from: process.env.EMAIL_FROM || "noreply@imobintel.ro",
         to: userEmail,
         subject: "Confirmăm primirea cererii tale",
         html: `

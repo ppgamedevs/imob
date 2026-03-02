@@ -41,7 +41,7 @@ export async function SiteHeader() {
           <div className="h-8 w-8 rounded-md bg-primary/10 flex items-center justify-center text-primary font-bold">
             iR
           </div>
-          <span className="hidden sm:inline">imob.ro</span>
+          <span className="hidden sm:inline">ImobIntel</span>
         </Link>
 
         {/* Search Box - Desktop (centered) */}

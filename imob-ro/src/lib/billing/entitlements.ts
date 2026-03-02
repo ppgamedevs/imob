@@ -1,40 +1,35 @@
-/**
- * Day 23 - Entitlements & Usage Tracking
- * Central logic for checking if user can perform actions (analyze, PDF, share)
- */
-
 import { prisma } from "@/lib/db";
+import type { PlanFeatures } from "@/lib/types/pipeline";
 
 import { monthStartUTC } from "./period";
 
-type Limits = { analyze: number; pdf: number; share: number };
+type CountableKind = "analyze" | "pdf" | "share" | "alerts";
 
-/**
- * Get user's subscription or default to free
- */
+const FREE_DEFAULTS: PlanFeatures = {
+  analyze: 10,
+  pdf: 0,
+  share: 0,
+  alerts: 0,
+  advancedComps: false,
+  detailedScore: false,
+  history: false,
+  historyDays: 0,
+  csvExport: false,
+  support: "community",
+};
+
 export async function getSubscription(userId: string) {
   const sub = await prisma.subscription.findUnique({ where: { userId } });
   if (!sub) return { planCode: "free", status: "active" } as const;
   return sub;
 }
 
-/**
- * Get limits for a given plan code from Plan.features JSON
- */
-export async function getPlanLimits(planCode: string): Promise<Limits> {
+export async function getPlanFeatures(planCode: string): Promise<PlanFeatures> {
   const plan = await prisma.plan.findUnique({ where: { code: planCode } });
-
-  const f = (plan?.features as any) || {};
-  return {
-    analyze: Number(f.analyze ?? 20),
-    pdf: Number(f.pdf ?? 3),
-    share: Number(f.share ?? 3),
-  };
+  if (!plan) return FREE_DEFAULTS;
+  return { ...FREE_DEFAULTS, ...(plan.features as PlanFeatures) };
 }
 
-/**
- * Get current month's usage for a user
- */
 export async function getUsage(userId: string) {
   const periodStart = monthStartUTC();
   const rows = await prisma.usageCounter.findMany({ where: { userId, periodStart } });
@@ -45,26 +40,37 @@ export async function getUsage(userId: string) {
     analyze: m.analyze ?? 0,
     pdf: m.pdf ?? 0,
     share: m.share ?? 0,
+    alerts: m.alerts ?? 0,
   };
 }
 
 /**
- * Check if user can perform an action
- * Returns: allowed (boolean), used (count), max (limit), plan (code)
+ * Check if user can perform a countable action (analyze, pdf, share, alerts).
+ * A limit of -1 means unlimited.
  */
-export async function canUse(userId: string, kind: "analyze" | "pdf" | "share") {
+export async function canUse(userId: string, kind: CountableKind) {
   const sub = await getSubscription(userId);
-  const limits = await getPlanLimits(sub.planCode);
+  const features = await getPlanFeatures(sub.planCode);
   const usage = await getUsage(userId);
   const used = usage[kind];
-  const max = limits[kind];
-  return { allowed: used < max, used, max, plan: sub.planCode };
+  const max = Number(features[kind] ?? 0);
+  const unlimited = max === -1;
+  return { allowed: unlimited || used < max, used, max, unlimited, plan: sub.planCode };
 }
 
 /**
- * Increment usage counter for a user
+ * Check if user has access to a boolean feature (advancedComps, detailedScore, etc.)
  */
-export async function incUsage(userId: string, kind: "analyze" | "pdf" | "share", delta = 1) {
+export async function canAccess(
+  userId: string,
+  feature: "advancedComps" | "detailedScore" | "history" | "csvExport",
+) {
+  const sub = await getSubscription(userId);
+  const features = await getPlanFeatures(sub.planCode);
+  return { allowed: !!features[feature], plan: sub.planCode };
+}
+
+export async function incUsage(userId: string, kind: CountableKind, delta = 1) {
   const periodStart = monthStartUTC();
   await prisma.usageCounter.upsert({
     where: {

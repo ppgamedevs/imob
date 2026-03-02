@@ -12,7 +12,17 @@ export async function syncSubscription(
   stripeSub: Stripe.Subscription,
 ): Promise<void> {
   const status = stripeSub.status;
-  const planCode = status === "active" || status === "trialing" ? "pro" : "free";
+
+  // Determine plan from Stripe price ID
+  let planCode = "free";
+  if (status === "active" || status === "trialing") {
+    const priceId = stripeSub.items?.data?.[0]?.price?.id;
+    if (priceId === process.env.STRIPE_PRICE_STANDARD) {
+      planCode = "standard";
+    } else {
+      planCode = "pro";
+    }
+  }
 
   const renewsAt = stripeSub.current_period_end
     ? new Date(stripeSub.current_period_end * 1000)
@@ -43,7 +53,7 @@ export async function syncSubscription(
 
     await prisma.user.update({
       where: { id: userId },
-      data: { proTier: planCode === "pro" },
+      data: { proTier: planCode === "pro" || planCode === "standard" },
     });
 
     logger.info({ userId, planCode, status }, "Subscription synced");

@@ -24,7 +24,7 @@ export default function AgentSignInPage() {
         <div className="bg-white/5 backdrop-blur-lg rounded-2xl shadow-xl border border-white/10 p-8">
           <div className="text-center mb-8">
             <Link href="/" className="inline-block mb-4">
-              <h1 className="text-3xl font-bold text-white">imob.ro</h1>
+              <h1 className="text-3xl font-bold text-white">ImobIntel</h1>
             </Link>
             <h2 className="text-xl font-semibold text-white mb-2">Agent Workspace</h2>
             <p className="text-sm text-gray-400">

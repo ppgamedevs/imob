@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   // TODO: Integrate with existing PDF infrastructure from Day 22
   // For now, return a simple text response
   const content = `
-Raport Evaluare Proprietate - imob.ro
+Raport Evaluare Proprietate - ImobIntel
 
 Zona: ${lead.areaSlug ? lead.areaSlug.replace(/-/g, " ") : "N/A"}
 Adresa: ${lead.addressHint || "Confidențială"}

@@ -199,7 +199,7 @@ export default function ListingCard(props: ListingCardProps) {
               {faviconUrl && (
                 <img src={faviconUrl} alt="" width={14} height={14} className="rounded-sm" />
               )}
-              <span className="truncate max-w-[120px]">{sourceHost || "imob.ro"}</span>
+              <span className="truncate max-w-[120px]">{sourceHost || "imobintel.ro"}</span>
             </div>
             <span aria-hidden className="text-xs text-muted">
               →

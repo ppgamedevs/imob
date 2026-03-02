@@ -61,7 +61,7 @@ export default function UploadPage() {
               className="mt-2 font-mono text-sm"
             />
             <p className="text-xs text-gray-500 mt-2">
-              Supported: imobiliare.ro, olx.ro, storia.ro, publi24.ro, and more
+              Supported: imobiliare.ro, storia.ro, olx.ro, publi24.ro, lajumate.ro
             </p>
           </div>
 

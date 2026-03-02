@@ -1,7 +1,7 @@
 /**
  * Copilot: Build <SiteFooter> minimal:
  * - Links: How we estimate (stub /how-we-estimate), Terms, Privacy
- * - Small text © {year} imob.ro
+ * - Small text © {year} ImobIntel
  */
 import Link from "next/link";
 
@@ -14,10 +14,10 @@ export function SiteFooter() {
         <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
           <div className="flex items-center gap-4">
             <Link href="/" className="text-lg font-bold">
-              imob.ro
+              ImobIntel
             </Link>
             <p className="text-sm text-muted-foreground hidden sm:block">
-              © {currentYear} imob.ro
+              © {currentYear} ImobIntel
             </p>
           </div>
 

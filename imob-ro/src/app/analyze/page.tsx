@@ -1,9 +1,24 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 
 export const dynamic = "force-dynamic";
+
+const ANON_SEARCH_KEY = "imob_anon_searches";
+const ANON_LIMIT = 3;
+
+function getAnonSearchCount(): number {
+  if (typeof window === "undefined") return 0;
+  return parseInt(localStorage.getItem(ANON_SEARCH_KEY) || "0", 10);
+}
+
+function incrementAnonSearchCount(): number {
+  const next = getAnonSearchCount() + 1;
+  localStorage.setItem(ANON_SEARCH_KEY, String(next));
+  return next;
+}
 
 function AnalyzePageContent() {
   const searchParams = useSearchParams();
@@ -11,20 +26,29 @@ function AnalyzePageContent() {
   const [url, setUrl] = useState(urlParam || "");
   const [status, setStatus] = useState<"idle" | "fetching" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [anonWall, setAnonWall] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    if (urlParam && status === "idle") {
+    if (urlParam && status === "idle" && !anonWall) {
       handleSubmit();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlParam]);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!url.trim()) return;
 
+    // Check anon wall: after 3 anonymous searches, require account
+    const anonCount = getAnonSearchCount();
+    if (anonCount >= ANON_LIMIT) {
+      setAnonWall(true);
+      return;
+    }
+
     setError(null);
+    setAnonWall(false);
     setStatus("fetching");
 
     try {
@@ -37,6 +61,7 @@ function AnalyzePageContent() {
       const data = await res.json().catch(() => ({}));
 
       if (res.ok && data?.id) {
+        incrementAnonSearchCount();
         setStatus("done");
         router.push(`/report/${data.id}`);
       } else if (res.status === 402) {
@@ -53,7 +78,7 @@ function AnalyzePageContent() {
       setStatus("idle");
       setError("Eroare de conexiune. Verifica conexiunea la internet si incearca din nou.");
     }
-  };
+  }, [url, router]);
 
   return (
     <div className="mx-auto max-w-[680px] px-5 py-16 md:py-24">
@@ -61,8 +86,25 @@ function AnalyzePageContent() {
         Analizeaza un anunt
       </h1>
       <p className="mt-2 text-[15px] text-gray-500">
-        Introdu un link de pe imobiliare.ro si primesti estimare de pret, comparabile si analiza completa.
+        Introdu un link de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro sau lajumate.ro si primesti estimare de pret, comparabile si analiza completa.
       </p>
+
+      {anonWall && (
+        <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50/60 p-5 text-center">
+          <p className="text-[15px] font-semibold text-gray-900">
+            Creeaza un cont gratuit pentru a continua
+          </p>
+          <p className="mt-1.5 text-[13px] text-gray-500">
+            Ai folosit {ANON_LIMIT} cautari gratuite. Creeaza un cont gratuit si primesti 10 cautari/luna.
+          </p>
+          <Link
+            href="/auth/signin?callbackUrl=/analyze"
+            className="mt-4 inline-flex items-center rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 px-6 py-2.5 text-[13px] font-semibold text-white shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200"
+          >
+            Creeaza cont gratuit
+          </Link>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="mt-8">
         <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white p-2 shadow-sm transition-shadow duration-300 focus-within:shadow-md focus-within:border-gray-300">
@@ -70,7 +112,7 @@ function AnalyzePageContent() {
             value={url}
             onChange={(e) => { setUrl(e.target.value); setError(null); }}
             type="url"
-            placeholder="https://www.imobiliare.ro/vanzare-apartamente/..."
+            placeholder="https://www.imobiliare.ro/... sau storia.ro, olx.ro, publi24.ro, lajumate.ro"
             className="flex-1 bg-transparent text-[14px] text-gray-900 placeholder:text-gray-400 px-3 py-3 outline-none"
           />
           <button

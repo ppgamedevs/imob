@@ -15,7 +15,7 @@ export const authConfig = {
       ? [
           EmailProvider({
             server: process.env.EMAIL_SERVER || process.env.SMTP_URL || "",
-            from: process.env.EMAIL_FROM || "noreply@imob.ro",
+            from: process.env.EMAIL_FROM || "noreply@imobintel.ro",
             async sendVerificationRequest({ identifier: email, url }) {
               if (process.env.NODE_ENV === "development") {
                 logger.info({ email, url }, "Magic link generated (dev only)");

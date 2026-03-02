@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Politica Cookie-uri",
-  description: "Cum folosim cookie-urile pe platforma imob.ro",
+  description: "Cum folosim cookie-urile pe platforma imobintel.ro",
 };
 
 export default function CookiesPage() {
@@ -28,7 +28,7 @@ export default function CookiesPage() {
             ✅ Veste Bună: Folosim Doar Cookie-uri Esențiale
           </h3>
           <p className="text-green-700 dark:text-green-300">
-            imob.ro folosește <strong>doar cookie-uri strict necesare</strong> pentru funcționarea
+            ImobIntel foloseste <strong>doar cookie-uri strict necesare</strong> pentru funcționarea
             platformei. Nu folosim cookie-uri de marketing, publicitate sau tracking terț.
           </p>
         </div>
@@ -222,8 +222,8 @@ export default function CookiesPage() {
         <h2 className="text-2xl font-semibold">8. Întrebări?</h2>
         <p>
           Pentru întrebări despre cookie-uri sau confidențialitate, contactați-ne la:{" "}
-          <a href="mailto:privacy@imob.ro" className="text-primary hover:underline">
-            privacy@imob.ro
+          <a href="mailto:privacy@imobintel.ro" className="text-primary hover:underline">
+            privacy@imobintel.ro
           </a>
         </p>
       </section>

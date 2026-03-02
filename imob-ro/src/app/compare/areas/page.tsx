@@ -36,7 +36,7 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
   const items = await loadCompareAreas(slugs);
 
   return {
-    title: `Compară ${items.length} zone | imob.ro`,
+    title: `Compară ${items.length} zone | ImobIntel`,
     description: `Comparație zone: preț/m², chirie, randament, schimbare 12 luni pentru ${items.map((i) => i.name).join(", ")}.`,
   };
 }

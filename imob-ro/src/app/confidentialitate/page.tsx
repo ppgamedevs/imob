@@ -2,19 +2,19 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Politica de Confidențialitate",
-  description: "Cum prelucrăm și protejăm datele personale pe imob.ro",
+  description: "Cum prelucram si protejam datele personale pe imobintel.ro",
 };
 
 export default function ConfidentialitatePage() {
   return (
     <div className="container mx-auto max-w-4xl p-6 py-12 space-y-8">
       <h1 className="text-4xl font-bold">Politica de Confidențialitate</h1>
-      <p className="text-muted-foreground">Ultima actualizare: 24 octombrie 2025</p>
+      <p className="text-muted-foreground">Ultima actualizare: 1 martie 2026</p>
 
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">1. Introducere</h2>
         <p>
-          imob.ro (&quot;noi&quot;, &quot;platforma&quot;) respectă confidențialitatea datelor
+          ImobIntel (imobintel.ro, &quot;noi&quot;, &quot;platforma&quot;) respecta confidentialitatea datelor
           personale și se angajează să le protejeze în conformitate cu Regulamentul General privind
           Protecția Datelor (GDPR - Regulamentul UE 2016/679).
         </p>
@@ -27,13 +27,13 @@ export default function ConfidentialitatePage() {
         <h2 className="text-2xl font-semibold">2. Operator de Date</h2>
         <div className="bg-muted p-4 rounded">
           <p>
-            <strong>Denumire:</strong> imob.ro
+            <strong>Denumire:</strong> ImobIntel
           </p>
           <p>
-            <strong>Email contact:</strong> contact@imob.ro
+            <strong>Email contact:</strong> contact@imobintel.ro
           </p>
           <p>
-            <strong>Email DPO:</strong> privacy@imob.ro
+            <strong>Email DPO:</strong> privacy@imobintel.ro
           </p>
         </div>
       </section>
@@ -175,7 +175,7 @@ export default function ConfidentialitatePage() {
             <strong>Vercel (SUA):</strong> Hosting platformă, analytics anonim (DPA semnat)
           </li>
           <li>
-            <strong>Neon (SUA):</strong> Bază de date PostgreSQL (DPA semnat, criptat)
+            <strong>Hetzner (UE/Germania):</strong> Baza de date PostgreSQL, hosting API (GDPR compliant, date in UE)
           </li>
           <li>
             <strong>Stripe (UE):</strong> Procesare plăți (PCI-DSS certified)
@@ -192,7 +192,7 @@ export default function ConfidentialitatePage() {
         </p>
 
         <h3 className="text-xl font-semibold mt-4">6.2 Transferuri Internaționale</h3>
-        <p>Unele servicii sunt în SUA (Vercel, Neon, Sentry). Transferurile se fac conform:</p>
+        <p>Unele servicii sunt in SUA (Vercel, Sentry). Transferurile se fac conform:</p>
         <ul className="list-disc list-inside space-y-2 ml-4">
           <li>
             <strong>Standard Contractual Clauses (SCC):</strong> Clauzele standard UE
@@ -285,7 +285,7 @@ export default function ConfidentialitatePage() {
 
           <div className="border-l-4 border-primary pl-4">
             <h4 className="font-semibold">🔒 Dreptul de Restricționare (Art. 18)</h4>
-            <p className="text-sm">Contactați-ne la privacy@imob.ro</p>
+            <p className="text-sm">Contactati-ne la privacy@imobintel.ro</p>
           </div>
 
           <div className="border-l-4 border-primary pl-4">
@@ -351,10 +351,10 @@ export default function ConfidentialitatePage() {
         <h2 className="text-2xl font-semibold">13. Contact și Întrebări</h2>
         <div className="bg-muted p-4 rounded space-y-2">
           <p>
-            <strong>Email general:</strong> contact@imob.ro
+            <strong>Email general:</strong> contact@imobintel.ro
           </p>
           <p>
-            <strong>Email confidențialitate:</strong> privacy@imob.ro
+            <strong>Email confidentialitate:</strong> privacy@imobintel.ro
           </p>
           <p>
             <strong>Răspuns:</strong> Maxim 30 zile (conform Art. 12 GDPR)

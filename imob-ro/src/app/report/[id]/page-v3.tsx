@@ -370,7 +370,7 @@ export default async function ReportPageV3({ params }: Props) {
               position="sidebar"
               size="rectangle"
               adUrl="https://partner-agency.ro/banner-300x250.jpg"
-              clickUrl="https://track.imob.ro/click/sidebar-1"
+              clickUrl="https://track.imobintel.ro/click/sidebar-1"
             />
 
             {/* Related listings (placeholder) */}

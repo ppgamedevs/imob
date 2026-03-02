@@ -6,7 +6,7 @@ import DiscoverClient from "./DiscoverClient";
 import FiltersBar from "./FiltersBar";
 
 export const metadata: Metadata = {
-  title: "Descoperă proprietăți în București – imob.ro",
+  title: "Descopera proprietati in Bucuresti - ImobIntel",
   description:
     "Caută și compară proprietăți cu filtre avansate. Hartă interactivă, estimări AVM, TTS, randamente.",
   openGraph: {

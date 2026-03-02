@@ -217,7 +217,7 @@ async function searchPages(q: string, limit: number): Promise<SuggestItem[]> {
       href: "/owners",
       keywords: ["proprietari", "vanzare", "estimare", "evaluare"],
     },
-    { title: "Despre imob.ro", href: "/about", keywords: ["despre", "about", "echipa", "contact"] },
+    { title: "Despre ImobIntel", href: "/about", keywords: ["despre", "about", "echipa", "contact"] },
   ];
 
   const matches = staticPages.filter((page) => {

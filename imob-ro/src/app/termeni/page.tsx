@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Termeni și Condiții",
-  description: "Termenii și condițiile de utilizare ale platformei imob.ro",
+  description: "Termenii și condițiile de utilizare ale platformei imobintel.ro",
 };
 
 export default function TermeniPage() {
@@ -14,7 +14,7 @@ export default function TermeniPage() {
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">1. Acceptarea Termenilor</h2>
         <p>
-          Prin accesarea și utilizarea platformei imob.ro (&quot;Platforma&quot;), sunteți de acord
+          Prin accesarea și utilizarea platformei ImobIntel (imobintel.ro) (&quot;Platforma&quot;), sunteți de acord
           să respectați acești Termeni și Condiții. Dacă nu sunteți de acord cu aceștii termeni, vă
           rugăm să nu utilizați Platforma.
         </p>
@@ -22,7 +22,7 @@ export default function TermeniPage() {
 
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">2. Despre Serviciu</h2>
-        <p>imob.ro este o platformă de analiză imobiliară pentru București care oferă:</p>
+        <p>ImobIntel este o platformă de analiză imobiliară pentru București care oferă:</p>
         <ul className="list-disc list-inside space-y-2 ml-4">
           <li>Estimări de preț automate (AVM - Automated Valuation Model)</li>
           <li>Timp estimat până la vânzare (TTS - Time to Sale)</li>
@@ -61,7 +61,7 @@ export default function TermeniPage() {
         <h2 className="text-2xl font-semibold">4. Proprietate Intelectuală</h2>
         <p>
           Tot conținutul, design-ul, logo-urile și codul sursă al Platformei sunt protejate de
-          drepturi de autor și aparțin imob.ro. Nu aveți dreptul să copiați, modificați sau
+          drepturi de autor și apartin ImobIntel. Nu aveți dreptul să copiați, modificați sau
           distribuiți conținutul fără permisiune scrisă.
         </p>
       </section>
@@ -80,7 +80,7 @@ export default function TermeniPage() {
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">6. Limitarea Răspunderii</h2>
         <p>
-          <strong>Estimările și analizele furnizate sunt orientative.</strong> imob.ro nu garantează
+          <strong>Estimările și analizele furnizate sunt orientative.</strong> ImobIntel nu garanteaza
           acuratețea absolută a prețurilor estimate, a timpului de vânzare sau a altor metrici.
         </p>
         <p>Nu suntem responsabili pentru:</p>
@@ -144,8 +144,8 @@ export default function TermeniPage() {
         <h2 className="text-2xl font-semibold">11. Contact</h2>
         <p>
           Pentru întrebări despre acești Termeni, contactați-ne la:{" "}
-          <a href="mailto:contact@imob.ro" className="text-primary hover:underline">
-            contact@imob.ro
+          <a href="mailto:contact@imobintel.ro" className="text-primary hover:underline">
+            contact@imobintel.ro
           </a>
         </p>
       </section>

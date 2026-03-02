@@ -29,10 +29,11 @@ export function getServerWhitelist(): Set<string> {
   }
   return new Set([
     "imobiliare.ro",
-    "olx.ro",
     "storia.ro",
-    "homezz.ro",
+    "olx.ro",
     "publi24.ro",
+    "lajumate.ro",
+    "homezz.ro",
     "example.com",
   ]);
 }

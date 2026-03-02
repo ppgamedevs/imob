@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import OwnerWizard from "./OwnerWizard";
 
 export const metadata: Metadata = {
-  title: "Evaluare Preț Apartament București | imob.ro",
+  title: "Evaluare Pret Apartament Bucuresti | ImobIntel",
   description:
     "Află pretul recomandat pentru apartamentul tău în 3 pași simpli. Evaluare AVM gratuită, estimare timp de vânzare și recomandări personalizate.",
   openGraph: {
@@ -26,7 +26,7 @@ export default async function VindePage({
       "Serviciu gratuit de evaluare automată (AVM) pentru proprietari de apartamente din București. Estimare preț de vânzare, timp până la vânzare și randament ca investiție.",
     provider: {
       "@type": "Organization",
-      name: "imob.ro",
+      name: "ImobIntel",
     },
     areaServed: {
       "@type": "City",

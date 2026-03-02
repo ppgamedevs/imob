@@ -161,7 +161,7 @@ export default async function PublicPortfolioPage({
         <div className="container max-w-7xl text-center text-sm text-gray-500">
           Powered by{" "}
           <Link href="/" className="text-white hover:underline">
-            imob.ro
+            ImobIntel
           </Link>
         </div>
       </div>

@@ -10,12 +10,12 @@ export async function sendMagicLinkEmail(email: string, token: string): Promise<
 
   try {
     await resend.emails.send({
-      from: "imob.ro <no-reply@imob.ro>",
+      from: "ImobIntel <no-reply@imobintel.ro>",
       to: email,
       subject: "Sign in to your agent workspace",
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2>Sign in to imob.ro</h2>
+          <h2>Sign in to ImobIntel</h2>
           <p>Click the link below to sign in to your agent workspace:</p>
           <p>
             <a href="${magicLink}" style="display: inline-block; background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px;">

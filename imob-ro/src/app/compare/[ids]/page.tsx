@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const items = await loadCompareListings(ids);
 
   return {
-    title: `Compară ${items.length} proprietăți | imob.ro`,
+    title: `Compară ${items.length} proprietăți | ImobIntel`,
     description: `Comparație side-by-side: preț, €/m², AVM, randament, timp vânzare pentru ${items.length} proprietăți selectate.`,
   };
 }

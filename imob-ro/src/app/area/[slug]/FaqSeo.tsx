@@ -58,7 +58,7 @@ export default function FaqSeo({ areaName, faq }: FaqSeoProps) {
           <div className="prose prose-sm max-w-none text-muted">
             <p>
               Zona <strong>{areaName}</strong> din București este monitorizată zilnic de platforma
-              imob.ro pentru a oferi cele mai recente informații despre piața imobiliară locală.
+              ImobIntel pentru a oferi cele mai recente informații despre piața imobiliară locală.
               Analizăm anunțurile active, calculăm prețurile mediane și estimăm timpul necesar
               pentru vânzare (TTS).
             </p>

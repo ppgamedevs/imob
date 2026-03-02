@@ -22,7 +22,7 @@ export default function SupportPage() {
     },
     {
       q: "Ce surse de date folositi?",
-      a: "Analizam anunturi de pe portaluri imobiliare publice. Nu garantam exhaustivitatea datelor si recomandam verificarea independenta.",
+      a: "Analizam anunturi de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro si lajumate.ro. Nu garantam exhaustivitatea datelor si recomandam verificarea independenta.",
     },
   ];
 
@@ -52,7 +52,7 @@ export default function SupportPage() {
         </CardHeader>
         <CardContent className="text-sm space-y-2">
           <p>
-            Email: <a href="mailto:support@imob.ro" className="text-primary underline">support@imob.ro</a>
+            Email: <a href="mailto:support@imobintel.ro" className="text-primary underline">support@imobintel.ro</a>
           </p>
           <p>Raspundem in maxim 24 de ore in zilele lucratoare.</p>
           <p className="mt-4">

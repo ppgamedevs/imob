@@ -31,7 +31,7 @@ export async function fetchWithCache(u: URL, init?: RequestInit) {
 
   const headers: HeadersInit = {
     ...((init?.headers as Record<string, string>) || {}),
-    "User-Agent": "ImobIntelBot/1.0 (+https://imob.ro/bot)",
+    "User-Agent": "ImobIntelBot/1.0 (+https://imobintel.ro/bot)",
   };
 
   if (cache?.etag) headers["If-None-Match"] = cache.etag;

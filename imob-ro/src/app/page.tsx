@@ -75,7 +75,7 @@ function Hero() {
           >
             <input
               name="q"
-              placeholder="Lipeste un URL de pe imobiliare.ro..."
+              placeholder="Lipeste un URL de pe imobiliare.ro, storia.ro, olx.ro..."
               className="flex-1 bg-transparent text-[15px] text-gray-900 placeholder:text-gray-400 px-4 py-3.5 outline-none"
             />
             <button
@@ -185,7 +185,7 @@ function Features() {
             Tot ce ai nevoie intr-un singur raport
           </h2>
           <p className="mt-3 text-[16px] md:text-[18px] text-gray-500 max-w-[520px] mx-auto">
-            Analiza completa pentru orice anunt de pe imobiliare.ro, in cateva secunde.
+            Analiza completa pentru orice anunt de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro sau lajumate.ro.
           </p>
         </div>
 
@@ -221,7 +221,7 @@ const steps = [
   {
     num: "1",
     title: "Lipeste un link",
-    description: "Copiaza URL-ul unui anunt de pe imobiliare.ro si lipeste-l in bara de sus.",
+    description: "Copiaza URL-ul unui anunt de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro sau lajumate.ro.",
   },
   {
     num: "2",
@@ -298,7 +298,7 @@ function CtaSection() {
           Analizeaza un anunt
         </Link>
         <p className="mt-4 text-[13px] text-gray-400">
-          Gratuit pentru primele 5 analize. Fara obligatii.
+          10 cautari gratuite pe luna. Fara obligatii.
         </p>
       </div>
     </section>

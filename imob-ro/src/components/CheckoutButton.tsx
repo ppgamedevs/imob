@@ -3,10 +3,10 @@
 import React from "react";
 
 export default function CheckoutButton({
-  mode = "subscription",
+  plan = "standard",
   children,
 }: {
-  mode?: "subscription" | "payment";
+  plan?: "standard" | "pro";
   children: React.ReactNode;
 }) {
   const onClick = async () => {
@@ -14,22 +14,25 @@ export default function CheckoutButton({
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode }),
+        body: JSON.stringify({ plan }),
       });
       const j = await res.json();
       if (j?.url) {
         window.location.href = j.url;
       } else {
-        alert("Failed to create checkout session");
+        alert("Eroare la crearea sesiunii de plata");
       }
     } catch (err) {
       console.error(err);
-      alert("Checkout error");
+      alert("Eroare la checkout");
     }
   };
 
   return (
-    <button className="btn btn-primary" onClick={onClick}>
+    <button
+      className="w-full rounded-xl py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white text-[14px] font-semibold shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200"
+      onClick={onClick}
+    >
       {children}
     </button>
   );

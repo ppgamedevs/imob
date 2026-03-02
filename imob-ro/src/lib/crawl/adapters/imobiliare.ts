@@ -22,7 +22,7 @@ export const adapterImobiliare: SourceAdapter = {
 
     // Otherwise, scrape listing page
     const res = await fetch(listUrl.toString(), {
-      headers: { "User-Agent": "ImobIntelBot/1.0 (+https://imob.ro/bot)" },
+      headers: { "User-Agent": "ImobIntelBot/1.0 (+https://imobintel.ro/bot)" },
     });
     const html = await res.text();
     const $ = cheerio.load(html);
@@ -164,7 +164,7 @@ export const adapterImobiliare: SourceAdapter = {
  */
 async function discoverFromSitemap(sitemapUrl: string): Promise<DiscoverResult> {
   const res = await fetch(sitemapUrl, {
-    headers: { "User-Agent": "ImobIntelBot/1.0 (+https://imob.ro/bot)" },
+    headers: { "User-Agent": "ImobIntelBot/1.0 (+https://imobintel.ro/bot)" },
   });
   const xml = await res.text();
 

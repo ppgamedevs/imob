@@ -190,7 +190,7 @@ export async function GET(request: NextRequest) {
               borderTop: "1px solid #2a2a2a",
             }}
           >
-            <div style={{ fontSize: "24px", fontWeight: "bold", color: "#6366f1" }}>imob.ro</div>
+            <div style={{ fontSize: "24px", fontWeight: "bold", color: "#6366f1" }}>ImobIntel</div>
             <div style={{ fontSize: "16px", color: "#a1a1a1" }}>Comparație proprietăți</div>
           </div>
         </div>

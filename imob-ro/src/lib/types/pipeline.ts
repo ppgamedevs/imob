@@ -98,11 +98,17 @@ export interface PipelineStep {
   run: (ctx: PipelineContext) => Promise<PipelineContext>;
 }
 
-/** Prisma Json field types for plan features */
+/** Prisma Json field types for plan features. -1 = unlimited */
 export interface PlanFeatures {
   analyze?: number;
   pdf?: number;
   share?: number;
+  alerts?: number;
+  advancedComps?: boolean;
+  detailedScore?: boolean;
+  history?: boolean;
+  historyDays?: number;
+  csvExport?: boolean;
   support?: string;
   [key: string]: unknown;
 }

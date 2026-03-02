@@ -1,22 +1,72 @@
-/**
- * Day 23 - Seed Plans
- * Creates Free and Pro plans with feature limits
- */
-
 import { prisma } from "../src/lib/db";
 
 export async function seedPlans() {
   await prisma.plan.upsert({
     where: { code: "free" },
-    update: {},
+    update: {
+      features: {
+        analyze: 10,
+        pdf: 0,
+        share: 0,
+        alerts: 0,
+        advancedComps: false,
+        detailedScore: false,
+        history: false,
+        csvExport: false,
+        support: "community",
+      },
+    },
     create: {
       code: "free",
       name: "Free",
       priceCents: 0,
       features: {
-        analyze: 20,
-        pdf: 3,
-        share: 3,
+        analyze: 10,
+        pdf: 0,
+        share: 0,
+        alerts: 0,
+        advancedComps: false,
+        detailedScore: false,
+        history: false,
+        csvExport: false,
+        support: "community",
+      },
+    },
+  });
+
+  await prisma.plan.upsert({
+    where: { code: "standard" },
+    update: {
+      priceCents: 4900,
+      stripePrice: process.env.STRIPE_PRICE_STANDARD ?? null,
+      features: {
+        analyze: 50,
+        pdf: 5,
+        share: 10,
+        alerts: 0,
+        advancedComps: true,
+        detailedScore: true,
+        history: true,
+        historyDays: 30,
+        csvExport: false,
+        support: "email",
+      },
+    },
+    create: {
+      code: "standard",
+      name: "Standard",
+      priceCents: 4900,
+      stripePrice: process.env.STRIPE_PRICE_STANDARD ?? null,
+      features: {
+        analyze: 50,
+        pdf: 5,
+        share: 10,
+        alerts: 0,
+        advancedComps: true,
+        detailedScore: true,
+        history: true,
+        historyDays: 30,
+        csvExport: false,
         support: "email",
       },
     },
@@ -24,33 +74,53 @@ export async function seedPlans() {
 
   await prisma.plan.upsert({
     where: { code: "pro" },
-    update: {},
+    update: {
+      priceCents: 9900,
+      stripePrice: process.env.STRIPE_PRICE_PRO ?? null,
+      features: {
+        analyze: -1,
+        pdf: -1,
+        share: -1,
+        alerts: 20,
+        advancedComps: true,
+        detailedScore: true,
+        history: true,
+        historyDays: -1,
+        csvExport: true,
+        support: "priority",
+      },
+    },
     create: {
       code: "pro",
       name: "Pro",
-      priceCents: 1900, // 19 €/lună
+      priceCents: 9900,
       stripePrice: process.env.STRIPE_PRICE_PRO ?? null,
       features: {
-        analyze: 300,
-        pdf: 50,
-        share: 100,
+        analyze: -1,
+        pdf: -1,
+        share: -1,
+        alerts: 20,
+        advancedComps: true,
+        detailedScore: true,
+        history: true,
+        historyDays: -1,
+        csvExport: true,
         support: "priority",
       },
     },
   });
 
-  console.log("✅ Seeded plans: free, pro");
+  console.log("Seeded plans: free, standard, pro");
 }
 
-// Run if called directly
 if (require.main === module) {
   seedPlans()
     .then(() => {
-      console.log("✅ Seed completed");
+      console.log("Seed completed");
       process.exit(0);
     })
     .catch((e) => {
-      console.error("❌ Seed failed:", e);
+      console.error("Seed failed:", e);
       process.exit(1);
     });
 }

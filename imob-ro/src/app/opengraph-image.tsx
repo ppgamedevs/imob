@@ -7,7 +7,7 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
-export const alt = "imob.ro - Caută, compară și vinde în București";
+export const alt = "ImobIntel - Analiza imobiliara inteligenta pentru Bucuresti";
 export const size = {
   width: 1200,
   height: 630,
@@ -48,7 +48,7 @@ export default async function Image() {
               lineHeight: 1.2,
             }}
           >
-            imob.ro
+            ImobIntel
           </h1>
           <p
             style={{

@@ -27,14 +27,14 @@ export async function generateMetadata({ params }: AreaPageProps): Promise<Metad
 
   if (!data) {
     return {
-      title: "Zonă negăsită – imob.ro",
+      title: "Zona negasita - ImobIntel",
     };
   }
 
   const { kpis } = data;
   const change30dText = formatChange(kpis.medianEurM2Change30d);
 
-  const title = `${kpis.name} - Prețuri, Chirii, Randament | București | imob.ro`;
+  const title = `${kpis.name} - Prețuri, Chirii, Randament | București | ImobIntel`;
   const description = `${kpis.name}, București: preț median ${formatNumber(kpis.medianEurM2)} €/m² (${change30dText} în 30 zile)${
     kpis.medianRentEurM2 ? `, chirie ${formatNumber(kpis.medianRentEurM2)} €/m²` : ""
   }${
@@ -110,7 +110,7 @@ export default async function AreaPage({ params, searchParams }: AreaPageProps) 
               "@type": "Offer",
               price: listing.priceEur,
               priceCurrency: "EUR",
-              url: `https://imob.ro${listing.href}`,
+              url: `https://imobintel.ro${listing.href}`,
               availability: "https://schema.org/InStock",
             })),
           }
@@ -125,13 +125,13 @@ export default async function AreaPage({ params, searchParams }: AreaPageProps) 
         "@type": "ListItem",
         position: 1,
         name: "București",
-        item: "https://imob.ro/area",
+        item: "https://imobintel.ro/area",
       },
       {
         "@type": "ListItem",
         position: 2,
         name: kpis.name,
-        item: `https://imob.ro/area/${slug}`,
+        item: `https://imobintel.ro/area/${slug}`,
       },
     ],
   };
