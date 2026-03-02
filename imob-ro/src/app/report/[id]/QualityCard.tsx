@@ -31,7 +31,7 @@ export function QualityCard({
         <div className="text-sm">
           <div className="font-medium">Calitatea anunțului</div>
           <div className={`inline-flex items-center px-2 py-0.5 rounded text-xs ${cls}`}>
-            {badge ?? detail?.aggregate?.badge ?? "—"} {s != null ? ` · ${s}/100` : ""}
+            {badge ?? detail?.aggregate?.badge ?? "-"} {s != null ? ` · ${s}/100` : ""}
           </div>
         </div>
       </div>

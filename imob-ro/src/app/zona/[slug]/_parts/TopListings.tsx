@@ -39,9 +39,9 @@ export function TopListings({ items }: { items: ListingItem[] }) {
                 />
               </div>
             )}
-            <div className="mt-2 text-sm font-medium line-clamp-1">{it.title || "—"}</div>
+            <div className="mt-2 text-sm font-medium line-clamp-1">{it.title || "-"}</div>
             <div className="text-xs text-muted-foreground">
-              {it.priceEur ? `€${it.priceEur.toLocaleString()}` : "—"}
+              {it.priceEur ? `€${it.priceEur.toLocaleString()}` : "-"}
               {ppSqm && <span className="ml-2">(€{ppSqm}/m²)</span>}
             </div>
           </Link>

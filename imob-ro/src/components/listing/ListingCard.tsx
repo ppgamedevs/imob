@@ -166,13 +166,13 @@ export default function ListingCard(props: ListingCardProps) {
 
           {/* Meta Row */}
           <div className="text-xs text-muted truncate">
-            {areaM2 ? `${areaM2} m²` : "—"}
+            {areaM2 ? `${areaM2} m²` : "-"}
             {" · "}
-            {rooms ? `${rooms} cam` : "—"}
+            {rooms ? `${rooms} cam` : "-"}
             {" · "}
-            {floor || "—"}
+            {floor || "-"}
             {" · "}
-            {yearBuilt || "—"}
+            {yearBuilt || "-"}
             {typeof distMetroM === "number" && <span> · {Math.round(distMetroM)} m de metrou</span>}
           </div>
 
@@ -246,7 +246,7 @@ function Chip({ children, title }: { children: React.ReactNode; title?: string }
 
 /** Format EUR currency */
 function fmtEur(value?: number): string {
-  if (typeof value !== "number") return "—";
+  if (typeof value !== "number") return "-";
   return new Intl.NumberFormat("ro-RO", {
     style: "currency",
     currency: "EUR",

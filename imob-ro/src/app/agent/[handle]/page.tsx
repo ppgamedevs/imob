@@ -69,7 +69,7 @@ export default async function AgentPublicPage({ params }: { params: Promise<{ ha
                     {a.extractedListing?.title ?? "Anunț"}
                   </div>
                   <div>
-                    {(f?.priceEur ?? 0).toLocaleString("ro-RO")} € · {f?.areaM2 ?? "—"} m²
+                    {(f?.priceEur ?? 0).toLocaleString("ro-RO")} € · {f?.areaM2 ?? "-"} m²
                   </div>
                 </div>
               </a>

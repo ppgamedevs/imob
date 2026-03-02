@@ -25,7 +25,7 @@ export default function FeedbackModal({
       });
       const json = await res.json();
       if (json?.ok) {
-        toast("Mulțumim — ai primit 1 raport gratuit!");
+        toast("Mulțumim - ai primit 1 raport gratuit!");
         onClose?.();
       } else {
         toast("Eroare la trimitere");

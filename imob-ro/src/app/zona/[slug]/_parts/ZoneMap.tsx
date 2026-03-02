@@ -23,7 +23,7 @@ export function ZoneMap({ items }: { items: MapItem[] }) {
         id: it.id,
         lat: it.lat,
         lng: it.lng,
-        title: it.title || "—",
+        title: it.title || "-",
         priceEur: it.priceEur || 0,
       }));
   }, [items]);

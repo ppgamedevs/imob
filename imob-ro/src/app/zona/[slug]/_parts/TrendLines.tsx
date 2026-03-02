@@ -35,7 +35,7 @@ export function TrendLines({ series }: { series: DailyPoint[] }) {
                 style={{ width: `${pct}%`, minWidth: pct > 0 ? "2px" : "0" }}
               />
             </div>
-            <div className="text-right">{d.pricePerSqm ? `€${d.pricePerSqm}` : "—"}</div>
+            <div className="text-right">{d.pricePerSqm ? `€${d.pricePerSqm}` : "-"}</div>
             <div className="text-right">{d.supply ?? 0}</div>
           </div>
         );

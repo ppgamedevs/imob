@@ -9,7 +9,7 @@ export default function Sparkline({
   width?: number;
   height?: number;
 }) {
-  if (!values || values.length === 0) return <div className="text-sm text-muted-foreground">—</div>;
+  if (!values || values.length === 0) return <div className="text-sm text-muted-foreground">-</div>;
 
   const min = Math.min(...values);
   const max = Math.max(...values);

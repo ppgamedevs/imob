@@ -213,7 +213,7 @@ export const ro = {
   agent: {
     upload: {
       title: "Import anunțuri",
-      subtitle: "Lipește până la 500 de linkuri — detectăm duplicatele automat",
+      subtitle: "Lipește până la 500 de linkuri - detectăm duplicatele automat",
       placeholder: "https://example.com/anunt1\nhttps://example.com/anunt2",
       cta: "Procesează linkurile",
     },
@@ -241,7 +241,7 @@ export const ro = {
       required: "Te rugăm să introduci adresa de email",
     },
     phone: {
-      invalid: "Verifică formatul — ex. 07xx xxx xxx",
+      invalid: "Verifică formatul - ex. 07xx xxx xxx",
       required: "Te rugăm să introduci numărul de telefon",
     },
     url: {

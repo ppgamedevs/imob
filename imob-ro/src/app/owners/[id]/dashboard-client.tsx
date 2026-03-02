@@ -78,7 +78,7 @@ export function OwnerDashboardClient({ data }: { data: OwnerDashboardData }) {
               </div>
 
               <div className="text-4xl font-bold text-primary mb-2">
-                €{data.scores.avmMid?.toLocaleString() ?? "—"}
+                €{data.scores.avmMid?.toLocaleString() ?? "-"}
               </div>
 
               {data.scores.avmLow && data.scores.avmHigh && (

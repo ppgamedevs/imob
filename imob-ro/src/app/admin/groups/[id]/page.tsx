@@ -96,11 +96,11 @@ export default async function AdminGroupDetailPage({
             </div>
             <div>
               <div className="text-sm text-muted-foreground">City</div>
-              <div className="text-lg">{group.city ?? "—"}</div>
+              <div className="text-lg">{group.city ?? "-"}</div>
             </div>
             <div>
               <div className="text-sm text-muted-foreground">Area</div>
-              <div className="text-lg">{group.areaSlug ?? "—"}</div>
+              <div className="text-lg">{group.areaSlug ?? "-"}</div>
             </div>
             <div>
               <div className="text-sm text-muted-foreground">Signature</div>
@@ -114,21 +114,21 @@ export default async function AdminGroupDetailPage({
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
                 <div>
                   <span className="text-muted-foreground">Price: </span>
-                  {snapshot.priceEur ? `${snapshot.priceEur.toLocaleString()} €` : "—"}
+                  {snapshot.priceEur ? `${snapshot.priceEur.toLocaleString()} €` : "-"}
                 </div>
                 <div>
                   <span className="text-muted-foreground">Range: </span>
                   {snapshot.priceMin && snapshot.priceMax
                     ? `${snapshot.priceMin.toLocaleString()}–${snapshot.priceMax.toLocaleString()} €`
-                    : "—"}
+                    : "-"}
                 </div>
                 <div>
                   <span className="text-muted-foreground">Area: </span>
-                  {snapshot.areaM2 ? `${snapshot.areaM2} m²` : "—"}
+                  {snapshot.areaM2 ? `${snapshot.areaM2} m²` : "-"}
                 </div>
                 <div>
                   <span className="text-muted-foreground">Sources: </span>
-                  {snapshot.sources ?? "—"}
+                  {snapshot.sources ?? "-"}
                 </div>
               </div>
             </div>

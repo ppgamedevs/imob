@@ -47,7 +47,7 @@ export function ResultsList({
             <div className="text-xs text-muted-foreground">{x.areaSlug || "București"}</div>
             <div className="mt-1">
               {x.priceEur?.toLocaleString("ro-RO")} € · {x.areaM2} m² · {x.rooms ?? "?"} cam ·{" "}
-              {x.yearBuilt ?? "—"}
+              {x.yearBuilt ?? "-"}
               {x.trustBadge ? (
                 <span className="ml-1 text-[11px] px-1.5 py-0.5 rounded bg-muted">
                   {x.trustBadge}
@@ -60,8 +60,8 @@ export function ResultsList({
               ) : null}
             </div>
             <div className="text-xs text-muted-foreground">
-              {x.eurm2 ? `${Math.round(x.eurm2)} €/m²` : "—"} ·{" "}
-              {x.distMetroM != null ? `${x.distMetroM} m metrou` : "—"}{" "}
+              {x.eurm2 ? `${Math.round(x.eurm2)} €/m²` : "-"} ·{" "}
+              {x.distMetroM != null ? `${x.distMetroM} m metrou` : "-"}{" "}
               {x.priceBadge ? `· ${x.priceBadge}` : ""}
             </div>
           </div>

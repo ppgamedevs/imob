@@ -50,9 +50,9 @@ export default function HowWeEstimatePage() {
       </p>
 
       <section className="mb-8">
-        <h2 className="text-xl font-medium mb-2">AVM — Preț estimat</h2>
+        <h2 className="text-xl font-medium mb-2">AVM - Preț estimat</h2>
         <p className="text-sm text-muted-foreground">
-          Calculăm un interval (low — high) și un nivel de încredere. Limitele: modelul se bazează
+          Calculăm un interval (low - high) și un nivel de încredere. Limitele: modelul se bazează
           pe date publice și anunțuri extrase. În zone cu puține date, încrederea scade.
         </p>
       </section>

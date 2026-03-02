@@ -11,7 +11,7 @@ export default function AreaHeatmap({
   history?: number[] | null;
   slug?: string | null;
 }) {
-  if (score == null) return <div className="text-sm text-muted-foreground">—</div>;
+  if (score == null) return <div className="text-sm text-muted-foreground">-</div>;
 
   const normalized = Math.max(0, score);
   let bg = "bg-gray-300";

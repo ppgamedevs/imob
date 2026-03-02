@@ -39,7 +39,7 @@ const styles = StyleSheet.create({
 });
 
 function fmt(n?: number | null, digits = 0) {
-  if (n == null) return "—";
+  if (n == null) return "-";
   return Intl.NumberFormat("ro-RO", { maximumFractionDigits: digits }).format(n);
 }
 
@@ -84,11 +84,11 @@ export default function ReportPdf(props: {
               </View>
               <View style={styles.stat}>
                 <Text>Badge preț</Text>
-                <Text>{data.priceBadge ?? "—"}</Text>
+                <Text>{data.priceBadge ?? "-"}</Text>
               </View>
               <View style={styles.stat}>
                 <Text>Timp de vânzare</Text>
-                <Text>{data.ttsBucket ? `~ ${data.ttsBucket} zile` : "—"}</Text>
+                <Text>{data.ttsBucket ? `~ ${data.ttsBucket} zile` : "-"}</Text>
               </View>
               <View style={styles.stat}>
                 <Text>Chirie estimată</Text>
@@ -118,7 +118,7 @@ export default function ReportPdf(props: {
               <View style={styles.stat}>
                 <Text>Încredere</Text>
                 <Text>
-                  {data.avmConf != null ? `${Math.round((data.avmConf || 0) * 100)}%` : "—"}
+                  {data.avmConf != null ? `${Math.round((data.avmConf || 0) * 100)}%` : "-"}
                 </Text>
               </View>
             </View>

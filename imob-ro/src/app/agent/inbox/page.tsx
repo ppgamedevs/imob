@@ -34,9 +34,9 @@ export default async function AgentInboxPage() {
                 {l.createdAt.toLocaleString("ro-RO")}
               </div>
             </div>
-            <div className="mt-1">{l.message || "—"}</div>
+            <div className="mt-1">{l.message || "-"}</div>
             <div className="mt-1 text-xs text-muted-foreground">
-              Sursă: {l.source ?? "—"} ·{" "}
+              Sursă: {l.source ?? "-"} ·{" "}
               <Link className="underline" href={`/report/${l.analysisId}`}>
                 raport
               </Link>

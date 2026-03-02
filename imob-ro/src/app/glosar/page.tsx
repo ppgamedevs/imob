@@ -6,11 +6,11 @@ import { Surface } from "@/components/ui/Surface";
 import { ro } from "@/i18n/ro";
 
 export const metadata: Metadata = {
-  title: "Glosar — Termeni Imobiliari",
+  title: "Glosar - Termeni Imobiliari",
   description:
     "Explicații clare pentru termeni tehnici: AVM, Time to Sell, €/m², Randament, Risc Seismic și mai multe.",
   openGraph: {
-    title: "Glosar — Termeni Imobiliari",
+    title: "Glosar - Termeni Imobiliari",
     description: "Explicații clare pentru termeni tehnici folosiți în evaluările imobiliare",
   },
 };

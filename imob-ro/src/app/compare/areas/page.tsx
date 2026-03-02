@@ -154,10 +154,10 @@ export default async function CompareAreasPage({ searchParams }: PageProps) {
                     {area.medianEurM2.toLocaleString("ro-RO")} €
                   </td>
                   <td className="px-4 py-3 text-sm text-right text-muted">
-                    {area.rentEurM2?.toLocaleString("ro-RO") || "—"} €
+                    {area.rentEurM2?.toLocaleString("ro-RO") || "-"} €
                   </td>
                   <td className="px-4 py-3 text-sm text-right font-medium">
-                    {area.yieldNet?.toFixed(1) || "—"}%
+                    {area.yieldNet?.toFixed(1) || "-"}%
                   </td>
                   <td
                     className={`px-4 py-3 text-sm text-right font-medium ${
@@ -166,7 +166,7 @@ export default async function CompareAreasPage({ searchParams }: PageProps) {
                   >
                     {area.change12m !== undefined
                       ? `${area.change12m > 0 ? "+" : ""}${area.change12m.toFixed(1)}%`
-                      : "—"}
+                      : "-"}
                   </td>
                   <td className="px-4 py-3 text-sm text-right text-muted">
                     ~{area.ttsMedianDays || 60} zile

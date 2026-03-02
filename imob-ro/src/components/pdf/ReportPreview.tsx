@@ -47,7 +47,7 @@ export default function ReportPreview({
         setPdfUrl(null);
       }
     };
-    // intentionally only watch `open` — fetchPdf is stable via useCallback
+    // intentionally only watch `open` - fetchPdf is stable via useCallback
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 

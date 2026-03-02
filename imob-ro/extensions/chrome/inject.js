@@ -79,7 +79,7 @@
   })
     .then((r) => r.json())
     .then((data) => {
-      alert("Trimis către YOUR_DOMAIN — analysisId: " + (data?.analysisId || JSON.stringify(data)));
+      alert("Trimis către YOUR_DOMAIN - analysisId: " + (data?.analysisId || JSON.stringify(data)));
     })
     .catch(() => {
       console.error("client-push failed");

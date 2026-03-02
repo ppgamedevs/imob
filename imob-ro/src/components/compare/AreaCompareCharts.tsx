@@ -133,7 +133,7 @@ function MetricChart({ label, values, names, colors, format }: MetricChartProps)
                     value > 0 && "text-success",
                   )}
                 >
-                  {value !== 0 ? format(value) : "—"}
+                  {value !== 0 ? format(value) : "-"}
                 </span>
               </div>
               {value !== 0 && (

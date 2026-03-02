@@ -16,7 +16,7 @@ export type CompItem = {
 };
 
 function fmtPrice(n?: number | null) {
-  if (n == null) return "—";
+  if (n == null) return "-";
   return n.toLocaleString("ro-RO");
 }
 
@@ -64,11 +64,11 @@ export function CompsCarousel({
             <div className="mt-2 text-sm">
               <div className="font-medium line-clamp-1">{c.title || "Comparabil"}</div>
               <div>
-                {fmtPrice(c.priceEur)} € · {c.areaM2 ? `${c.areaM2} m²` : "—"}
+                {fmtPrice(c.priceEur)} € · {c.areaM2 ? `${c.areaM2} m²` : "-"}
               </div>
               <div className="text-xs text-muted-foreground">
-                {c.eurM2 ? `${Math.round(c.eurM2)} €/m²` : "—"} ·{" "}
-                {c.distanceM != null ? `${c.distanceM} m` : "—"}
+                {c.eurM2 ? `${Math.round(c.eurM2)} €/m²` : "-"} ·{" "}
+                {c.distanceM != null ? `${c.distanceM} m` : "-"}
               </div>
             </div>
           </a>

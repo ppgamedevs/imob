@@ -30,7 +30,7 @@ export default function Hero({ kpis, series }: HeroProps) {
 
   const handleShare = async () => {
     const url = `${window.location.origin}/area/${kpis.slug}`;
-    const text = `${kpis.name} — Preț median ${formatNumber(kpis.medianEurM2)} €/m²`;
+    const text = `${kpis.name} - Preț median ${formatNumber(kpis.medianEurM2)} €/m²`;
 
     if (navigator.share) {
       try {

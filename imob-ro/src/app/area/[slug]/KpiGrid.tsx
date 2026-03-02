@@ -88,7 +88,7 @@ export default function KpiGrid({ kpis }: KpiGridProps) {
             size="md"
           />
         ) : (
-          <KpiTile icon={DollarSign} label="Chirie medie" value="—" size="md" />
+          <KpiTile icon={DollarSign} label="Chirie medie" value="-" size="md" />
         )}
 
         {/* Yield */}
@@ -103,7 +103,7 @@ export default function KpiGrid({ kpis }: KpiGridProps) {
             size="md"
           />
         ) : (
-          <KpiTile icon={TrendingUp} label="Randament net" value="—" size="md" />
+          <KpiTile icon={TrendingUp} label="Randament net" value="-" size="md" />
         )}
 
         {/* TTS */}
@@ -122,7 +122,7 @@ export default function KpiGrid({ kpis }: KpiGridProps) {
             size="md"
           />
         ) : (
-          <KpiTile icon={Clock} label="Timp până la vânzare" value="—" size="md" />
+          <KpiTile icon={Clock} label="Timp până la vânzare" value="-" size="md" />
         )}
 
         {/* Seismic */}
@@ -136,7 +136,7 @@ export default function KpiGrid({ kpis }: KpiGridProps) {
           {seismicBar ? (
             seismicBar
           ) : (
-            <div className="text-2xl font-bold text-[rgb(var(--text))] mb-1">—</div>
+            <div className="text-2xl font-bold text-[rgb(var(--text))] mb-1">-</div>
           )}
           <div className="text-[var(--fs-xs)] text-[rgb(var(--muted))] mt-2">
             Distribuția în zonă

@@ -64,7 +64,7 @@ function Hero() {
         {/* Subtitle */}
         <p className="mx-auto mt-5 max-w-[600px] text-[17px] md:text-[19px] leading-relaxed text-gray-500 animate-fade-up [animation-delay:200ms]">
           Lipeste un link de anunt si primesti pret estimat, comparabile,
-          viteza de vanzare si risc seismic — totul in cateva secunde.
+          viteza de vanzare si risc seismic - totul in cateva secunde.
         </p>
 
         {/* Search bar */}

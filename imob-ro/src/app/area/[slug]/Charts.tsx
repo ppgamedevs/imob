@@ -58,31 +58,31 @@ export default function Charts({ series, areaName, defaultView, defaultRange }: 
         return filteredSeries.map((s) => ({
           date: s.date,
           value: s.eurM2 ?? null,
-          label: s.eurM2 ? `${formatNumber(s.eurM2)} €/m²` : "—",
+          label: s.eurM2 ? `${formatNumber(s.eurM2)} €/m²` : "-",
         }));
       case "rent":
         return filteredSeries.map((s) => ({
           date: s.date,
           value: s.rentEurM2 ?? null,
-          label: s.rentEurM2 ? `${formatNumber(s.rentEurM2)} €/m²` : "—",
+          label: s.rentEurM2 ? `${formatNumber(s.rentEurM2)} €/m²` : "-",
         }));
       case "yield":
         return filteredSeries.map((s) => ({
           date: s.date,
           value: s.yieldNet ? s.yieldNet * 100 : null,
-          label: s.yieldNet ? `${(s.yieldNet * 100).toFixed(1)}%` : "—",
+          label: s.yieldNet ? `${(s.yieldNet * 100).toFixed(1)}%` : "-",
         }));
       case "tts":
         return filteredSeries.map((s) => ({
           date: s.date,
           value: s.ttsDays ?? null,
-          label: s.ttsDays ? `${s.ttsDays} zile` : "—",
+          label: s.ttsDays ? `${s.ttsDays} zile` : "-",
         }));
       case "supply":
         return filteredSeries.map((s) => ({
           date: s.date,
           value: s.supply ?? null,
-          label: s.supply ? `${s.supply} anunțuri` : "—",
+          label: s.supply ? `${s.supply} anunțuri` : "-",
         }));
       default:
         return [];

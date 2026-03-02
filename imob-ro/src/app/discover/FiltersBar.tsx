@@ -108,7 +108,7 @@ export default function FiltersBar({ onFilterChange }: FiltersBarProps) {
                 "focus:outline-none focus:ring-2 focus:ring-primary",
               )}
             />
-            <span className="text-sm text-muted">—</span>
+            <span className="text-sm text-muted">-</span>
             <input
               type="number"
               placeholder="Max €"
@@ -137,7 +137,7 @@ export default function FiltersBar({ onFilterChange }: FiltersBarProps) {
                 "focus:outline-none focus:ring-2 focus:ring-primary",
               )}
             />
-            <span className="text-sm text-muted">—</span>
+            <span className="text-sm text-muted">-</span>
             <input
               type="number"
               placeholder="Max m²"

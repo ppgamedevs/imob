@@ -17,7 +17,7 @@ import { NextResponse } from "next/server";
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Cron routes — require CRON_SECRET (skipped in dev when not set)
+  // Cron routes - require CRON_SECRET (skipped in dev when not set)
   if (pathname.startsWith("/api/cron/")) {
     const secret = process.env.CRON_SECRET;
     if (secret) {

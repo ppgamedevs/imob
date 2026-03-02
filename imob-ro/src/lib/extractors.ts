@@ -92,7 +92,7 @@ export async function maybeFetchServer(url: string) {
     const whitelist = getServerWhitelist();
     if (!whitelist.has(host)) return null;
 
-    // disallowed domains env (explicit blocklist) — quick check
+    // disallowed domains env (explicit blocklist) - quick check
     const disallowed = (process.env.DISALLOWED_DOMAINS || "")
       .split(",")
       .map((s) => s.trim().toLowerCase())

@@ -33,9 +33,9 @@ type RowDef = {
   format: (value: number | undefined, item: CompareListing) => React.ReactNode;
 };
 
-const formatNumber = (n?: number) => (n !== undefined ? n.toLocaleString("ro-RO") : "—");
-const formatPercent = (n?: number) => (n !== undefined ? `${n.toFixed(1)}%` : "—");
-const formatDays = (n?: number) => (n !== undefined ? `~${n} zile` : "—");
+const formatNumber = (n?: number) => (n !== undefined ? n.toLocaleString("ro-RO") : "-");
+const formatPercent = (n?: number) => (n !== undefined ? `${n.toFixed(1)}%` : "-");
+const formatDays = (n?: number) => (n !== undefined ? `~${n} zile` : "-");
 
 export function CompareTable({ items, onRemove }: CompareTableProps) {
   const rows: RowDef[] = [
@@ -94,21 +94,21 @@ export function CompareTable({ items, onRemove }: CompareTableProps) {
       label: "Camere",
       better: "custom",
       get: (x) => x.rooms,
-      format: (v) => v || "—",
+      format: (v) => v || "-",
     },
     {
       key: "floor",
       label: "Etaj",
       better: "custom",
       get: () => undefined,
-      format: (_, item) => item.floor || "—",
+      format: (_, item) => item.floor || "-",
     },
     {
       key: "year",
       label: "An construcție",
       better: "higher",
       get: (x) => x.yearBuilt,
-      format: (v) => v || "—",
+      format: (v) => v || "-",
     },
     {
       key: "metro",
@@ -170,7 +170,7 @@ export function CompareTable({ items, onRemove }: CompareTableProps) {
       get: (x) => x.quality?.score,
       format: (_, item) => (
         <div className="space-y-1">
-          <div className="font-medium">{item.quality?.label || "—"}</div>
+          <div className="font-medium">{item.quality?.label || "-"}</div>
           {item.quality?.score !== undefined && (
             <div className="text-xs text-muted">{item.quality.score.toFixed(0)}%</div>
           )}

@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: AreaPageProps): Promise<Metad
   const { kpis } = data;
   const change30dText = formatChange(kpis.medianEurM2Change30d);
 
-  const title = `${kpis.name} — Prețuri, Chirii, Randament | București | imob.ro`;
+  const title = `${kpis.name} - Prețuri, Chirii, Randament | București | imob.ro`;
   const description = `${kpis.name}, București: preț median ${formatNumber(kpis.medianEurM2)} €/m² (${change30dText} în 30 zile)${
     kpis.medianRentEurM2 ? `, chirie ${formatNumber(kpis.medianRentEurM2)} €/m²` : ""
   }${
@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: AreaPageProps): Promise<Metad
       canonical: `/area/${slug}`,
     },
     openGraph: {
-      title: `${kpis.name} — Date imobiliare în timp real`,
+      title: `${kpis.name} - Date imobiliare în timp real`,
       description,
       url: `/area/${slug}`,
       type: "website",

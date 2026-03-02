@@ -34,7 +34,7 @@ export type ReportData = ReportDocData;
 
 export function ReportDoc({ data }: { data: ReportDocData }) {
   const negotiableText =
-    data.negotiableProb != null ? `${Math.round((data.negotiableProb ?? 0) * 100)}%` : "—";
+    data.negotiableProb != null ? `${Math.round((data.negotiableProb ?? 0) * 100)}%` : "-";
 
   return (
     <Document>
@@ -47,25 +47,25 @@ export function ReportDoc({ data }: { data: ReportDocData }) {
           )}
           <View>
             <Text style={styles.title}>{data.address ?? "Adresa necunoscuta"}</Text>
-            <Text>{`Preț: ${data.price ?? "—"} EUR`}</Text>
+            <Text>{`Preț: ${data.price ?? "-"} EUR`}</Text>
           </View>
         </View>
 
         <View style={styles.section}>
           <Text style={{ fontWeight: 700 }}>AVM</Text>
           <Text>
-            {data.avm ? `${data.avm.low} - ${data.avm.high} (conf ${data.avm.conf})` : "—"}
+            {data.avm ? `${data.avm.low} - ${data.avm.high} (conf ${data.avm.conf})` : "-"}
           </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={{ fontWeight: 700 }}>TTS</Text>
-          <Text>{data.tts ?? "—"}</Text>
+          <Text>{data.tts ?? "-"}</Text>
         </View>
 
         <View style={styles.section}>
           <Text style={{ fontWeight: 700 }}>Timp până la metrou</Text>
-          <Text>{data.time_to_metro_min != null ? `${data.time_to_metro_min} min` : "—"}</Text>
+          <Text>{data.time_to_metro_min != null ? `${data.time_to_metro_min} min` : "-"}</Text>
         </View>
 
         <View style={styles.section}>
@@ -75,18 +75,18 @@ export function ReportDoc({ data }: { data: ReportDocData }) {
 
         <View style={styles.section}>
           <Text style={{ fontWeight: 700 }}>Randament</Text>
-          <Text>{data.yieldNet ? `${(data.yieldNet * 100).toFixed(2)}%` : "—"}</Text>
+          <Text>{data.yieldNet ? `${(data.yieldNet * 100).toFixed(2)}%` : "-"}</Text>
         </View>
 
         <View style={styles.section}>
           <Text style={{ fontWeight: 700 }}>Risc seismic</Text>
-          <Text>{data.riskSeismic ?? "—"}</Text>
+          <Text>{data.riskSeismic ?? "-"}</Text>
         </View>
 
         <View style={styles.section}>
           <Text style={{ fontWeight: 700 }}>Stare (din poze)</Text>
           <Text>
-            {data.conditionScore != null ? `${Math.round(data.conditionScore * 100)}%` : "—"}
+            {data.conditionScore != null ? `${Math.round(data.conditionScore * 100)}%` : "-"}
           </Text>
         </View>
 
@@ -96,11 +96,11 @@ export function ReportDoc({ data }: { data: ReportDocData }) {
             data.comps.slice(0, 5).map((c, i) => {
               const comp = c as Record<string, unknown>;
               const title = (comp.title as string) ?? (comp.address as string) ?? "comp";
-              const price = (comp.price as number) ?? "—";
-              return <Text key={i}>{`${title} — ${price}`}</Text>;
+              const price = (comp.price as number) ?? "-";
+              return <Text key={i}>{`${title} - ${price}`}</Text>;
             })
           ) : (
-            <Text>—</Text>
+            <Text>-</Text>
           )}
         </View>
 

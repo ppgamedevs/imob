@@ -131,7 +131,7 @@ function ChartBar({ label, values, labels, colors, format, lowerIsBetter }: Char
                   {labels[idx].length > 20 && "..."}
                 </span>
                 <span className={cn("font-medium", isBest && "text-success")}>
-                  {value > 0 ? format(value) : "—"}
+                  {value > 0 ? format(value) : "-"}
                 </span>
               </div>
               {value > 0 && (

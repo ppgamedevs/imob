@@ -10,7 +10,7 @@ type Props = {
 };
 
 function compareBadge(actual: number | undefined | null, mid: number) {
-  if (!actual) return { label: "—", variant: "outline" as const };
+  if (!actual) return { label: "-", variant: "outline" as const };
   const ratio = actual / mid;
   if (ratio < 0.9) return { label: "Under", variant: "secondary" as const };
   if (ratio > 1.1) return { label: "Over", variant: "destructive" as const };
@@ -20,7 +20,7 @@ function compareBadge(actual: number | undefined | null, mid: number) {
 export function AvmCard({ priceRange, actualPrice }: Props) {
   const badge = priceRange
     ? compareBadge(actualPrice, priceRange.mid)
-    : { label: "—", variant: "outline" as const };
+    : { label: "-", variant: "outline" as const };
 
   return (
     <div className="rounded-lg-2 overflow-hidden glass-card p-4 shadow-card-lg">
@@ -28,13 +28,13 @@ export function AvmCard({ priceRange, actualPrice }: Props) {
         <div>
           <div className="text-sm font-medium">Preț estimat</div>
           <div className="text-2xl font-extrabold">
-            {priceRange ? priceRange.mid.toLocaleString("ro-RO") + " €" : "—"}
+            {priceRange ? priceRange.mid.toLocaleString("ro-RO") + " €" : "-"}
           </div>
         </div>
         <div className="flex flex-col items-end gap-2">
           <Badge variant={badge.variant as keyof typeof badgeVariants}>{badge.label}</Badge>
           <div className="text-xs text-muted-foreground">
-            Confidență: {priceRange ? `${Math.round(priceRange.conf * 100)}%` : "—"}
+            Confidență: {priceRange ? `${Math.round(priceRange.conf * 100)}%` : "-"}
           </div>
         </div>
       </div>

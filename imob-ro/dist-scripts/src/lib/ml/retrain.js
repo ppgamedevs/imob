@@ -14,7 +14,7 @@ async function tryTrainGBM(X, y, opts) {
 
     const xgb = require("xgboost-wasm");
     if (!xgb) return null;
-    // This block is illustrative — xgboost-wasm APIs differ; implement a best-effort wrapper
+    // This block is illustrative - xgboost-wasm APIs differ; implement a best-effort wrapper
     if (typeof xgb.train === "function") {
       const params = opts?.params ?? { max_depth: 4, eta: 0.3, objective: "reg:squarederror" };
       const dtrain = new xgb.DMatrix(X, y);

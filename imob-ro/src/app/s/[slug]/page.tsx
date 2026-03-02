@@ -39,8 +39,8 @@ export async function generateMetadata({
   }
 
   const title = data.a.extractedListing?.title
-    ? `${data.a.extractedListing.title} — Analiză ImobIntel`
-    : "Analiză imobiliară — ImobIntel";
+    ? `${data.a.extractedListing.title} - Analiză ImobIntel`
+    : "Analiză imobiliară - ImobIntel";
   const desc =
     "Estimare preț, timp de vânzare, randament și risc seismic. Partajat prin ImobIntel.";
   const ogImageUrl = `/api/og/report/${data.a.id}`;
@@ -177,7 +177,7 @@ export default async function SharePage(props: { params: Promise<{ slug: string 
               Preț estimat
             </div>
             <div className="text-2xl font-semibold mb-1">
-              {s.avmMid ? `${s.avmMid.toLocaleString("ro-RO")} €` : "—"}
+              {s.avmMid ? `${s.avmMid.toLocaleString("ro-RO")} €` : "-"}
             </div>
             {s.avmLow && s.avmHigh && (
               <div className="text-sm text-muted-foreground">
@@ -185,7 +185,7 @@ export default async function SharePage(props: { params: Promise<{ slug: string 
               </div>
             )}
             <div className="text-xs mt-2">
-              Încredere: {s.avmConf != null ? `${Math.round((s.avmConf || 0) * 100)}%` : "—"}
+              Încredere: {s.avmConf != null ? `${Math.round((s.avmConf || 0) * 100)}%` : "-"}
             </div>
           </div>
 
@@ -195,7 +195,7 @@ export default async function SharePage(props: { params: Promise<{ slug: string 
               Time to sell
             </div>
             <div className="text-2xl font-semibold mb-1">
-              {s.ttsBucket ? `~${s.ttsBucket} zile` : "—"}
+              {s.ttsBucket ? `~${s.ttsBucket} zile` : "-"}
             </div>
             <div className="text-xs text-muted-foreground">Estimare bazată pe piață</div>
           </div>
@@ -206,7 +206,7 @@ export default async function SharePage(props: { params: Promise<{ slug: string 
               Randament net
             </div>
             <div className="text-2xl font-semibold mb-1">
-              {s.yieldNet != null ? `${(s.yieldNet * 100).toFixed(1)}%` : "—"}
+              {s.yieldNet != null ? `${(s.yieldNet * 100).toFixed(1)}%` : "-"}
             </div>
             {s.estRent && (
               <div className="text-sm text-muted-foreground">
@@ -222,29 +222,29 @@ export default async function SharePage(props: { params: Promise<{ slug: string 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
               <div className="text-muted-foreground text-xs mb-1">Suprafață</div>
-              <div className="font-medium">{f.areaM2 ? `${f.areaM2} m²` : "—"}</div>
+              <div className="font-medium">{f.areaM2 ? `${f.areaM2} m²` : "-"}</div>
             </div>
             <div>
               <div className="text-muted-foreground text-xs mb-1">Camere</div>
-              <div className="font-medium">{f.rooms ?? "—"}</div>
+              <div className="font-medium">{f.rooms ?? "-"}</div>
             </div>
             <div>
               <div className="text-muted-foreground text-xs mb-1">Etaj</div>
-              <div className="font-medium">{f.level ?? "—"}</div>
+              <div className="font-medium">{f.level ?? "-"}</div>
             </div>
             <div>
               <div className="text-muted-foreground text-xs mb-1">An construcție</div>
-              <div className="font-medium">{f.yearBuilt ?? "—"}</div>
+              <div className="font-medium">{f.yearBuilt ?? "-"}</div>
             </div>
             <div>
               <div className="text-muted-foreground text-xs mb-1">Distanță metrou</div>
               <div className="font-medium">
-                {f.distMetroM != null ? `${Math.round(f.distMetroM)} m` : "—"}
+                {f.distMetroM != null ? `${Math.round(f.distMetroM)} m` : "-"}
               </div>
             </div>
             <div>
               <div className="text-muted-foreground text-xs mb-1">Risc seismic</div>
-              <div className="font-medium">{s.riskClass ?? "—"}</div>
+              <div className="font-medium">{s.riskClass ?? "-"}</div>
             </div>
           </div>
         </div>
@@ -262,7 +262,7 @@ export default async function SharePage(props: { params: Promise<{ slug: string 
               Vezi anunț original
             </Link>
           ) : (
-            "—"
+            "-"
           )}
         </div>
       </div>
