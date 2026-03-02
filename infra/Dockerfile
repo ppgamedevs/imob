@@ -35,7 +35,8 @@ COPY --from=builder /app/node_modules/.pnpm/@prisma+client*/node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/prisma ./prisma
 
-RUN cd /app && npm install --no-save prisma@6.17.1
+RUN mkdir /prisma-cli && cd /prisma-cli && npm init -y && npm install prisma@6.17.1
+ENV PATH="/prisma-cli/node_modules/.bin:$PATH"
 
 USER nextjs
 EXPOSE 3000
