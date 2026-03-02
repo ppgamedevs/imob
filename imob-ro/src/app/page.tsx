@@ -1,25 +1,28 @@
 "use client";
 
+import {
+  BarChart3,
+  Clock,
+  FileText,
+  MapPin,
+  MessageSquare,
+  Shield,
+} from "lucide-react";
 import Link from "next/link";
 
 export default function HomePage() {
   return (
-    <main className="min-h-[100dvh]">
-      <section className="relative overflow-hidden">
-        <div
-          className="pointer-events-none absolute inset-0
-          bg-[radial-gradient(90%_60%_at_50%_0%,rgba(99,102,241,.25),transparent)]
-          md:bg-[radial-gradient(70%_60%_at_50%_-20%,rgba(99,102,241,.28),transparent)]"
-        />
-        <div className="mx-auto max-w-[1040px] px-4 pt-16 md:pt-24 pb-8 text-center relative">
-          <Hero />
-          <ValueProps />
-        </div>
-      </section>
-      <BelowFold />
+    <main className="overflow-hidden">
+      <Hero />
+      <SocialProof />
+      <Features />
+      <HowItWorks />
+      <CtaSection />
     </main>
   );
 }
+
+/* ---------- Hero ---------- */
 
 function Hero() {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -27,107 +30,276 @@ function Hero() {
     const formData = new FormData(e.currentTarget);
     const query = (formData.get("q") as string)?.trim();
     if (!query) return;
-
-    try {
-      new URL(query);
-      window.location.href = `/analyze?url=${encodeURIComponent(query)}`;
-    } catch {
-      window.location.href = `/analyze?url=${encodeURIComponent(query)}`;
-    }
+    window.location.href = `/analyze?url=${encodeURIComponent(query)}`;
   };
 
   return (
-    <>
-      <h1 className="text-4xl md:text-6xl font-semibold tracking-tight">
-        Analiza imobiliara <span className="text-primary">inteligenta</span>
-      </h1>
-      <p className="mt-3 text-[15px] md:text-lg text-muted">
-        Lipeste un link de anunt si primesti pret estimat, comparabile, viteza vanzarii si risc seismic.
-      </p>
+    <section className="relative isolate">
+      {/* Gradient mesh background */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10
+          bg-[radial-gradient(80%_50%_at_50%_-10%,rgba(37,99,235,.12),transparent_70%)]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10
+          bg-[radial-gradient(40%_40%_at_70%_20%,rgba(124,58,237,.08),transparent_70%)]"
+      />
 
-      <div className="mx-auto mt-8 max-w-[760px]">
-        <form
-          onSubmit={handleSubmit}
-          className="flex items-center gap-2 rounded-2xl border border-border bg-surface shadow-elev2 p-2"
-        >
-          <input
-            name="q"
-            placeholder="Lipeste un URL de pe imobiliare.ro..."
-            className="flex-1 bg-transparent outline-none text-[15px] placeholder:text-muted px-3 py-3 focus:outline-none focus:ring-0"
-          />
-          <button
-            type="submit"
-            className="rounded-xl px-6 py-3 bg-primary text-white text-sm font-medium hover:bg-primary/90 active:scale-95 transition-all duration-150 shadow-sm hover:shadow-md"
-          >
-            Analizeaza
-          </button>
-        </form>
-        <p className="mt-3 text-xs text-muted">
-          Exemplu:{" "}
-          <button
-            type="button"
-            className="underline hover:no-underline"
-            onClick={() => {
-              const input = document.querySelector<HTMLInputElement>("input[name=q]");
-              if (input) input.value = "https://www.imobiliare.ro/vanzare-apartamente/bucuresti/floreasca/apartament-de-vanzare-2-camere-XY12345";
-            }}
-          >
-            imobiliare.ro/vanzare-apartamente/bucuresti/...
-          </button>
+      <div className="mx-auto max-w-[980px] px-5 pt-24 pb-6 md:pt-36 md:pb-10 text-center">
+        {/* Badge */}
+        <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-4 py-1.5 text-[13px] font-medium text-gray-600 shadow-sm animate-fade-up">
+          <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
+          Platforma de analiza imobiliara #1 din Romania
+        </div>
+
+        {/* Headline */}
+        <h1 className="text-[40px] leading-[1.1] md:text-[72px] md:leading-[1.05] font-extrabold tracking-[-0.04em] text-gray-950 animate-fade-up [animation-delay:100ms]">
+          Analiza imobiliara
+          <br />
+          <span className="text-gradient">pentru investitori inteligenti</span>
+        </h1>
+
+        {/* Subtitle */}
+        <p className="mx-auto mt-5 max-w-[600px] text-[17px] md:text-[19px] leading-relaxed text-gray-500 animate-fade-up [animation-delay:200ms]">
+          Lipeste un link de anunt si primesti pret estimat, comparabile,
+          viteza de vanzare si risc seismic — totul in cateva secunde.
         </p>
+
+        {/* Search bar */}
+        <div className="mx-auto mt-10 max-w-[680px] animate-fade-up [animation-delay:300ms]">
+          <form
+            onSubmit={handleSubmit}
+            className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white p-2 shadow-lg shadow-gray-200/60 transition-shadow duration-300 focus-within:shadow-xl focus-within:shadow-blue-100/40"
+          >
+            <input
+              name="q"
+              placeholder="Lipeste un URL de pe imobiliare.ro..."
+              className="flex-1 bg-transparent text-[15px] text-gray-900 placeholder:text-gray-400 px-4 py-3.5 outline-none"
+            />
+            <button
+              type="submit"
+              className="rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 px-7 py-3.5 text-[14px] font-semibold text-white shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200"
+            >
+              Analizeaza
+            </button>
+          </form>
+
+          <p className="mt-3 text-[13px] text-gray-400">
+            Exemplu:{" "}
+            <button
+              type="button"
+              className="text-gray-500 underline decoration-gray-300 underline-offset-2 hover:text-gray-700 hover:decoration-gray-400 transition-colors"
+              onClick={() => {
+                const input = document.querySelector<HTMLInputElement>("input[name=q]");
+                if (input) input.value = "https://www.imobiliare.ro/vanzare-apartamente/bucuresti/floreasca/apartament-de-vanzare-2-camere-XY12345";
+              }}
+            >
+              imobiliare.ro/vanzare-apartamente/bucuresti/...
+            </button>
+          </p>
+        </div>
       </div>
-    </>
+    </section>
   );
 }
 
-function ValueProps() {
-  const items = [
-    { t: "Pret estimat", d: "Interval de pret corect bazat pe comparabile din zona." },
-    { t: "Viteza la vanzare", d: "Estimare conservatoare in luni, cu interval." },
-    { t: "Risc seismic", d: "Indicator orientativ bazat pe anul constructiei." },
-  ];
+/* ---------- Social Proof ---------- */
+
+const stats = [
+  { value: "10,000+", label: "Analize efectuate" },
+  { value: "500+", label: "Zone acoperite" },
+  { value: "95%", label: "Precizie estimari" },
+];
+
+function SocialProof() {
   return (
-    <div className="mx-auto mt-10 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-[1000px]">
-      {items.map((x) => (
-        <div
-          key={x.t}
-          className="rounded-2xl border border-border bg-surface/90 shadow-elev1 p-5 text-left"
-        >
-          <div className="text-sm font-semibold text-text">{x.t}</div>
-          <div className="mt-1.5 text-sm text-muted">{x.d}</div>
-        </div>
-      ))}
-    </div>
+    <section className="border-y border-gray-100 bg-gray-50/60">
+      <div className="mx-auto flex max-w-[980px] flex-col md:flex-row items-center justify-center divide-y md:divide-y-0 md:divide-x divide-gray-200 px-5 py-8">
+        {stats.map((s) => (
+          <div
+            key={s.label}
+            className="flex flex-col items-center gap-1 px-12 py-4 md:py-0"
+          >
+            <span className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
+              {s.value}
+            </span>
+            <span className="text-[13px] font-medium text-gray-500">
+              {s.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 
-function BelowFold() {
+/* ---------- Features ---------- */
+
+const features = [
+  {
+    icon: BarChart3,
+    title: "Pret estimat AVM",
+    description: "Interval de pret corect bazat pe algoritmul nostru de evaluare automata.",
+    color: "text-blue-600 bg-blue-50",
+  },
+  {
+    icon: Clock,
+    title: "Viteza la vanzare",
+    description: "Estimare conservatoare in luni, cu interval de incredere.",
+    color: "text-violet-600 bg-violet-50",
+  },
+  {
+    icon: Shield,
+    title: "Risc seismic",
+    description: "Indicator orientativ bazat pe anul constructiei si zona.",
+    color: "text-amber-600 bg-amber-50",
+  },
+  {
+    icon: MapPin,
+    title: "Comparabile din zona",
+    description: "Vezi apartamente similare vandute recent in aceeasi zona.",
+    color: "text-emerald-600 bg-emerald-50",
+  },
+  {
+    icon: FileText,
+    title: "Raport complet",
+    description: "Document detaliat cu toate datele intr-un format clar.",
+    color: "text-rose-600 bg-rose-50",
+  },
+  {
+    icon: MessageSquare,
+    title: "Argumente de negociere",
+    description: "Puncte concrete pe care le poti folosi in negocierea pretului.",
+    color: "text-cyan-600 bg-cyan-50",
+  },
+];
+
+function Features() {
   return (
-    <section className="mx-auto max-w-[1040px] px-4 py-14">
-      <h2 className="text-xl font-semibold text-text">
-        Cum functioneaza
-      </h2>
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div>
-          <div className="text-2xl font-bold text-primary">1</div>
-          <p className="mt-1 text-sm text-muted">Lipeste un link de anunt de pe imobiliare.ro</p>
+    <section className="py-24 md:py-32">
+      <div className="mx-auto max-w-[1100px] px-5">
+        <div className="text-center">
+          <h2 className="text-[28px] md:text-[40px] font-bold tracking-tight text-gray-950">
+            Tot ce ai nevoie intr-un singur raport
+          </h2>
+          <p className="mt-3 text-[16px] md:text-[18px] text-gray-500 max-w-[520px] mx-auto">
+            Analiza completa pentru orice anunt de pe imobiliare.ro, in cateva secunde.
+          </p>
         </div>
-        <div>
-          <div className="text-2xl font-bold text-primary">2</div>
-          <p className="mt-1 text-sm text-muted">Analizam pretul, comparabilele si zona</p>
-        </div>
-        <div>
-          <div className="text-2xl font-bold text-primary">3</div>
-          <p className="mt-1 text-sm text-muted">Primesti raport cu estimare, argumente de negociere si riscuri</p>
+
+        <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {features.map((f) => {
+            const Icon = f.icon;
+            return (
+              <div
+                key={f.title}
+                className="group rounded-2xl border border-gray-100 bg-white p-6 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-gray-100/80 hover:border-gray-200"
+              >
+                <div className={`inline-flex items-center justify-center rounded-xl p-2.5 ${f.color}`}>
+                  <Icon className="h-5 w-5" strokeWidth={2} />
+                </div>
+                <h3 className="mt-4 text-[16px] font-semibold text-gray-900">
+                  {f.title}
+                </h3>
+                <p className="mt-1.5 text-[14px] leading-relaxed text-gray-500">
+                  {f.description}
+                </p>
+              </div>
+            );
+          })}
         </div>
       </div>
-      <div className="mt-8">
+    </section>
+  );
+}
+
+/* ---------- How It Works ---------- */
+
+const steps = [
+  {
+    num: "1",
+    title: "Lipeste un link",
+    description: "Copiaza URL-ul unui anunt de pe imobiliare.ro si lipeste-l in bara de sus.",
+  },
+  {
+    num: "2",
+    title: "Analizam datele",
+    description: "Extragem informatiile, comparam cu proprietati similare si calculam valorile.",
+  },
+  {
+    num: "3",
+    title: "Primesti raportul",
+    description: "Raport complet cu pret estimat, comparabile, viteza vanzarii si riscuri.",
+  },
+];
+
+function HowItWorks() {
+  return (
+    <section className="border-t border-gray-100 bg-gray-50/40 py-24 md:py-32">
+      <div className="mx-auto max-w-[980px] px-5">
+        <div className="text-center">
+          <h2 className="text-[28px] md:text-[40px] font-bold tracking-tight text-gray-950">
+            Cum functioneaza
+          </h2>
+          <p className="mt-3 text-[16px] md:text-[18px] text-gray-500">
+            Trei pasi simpli pana la o decizie informata.
+          </p>
+        </div>
+
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-6 relative">
+          {/* Connecting line (desktop) */}
+          <div
+            aria-hidden
+            className="hidden md:block absolute top-8 left-[calc(16.67%+20px)] right-[calc(16.67%+20px)] h-px bg-gradient-to-r from-blue-200 via-violet-200 to-blue-200"
+          />
+
+          {steps.map((s) => (
+            <div key={s.num} className="relative text-center">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-violet-600 text-[20px] font-bold text-white shadow-lg shadow-blue-200/50">
+                {s.num}
+              </div>
+              <h3 className="mt-5 text-[17px] font-semibold text-gray-900">
+                {s.title}
+              </h3>
+              <p className="mt-2 text-[14px] leading-relaxed text-gray-500 max-w-[280px] mx-auto">
+                {s.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ---------- CTA ---------- */
+
+function CtaSection() {
+  return (
+    <section className="relative isolate py-24 md:py-32">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-blue-600/[0.04] via-violet-600/[0.06] to-blue-600/[0.03]"
+      />
+
+      <div className="mx-auto max-w-[600px] px-5 text-center">
+        <h2 className="text-[28px] md:text-[40px] font-bold tracking-tight text-gray-950">
+          Incepe prima analiza gratuita
+        </h2>
+        <p className="mt-4 text-[16px] md:text-[18px] text-gray-500">
+          Nu necesita card. Rezultate in 30 de secunde.
+        </p>
         <Link
           href="/analyze"
-          className="inline-block rounded-xl px-6 py-3 bg-primary text-white text-sm font-medium hover:bg-primary/90 transition-all"
+          className="mt-8 inline-flex items-center rounded-full bg-gradient-to-r from-blue-600 to-violet-600 px-8 py-3.5 text-[15px] font-semibold text-white shadow-md shadow-blue-200/50 hover:shadow-lg hover:shadow-blue-200/60 hover:brightness-110 active:scale-[0.97] transition-all duration-200"
         >
-          Incepe analiza gratuita
+          Analizeaza un anunt
         </Link>
+        <p className="mt-4 text-[13px] text-gray-400">
+          Gratuit pentru primele 5 analize. Fara obligatii.
+        </p>
       </div>
     </section>
   );

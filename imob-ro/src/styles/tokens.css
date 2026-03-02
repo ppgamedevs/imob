@@ -1,7 +1,7 @@
 /**
- * Design Tokens v2 - Step 12
+ * Design Tokens v2
  * Single source of truth for colors, spacing, typography, motion, and theming.
- * Supports dark mode, brand override, and reduced motion.
+ * Light mode only. Supports brand override and reduced motion.
  */
 
 :root {
@@ -16,6 +16,8 @@
   /* Brand */
   --primary: 37 99 235; /* #2563eb - blue */
   --primary-contrast: 255 255 255; /* white */
+  --accent: 124 58 237; /* #7c3aed - violet */
+  --accent-contrast: 255 255 255;
 
   /* Semantic */
   --success: 34 197 94; /* #22c55e - green */
@@ -39,14 +41,14 @@
   --r-xl: 24px;
 
   /* === Shadows (Elevation) === */
-  --elev0: 0 0 0 1px rgb(var(--border) / 0.1);
-  --elev1: 0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px rgb(var(--border) / 0.1);
+  --elev0: 0 0 0 1px rgb(var(--border) / 0.06);
+  --elev1: 0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.03);
   --elev2:
-    0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1),
-    0 0 0 1px rgb(var(--border) / 0.1);
+    0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04),
+    0 0 0 1px rgb(var(--border) / 0.06);
   --elev3:
-    0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1),
-    0 0 0 1px rgb(var(--border) / 0.1);
+    0 12px 24px -4px rgb(0 0 0 / 0.08), 0 4px 8px -2px rgb(0 0 0 / 0.04),
+    0 0 0 1px rgb(var(--border) / 0.06);
 
   /* === Typography === */
   --font-sans:
@@ -98,69 +100,6 @@
   --ad-label: rgb(var(--ad-tint));
 }
 
-/* === Dark Mode === */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: 10 10 10; /* #0a0a0a */
-    --surface: 23 23 23; /* #171717 */
-    --surface-2: 38 38 38; /* #262626 */
-    --border: 64 64 64; /* #404040 */
-    --text: 250 250 250; /* #fafafa */
-    --muted: 163 163 163; /* #a3a3a3 */
-
-    --primary: 59 130 246; /* #3b82f6 - lighter blue */
-    --primary-contrast: 23 23 23; /* dark text */
-
-    --success: 74 222 128; /* #4ade80 */
-    --warn: 251 191 36; /* #fbbf24 */
-    --danger: 248 113 113; /* #f87171 */
-
-    --ad-tint: 192 132 252; /* #c084fc - lighter purple */
-
-    /* Stronger shadows for dark mode */
-    --elev0: 0 0 0 1px rgb(var(--border) / 0.2);
-    --elev1: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 0 0 1px rgb(var(--border) / 0.2);
-    --elev2:
-      0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3),
-      0 0 0 1px rgb(var(--border) / 0.2);
-    --elev3:
-      0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4),
-      0 0 0 1px rgb(var(--border) / 0.2);
-
-    --ad-bg: rgb(var(--surface-2));
-    --ad-border: rgb(var(--border));
-    --ad-label: rgb(var(--ad-tint));
-  }
-}
-
-/* === Explicit Dark Theme Class === */
-.theme-dark,
-[data-theme="dark"] {
-  --bg: 10 10 10;
-  --surface: 23 23 23;
-  --surface-2: 38 38 38;
-  --border: 64 64 64;
-  --text: 250 250 250;
-  --muted: 163 163 163;
-
-  --primary: 59 130 246;
-  --primary-contrast: 23 23 23;
-
-  --success: 74 222 128;
-  --warn: 251 191 36;
-  --danger: 248 113 113;
-
-  --ad-tint: 192 132 252;
-
-  --elev0: 0 0 0 1px rgb(var(--border) / 0.2);
-  --elev1: 0 1px 2px 0 rgb(0 0 0 / 0.3), 0 0 0 1px rgb(var(--border) / 0.2);
-  --elev2:
-    0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3),
-    0 0 0 1px rgb(var(--border) / 0.2);
-  --elev3:
-    0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4),
-    0 0 0 1px rgb(var(--border) / 0.2);
-}
 
 /* === Brand Override Hook === */
 [data-brand] {
