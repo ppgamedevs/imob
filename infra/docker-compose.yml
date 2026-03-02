@@ -62,10 +62,10 @@ services:
       - web
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 40s
 
   # ─── Reverse proxy (public: 80, 443) ──────────────────────
   caddy:
