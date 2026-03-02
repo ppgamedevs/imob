@@ -61,11 +61,11 @@ services:
       - internal
       - web
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health || exit 1"]
-      interval: 10s
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:3000/api/health || exit 1"]
+      interval: 15s
       timeout: 10s
-      retries: 10
-      start_period: 40s
+      retries: 12
+      start_period: 60s
 
   # ─── Reverse proxy (public: 80, 443) ──────────────────────
   caddy:
@@ -84,7 +84,7 @@ services:
       - web
     depends_on:
       imobintel-api:
-        condition: service_healthy
+        condition: service_started
 
   # ─── Uptime monitor ───────────────────────────────────────
   uptime-kuma:
