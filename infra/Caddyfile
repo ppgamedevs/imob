@@ -27,12 +27,12 @@
 			health_uri /api/health
 			health_interval 30s
 		}
+	}
 
-		log {
-			output file /data/site-access.log {
-				roll_size 10mb
-				roll_keep 5
-			}
+	log {
+		output file /data/site-access.log {
+			roll_size 10mb
+			roll_keep 5
 		}
 	}
 }
