@@ -17,6 +17,7 @@ export type PdfSections = {
   risk: boolean;
   gallery: boolean;
   provenance: boolean;
+  priceAnchors: boolean;
 };
 
 const styles = StyleSheet.create({
@@ -122,6 +123,54 @@ export default function ReportPdf(props: {
                 </Text>
               </View>
             </View>
+          </>
+        )}
+
+        {sections.priceAnchors && (data.avmMid != null || data.notarialTotal != null) && (
+          <>
+            <Text style={styles.h2}>Analiza pret (3 ancore)</Text>
+            <View style={styles.row}>
+              {data.notarialTotal != null && (
+                <View style={styles.stat}>
+                  <Text style={styles.small}>Valoare notariala</Text>
+                  <Text>{fmt(data.notarialTotal)} EUR</Text>
+                  {data.notarialZone && (
+                    <Text style={{ fontSize: 8, color: "#888" }}>
+                      {data.notarialZone} ({data.notarialYear})
+                    </Text>
+                  )}
+                </View>
+              )}
+              <View style={styles.stat}>
+                <Text style={styles.small}>Estimare piata</Text>
+                <Text>
+                  {fmt(data.avmLow)}-{fmt(data.avmHigh)} EUR
+                </Text>
+                <Text style={{ fontSize: 8, color: "#888" }}>Medie: {fmt(data.avmMid)} EUR</Text>
+              </View>
+              {data.priceEur != null && (
+                <View style={styles.stat}>
+                  <Text style={styles.small}>Pret cerut</Text>
+                  <Text>{fmt(data.priceEur)} EUR</Text>
+                  {data.avmMid != null && data.priceEur != null && (
+                    <Text style={{ fontSize: 8, color: data.priceEur > data.avmMid ? "#dc2626" : "#16a34a" }}>
+                      {data.priceEur > data.avmMid ? "+" : ""}
+                      {Math.round(((data.priceEur - data.avmMid) / data.avmMid) * 100)}% fata de
+                      estimare
+                    </Text>
+                  )}
+                </View>
+              )}
+            </View>
+            {data.notarialTotal != null && data.avmMid != null && (
+              <View style={{ marginTop: 6 }}>
+                <Text style={{ fontSize: 9, color: "#666" }}>
+                  Valoarea notariala este valoarea minima fiscala (grila notarilor). Pretul de piata
+                  este de obicei {Math.round(((data.avmMid - data.notarialTotal) / data.notarialTotal) * 100)}%
+                  mai mare.
+                </Text>
+              </View>
+            )}
           </>
         )}
 

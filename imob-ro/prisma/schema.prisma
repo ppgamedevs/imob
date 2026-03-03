@@ -183,21 +183,22 @@ model Analysis {
 }
 
 model ExtractedListing {
-  id         String  @id @default(cuid())
-  analysisId String  @unique
-  title      String?
-  price      Int?
-  currency   String?
-  areaM2     Int?
-  rooms      Int?
-  floor      Int?
-  yearBuilt  Int?
-  addressRaw String?
-  lat        Float?
-  lng        Float?
-  photos     Json?
-  sourceMeta Json?
-  floorRaw   String?
+  id           String  @id @default(cuid())
+  analysisId   String  @unique
+  title        String?
+  price        Int?
+  currency     String?
+  areaM2       Int?
+  titleAreaM2  Int?    // area mentioned in listing title (may include balcony)
+  rooms        Int?
+  floor        Int?
+  yearBuilt    Int?
+  addressRaw   String?
+  lat          Float?
+  lng          Float?
+  photos       Json?
+  sourceMeta   Json?
+  floorRaw     String?
 
   analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
@@ -233,6 +234,10 @@ model ScoreSnapshot {
   riskSource     String?
   condition      String?
   conditionScore Float?
+  notarialEurM2  Float?  // grila notarilor: min EUR/mp for this zone
+  notarialTotal  Float?  // grila notarilor: total estimated value (eurM2 * areaM2)
+  notarialYear   Int?    // grid year used
+  notarialZone   String? // matched zone name
   explain        Json?
 
   analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
@@ -719,6 +724,59 @@ model ShareDaily {
 
   @@unique([slug, date])
   @@index([slug, date])
+}
+
+// AMCCRS Seismic Building Registry - expertised buildings with risk class
+model SeismicBuilding {
+  id             String   @id @default(cuid())
+  externalId     String?  // original ID from AMCCRS list
+  addressRaw     String   // original address as published
+  addressNorm    String   // normalized for matching (no diacritics, lowercase, expanded abbreviations)
+  streetName     String?  // extracted street name
+  streetNumber   String?  // extracted number (can be "10", "10A", "10-12")
+  bloc           String?  // bloc identifier ("A", "B1", etc.)
+  scara          String?  // scara/entrance
+  sector         Int?     // 1-6 for Bucharest
+  lat            Float?
+  lng            Float?
+  riskClass      String   // "RsI", "RsII", "RsIII", "RsIV"
+  yearBuilt      Int?
+  floors         Int?
+  apartments     Int?
+  intervention   String?  // "consolidat", "in lucru", "proiect", null
+  source         String   @default("AMCCRS")
+  sourceUrl      String?
+  lastUpdated    DateTime? // when AMCCRS last updated this entry
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([addressNorm, riskClass])
+  @@index([lat, lng])
+  @@index([streetName])
+  @@index([sector, riskClass])
+  @@index([riskClass])
+  @@index([addressNorm])
+}
+
+// Notarial Grid (Grila Notarilor) - minimum fiscal values per zone
+model NotarialGrid {
+  id             String   @id @default(cuid())
+  zone           String   // fiscal zone name (e.g., "Sector 1 - Aviatorilor")
+  zoneCode       String?  // optional code from ANCPI
+  city           String   @default("București")
+  sector         Int?     // 1-6 for Bucharest
+  neighborhood   String?  // cartier
+  propertyType   String   @default("apartment") // apartment | house | land
+  minEurPerM2    Float    // minimum fiscal value EUR/mp
+  maxEurPerM2    Float?   // some zones have ranges
+  year           Int      // grid year (e.g., 2025, 2026)
+  source         String?  // "ANCPI", "Camera Notarilor Bucuresti"
+  updatedAt      DateTime @updatedAt
+  createdAt      DateTime @default(now())
+
+  @@unique([zone, propertyType, year])
+  @@index([city, sector, propertyType, year])
+  @@index([neighborhood, propertyType, year])
 }
 
 // Day 23 - Billing & Paywall v1

@@ -8,14 +8,45 @@ import { NormalizedFeaturesSchema } from "@/lib/schemas/normalized-features";
 const normalizeExtracted = (normalizeModule as any).default ?? (normalizeModule as any);
 const deriveLevelImported = (normalizeModule as any).deriveLevel ?? undefined;
 
-function deriveLevel(floor?: number | null, floorRaw?: string | null) {
+function deriveLevel(floor?: number | null, floorRaw?: string | null): number | null {
   if (deriveLevelImported) return deriveLevelImported(floor ?? undefined, floorRaw ?? undefined);
   if (floor != null) return floor;
-  const raw = (floorRaw || "").toLowerCase();
-  if (/parter/.test(raw)) return -1;
-  if (/demisol/.test(raw)) return -2;
-  if (/mezanin/.test(raw)) return 0;
-  const m = raw.match(/etaj\s*(\d{1,2})/i);
+  const raw = (floorRaw || "").toLowerCase().trim();
+  if (!raw) return null;
+
+  if (/\bparter\b/.test(raw)) return 0;
+  if (/\bdemisol\b/.test(raw)) return -1;
+  if (/\bmezanin\b/.test(raw)) return 0;
+  if (/\bmansard[aă]\b/.test(raw)) return 99;
+
+  // "etaj 3", "et. 3", "et 3"
+  const etajMatch = raw.match(/(?:etaj|et\.?)\s*(\d{1,2})/i);
+  if (etajMatch) return Number(etajMatch[1]);
+
+  // "3/8", "1/4", "P/4" (floor/totalFloors)
+  const slashMatch = raw.match(/^(p|\d{1,2})\s*\/\s*(\d{1,2})$/i);
+  if (slashMatch) {
+    const left = slashMatch[1].toLowerCase();
+    return left === "p" ? 0 : Number(left);
+  }
+
+  // "etaj ideal 1/4" or "etaj 2 din 8"
+  const compoundMatch = raw.match(/(\d{1,2})\s*(?:\/|din)\s*\d{1,2}/);
+  if (compoundMatch) return Number(compoundMatch[1]);
+
+  // bare digit
+  const digitMatch = raw.match(/^(\d{1,2})$/);
+  if (digitMatch) return Number(digitMatch[1]);
+
+  return null;
+}
+
+function deriveRoomsFromTitle(title?: string | null, rooms?: number | null): number | null {
+  if (rooms != null) return rooms;
+  if (!title) return null;
+  const t = title.toLowerCase();
+  if (/\bgarsonier[aă]\b/.test(t) || /\bstud?io\b/.test(t)) return 1;
+  const m = t.match(/(\d)\s*(?:camere|camera|cam\.?)\b/);
   return m ? Number(m[1]) : null;
 }
 
@@ -25,13 +56,15 @@ function normalizeExtractedWrapper(raw: any) {
     raw.price ?? (n.price_eur as number | undefined),
     raw.currency ?? n.currency ?? "EUR",
   );
-  const level = deriveLevel(raw.floor ?? null, raw.floorRaw ?? null);
+  const floorRaw = raw.floorRaw ?? n.floor_raw ?? null;
+  const level = deriveLevel(raw.floor ?? null, floorRaw);
   const areaM2 = raw.areaM2 ?? n.area_m2 ?? n.area_m2;
-  const rooms = raw.rooms ?? n.rooms;
+  const rawRooms = raw.rooms ?? n.rooms ?? null;
+  const rooms = deriveRoomsFromTitle(raw.title ?? n.title, rawRooms);
   const yearBuilt = raw.yearBuilt ?? n.year_built ?? n.year;
   const lat = raw.lat ?? n.lat;
   const lng = raw.lng ?? n.lng;
-  return { ...(n || {}), priceEur, areaM2, rooms, level, yearBuilt, lat, lng };
+  return { ...(n || {}), priceEur, areaM2, rooms, level, floorRaw, yearBuilt, lat, lng };
 }
 
 export async function updateFeatureSnapshot(analysisId: string) {

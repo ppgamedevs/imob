@@ -28,6 +28,11 @@ export type PdfReportData = {
   yieldNet?: number | null;
   riskClass?: string | null;
   riskSource?: string | null;
+  // Notarial grid
+  notarialTotal?: number | null;
+  notarialEurM2?: number | null;
+  notarialZone?: string | null;
+  notarialYear?: number | null;
   // Day 20: Provenance
   trustScore?: number | null;
   trustBadge?: string | null;
@@ -81,6 +86,15 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     payload: e.payload,
   }));
 
+  const notarialTotal =
+    typeof ssRecord?.notarialTotal === "number" ? (ssRecord.notarialTotal as number) : null;
+  const notarialEurM2 =
+    typeof ssRecord?.notarialEurM2 === "number" ? (ssRecord.notarialEurM2 as number) : null;
+  const notarialZone =
+    typeof ssRecord?.notarialZone === "string" ? (ssRecord.notarialZone as string) : null;
+  const notarialYear =
+    typeof ssRecord?.notarialYear === "number" ? (ssRecord.notarialYear as number) : null;
+
   return {
     id: a.id,
     url: a.sourceUrl,
@@ -95,17 +109,21 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     city: typeof f?.city === "string" ? f.city : null,
     areaSlug: typeof f?.areaSlug === "string" ? f.areaSlug : null,
     distMetroM: typeof f?.distMetroM === "number" ? f.distMetroM : null,
-    avmLow: avmLow,
-    avmMid: avmMid,
-    avmHigh: avmHigh,
-    avmConf: avmConf,
-    priceBadge: priceBadge,
-    ttsBucket: ttsBucket,
-    estRent: estRent,
-    yieldGross: yieldGross,
-    yieldNet: yieldNet,
-    riskClass: riskClass,
-    riskSource: riskSource,
+    avmLow,
+    avmMid,
+    avmHigh,
+    avmConf,
+    priceBadge,
+    ttsBucket,
+    estRent,
+    yieldGross,
+    yieldNet,
+    riskClass,
+    riskSource,
+    notarialTotal,
+    notarialEurM2,
+    notarialZone,
+    notarialYear,
     trustScore,
     trustBadge,
     trustReasons,

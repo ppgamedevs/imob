@@ -1,0 +1,10 @@
+[Unit]
+Description=ImobIntel crawl-seed (discover new listing URLs from sitemaps)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/curl -sf -H "Authorization: Bearer ${CRON_SECRET}" http://localhost:3000/api/cron/crawl-seed
+EnvironmentFile=/home/admin/apps/imob/infra/.env
+TimeoutStartSec=120

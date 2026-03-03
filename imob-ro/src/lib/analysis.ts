@@ -100,11 +100,17 @@ async function stepProvenance(analysisId: string, url: string): Promise<void> {
   await computeTrustScore(analysisId);
 }
 
+async function stepNotarial(analysisId: string, features: Record<string, unknown>): Promise<void> {
+  const { applyNotarialToAnalysis } = await import("./notarial/apply-notarial");
+  await applyNotarialToAnalysis(analysisId, features);
+}
+
 const SCORING_STEPS: PipelineStep[] = [
   { name: "avm", run: stepAvm, critical: true },
   { name: "tts", run: stepTts },
   { name: "yield", run: stepYield },
   { name: "seismic", run: stepSeismic },
+  { name: "notarial", run: stepNotarial },
   { name: "comps", run: (id) => stepComps(id) },
   { name: "quality", run: (id) => stepQuality(id) },
   { name: "dedup", run: (id) => stepDedup(id) },
@@ -146,25 +152,27 @@ async function waitForClientExtract(analysisId: string): Promise<Extracted | nul
 }
 
 async function upsertExtractedListing(analysisId: string, data: Extracted): Promise<void> {
+  const payload = {
+    title: data.title || undefined,
+    price: data.price || undefined,
+    currency: data.currency || undefined,
+    areaM2: data.areaM2 || undefined,
+    titleAreaM2: data.titleAreaM2 || undefined,
+    rooms: data.rooms || undefined,
+    floor: data.floor ?? undefined,
+    floorRaw: data.floorRaw || undefined,
+    yearBuilt: data.yearBuilt || undefined,
+    addressRaw: data.addressRaw || undefined,
+    lat: data.lat ?? undefined,
+    lng: data.lng ?? undefined,
+    photos: Array.isArray(data.photos) && data.photos.length ? data.photos : undefined,
+    sourceMeta: data.sourceMeta ?? undefined,
+  };
+
   await prisma.extractedListing.upsert({
     where: { analysisId },
-    create: {
-      analysisId,
-      title: data.title || undefined,
-      price: data.price || undefined,
-      currency: data.currency || undefined,
-      areaM2: data.areaM2 || undefined,
-      rooms: data.rooms || undefined,
-      addressRaw: data.addressRaw || undefined,
-    },
-    update: {
-      title: data.title || undefined,
-      price: data.price || undefined,
-      currency: data.currency || undefined,
-      areaM2: data.areaM2 || undefined,
-      rooms: data.rooms || undefined,
-      addressRaw: data.addressRaw || undefined,
-    },
+    create: { analysisId, ...payload } as any,
+    update: payload as any,
   });
 }
 

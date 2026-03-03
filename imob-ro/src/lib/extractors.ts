@@ -1,3 +1,4 @@
+import { pickAdapter } from "./crawl/adapters";
 import { getServerWhitelist } from "./config";
 
 type Extracted = {
@@ -5,8 +6,16 @@ type Extracted = {
   price?: number | null;
   currency?: string | null;
   areaM2?: number | null;
+  titleAreaM2?: number | null;
   rooms?: number | null;
+  floor?: number | null;
+  floorRaw?: string | null;
+  yearBuilt?: number | null;
   addressRaw?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  photos?: string[] | null;
+  sourceMeta?: Record<string, unknown> | null;
 };
 
 // Simple in-memory rate limiter per hostname: allow 1 request per 2 seconds by default
@@ -70,6 +79,27 @@ export function extractGeneric(html: string): Extracted {
     if (areaMatch) result.areaM2 = parseNumberFromText(areaMatch[1]);
   }
 
+  // rooms from HTML heuristics
+  if (!result.rooms) {
+    const roomsMatch = html.match(/(\d)\s*(?:camere|camera|cam\.?)\b/i);
+    if (roomsMatch) result.rooms = parseInt(roomsMatch[1], 10);
+    else if (/\bgarsonier[aă]\b/i.test(html) || /\bstud?io\b/i.test(html)) {
+      result.rooms = 1;
+    }
+  }
+
+  // floor from HTML heuristics
+  if (!result.floorRaw) {
+    const floorMatch = html.match(/(?:etaj|floor)[:\s]*([^<,]{1,30})/i);
+    if (floorMatch) result.floorRaw = floorMatch[1].trim();
+  }
+
+  // year built from HTML
+  if (!result.yearBuilt) {
+    const yearMatch = html.match(/(?:an\s+construc[tț]ie|year\s*built)[:\s]*(\d{4})/i);
+    if (yearMatch) result.yearBuilt = parseInt(yearMatch[1], 10);
+  }
+
   // simple address heuristics
   if (!result.addressRaw) {
     const addr =
@@ -77,6 +107,18 @@ export function extractGeneric(html: string): Extracted {
       html.match(/address[^>]*>([^<]{10,200})</i);
     if (addr) result.addressRaw = addr[1].trim();
   }
+
+  // Extract area from title (often inflated with balcony)
+  if (result.title) {
+    const titleArea = result.title.match(/(\d{2,3})\s*(?:m2|m²|mp)\b/i);
+    if (titleArea) {
+      result.titleAreaM2 = parseInt(titleArea[1], 10);
+    }
+  }
+
+  // photos from og:image
+  const ogImage = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+  if (ogImage) result.photos = [ogImage[1]];
 
   return result;
 }
@@ -116,6 +158,18 @@ export async function maybeFetchServer(url: string) {
     const contentType = res.headers.get("content-type") || "";
     if (!contentType.includes("text/html")) return null;
     const html = await res.text();
+
+    // Use crawl adapter for known domains (richer extraction)
+    try {
+      const adapter = pickAdapter(u);
+      if (adapter.domain !== "*") {
+        const result = await adapter.extract({ url, html });
+        return result.extracted as Extracted;
+      }
+    } catch {
+      // Fall through to generic
+    }
+
     return extractGeneric(html);
   } catch {
     return null;

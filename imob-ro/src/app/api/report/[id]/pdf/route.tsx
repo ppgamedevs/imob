@@ -54,6 +54,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     yield: bool(q, "yield", true),
     risk: bool(q, "risk", true),
     gallery: bool(q, "gallery", true),
+    provenance: bool(q, "provenance", true),
+    priceAnchors: bool(q, "priceAnchors", true),
   };
 
   const pdf = <ReportPdf data={data} brand={brand} sections={sections} />;

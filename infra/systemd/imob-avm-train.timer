@@ -1,0 +1,10 @@
+[Unit]
+Description=Run AVM training daily at 2 AM
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+RandomizedDelaySec=600
+Persistent=true
+
+[Install]
+WantedBy=timers.target

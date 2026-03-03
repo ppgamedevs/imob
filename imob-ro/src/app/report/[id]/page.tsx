@@ -11,9 +11,12 @@ import { matchSeismic } from "@/lib/risk/seismic";
 import type { NormalizedFeatures } from "@/lib/types/pipeline";
 
 import CompsClientBlock from "./CompsClientBlock";
+import { PdfActions } from "./PdfActions";
 import { Poller } from "./poller";
+import DataInsightsSection from "./sections/DataInsightsSection";
 import MethodologySection from "./sections/MethodologySection";
 import NegotiationSection from "./sections/NegotiationSection";
+import PriceAnchorsSection from "./sections/PriceAnchorsSection";
 import SeismicSection from "./sections/SeismicSection";
 import SellerChecklist from "./sections/SellerChecklist";
 import TtsSection from "./sections/TtsSection";
@@ -67,7 +70,7 @@ export default async function ReportPage({ params }: Props) {
   let priceRange: { low: number; high: number; mid: number; conf: number } | null = null;
   let ttsResult: Awaited<ReturnType<typeof estimateTTS>> | null = null;
   let yieldRes: YieldResult | null = null;
-  let seismic: { level: "RS1" | "RS2" | "None"; sourceUrl?: string | null } = { level: "None" };
+  let seismic: { level: "RS1" | "RS2" | "RS3" | "RS4" | "None"; sourceUrl?: string | null } = { level: "None" };
 
   const areaSlug = f?.areaSlug ?? (f as Record<string, unknown>)?.area_slug as string | undefined;
   const actualPrice = f?.priceEur ?? (f as Record<string, unknown>)?.price_eur as number | undefined ?? extracted?.price as number | undefined;
@@ -119,12 +122,40 @@ export default async function ReportPage({ params }: Props) {
   const session = await auth();
   const isAdmin = session?.user?.role === "admin";
 
+  // Tier check for notarial data visibility
+  let showNotarial = false;
+  if (session?.user?.id) {
+    try {
+      const { canAccess } = await import("@/lib/billing/entitlements");
+      const access = await canAccess(session.user.id, "detailedScore");
+      showNotarial = access.allowed;
+    } catch { /* free tier by default */ }
+  }
+  if (isAdmin) showNotarial = true;
+
+  // Notarial grid data from ScoreSnapshot
+  const notarialTotal = analysis?.scoreSnapshot?.notarialTotal ?? null;
+  const notarialZone = analysis?.scoreSnapshot?.notarialZone ?? null;
+  const notarialYear = analysis?.scoreSnapshot?.notarialYear ?? null;
+
   // Compute derived values for sections
   const overpricingPct = actualPrice && priceRange?.mid
     ? Math.round(((actualPrice - priceRange.mid) / priceRange.mid) * 100)
     : null;
 
   const seismicExplain = scoreExplain?.seismic as Record<string, unknown> | undefined;
+
+  // Override seismic from pipeline data if available
+  if (seismicExplain?.riskClass) {
+    const rc = String(seismicExplain.riskClass);
+    const isRisk = ["RsI", "RsII", "RS1", "RS2"].includes(rc);
+    const mappedLevel = rc === "RsI" || rc === "RS1" ? "RS1"
+      : rc === "RsII" || rc === "RS2" ? "RS2"
+      : rc === "RsIII" || rc === "RS3" ? "RS3"
+      : rc === "RsIV" || rc === "RS4" ? "RS4"
+      : "None";
+    seismic = { level: mappedLevel as typeof seismic.level, sourceUrl: seismicExplain.sourceUrl as string ?? null };
+  }
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -157,7 +188,7 @@ export default async function ReportPage({ params }: Props) {
                 <CardDescription>{extracted.addressRaw ?? "-"}</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-sm">
                   <div>
                     <div className="text-muted-foreground">Pret</div>
                     <div className="font-semibold">{extracted.price ? `${extracted.price.toLocaleString("ro-RO")} ${extracted.currency ?? "EUR"}` : "-"}</div>
@@ -168,11 +199,15 @@ export default async function ReportPage({ params }: Props) {
                   </div>
                   <div>
                     <div className="text-muted-foreground">Camere</div>
-                    <div className="font-semibold">{extracted.rooms ?? "-"}</div>
+                    <div className="font-semibold">{extracted.rooms ?? f?.rooms ?? "-"}</div>
                   </div>
                   <div>
-                    <div className="text-muted-foreground">An / Etaj</div>
-                    <div className="font-semibold">{extracted.yearBuilt ?? "-"} / {extracted.floor ?? "-"}</div>
+                    <div className="text-muted-foreground">Etaj</div>
+                    <div className="font-semibold">{extracted.floor ?? extracted.floorRaw ?? f?.floorRaw ?? "-"}</div>
+                  </div>
+                  <div>
+                    <div className="text-muted-foreground">An</div>
+                    <div className="font-semibold">{extracted.yearBuilt ?? "-"}</div>
                   </div>
                 </div>
               </CardContent>
@@ -224,6 +259,18 @@ export default async function ReportPage({ params }: Props) {
             confidence={confidenceData ?? null}
           />
 
+          <PriceAnchorsSection
+            askingPrice={actualPrice ?? null}
+            avmLow={priceRange?.low ?? null}
+            avmMid={priceRange?.mid ?? null}
+            avmHigh={priceRange?.high ?? null}
+            notarialTotal={notarialTotal}
+            notarialZone={notarialZone}
+            notarialYear={notarialYear}
+            showNotarial={showNotarial}
+            currency={extracted?.currency ?? "EUR"}
+          />
+
           <TtsSection
             ttsBucket={ttsResult?.bucket ?? analysis?.scoreSnapshot?.ttsBucket}
             scoreDays={ttsResult?.scoreDays}
@@ -237,7 +284,10 @@ export default async function ReportPage({ params }: Props) {
             confidence={seismicExplain?.confidence as number ?? null}
             method={seismicExplain?.method as string ?? null}
             note={seismicExplain?.note as string ?? null}
-            sourceUrl={seismic.sourceUrl}
+            sourceUrl={seismicExplain?.sourceUrl as string ?? seismic.sourceUrl}
+            matchedAddress={seismicExplain?.matchedAddress as string ?? null}
+            intervention={seismicExplain?.intervention as string ?? null}
+            nearby={seismicExplain?.nearby as { total: number; rsI: number; rsII: number; buildings: { address: string; riskClass: string; distanceM: number; intervention: string | null }[] } ?? null}
           />
 
           <NegotiationSection
@@ -247,10 +297,35 @@ export default async function ReportPage({ params }: Props) {
             suggestedHigh={compsStats?.median && f?.areaM2 ? Math.round(compsStats.median * f.areaM2) : null}
           />
 
+          <DataInsightsSection
+            hasPrice={!!extracted?.price}
+            hasArea={!!extracted?.areaM2}
+            hasRooms={!!(extracted?.rooms ?? f?.rooms)}
+            hasFloor={extracted?.floor != null || extracted?.floorRaw != null || f?.level != null}
+            hasYear={!!(extracted?.yearBuilt ?? f?.yearBuilt)}
+            hasAddress={!!extracted?.addressRaw}
+            hasCoords={f?.lat != null && f?.lng != null}
+            hasPhotos={Array.isArray(extracted?.photos) && (extracted.photos as unknown[]).length > 0}
+            compsCount={comps.length}
+            confidenceLevel={confidenceData?.level}
+            seismicLevel={seismic.level}
+          />
+
           <SellerChecklist
             yearBuilt={extracted?.yearBuilt ?? f?.yearBuilt}
-            hasFloor={extracted?.floor != null || f?.level != null}
-            seismicAttention={seismic.level === "RS1" || seismic.level === "RS2"}
+            hasFloor={extracted?.floor != null || extracted?.floorRaw != null || f?.level != null}
+            hasAddress={!!extracted?.addressRaw}
+            hasCoords={f?.lat != null && f?.lng != null}
+            hasArea={!!extracted?.areaM2}
+            hasPhotos={Array.isArray(extracted?.photos) && (extracted.photos as unknown[]).length > 0}
+            seismicAttention={["RS1", "RS2", "RS3", "RsI", "RsII", "RsIII"].includes(seismic.level)}
+            overpricingPct={overpricingPct}
+            compsCount={comps.length}
+            confidenceLevel={confidenceData?.level}
+            areaM2={extracted?.areaM2 ?? (f?.areaM2 as number) ?? null}
+            titleAreaM2={(extracted as Record<string, unknown>)?.titleAreaM2 as number ?? null}
+            rooms={extracted?.rooms ?? (f?.rooms as number) ?? null}
+            title={extracted?.title ?? null}
           />
 
           <MethodologySection
@@ -261,6 +336,20 @@ export default async function ReportPage({ params }: Props) {
           />
         </div>
       </div>
+
+      {/* PDF Download */}
+      {analysis?.status === "done" && (
+        <div className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Exporta raport</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PdfActions analysisId={analysis.id} />
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       <Poller active={analysis?.status !== "done" && analysis?.status !== "error"} />
     </div>
