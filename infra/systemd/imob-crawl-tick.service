@@ -5,6 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/curl -sf -H "Authorization: Bearer ${CRON_SECRET}" http://localhost:3000/api/cron/crawl-tick
+# Use public API URL (port 3000 is not published to host). Set CRON_BASE_URL in .env e.g. https://api.imobintel.ro
+ExecStart=/bin/sh -c 'curl -sf -H "Authorization: Bearer $CRON_SECRET" "${CRON_BASE_URL:-https://api.imobintel.ro}/api/cron/crawl-tick"'
 EnvironmentFile=/home/admin/apps/imob/infra/.env
 TimeoutStartSec=90
