@@ -79,6 +79,20 @@ export function validateTextExtraction(
   if (!Array.isArray(result.positives)) result.positives = [];
   if (!Array.isArray(result.evidence)) result.evidence = [];
 
+  // Move "comision 0%" items from redFlags to positives
+  const movedToPositive: string[] = [];
+  result.redFlags = result.redFlags.filter((flag) => {
+    const lower = flag.toLowerCase();
+    if (lower.includes("comision 0") || lower.includes("comision zero") || lower.includes("fara comision") || lower.includes("fără comision")) {
+      movedToPositive.push(flag.replace(/^!?\s*/, ""));
+      return false;
+    }
+    return true;
+  });
+  if (movedToPositive.length > 0) {
+    result.positives = [...movedToPositive, ...result.positives];
+  }
+
   if (typeof result.summary !== "string") result.summary = "";
 
   if (failures.length > 0) {

@@ -61,7 +61,7 @@ interface FeatureRow {
 }
 
 const features: FeatureRow[] = [
-  { label: "Cautari/luna", free: "10", standard: "50", pro: "200", enterprise: "Nelimitat" },
+  { label: "Cautari/luna", free: "10", standard: "50", pro: "300", enterprise: "Nelimitat" },
   { label: "Verdict (subevaluat/corect/supraevaluat)", free: true, standard: true, pro: true, enterprise: true },
   { label: "Comparabile", free: "3 preview", standard: "Complete", pro: "Complete cu harta", enterprise: "Complete cu harta" },
   { label: "Rapoarte PDF", free: "1/luna", standard: "10/luna", pro: "30/luna", enterprise: "Nelimitat" },

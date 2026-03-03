@@ -25,9 +25,33 @@ import SeismicSection from "./sections/SeismicSection";
 import SellerChecklist from "./sections/SellerChecklist";
 import TtsSection from "./sections/TtsSection";
 import VerdictSection from "./sections/VerdictSection";
+import ReportChat from "./ReportChat";
 import { ViewTracker } from "./ViewTracker";
 
 export const dynamic = "force-dynamic";
+
+const PHOTO_BLACKLIST_PATTERNS = [
+  /google\s*play/i, /app\s*store/i, /badge/i,
+  /logo/i, /icon/i, /favicon/i, /avatar/i, /placeholder/i,
+  /banner/i, /sprite/i, /widget/i,
+  /play\.google\.com/i, /apple\.com\/.*badge/i,
+  /\.svg$/i,
+];
+
+function isPropertyPhoto(url: string): boolean {
+  return !PHOTO_BLACKLIST_PATTERNS.some((p) => p.test(url));
+}
+
+function looksLikeAddress(raw: string): boolean {
+  if (!raw || raw.length < 5 || raw.length > 300) return false;
+  const lower = raw.toLowerCase();
+  const nonAddressPatterns = [
+    /^descriere/, /^detalii/, /^informatii/, /^contact/, /^galerie/,
+    /^vezi /, /^citeste/, /^afiseaza/, /^anunt/, /^oferta$/,
+  ];
+  if (nonAddressPatterns.some((p) => p.test(lower))) return false;
+  return true;
+}
 
 /** Prevent garbage data (JSON blobs, HTML) from rendering in the UI. */
 function safeDisplay(val: unknown, maxLen = 30): string {
@@ -39,13 +63,13 @@ function safeDisplay(val: unknown, maxLen = 30): string {
   return s;
 }
 
-/** Format floor for display: ground_floor -> Parter, 1/7 -> Etaj 1/7, P/8 -> Parter/8 */
+/** Format floor for display: ground_floor -> Parter, floor_1 -> Etaj 1, 1/7 -> Etaj 1/7 */
 function displayFloor(val: unknown): string {
   if (val == null) return "-";
   const raw = String(val).trim().toLowerCase();
   if (!raw || raw === "null" || raw === "undefined") return "-";
 
-  const GROUND = ["ground_floor", "ground", "parter", "p", "0"];
+  const GROUND = ["ground_floor", "ground", "parter", "p", "0", "floor_0"];
   const DEMISOL = ["demisol", "subsol", "-1", "basement"];
   const MANSARDA = ["mansarda", "mansardă", "attic", "99"];
 
@@ -53,11 +77,17 @@ function displayFloor(val: unknown): string {
   if (DEMISOL.includes(raw)) return "Demisol";
   if (MANSARDA.includes(raw)) return "Mansarda";
 
-  const slash = raw.match(/^(p|parter|ground_floor|ground|\d{1,2})\s*\/\s*(\d{1,2})$/i);
+  // Handle English format: floor_1, floor_2, floor_10
+  const floorUnderscore = raw.match(/^floor[_\s]+(\d{1,2})$/i);
+  if (floorUnderscore) return `Etaj ${floorUnderscore[1]}`;
+
+  const slash = raw.match(/^(p|parter|ground_floor|ground|floor_?\d{0,2}|\d{1,2})\s*\/\s*(\d{1,2})$/i);
   if (slash) {
     const left = slash[1].toLowerCase();
     const total = slash[2];
     if (GROUND.includes(left)) return `Parter/${total}`;
+    const leftNum = left.match(/\d+/);
+    if (leftNum) return `Etaj ${leftNum[0]}/${total}`;
     return `Etaj ${left}/${total}`;
   }
 
@@ -245,7 +275,7 @@ export default async function ReportPage({ params }: Props) {
               <CardHeader>
                 <CardTitle>{extracted.title ?? "Fara titlu"}</CardTitle>
                 <CardDescription>
-                  {extracted.addressRaw ? (
+                  {extracted.addressRaw && looksLikeAddress(extracted.addressRaw) ? (
                     <a
                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(extracted.addressRaw + ", Bucuresti")}`}
                       target="_blank"
@@ -254,7 +284,9 @@ export default async function ReportPage({ params }: Props) {
                     >
                       {extracted.addressRaw}
                     </a>
-                  ) : "-"}
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -295,21 +327,24 @@ export default async function ReportPage({ params }: Props) {
           )}
 
           {/* Photo gallery */}
-          {extracted && Array.isArray(extracted.photos) && (extracted.photos as unknown[]).length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 rounded-xl overflow-hidden">
-              {(extracted.photos as string[]).slice(0, 6).map((src, i) => (
-                <div key={i} className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={src}
-                    alt={`Foto ${i + 1}`}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    loading={i < 2 ? "eager" : "lazy"}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+          {(() => {
+            const allPhotos = extracted && Array.isArray(extracted.photos) ? (extracted.photos as string[]).filter(isPropertyPhoto) : [];
+            return allPhotos.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 rounded-xl overflow-hidden">
+                {allPhotos.slice(0, 6).map((src, i) => (
+                  <div key={i} className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={src}
+                      alt={`Foto ${i + 1}`}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      loading={i < 2 ? "eager" : "lazy"}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : null;
+          })()}
 
           {/* LLM Analysis - detailed listing insights */}
           <ListingInsightsSection
@@ -469,6 +504,9 @@ export default async function ReportPage({ params }: Props) {
       )}
 
       {isLlmEnriching && <LlmEnrichTrigger analysisId={analysis?.id ?? ""} />}
+
+      {/* Chat assistant */}
+      {extracted && <ReportChat analysisId={analysis?.id ?? ""} />}
     </div>
   );
 }

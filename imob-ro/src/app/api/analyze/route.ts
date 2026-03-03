@@ -22,6 +22,52 @@ function sanitizeUrl(input: unknown): string | null {
   }
 }
 
+function isListingUrl(urlStr: string): boolean {
+  try {
+    const u = new URL(urlStr);
+    const host = u.hostname.replace(/^www\./, "").toLowerCase();
+    const path = u.pathname.toLowerCase();
+
+    if (host === "imobiliare.ro") {
+      // Listing pages: /oferta/* or /vanzare-*/.../slug-with-id-NNNNN
+      if (path.startsWith("/oferta/")) return true;
+      if (/\/[a-z0-9-]+-\d{4,}$/.test(path)) return true;
+      // Category/search pages: /vanzare-apartamente/bucuresti (no specific listing ID)
+      if (/^\/vanzare-[^/]+\/[^/]+(\/[^/]+)?$/.test(path) && !/-\d{4,}$/.test(path)) return false;
+      return true;
+    }
+
+    if (host === "storia.ro") {
+      if (path.includes("/oferta/")) return true;
+      if (path.includes("/rezultate/")) return false;
+      return true;
+    }
+
+    if (host === "olx.ro") {
+      if (path.includes("/d/oferta/")) return true;
+      if (path.includes("/imobiliare/")) return false;
+      return true;
+    }
+
+    if (host === "publi24.ro") {
+      if (path.includes("/anunt/")) return true;
+      if (/\/\d+$/.test(path)) return true;
+      if (path.includes("/anunturi/") && !path.includes("/anunt/")) return false;
+      return true;
+    }
+
+    if (host === "lajumate.ro") {
+      if (path.includes("/ad/")) return true;
+      if (/^\/[a-z-]+\/[a-z-]+$/.test(path) && !path.includes("/ad/")) return false;
+      return true;
+    }
+
+    return true;
+  } catch {
+    return true;
+  }
+}
+
 export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const session = await auth();
@@ -51,6 +97,13 @@ export async function POST(req: Request) {
 
   const rawUrl = sanitizeUrl(body?.url);
   if (!rawUrl) return NextResponse.json({ error: "invalid_url" }, { status: 400 });
+
+  if (!isListingUrl(rawUrl)) {
+    return NextResponse.json(
+      { error: "Acest link pare sa fie o pagina de cautare, nu un anunt individual. Lipeste linkul unui anunt specific (ex: imobiliare.ro/oferta/garsoniera-de-vanzare-...)." },
+      { status: 400 },
+    );
+  }
 
   const dedupCutoff = new Date(Date.now() - ANALYSIS_DEDUP_WINDOW_MS);
   const existing = await prisma.analysis.findFirst({

@@ -76,9 +76,9 @@ const s = StyleSheet.create({
   listText: { flex: 1, fontSize: 9, lineHeight: 1.5 },
 
   // Checklist
-  checkBox: { width: 10, height: 10, borderRadius: 2, border: `1pt solid ${BORDER}`, marginTop: 1 },
-  checkText: { flex: 1, fontSize: 9, lineHeight: 1.5 },
-  tipText: { fontSize: 8, color: GRAY, marginTop: 1 },
+  checkBox: { width: 10, height: 10, borderRadius: 2, border: `1pt solid ${BORDER}`, marginTop: 2, flexShrink: 0 },
+  checkText: { fontSize: 9, lineHeight: 1.5 },
+  tipText: { fontSize: 7.5, color: GRAY, marginTop: 2, lineHeight: 1.4 },
 
   // Info box
   infoBox: { backgroundColor: LIGHT_BG, borderRadius: 6, padding: 10, border: `1pt solid ${BORDER}`, marginBottom: 8 },
@@ -97,13 +97,17 @@ function displayFloor(raw?: string | number | null, level?: number | null): stri
   if (raw == null && level == null) return "-";
   const val = String(raw ?? level ?? "").trim().toLowerCase();
   if (!val) return "-";
-  if (["ground_floor", "ground", "parter", "p", "0"].includes(val)) return "Parter";
+  if (["ground_floor", "ground", "parter", "p", "0", "floor_0"].includes(val)) return "Parter";
   if (["demisol", "-1"].includes(val)) return "Demisol";
   if (["mansarda", "99"].includes(val)) return "Mansarda";
-  const slash = val.match(/^(p|parter|ground_floor|ground|\d{1,2})\s*\/\s*(\d{1,2})$/i);
+  const floorUnderscore = val.match(/^floor[_\s]+(\d{1,2})$/i);
+  if (floorUnderscore) return `Etaj ${floorUnderscore[1]}`;
+  const slash = val.match(/^(p|parter|ground_floor|ground|floor_?\d{0,2}|\d{1,2})\s*\/\s*(\d{1,2})$/i);
   if (slash) {
     const left = slash[1].toLowerCase();
-    if (["p", "parter", "ground_floor", "ground", "0"].includes(left)) return `Parter/${slash[2]}`;
+    if (["p", "parter", "ground_floor", "ground", "0", "floor_0"].includes(left)) return `Parter/${slash[2]}`;
+    const leftNum = left.match(/\d+/);
+    if (leftNum) return `Etaj ${leftNum[0]}/${slash[2]}`;
     return `Etaj ${left}/${slash[2]}`;
   }
   const num = val.match(/^(\d{1,2})$/);
@@ -333,7 +337,7 @@ export default function ReportPdf(props: {
           q.push({ text: "Extras CF actualizat disponibil?", tip: "CF trebuie sa fie emisa in ultimele 30 de zile." });
           q.push({ text: "Cat este intretinerea lunara si ce include?" });
           return q.slice(0, 6).map((item, i) => (
-            <View key={i} style={{ ...s.listItem, marginBottom: 4 }}>
+            <View key={i} style={{ flexDirection: "row", gap: 8, marginBottom: 8 }} wrap={false}>
               <View style={s.checkBox} />
               <View style={{ flex: 1 }}>
                 <Text style={s.checkText}>{item.text}</Text>

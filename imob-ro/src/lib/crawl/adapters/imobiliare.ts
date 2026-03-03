@@ -196,9 +196,14 @@ export const adapterImobiliare: SourceAdapter = {
       $('[itemprop="address"]').text().trim() ||
       $('meta[property="og:street-address"]').attr("content")?.trim() ||
       (() => {
-        const h2 = $("h2").first().text().trim();
-        if (h2 && h2.length < 200) return h2;
-        const loc = rawHtml.match(/(?:Militari|Drumul Taberei|Crângași|Sector \d|București)[^<]*/i);
+        // Try breadcrumb location
+        const breadcrumb = $('[itemprop="itemListElement"]').last().find('[itemprop="name"]').text().trim();
+        if (breadcrumb && breadcrumb.length > 3 && breadcrumb.length < 150) return breadcrumb;
+        // Try location-specific selectors
+        const locEl = $(".listing-page__location, [class*='location']").first().text().trim();
+        if (locEl && locEl.length < 200 && !/descriere|detalii|galerie/i.test(locEl)) return locEl;
+        // Regex fallback from raw HTML
+        const loc = rawHtml.match(/(?:Militari|Drumul Taberei|Crângași|Sector \d|București|Voluntari|Pipera|Floreasca|Dorobanți|Titan|Berceni|Colentina|Rahova|Pantelimon)[^<"]*/i);
         return loc ? loc[0].trim().slice(0, 150) : undefined;
       })();
 

@@ -69,3 +69,20 @@ Once deployed:
 - ⏳ Waiting for redeploy to run migrations
 
 You're almost there! 🚀
+
+## Verificare: câte apartamente sunt scrape-uite vs în DB
+
+**Din terminal (cu `.env` / `.env.local` încărcat):**
+```bash
+pnpm run count-listings
+```
+
+**Din API (necesită `ADMIN_TOKEN` în env):**
+```bash
+curl -H "Authorization: Bearer YOUR_ADMIN_TOKEN" https://your-app/api/admin/stats
+```
+
+În răspuns:
+- `ingestion.crawl.detailDone` = URL-uri de anunț scrape-uite cu succes (CrawlJob kind=detail, status=done)
+- `ingestion.totalExtractedListings` = total anunțuri cu date în baza de date (ExtractedListing)
+- `ingestion.doneAnalyses` = analize finalizate (cu scoring etc.)

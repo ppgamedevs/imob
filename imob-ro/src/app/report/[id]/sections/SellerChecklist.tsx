@@ -134,17 +134,16 @@ export default function SellerChecklist(props: Props) {
     });
   }
 
-  // ---- LLM-derived questions ----
+  // ---- LLM-derived questions (skip commission flags - they're self-explanatory) ----
   if (props.llmRedFlags && props.llmRedFlags.length > 0) {
     for (const flag of props.llmRedFlags.slice(0, 3)) {
-      const isCommission = flag.toLowerCase().includes("comision");
-      const isNoDoc = flag.toLowerCase().includes("cf") || flag.toLowerCase().includes("acte");
+      const lower = flag.toLowerCase();
+      if (lower.includes("comision")) continue;
+      const isNoDoc = lower.includes("cf") || lower.includes("acte");
       questions.push({
-        text: isCommission
-          ? `Comision mentionat: "${flag}". Cine plateste si cat este exact?`
-          : isNoDoc
-            ? `Problema posibila cu actele: "${flag}". Care este situatia juridica?`
-            : `Clarificati: ${flag}`,
+        text: isNoDoc
+          ? `Problema posibila cu actele: "${flag}". Care este situatia juridica?`
+          : `Clarificati: ${flag}`,
         tip: "Semnal detectat automat din textul anuntului.",
       });
     }

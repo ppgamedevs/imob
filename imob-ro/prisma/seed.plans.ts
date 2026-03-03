@@ -78,7 +78,7 @@ export async function seedPlans() {
       priceCents: 9900,
       stripePrice: process.env.STRIPE_PRICE_PRO ?? null,
       features: {
-        analyze: 200,
+        analyze: 300,
         pdf: 30,
         share: 50,
         alerts: 20,
@@ -96,7 +96,7 @@ export async function seedPlans() {
       priceCents: 9900,
       stripePrice: process.env.STRIPE_PRICE_PRO ?? null,
       features: {
-        analyze: 200,
+        analyze: 300,
         pdf: 30,
         share: 50,
         alerts: 20,

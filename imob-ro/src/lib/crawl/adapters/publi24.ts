@@ -2,50 +2,16 @@ import * as cheerio from "cheerio";
 
 import type { DiscoverResult, SourceAdapter } from "../types";
 
-/**
- * Find a spec value by its label text in publi24's "Specificatii" section.
- * The section uses heading/content pairs (often divs or dt/dd).
- */
-function findSpec($: cheerio.CheerioAPI, labelFragment: string): string | undefined {
-  const lf = labelFragment.toLowerCase();
-  let result: string | undefined;
-
-  // Strategy 1: walk all small text containers and match label
-  $("div, dt, td, span, li, th").each((_, el) => {
-    if (result) return;
-    const node = $(el);
-    const text = node.contents().filter((_, c) => c.type === "text").text().trim();
-    if (!text.toLowerCase().includes(lf)) return;
-
-    // Value is often the next sibling element
-    const sibling = node.next();
-    const sibText = sibling.text().trim();
-    if (sibText && sibText.length < 100 && sibText.length > 0) {
-      result = sibText;
-    }
-  });
-
-  // Strategy 2: regex on raw HTML for "label</...>...<...>value" patterns
-  if (!result) {
-    const re = new RegExp(
-      labelFragment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") +
-        `[^<]*<\\/[^>]+>\\s*(?:<[^>]+>\\s*)*([^<]{1,80})`,
-      "i",
-    );
-    const html = $.html();
-    const m = html.match(re);
-    if (m?.[1]) result = m[1].trim();
-  }
-
-  return result;
-}
-
 export const adapterPubli24: SourceAdapter = {
   domain: "publi24.ro",
 
   async discover(listUrl: URL): Promise<DiscoverResult> {
     const res = await fetch(listUrl.toString(), {
-      headers: { "User-Agent": "ImobIntelBot/1.0 (+https://imobintel.ro/bot)" },
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      },
     });
     const html = await res.text();
     const $ = cheerio.load(html);
@@ -72,65 +38,173 @@ export const adapterPubli24: SourceAdapter = {
 
   async extract({ url, html }) {
     const $ = cheerio.load(html);
+    const rawHtml = html as string;
 
-    // Title: first h1 on page (publi24 uses plain <h1>)
+    // --- JSON-LD ---
+    let ld: Record<string, unknown> | null = null;
+    $('script[type="application/ld+json"]').each((_, el) => {
+      if (ld) return;
+      try {
+        const obj = JSON.parse($(el).html() ?? "");
+        const node = Array.isArray(obj) ? obj[0] : obj;
+        if (node?.["@type"] || node?.name) ld = node;
+      } catch { /* ignore */ }
+    });
+
+    // --- Title ---
     const title =
+      (ld?.name as string) ??
       $("h1").first().text().trim() ||
       $("title").text().split("|")[0]?.trim() ||
       $("title").text().split("•")[0]?.trim();
 
-    // Price: look for EUR/RON pattern near h1
+    // --- Price ---
     let price: number | undefined;
     let currency = "EUR";
-    // Publi24 shows "45 000 EUR" near the title
-    const priceContainer =
-      $("h1").parent().text() ||
-      $('[class*="price"]').first().text() ||
-      $("body").text();
-    const priceMatch = priceContainer.match(/([\d\s.,]+)\s*(?:EUR|€)/i);
-    if (priceMatch) {
-      price = parseInt(priceMatch[1].replace(/[\s,.]/g, ""));
+
+    // Publi24 shows "45 000 EUR 1552 EUR/m2" near title
+    const priceRegex = /([\d][.\d\s]*\d)\s*(?:EUR|€)/i;
+    const ronRegex = /([\d][.\d\s]*\d)\s*(?:RON|lei)/i;
+
+    // Try from JSON-LD first
+    const ldPrice = ld?.offers
+      ? (ld.offers as Record<string, unknown>)?.price
+      : ld?.price;
+    if (ldPrice) {
+      price = parseInt(String(ldPrice).replace(/[\s,.]/g, ""));
+      const ldCurrency = ld?.offers
+        ? (ld.offers as Record<string, unknown>)?.priceCurrency
+        : ld?.priceCurrency;
+      if (ldCurrency) currency = String(ldCurrency).toUpperCase();
     }
+
+    // Fallback to HTML
     if (!price) {
-      const ronMatch = priceContainer.match(/([\d\s.,]+)\s*(?:RON|lei)/i);
-      if (ronMatch) {
-        price = parseInt(ronMatch[1].replace(/[\s,.]/g, ""));
-        currency = "RON";
+      const priceZone = $("h1").parent().text() + " " + $('[class*="price"]').text();
+      const eurMatch = priceZone.match(priceRegex);
+      if (eurMatch) {
+        price = parseInt(eurMatch[1].replace(/[\s.]/g, ""));
+      } else {
+        const ronMatch = priceZone.match(ronRegex);
+        if (ronMatch) {
+          price = parseInt(ronMatch[1].replace(/[\s.]/g, ""));
+          currency = "RON";
+        }
       }
     }
 
-    // Specs: publi24 has a "Specificatii" section with labeled pairs
+    // Final fallback: full body text
+    if (!price) {
+      const bodyMatch = rawHtml.match(priceRegex);
+      if (bodyMatch) price = parseInt(bodyMatch[1].replace(/[\s.]/g, ""));
+    }
+
+    // --- Specs ---
+    // Publi24 has a "Specificatii" section with pairs like:
+    // <strong>Suprafata utila</strong> ... 29 m2
+    function findSpec(label: string): string | undefined {
+      const lf = label.toLowerCase();
+      let result: string | undefined;
+
+      // Strategy 1: walk elements looking for label text
+      $("div, dt, td, span, li, th, strong, b").each((_, el) => {
+        if (result) return;
+        const node = $(el);
+        const text = node.text().trim().toLowerCase();
+        if (!text.includes(lf) || text.length > 100) return;
+
+        // Value in next sibling
+        const sibling = node.next();
+        const sibText = sibling.text().trim();
+        if (sibText && sibText.length < 80 && sibText !== text) {
+          result = sibText;
+          return;
+        }
+
+        // Value inline after label (e.g. "Suprafata utila\n29 m2")
+        const parent = node.parent();
+        const parentText = parent.text().trim();
+        const re = new RegExp(label + "[:\\s]*(.+)", "i");
+        const m = parentText.match(re);
+        if (m) result = m[1].trim();
+      });
+
+      // Strategy 2: regex on raw HTML
+      if (!result) {
+        const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const re = new RegExp(
+          escaped + `[^<]*<\\/[^>]+>\\s*(?:<[^>]+>\\s*)*([^<]{1,80})`,
+          "i",
+        );
+        const m = rawHtml.match(re);
+        if (m?.[1]) result = m[1].trim();
+      }
+
+      return result;
+    }
+
+    // Area
     let areaM2: number | undefined;
-    const areaText = findSpec($, "Suprafat");
-    const areaMatch = areaText?.match(/([\d.,]+)\s*m/i);
-    if (areaMatch) areaM2 = parseInt(areaMatch[1]);
+    const areaText = findSpec("Suprafat");
+    if (areaText) {
+      const m = areaText.match(/([\d.,]+)/);
+      if (m) areaM2 = parseInt(m[1]);
+    }
+    if (!areaM2) {
+      const match = rawHtml.match(/(\d{2,3})\s*(?:m2|m²|mp)\b/i);
+      if (match) areaM2 = parseInt(match[1]);
+    }
 
     // Rooms
     let rooms: number | undefined;
-    const roomsText = findSpec($, "Numar camere") ?? findSpec($, "camere");
-    const roomsMatch = roomsText?.match(/(\d+)/);
-    if (roomsMatch) rooms = parseInt(roomsMatch[1]);
+    const roomsText = findSpec("Numar camere") ?? findSpec("camere");
+    if (roomsText) {
+      const m = roomsText.match(/(\d+)/);
+      if (m) rooms = parseInt(m[1]);
+    }
     if (!rooms && /\bgarsonier/i.test(title ?? "")) rooms = 1;
 
     // Floor
     let floorRaw: string | undefined;
-    const floorText = findSpec($, "Etaj");
-    if (floorText && floorText.length < 50) floorRaw = floorText;
+    const floorText = findSpec("Etaj");
+    if (floorText && floorText.length < 50) {
+      floorRaw = floorText.replace(/^etaj\s*/i, "").trim();
+    }
 
     // Year built
     let yearBuilt: number | undefined;
-    const yearText = findSpec($, "Anul construc") ?? findSpec($, "An construc");
-    const yearMatch = yearText?.match(/(\d{4})/);
-    if (yearMatch) yearBuilt = parseInt(yearMatch[1]);
+    const yearText = findSpec("Anul construc") ?? findSpec("An construc");
+    if (yearText) {
+      const m = yearText.match(/(\d{4})/);
+      if (m) yearBuilt = parseInt(m[1]);
+    }
 
-    // Address
-    const addressRaw =
-      $('[itemprop="address"]').text().trim() ||
-      $("a[href*='sector'], a[href*='judet']").first().parent().text().trim().replace(/\s+/g, " ") ||
-      undefined;
+    // Compartimentare
+    const compartiment = findSpec("Compartimentare") ?? findSpec("compartimentare");
+
+    // Address: publi24 shows "Bucuresti,Sector 6 Crangasi" near the title
+    let addressRaw: string | undefined;
+    const addrMeta = $('[itemprop="address"]').text().trim();
+    if (addrMeta) {
+      addressRaw = addrMeta;
+    } else {
+      // Look for "Sector" or city + neighborhood near title
+      const locationText = $('a[href*="sector"], a[href*="judet"]').first().parent().text().trim();
+      if (locationText && locationText.length < 100) {
+        addressRaw = locationText.replace(/\s+/g, " ");
+      }
+    }
+    // Fallback: search for common Romanian city/sector patterns
+    if (!addressRaw) {
+      const cityMatch = rawHtml.match(/(?:Bucuresti|Cluj|Iasi|Timisoara|Constanta|Brasov)[,\s]+(?:Sector\s*\d|[A-Z][a-z]+)/i);
+      if (cityMatch) addressRaw = cityMatch[0].trim();
+    }
 
     // Photos
     const photos: string[] = [];
+    const ogImage = $('meta[property="og:image"]').attr("content");
+    if (ogImage && ogImage.startsWith("http")) photos.push(ogImage);
+
     $("img").each((_, el) => {
       const src = $(el).attr("src") || $(el).attr("data-src");
       if (
@@ -140,13 +214,18 @@ export const adapterPubli24: SourceAdapter = {
         !src.includes("no-photo") &&
         !src.includes("logo") &&
         !src.includes("icon") &&
-        !src.includes("avatar")
+        !src.includes("avatar") &&
+        !src.includes("badge") &&
+        !src.includes("google") &&
+        !src.includes("facebook") &&
+        !src.includes("apple") &&
+        (src.includes("publi24") || src.includes("romimo") || src.includes("cdn") || src.includes("cloudfront"))
       ) {
         photos.push(src);
       }
     });
 
-    // Geocode from inline scripts
+    // Geocode
     let lat: number | undefined;
     let lng: number | undefined;
     $("script").each((_, el) => {
@@ -155,25 +234,36 @@ export const adapterPubli24: SourceAdapter = {
       const latM = text.match(/["']?lat(?:itude)?["']?\s*[:=]\s*([\d.]+)/);
       const lngM = text.match(/["']?l(?:ng|ong(?:itude)?)["']?\s*[:=]\s*([\d.]+)/);
       if (latM && lngM) {
-        const parsedLat = parseFloat(latM[1]);
-        const parsedLng = parseFloat(lngM[1]);
-        if (parsedLat > 43 && parsedLat < 49 && parsedLng > 20 && parsedLng < 30) {
-          lat = parsedLat;
-          lng = parsedLng;
+        const pLat = parseFloat(latM[1]);
+        const pLng = parseFloat(lngM[1]);
+        if (pLat > 43 && pLat < 49 && pLng > 20 && pLng < 30) {
+          lat = pLat;
+          lng = pLng;
         }
       }
     });
 
     // Description
-    const descEl = $("h5:contains('Descriere')").next();
-    const description = descEl.text().trim() || undefined;
+    let description: string | undefined;
+    const descHeading = $("h5:contains('Descriere'), h4:contains('Descriere'), h3:contains('Descriere')");
+    if (descHeading.length) {
+      const descEl = descHeading.first().nextAll("div, p").first();
+      description = descEl.text().trim().slice(0, 2000) || undefined;
+    }
+    if (!description) {
+      const descEl = $("[class*=description], [class*=descriere]").first();
+      if (descEl.length) description = descEl.text().trim().slice(0, 2000) || undefined;
+    }
+    if (!description) {
+      description = $('meta[name="description"]').attr("content")?.trim() || undefined;
+    }
 
     // Seller type
     let sellerType: string | undefined;
-    const rawLower = $.html().toLowerCase();
-    if (/\b(?:agentie|agenție|agent imobiliar|intermediar)\b/.test(rawLower)) sellerType = "agentie";
-    else if (/\b(?:proprietar|particular)\b/.test(rawLower)) sellerType = "proprietar";
-    else if (/\b(?:dezvoltator|constructor)\b/.test(rawLower)) sellerType = "dezvoltator";
+    const bodyText = rawHtml.toLowerCase();
+    if (/\b(?:agentie|agenție|agent imobiliar|intermediar)\b/.test(bodyText)) sellerType = "agentie";
+    else if (/\b(?:proprietar|particular)\b/.test(bodyText)) sellerType = "proprietar";
+    else if (/\b(?:dezvoltator|constructor)\b/.test(bodyText)) sellerType = "dezvoltator";
 
     return {
       extracted: {
@@ -192,6 +282,7 @@ export const adapterPubli24: SourceAdapter = {
           source: "publi24.ro",
           description,
           sellerType,
+          compartimentare: compartiment,
           extractedAt: new Date().toISOString(),
         },
       },
