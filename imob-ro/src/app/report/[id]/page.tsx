@@ -10,10 +10,14 @@ import { computeYield, estimateRent, type YieldResult } from "@/lib/ml/yield";
 import { matchSeismic } from "@/lib/risk/seismic";
 import type { NormalizedFeatures } from "@/lib/types/pipeline";
 
+import type { LlmTextExtraction, LlmVisionExtraction } from "@/lib/llm/types";
+
 import CompsClientBlock from "./CompsClientBlock";
+import { LlmEnrichTrigger } from "./LlmEnrichTrigger";
 import { PdfActions } from "./PdfActions";
 import { Poller } from "./poller";
 import DataInsightsSection from "./sections/DataInsightsSection";
+import ListingInsightsSection from "./sections/ListingInsightsSection";
 import MethodologySection from "./sections/MethodologySection";
 import NegotiationSection from "./sections/NegotiationSection";
 import PriceAnchorsSection from "./sections/PriceAnchorsSection";
@@ -137,6 +141,13 @@ export default async function ReportPage({ params }: Props) {
   const notarialTotal = analysis?.scoreSnapshot?.notarialTotal ?? null;
   const notarialZone = analysis?.scoreSnapshot?.notarialZone ?? null;
   const notarialYear = analysis?.scoreSnapshot?.notarialYear ?? null;
+
+  // LLM enrichment data (read from DB, never call LLM here)
+  const llmText = extracted?.llmTextExtract as unknown as LlmTextExtraction | null;
+  const llmVision = extracted?.llmVisionExtract as unknown as LlmVisionExtraction | null;
+  const isLlmEnriching = analysis?.status === "done" && !extracted?.llmEnrichedAt;
+  const llmFailed = !!extracted?.llmEnrichedAt && !llmText;
+  const showVision = showNotarial; // Pro tier sees vision data
 
   // Compute derived values for sections
   const overpricingPct = actualPrice && priceRange?.mid
@@ -311,6 +322,14 @@ export default async function ReportPage({ params }: Props) {
             seismicLevel={seismic.level}
           />
 
+          <ListingInsightsSection
+            llmText={llmText}
+            llmVision={llmVision}
+            isEnriching={isLlmEnriching}
+            showVision={showVision}
+            llmFailed={llmFailed}
+          />
+
           <SellerChecklist
             yearBuilt={extracted?.yearBuilt ?? f?.yearBuilt}
             hasFloor={extracted?.floor != null || extracted?.floorRaw != null || f?.level != null}
@@ -326,6 +345,9 @@ export default async function ReportPage({ params }: Props) {
             titleAreaM2={(extracted as Record<string, unknown>)?.titleAreaM2 as number ?? null}
             rooms={extracted?.rooms ?? (f?.rooms as number) ?? null}
             title={extracted?.title ?? null}
+            llmRedFlags={llmText?.redFlags ?? null}
+            llmCondition={llmText?.condition ?? null}
+            llmBalconyM2={llmText?.balconyM2 ?? null}
           />
 
           <MethodologySection
@@ -351,6 +373,7 @@ export default async function ReportPage({ params }: Props) {
         </div>
       )}
 
+      {isLlmEnriching && <LlmEnrichTrigger analysisId={analysis?.id ?? ""} />}
       <Poller active={analysis?.status !== "done" && analysis?.status !== "error"} />
     </div>
   );

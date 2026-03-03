@@ -227,8 +227,25 @@ export async function startAnalysis(analysisId: string, url: string) {
     // 5. Done
     await setStatus(analysisId, "done");
     log.info("Analysis completed");
+
+    // 6. Async LLM enrichment (non-blocking, runs after report is available)
+    enqueueLlmEnrichment(analysisId).catch((e) =>
+      log.warn({ err: e }, "LLM enrichment enqueue failed"),
+    );
   } catch (err) {
     log.error({ err }, "Analysis pipeline failed");
     await setStatus(analysisId, "failed").catch(() => {});
   }
+}
+
+async function enqueueLlmEnrichment(analysisId: string): Promise<void> {
+  if (process.env.LLM_EXTRACT_ENABLED === "false") return;
+  if (!process.env.OPENAI_API_KEY) return;
+
+  const { enrichTextForAnalysis } = await import("./llm/worker");
+
+  // Fire and forget - text enrichment runs async
+  enrichTextForAnalysis(analysisId).catch((err) =>
+    logger.warn({ err, analysisId }, "Async LLM text enrichment failed"),
+  );
 }

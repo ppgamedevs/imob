@@ -15,6 +15,9 @@ interface Props {
   titleAreaM2?: number | null;
   rooms?: number | null;
   title?: string | null;
+  llmRedFlags?: string[] | null;
+  llmCondition?: string | null;
+  llmBalconyM2?: number | null;
 }
 
 interface ChecklistItem {
@@ -109,6 +112,42 @@ export default function SellerChecklist(props: Props) {
       question: "Putine comparabile in zona - cereti o evaluare independenta",
       tip: "Am gasit sub 3 proprietati similare in zona. Estimarea noastra are o marja de eroare mai mare. Cereti o evaluare de la un evaluator ANEVAR.",
     });
+  }
+
+  // ---- LLM-derived questions ----
+
+  if (props.llmRedFlags && props.llmRedFlags.length > 0) {
+    for (const flag of props.llmRedFlags.slice(0, 3)) {
+      const isCommission = flag.toLowerCase().includes("comision");
+      const isNoDoc = flag.toLowerCase().includes("cf") || flag.toLowerCase().includes("acte");
+      items.push({
+        question: isCommission
+          ? `Comision mentionat in anunt: "${flag}". Clarificati cine plateste comisionul si cat este exact.`
+          : isNoDoc
+            ? `Problema posibila cu actele: "${flag}". Verificati situatia juridica.`
+            : `Atentie: ${flag}`,
+        tip: "Acest semnal a fost detectat automat din textul anuntului. Verificati informatia direct cu vanzatorul.",
+      });
+    }
+  }
+
+  if (props.llmCondition === "necesita_renovare" || props.llmCondition === "de_renovat") {
+    items.push({
+      question: "Ce lucrari de renovare sunt necesare si care este costul estimat?",
+      tip: props.llmCondition === "de_renovat"
+        ? "Anuntul sugereaza ca apartamentul necesita renovare majora. Solicitati o vizita si estimati bugetul (10.000-25.000 EUR pentru o renovare completa in Bucuresti)."
+        : "Anuntul indica nevoie de renovare. Clarificati ce anume trebuie renovat si negociati pretul in consecinta.",
+    });
+  }
+
+  if (props.llmBalconyM2 && props.areaM2 && props.llmBalconyM2 > 0) {
+    const pct = Math.round((props.llmBalconyM2 / props.areaM2) * 100);
+    if (pct > 15) {
+      items.push({
+        question: `Balconul de ${props.llmBalconyM2} mp reprezinta ${pct}% din suprafata totala. Este inclus in suprafata utila?`,
+        tip: "Balconul se calculeaza cu coeficient 0.5 (un balcon de 6 mp = 3 mp suprafata utila). Verificati in CF daca suprafata include balconul la valoare intreaga.",
+      });
+    }
   }
 
   items.push({

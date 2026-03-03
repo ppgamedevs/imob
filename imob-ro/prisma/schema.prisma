@@ -200,6 +200,11 @@ model ExtractedListing {
   sourceMeta   Json?
   floorRaw     String?
 
+  llmTextExtract   Json?      // LlmTextExtraction result (text analysis)
+  llmVisionExtract Json?      // LlmVisionExtraction result (photo analysis)
+  llmEnrichedAt    DateTime?  // when text enrichment completed
+  llmVisionAt      DateTime?  // when vision enrichment completed
+
   analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

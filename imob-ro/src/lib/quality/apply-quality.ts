@@ -1,7 +1,7 @@
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
-import { hashPhotoUrls, mapScoreToVerdict } from "@/lib/ml/vision/condition";
+import { mapScoreToVerdict } from "@/lib/ml/vision/condition";
 
 import { computeQuality } from "./quality";
 
@@ -63,14 +63,20 @@ export async function applyQualityToAnalysis(analysisId: string) {
     avm: { mid: a.scoreSnapshot?.avmMid ?? null },
   });
 
-  // Vision-based condition inference (non-blocking)
+  // Vision-based condition inference: prefer LLM vision data if available
   let visionResult: { conditionScore: number; verdict: string } | null = null;
   const photoUrls = photos
     .map((p: any) => (typeof p === "string" ? p : p?.url))
     .filter((u): u is string => typeof u === "string" && u.startsWith("http"));
 
-  if (photoUrls.length > 0) {
-    const photoHash = await hashPhotoUrls(photoUrls.slice(0, 3));
+  const llmVision = a.extractedListing?.llmVisionExtract as Record<string, unknown> | null;
+  if (llmVision?.condition) {
+    const condScoreMap: Record<string, number> = {
+      nou: 0.95, renovat: 0.85, locuibil: 0.6, necesita_renovare: 0.35, de_renovat: 0.15,
+    };
+    const score = condScoreMap[llmVision.condition as string] ?? 0.5;
+    visionResult = { conditionScore: score, verdict: llmVision.condition as string };
+  } else if (photoUrls.length > 0) {
     const cached = a.scoreSnapshot?.conditionScore;
     if (cached != null) {
       const mapped = mapScoreToVerdict(cached);
