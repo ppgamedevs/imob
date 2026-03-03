@@ -12,10 +12,10 @@ import type { NormalizedFeatures } from "@/lib/types/pipeline";
 
 import type { LlmTextExtraction, LlmVisionExtraction } from "@/lib/llm/types";
 
+import AnalysisLoading from "./AnalysisLoading";
 import CompsClientBlock from "./CompsClientBlock";
 import { LlmEnrichTrigger } from "./LlmEnrichTrigger";
 import { PdfActions } from "./PdfActions";
-import { Poller } from "./poller";
 import DataInsightsSection from "./sections/DataInsightsSection";
 import ListingInsightsSection from "./sections/ListingInsightsSection";
 import MethodologySection from "./sections/MethodologySection";
@@ -28,6 +28,16 @@ import VerdictSection from "./sections/VerdictSection";
 import { ViewTracker } from "./ViewTracker";
 
 export const dynamic = "force-dynamic";
+
+/** Prevent garbage data (JSON blobs, HTML) from rendering in the UI. */
+function safeDisplay(val: unknown, maxLen = 30): string {
+  if (val == null) return "-";
+  const s = String(val).trim();
+  if (!s) return "-";
+  if (s.startsWith("{") || s.startsWith("[") || s.startsWith("<")) return "-";
+  if (s.length > maxLen) return s.slice(0, maxLen) + "...";
+  return s;
+}
 
 type Props = { params: Promise<{ id?: string | string[] }> };
 
@@ -52,6 +62,16 @@ export default async function ReportPage({ params }: Props) {
   if (!analysis) {
     const { notFound } = await import("next/navigation");
     notFound();
+  }
+
+  // Show loading page until the analysis is fully done
+  if (analysis.status !== "done" && analysis.status !== "error") {
+    return (
+      <AnalysisLoading
+        status={analysis.status ?? "processing"}
+        title={analysis.extractedListing?.title}
+      />
+    );
   }
 
   const comps = await prisma.compMatch.findMany({
@@ -214,7 +234,7 @@ export default async function ReportPage({ params }: Props) {
                   </div>
                   <div>
                     <div className="text-muted-foreground">Etaj</div>
-                    <div className="font-semibold">{extracted.floor ?? extracted.floorRaw ?? f?.floorRaw ?? "-"}</div>
+                    <div className="font-semibold">{safeDisplay(extracted.floor ?? extracted.floorRaw ?? f?.floorRaw)}</div>
                   </div>
                   <div>
                     <div className="text-muted-foreground">An</div>
@@ -374,7 +394,6 @@ export default async function ReportPage({ params }: Props) {
       )}
 
       {isLlmEnriching && <LlmEnrichTrigger analysisId={analysis?.id ?? ""} />}
-      <Poller active={analysis?.status !== "done" && analysis?.status !== "error"} />
     </div>
   );
 }

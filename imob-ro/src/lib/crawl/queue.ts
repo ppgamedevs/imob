@@ -53,28 +53,28 @@ export async function enqueueUrl(opts: {
 }
 
 /**
- * Take a batch of jobs from queue
- * Prioritizes by domain diversity to avoid hammering one site
+ * Take a batch of jobs from queue.
+ * Round-robin across domains to avoid hammering one site (max 5 per domain per batch).
  */
 export async function takeBatch(n: number) {
   const queued = await prisma.crawlJob.findMany({
     where: { status: "queued" },
     orderBy: [{ priority: "desc" }, { scheduledAt: "asc" }],
-    take: n * 3, // Overfetch to ensure domain diversity
+    take: n * 4,
   });
 
-  // Pick distinct domains
-  const byDomain = new Map<string, (typeof queued)[0]>();
+  const MAX_PER_DOMAIN = 5;
+  const domainCount = new Map<string, number>();
+  const batch: typeof queued = [];
+
   for (const j of queued) {
-    if (!byDomain.has(j.domain)) {
-      byDomain.set(j.domain, j);
-    }
-    if (byDomain.size >= n) break;
+    if (batch.length >= n) break;
+    const cnt = domainCount.get(j.domain) ?? 0;
+    if (cnt >= MAX_PER_DOMAIN) continue;
+    domainCount.set(j.domain, cnt + 1);
+    batch.push(j);
   }
 
-  const batch = Array.from(byDomain.values());
-
-  // Mark as fetching
   if (batch.length > 0) {
     await prisma.crawlJob.updateMany({
       where: { id: { in: batch.map((j) => j.id) } },

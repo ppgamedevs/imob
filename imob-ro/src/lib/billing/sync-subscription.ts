@@ -17,7 +17,9 @@ export async function syncSubscription(
   let planCode = "free";
   if (status === "active" || status === "trialing") {
     const priceId = stripeSub.items?.data?.[0]?.price?.id;
-    if (priceId === process.env.STRIPE_PRICE_STANDARD) {
+    if (priceId === process.env.STRIPE_PRICE_ENTERPRISE) {
+      planCode = "enterprise";
+    } else if (priceId === process.env.STRIPE_PRICE_STANDARD) {
       planCode = "standard";
     } else {
       planCode = "pro";
@@ -53,7 +55,7 @@ export async function syncSubscription(
 
     await prisma.user.update({
       where: { id: userId },
-      data: { proTier: planCode === "pro" || planCode === "standard" },
+      data: { proTier: planCode !== "free" },
     });
 
     logger.info({ userId, planCode, status }, "Subscription synced");

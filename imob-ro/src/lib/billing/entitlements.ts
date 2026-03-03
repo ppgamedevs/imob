@@ -5,9 +5,12 @@ import { monthStartUTC } from "./period";
 
 type CountableKind = "analyze" | "pdf" | "share" | "alerts";
 
+/** Set BILLING_LIMITS_DISABLED=true in .env to bypass all limits during testing */
+const LIMITS_DISABLED = () => process.env.BILLING_LIMITS_DISABLED === "true";
+
 const FREE_DEFAULTS: PlanFeatures = {
   analyze: 10,
-  pdf: 0,
+  pdf: 1,
   share: 0,
   alerts: 0,
   advancedComps: false,
@@ -47,8 +50,10 @@ export async function getUsage(userId: string) {
 /**
  * Check if user can perform a countable action (analyze, pdf, share, alerts).
  * A limit of -1 means unlimited.
+ * When BILLING_LIMITS_DISABLED=true, always returns allowed.
  */
 export async function canUse(userId: string, kind: CountableKind) {
+  if (LIMITS_DISABLED()) return { allowed: true, used: 0, max: -1, unlimited: true, plan: "enterprise" };
   const sub = await getSubscription(userId);
   const features = await getPlanFeatures(sub.planCode);
   const usage = await getUsage(userId);
@@ -60,15 +65,20 @@ export async function canUse(userId: string, kind: CountableKind) {
 
 /**
  * Check if user has access to a boolean feature (advancedComps, detailedScore, etc.)
+ * When BILLING_LIMITS_DISABLED=true, always returns allowed.
  */
 export async function canAccess(
   userId: string,
   feature: "advancedComps" | "detailedScore" | "history" | "csvExport",
 ) {
+  if (LIMITS_DISABLED()) return { allowed: true, plan: "enterprise" };
   const sub = await getSubscription(userId);
   const features = await getPlanFeatures(sub.planCode);
   return { allowed: !!features[feature], plan: sub.planCode };
 }
+
+/** Alias for getPlanFeatures (used by account page) */
+export const getPlanLimits = getPlanFeatures;
 
 export async function incUsage(userId: string, kind: CountableKind, delta = 1) {
   const periodStart = monthStartUTC();

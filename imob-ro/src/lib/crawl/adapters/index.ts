@@ -1,5 +1,6 @@
 import type { SourceAdapter } from "../types";
 import { adapterGeneric } from "./generic";
+import { adapterHomezz } from "./homezz";
 import { adapterImobiliare } from "./imobiliare";
 import { adapterLajumate } from "./lajumate";
 import { adapterOlx } from "./olx";
@@ -12,6 +13,7 @@ export const ADAPTERS: SourceAdapter[] = [
   adapterOlx,
   adapterPubli24,
   adapterLajumate,
+  adapterHomezz,
   adapterGeneric,
 ];
 

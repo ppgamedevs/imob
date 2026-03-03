@@ -86,7 +86,7 @@ function AnalyzePageContent() {
         Analizeaza un anunt
       </h1>
       <p className="mt-2 text-[15px] text-gray-500">
-        Introdu un link de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro sau lajumate.ro si primesti estimare de pret, comparabile si analiza completa.
+        Introdu un link de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro, lajumate.ro sau homezz.ro si primesti estimare de pret, comparabile si analiza completa.
       </p>
 
       {anonWall && (
@@ -112,7 +112,7 @@ function AnalyzePageContent() {
             value={url}
             onChange={(e) => { setUrl(e.target.value); setError(null); }}
             type="url"
-            placeholder="https://www.imobiliare.ro/... sau storia.ro, olx.ro, publi24.ro, lajumate.ro"
+            placeholder="https://www.imobiliare.ro/... sau storia.ro, olx.ro, publi24.ro, lajumate.ro, homezz.ro"
             className="flex-1 bg-transparent text-[14px] text-gray-900 placeholder:text-gray-400 px-3 py-3 outline-none"
           />
           <button

@@ -75,7 +75,7 @@ function Hero() {
           >
             <input
               name="q"
-              placeholder="Lipeste un URL de pe imobiliare.ro, storia.ro, olx.ro..."
+              placeholder="Lipeste un URL de pe imobiliare.ro, storia.ro, olx.ro, homezz.ro..."
               className="flex-1 bg-transparent text-[15px] text-gray-900 placeholder:text-gray-400 px-4 py-3.5 outline-none"
             />
             <button
@@ -185,7 +185,7 @@ function Features() {
             Tot ce ai nevoie intr-un singur raport
           </h2>
           <p className="mt-3 text-[16px] md:text-[18px] text-gray-500 max-w-[520px] mx-auto">
-            Analiza completa pentru orice anunt de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro sau lajumate.ro.
+            Analiza completa pentru orice anunt de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro, lajumate.ro sau homezz.ro.
           </p>
         </div>
 
@@ -221,7 +221,7 @@ const steps = [
   {
     num: "1",
     title: "Lipeste un link",
-    description: "Copiaza URL-ul unui anunt de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro sau lajumate.ro.",
+    description: "Copiaza URL-ul unui anunt de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro, lajumate.ro sau homezz.ro.",
   },
   {
     num: "2",

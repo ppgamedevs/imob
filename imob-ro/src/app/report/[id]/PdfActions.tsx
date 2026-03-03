@@ -1,9 +1,21 @@
 "use client";
 import { useCallback, useMemo, useState } from "react";
 
+const SECTION_LABELS: Record<string, string> = {
+  overview: "Prezentare",
+  avm: "Estimare pret",
+  tts: "Timp vanzare",
+  yield: "Randament",
+  risk: "Risc seismic",
+  gallery: "Galerie foto",
+  provenance: "Provenienta",
+  priceAnchors: "Ancore pret",
+};
+
 export function PdfActions({ analysisId }: { analysisId: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSections, setShowSections] = useState(false);
 
   const [toggle, setToggle] = useState({
     overview: true,
@@ -70,20 +82,29 @@ export function PdfActions({ analysisId }: { analysisId: string }) {
           Descarca PDF
         </button>
 
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+        <button
+          onClick={() => setShowSections(!showSections)}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2"
+        >
+          {showSections ? "Ascunde sectiuni" : "Personalizeaza sectiuni"}
+        </button>
+      </div>
+
+      {showSections && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground border rounded-lg p-3">
           {(Object.keys(toggle) as (keyof typeof toggle)[]).map((k) => (
-            <label key={k} className="inline-flex items-center gap-1 cursor-pointer select-none">
+            <label key={k} className="inline-flex items-center gap-1.5 cursor-pointer select-none">
               <input
                 type="checkbox"
-                className="rounded border-gray-300 text-primary focus:ring-primary/50 h-3 w-3"
+                className="rounded border-gray-300 text-primary focus:ring-primary/50 h-3.5 w-3.5"
                 checked={toggle[k]}
                 onChange={(e) => setToggle({ ...toggle, [k]: e.target.checked })}
               />
-              {k === "priceAnchors" ? "Ancore pret" : k.charAt(0).toUpperCase() + k.slice(1)}
+              {SECTION_LABELS[k] ?? k}
             </label>
           ))}
         </div>
-      </div>
+      )}
 
       {error && (
         <div className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">

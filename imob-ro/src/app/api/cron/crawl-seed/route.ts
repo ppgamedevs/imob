@@ -12,11 +12,13 @@ export const maxDuration = 60; // 60 seconds for sitemap processing
 const MAX_URLS_PER_DAY = 2000;
 
 export async function GET() {
-  // Seed listing sources with real domains
   const sources = [
     { domain: "imobiliare.ro", sitemap: "https://www.imobiliare.ro/sitemap.xml" },
     { domain: "storia.ro", sitemap: "https://www.storia.ro/sitemap.xml" },
     { domain: "olx.ro", sitemap: "https://www.olx.ro/sitemap.xml" },
+    { domain: "publi24.ro", sitemap: "https://www.publi24.ro/sitemap.xml" },
+    { domain: "lajumate.ro", sitemap: "https://www.lajumate.ro/sitemap.xml" },
+    { domain: "homezz.ro", sitemap: "https://homezz.ro/sitemap.xml" },
   ];
 
   for (const src of sources) {

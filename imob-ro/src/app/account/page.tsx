@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { auth } from "@/lib/auth";
-import { getPlanLimits, getSubscription, getUsage } from "@/lib/billing/entitlements";
+import { getPlanFeatures, getSubscription, getUsage } from "@/lib/billing/entitlements";
 
 import ManageSubscriptionButton from "./ManageSubscriptionButton";
 
@@ -22,10 +22,10 @@ export default async function AccountPage() {
   }
 
   const subscription = await getSubscription(session.user.id);
-  const limits = await getPlanLimits(subscription.planCode);
+  const limits = await getPlanFeatures(subscription.planCode);
   const usage = await getUsage(session.user.id);
 
-  const isPro = subscription.planCode === "pro";
+  const isPaid = subscription.planCode === "pro" || subscription.planCode === "standard" || subscription.planCode === "enterprise";
 
   return (
     <div className="container mx-auto py-12 max-w-4xl">
@@ -44,7 +44,7 @@ export default async function AccountPage() {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">Plan:</span>
-              <Badge variant={isPro ? "default" : "outline"}>
+              <Badge variant={isPaid ? "default" : "outline"}>
                 {subscription.planCode.toUpperCase()}
               </Badge>
             </div>
@@ -129,17 +129,17 @@ export default async function AccountPage() {
         <CardHeader>
           <CardTitle>Gestionare abonament</CardTitle>
           <CardDescription>
-            {isPro
-              ? "Administrează abonamentul Pro: modifică plata, anulează sau vezi facturi"
-              : "Upgrade la Pro pentru mai multe analize, PDF-uri și link-uri share"}
+            {isPaid
+              ? "Administreaza abonamentul: modifica plata, anuleaza sau vezi facturi"
+              : "Upgrade pentru mai multe analize, PDF-uri si functionalitati avansate"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {isPro ? (
+          {isPaid ? (
             <ManageSubscriptionButton />
           ) : (
             <Button asChild>
-              <a href="/pricing">Upgrade la Pro</a>
+              <a href="/pricing">Vezi planuri</a>
             </Button>
           )}
         </CardContent>

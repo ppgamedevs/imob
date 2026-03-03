@@ -2,22 +2,15 @@ import * as cheerio from "cheerio";
 
 import type { DiscoverResult, SourceAdapter } from "../types";
 
-/**
- * Find a spec value by its label text in publi24's "Specificatii" section.
- * The section uses heading/content pairs (often divs or dt/dd).
- */
-function findSpec($: cheerio.CheerioAPI, labelFragment: string): string | undefined {
-  const lf = labelFragment.toLowerCase();
+function findSpecValue($: cheerio.CheerioAPI, label: string): string | undefined {
+  const lf = label.toLowerCase();
   let result: string | undefined;
 
-  // Strategy 1: walk all small text containers and match label
   $("div, dt, td, span, li, th").each((_, el) => {
     if (result) return;
     const node = $(el);
     const text = node.contents().filter((_, c) => c.type === "text").text().trim();
     if (!text.toLowerCase().includes(lf)) return;
-
-    // Value is often the next sibling element
     const sibling = node.next();
     const sibText = sibling.text().trim();
     if (sibText && sibText.length < 100 && sibText.length > 0) {
@@ -25,23 +18,21 @@ function findSpec($: cheerio.CheerioAPI, labelFragment: string): string | undefi
     }
   });
 
-  // Strategy 2: regex on raw HTML for "label</...>...<...>value" patterns
   if (!result) {
     const re = new RegExp(
-      labelFragment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") +
+      label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") +
         `[^<]*<\\/[^>]+>\\s*(?:<[^>]+>\\s*)*([^<]{1,80})`,
       "i",
     );
-    const html = $.html();
-    const m = html.match(re);
+    const m = $.html().match(re);
     if (m?.[1]) result = m[1].trim();
   }
 
   return result;
 }
 
-export const adapterPubli24: SourceAdapter = {
-  domain: "publi24.ro",
+export const adapterHomezz: SourceAdapter = {
+  domain: "homezz.ro",
 
   async discover(listUrl: URL): Promise<DiscoverResult> {
     const res = await fetch(listUrl.toString(), {
@@ -51,20 +42,18 @@ export const adapterPubli24: SourceAdapter = {
     const $ = cheerio.load(html);
 
     const links: string[] = [];
-    $('a[href*="/anunt/"]').each((_, el) => {
+    $("a[href]").each((_, el) => {
       const href = $(el).attr("href");
-      if (href && href.includes("/anunt/")) {
+      if (href && /\d{5,}\.html$/.test(href)) {
         const absolute = new URL(href, listUrl).toString();
-        if (absolute.includes("publi24.ro")) {
-          links.push(absolute);
-        }
+        if (absolute.includes("homezz.ro")) links.push(absolute);
       }
     });
 
     const nextHref =
       $('a[rel="next"]').attr("href") ||
-      $('a:contains("Următoarea")').attr("href") ||
-      $('a:contains("Urmatoarea")').attr("href");
+      $('a:contains("Pagina urmatoare")').attr("href") ||
+      $(".pagination a.next, .pagination .next a").attr("href");
     const next = nextHref ? new URL(nextHref, listUrl).toString() : null;
 
     return { links: [...new Set(links)], next };
@@ -73,63 +62,61 @@ export const adapterPubli24: SourceAdapter = {
   async extract({ url, html }) {
     const $ = cheerio.load(html);
 
-    // Title: first h1 on page (publi24 uses plain <h1>)
     const title =
       $("h1").first().text().trim() ||
-      $("title").text().split("|")[0]?.trim() ||
-      $("title").text().split("•")[0]?.trim();
+      $("title").text().split(",")[0]?.trim() ||
+      $("title").text().split("-")[0]?.trim();
 
-    // Price: look for EUR/RON pattern near h1
     let price: number | undefined;
     let currency = "EUR";
-    // Publi24 shows "45 000 EUR" near the title
-    const priceContainer =
-      $("h1").parent().text() ||
-      $('[class*="price"]').first().text() ||
-      $("body").text();
-    const priceMatch = priceContainer.match(/([\d\s.,]+)\s*(?:EUR|€)/i);
-    if (priceMatch) {
-      price = parseInt(priceMatch[1].replace(/[\s,.]/g, ""));
+    const titleTag = $("title").text();
+    const priceFromTitle = titleTag.match(/([\d\s.,]+)\s*(?:eur|€)/i);
+    if (priceFromTitle) {
+      price = parseInt(priceFromTitle[1].replace(/[\s,.]/g, ""));
     }
     if (!price) {
-      const ronMatch = priceContainer.match(/([\d\s.,]+)\s*(?:RON|lei)/i);
-      if (ronMatch) {
-        price = parseInt(ronMatch[1].replace(/[\s,.]/g, ""));
+      const bodyText = $("h1").parent().text() + " " + $('[class*="price"]').text();
+      const m = bodyText.match(/([\d\s.,]+)\s*(?:EUR|€)/i);
+      if (m) price = parseInt(m[1].replace(/[\s,.]/g, ""));
+    }
+    if (!price) {
+      const ronM = ($("h1").parent().text() + " " + $('[class*="price"]').text())
+        .match(/([\d\s.,]+)\s*(?:RON|lei)/i);
+      if (ronM) {
+        price = parseInt(ronM[1].replace(/[\s,.]/g, ""));
         currency = "RON";
       }
     }
 
-    // Specs: publi24 has a "Specificatii" section with labeled pairs
     let areaM2: number | undefined;
-    const areaText = findSpec($, "Suprafat");
+    const areaText = findSpecValue($, "Suprafat") ?? findSpecValue($, "utila");
     const areaMatch = areaText?.match(/([\d.,]+)\s*m/i);
     if (areaMatch) areaM2 = parseInt(areaMatch[1]);
+    if (!areaM2) {
+      const titleArea = (title ?? "").match(/(\d{2,3})\s*m[²p]/i);
+      if (titleArea) areaM2 = parseInt(titleArea[1]);
+    }
 
-    // Rooms
     let rooms: number | undefined;
-    const roomsText = findSpec($, "Numar camere") ?? findSpec($, "camere");
+    const roomsText = findSpecValue($, "Numar camere") ?? findSpecValue($, "camere");
     const roomsMatch = roomsText?.match(/(\d+)/);
     if (roomsMatch) rooms = parseInt(roomsMatch[1]);
     if (!rooms && /\bgarsonier/i.test(title ?? "")) rooms = 1;
 
-    // Floor
     let floorRaw: string | undefined;
-    const floorText = findSpec($, "Etaj");
+    const floorText = findSpecValue($, "Etaj");
     if (floorText && floorText.length < 50) floorRaw = floorText;
 
-    // Year built
     let yearBuilt: number | undefined;
-    const yearText = findSpec($, "Anul construc") ?? findSpec($, "An construc");
+    const yearText = findSpecValue($, "An construc") ?? findSpecValue($, "Anul");
     const yearMatch = yearText?.match(/(\d{4})/);
     if (yearMatch) yearBuilt = parseInt(yearMatch[1]);
 
-    // Address
     const addressRaw =
       $('[itemprop="address"]').text().trim() ||
-      $("a[href*='sector'], a[href*='judet']").first().parent().text().trim().replace(/\s+/g, " ") ||
+      $('[class*="location"], [class*="adresa"]').first().text().trim() ||
       undefined;
 
-    // Photos
     const photos: string[] = [];
     $("img").each((_, el) => {
       const src = $(el).attr("src") || $(el).attr("data-src");
@@ -137,16 +124,15 @@ export const adapterPubli24: SourceAdapter = {
         src &&
         src.startsWith("http") &&
         !src.includes("placeholder") &&
-        !src.includes("no-photo") &&
         !src.includes("logo") &&
         !src.includes("icon") &&
-        !src.includes("avatar")
+        !src.includes("avatar") &&
+        (src.includes("homezz") || src.includes("cdn") || src.includes("img"))
       ) {
         photos.push(src);
       }
     });
 
-    // Geocode from inline scripts
     let lat: number | undefined;
     let lng: number | undefined;
     $("script").each((_, el) => {
@@ -155,18 +141,17 @@ export const adapterPubli24: SourceAdapter = {
       const latM = text.match(/["']?lat(?:itude)?["']?\s*[:=]\s*([\d.]+)/);
       const lngM = text.match(/["']?l(?:ng|ong(?:itude)?)["']?\s*[:=]\s*([\d.]+)/);
       if (latM && lngM) {
-        const parsedLat = parseFloat(latM[1]);
-        const parsedLng = parseFloat(lngM[1]);
-        if (parsedLat > 43 && parsedLat < 49 && parsedLng > 20 && parsedLng < 30) {
-          lat = parsedLat;
-          lng = parsedLng;
+        const pLat = parseFloat(latM[1]);
+        const pLng = parseFloat(lngM[1]);
+        if (pLat > 43 && pLat < 49 && pLng > 20 && pLng < 30) {
+          lat = pLat;
+          lng = pLng;
         }
       }
     });
 
-    // Description
-    const descEl = $("h5:contains('Descriere')").next();
-    const description = descEl.text().trim() || undefined;
+    const descEl = $('[class*="description"], [class*="descriere"]');
+    const description = descEl.first().text().trim().slice(0, 2000) || undefined;
 
     return {
       extracted: {
@@ -182,7 +167,7 @@ export const adapterPubli24: SourceAdapter = {
         lng,
         photos: [...new Set(photos)].slice(0, 20),
         sourceMeta: {
-          source: "publi24.ro",
+          source: "homezz.ro",
           description,
           extractedAt: new Date().toISOString(),
         },

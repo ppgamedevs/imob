@@ -6,7 +6,7 @@ export async function seedPlans() {
     update: {
       features: {
         analyze: 10,
-        pdf: 0,
+        pdf: 1,
         share: 0,
         alerts: 0,
         advancedComps: false,
@@ -22,7 +22,7 @@ export async function seedPlans() {
       priceCents: 0,
       features: {
         analyze: 10,
-        pdf: 0,
+        pdf: 1,
         share: 0,
         alerts: 0,
         advancedComps: false,
@@ -41,9 +41,9 @@ export async function seedPlans() {
       stripePrice: process.env.STRIPE_PRICE_STANDARD ?? null,
       features: {
         analyze: 50,
-        pdf: 5,
+        pdf: 10,
         share: 10,
-        alerts: 0,
+        alerts: 5,
         advancedComps: true,
         detailedScore: true,
         history: true,
@@ -59,9 +59,9 @@ export async function seedPlans() {
       stripePrice: process.env.STRIPE_PRICE_STANDARD ?? null,
       features: {
         analyze: 50,
-        pdf: 5,
+        pdf: 10,
         share: 10,
-        alerts: 0,
+        alerts: 5,
         advancedComps: true,
         detailedScore: true,
         history: true,
@@ -78,14 +78,14 @@ export async function seedPlans() {
       priceCents: 9900,
       stripePrice: process.env.STRIPE_PRICE_PRO ?? null,
       features: {
-        analyze: -1,
-        pdf: -1,
-        share: -1,
+        analyze: 200,
+        pdf: 50,
+        share: 50,
         alerts: 20,
         advancedComps: true,
         detailedScore: true,
         history: true,
-        historyDays: -1,
+        historyDays: 90,
         csvExport: true,
         support: "priority",
       },
@@ -96,21 +96,59 @@ export async function seedPlans() {
       priceCents: 9900,
       stripePrice: process.env.STRIPE_PRICE_PRO ?? null,
       features: {
-        analyze: -1,
-        pdf: -1,
-        share: -1,
+        analyze: 200,
+        pdf: 50,
+        share: 50,
         alerts: 20,
         advancedComps: true,
         detailedScore: true,
         history: true,
-        historyDays: -1,
+        historyDays: 90,
         csvExport: true,
         support: "priority",
       },
     },
   });
 
-  console.log("Seeded plans: free, standard, pro");
+  await prisma.plan.upsert({
+    where: { code: "enterprise" },
+    update: {
+      priceCents: 24900,
+      stripePrice: process.env.STRIPE_PRICE_ENTERPRISE ?? null,
+      features: {
+        analyze: -1,
+        pdf: -1,
+        share: -1,
+        alerts: -1,
+        advancedComps: true,
+        detailedScore: true,
+        history: true,
+        historyDays: -1,
+        csvExport: true,
+        support: "dedicated",
+      },
+    },
+    create: {
+      code: "enterprise",
+      name: "Enterprise",
+      priceCents: 24900,
+      stripePrice: process.env.STRIPE_PRICE_ENTERPRISE ?? null,
+      features: {
+        analyze: -1,
+        pdf: -1,
+        share: -1,
+        alerts: -1,
+        advancedComps: true,
+        detailedScore: true,
+        history: true,
+        historyDays: -1,
+        csvExport: true,
+        support: "dedicated",
+      },
+    },
+  });
+
+  console.log("Seeded plans: free, standard, pro, enterprise");
 }
 
 if (require.main === module) {

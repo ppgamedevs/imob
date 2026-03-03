@@ -31,23 +31,71 @@ export const GET = withCronTracking("crawl-tick", async (_req) => {
   let skipped = 0;
   let errors = 0;
 
+  let discovered = 0;
+
   for (const job of batch) {
     try {
-      // Fetch HTML with caching
       const url = new URL(job.url);
+      const adapter = pickAdapter(url);
+
+      // Handle discover jobs: find listing URLs and enqueue them
+      if (job.kind === "discover") {
+        const result = await adapter.discover(url);
+        let enqueued = 0;
+        for (const link of result.links) {
+          try {
+            const linkUrl = new URL(link);
+            const norm = linkUrl.toString();
+            await prisma.crawlJob.create({
+              data: {
+                url: link,
+                normalized: norm,
+                domain: linkUrl.hostname.replace(/^www\./, ""),
+                kind: "detail",
+                status: "queued",
+                priority: 5,
+              },
+            });
+            enqueued++;
+          } catch {
+            // duplicate or invalid URL
+          }
+        }
+        discovered += enqueued;
+
+        // Enqueue next page if available
+        if (result.next) {
+          try {
+            const nextUrl = new URL(result.next);
+            await prisma.crawlJob.create({
+              data: {
+                url: result.next,
+                normalized: nextUrl.toString(),
+                domain: nextUrl.hostname.replace(/^www\./, ""),
+                kind: "discover",
+                status: "queued",
+                priority: 3,
+              },
+            });
+          } catch { /* duplicate */ }
+        }
+
+        await markDone({ id: job.id, status: "done" });
+        processed++;
+        await sleep(2000);
+        continue;
+      }
+
+      // Detail jobs: fetch, extract, analyze
       const { status, html } = await fetchWithCache(url);
 
-      // Handle 304 Not Modified
       if (status === 304 || !html) {
         await markDone({ id: job.id, status: "done" });
         skipped++;
         continue;
       }
 
-      // Calculate content hash
       const newHash = hashContent(html);
-
-      // Check if content changed since last crawl
       const changed = await hasContentChanged(job.normalized, newHash);
       if (!changed) {
         await markDone({ id: job.id, status: "done", contentHash: newHash });
@@ -55,12 +103,9 @@ export const GET = withCronTracking("crawl-tick", async (_req) => {
         continue;
       }
 
-      // Extract structured data using adapter
-      const adapter = pickAdapter(url);
       const result = await adapter.extract({ url, html });
       const ext = result.extracted;
 
-      // Skip if no meaningful data extracted
       if (!ext.title && !ext.price) {
         await markDone({
           id: job.id,
@@ -72,7 +117,6 @@ export const GET = withCronTracking("crawl-tick", async (_req) => {
         continue;
       }
 
-      // Find or create Analysis record
       const norm = normalizeUrl(job.url) ?? job.url;
       let analysis = await prisma.analysis.findFirst({
         where: { sourceUrl: norm },
@@ -88,7 +132,6 @@ export const GET = withCronTracking("crawl-tick", async (_req) => {
         });
       }
 
-      // Upsert ExtractedListing with all fields
       await prisma.extractedListing.upsert({
         where: { analysisId: analysis.id },
         update: {
@@ -122,10 +165,8 @@ export const GET = withCronTracking("crawl-tick", async (_req) => {
         },
       });
 
-      // Trigger analysis pipeline (normalize → score)
       await startAnalysis(analysis.id, norm);
 
-      // Mark job as done
       await markDone({
         id: job.id,
         status: "done",
@@ -134,8 +175,6 @@ export const GET = withCronTracking("crawl-tick", async (_req) => {
       });
 
       processed++;
-
-      // Respect rate limits between requests
       await sleep(1000);
     } catch (err) {
       console.error(`Failed to process ${job.url}:`, err);
@@ -154,5 +193,6 @@ export const GET = withCronTracking("crawl-tick", async (_req) => {
     processed,
     skipped,
     errors,
+    discovered,
   });
 });
