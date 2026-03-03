@@ -1,0 +1,29 @@
+---
+description: OpenAI and LLM calls must run only on the backend; never expose the API key to the frontend.
+alwaysApply: true
+---
+
+# OpenAI / LLM: Backend Only
+
+## Required flow
+
+- **User → Your API (Next.js route or server action) → OpenAI → Your API → DB**
+- **Never:** Browser / client component → OpenAI directly.
+
+## Rules
+
+1. **Do not call OpenAI from the frontend.** No `openai` package, no `fetch` to `api.openai.com`, and no `OPENAI_API_KEY` in client-side code or in env vars prefixed with `NEXT_PUBLIC_`.
+
+2. **All LLM/OpenAI usage must run server-side only:**
+   - API routes under `src/app/api/`
+   - Server Actions
+   - Code in `src/lib/` that is only ever imported by API routes, server components, or server actions (e.g. `src/lib/llm/`)
+
+3. **Never expose the API key.** Use `OPENAI_API_KEY` only in server environment (e.g. `.env`, `.env.local` without `NEXT_PUBLIC_`). Do not pass the key to the client, and do not use it in any file that contains `"use client"` or is imported by a client component.
+
+4. **Frontend may only:** Call your own backend endpoints (e.g. `fetch('/api/...')`) or trigger server actions. The backend is responsible for calling OpenAI and writing results to the DB.
+
+## Allowed pattern
+
+- Client: `fetch('/api/report/[id]/enrich')` or server action to trigger enrichment.
+- Server (API route or action): read `process.env.OPENAI_API_KEY`, call OpenAI, persist to DB, return only safe data (no key, no raw tokens).

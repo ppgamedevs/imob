@@ -38,6 +38,7 @@
 
 **Optional but Recommended:**
 
+- `OPENAI_API_KEY` - LLM enrichment (text/vision). **Must stay server-side only:** never use in frontend or expose to the client. All OpenAI calls go through API routes or server-only code (User → Your API → OpenAI → DB).
 - `RESEND_API_KEY` - Email notifications
 - `STRIPE_SECRET_KEY` - Payments
 - `STRIPE_WEBHOOK_SECRET` - Payment webhooks
