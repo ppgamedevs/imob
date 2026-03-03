@@ -11,10 +11,12 @@ const tiers = [
     price: "49",
     features: [
       "50 cautari/luna",
-      "Comparabile complete cu harta",
-      "5 rapoarte PDF/luna",
+      "Comparabile complete",
+      "10 rapoarte PDF/luna",
       "Scor detaliat (AVM, TTS, Yield, Risk)",
+      "Ancore pret (grila notariala)",
       "Istoric cautari 30 zile",
+      "5 alerte salvate",
       "10 link-uri share/luna",
       "Suport email",
     ],
@@ -24,14 +26,31 @@ const tiers = [
     name: "Pro",
     price: "99",
     features: [
-      "Cautari nelimitate",
-      "Rapoarte PDF nelimitate",
+      "200 cautari/luna",
+      "Comparabile complete cu harta",
+      "30 rapoarte PDF/luna",
       "Scor detaliat complet",
-      "Istoric cautari nelimitat",
+      "Analiza AI (text + fotografii)",
+      "Ancore pret (grila notariala)",
+      "Istoric cautari 90 zile",
       "Export CSV",
       "20 alerte salvate",
-      "Link-uri share nelimitate",
+      "50 link-uri share/luna",
       "Suport prioritar",
+    ],
+  },
+  {
+    code: "enterprise",
+    name: "Enterprise",
+    price: "249",
+    features: [
+      "Cautari nelimitate",
+      "Rapoarte PDF nelimitate",
+      "Toate functionalitatile Pro",
+      "Istoric nelimitat",
+      "Alerte nelimitate",
+      "Link-uri share nelimitate",
+      "Suport dedicat",
     ],
   },
 ];
@@ -40,11 +59,18 @@ function SubscribeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const planParam = searchParams.get("plan");
-  const [selected, setSelected] = useState(planParam === "pro" ? "pro" : "standard");
+  const initialPlan = tiers.find((t) => t.code === planParam)?.code ?? "standard";
+  const [selected, setSelected] = useState(initialPlan);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const selectedTier = tiers.find((t) => t.code === selected)!;
+
   async function handleSubscribe() {
+    if (selected === "enterprise") {
+      router.push("/contact");
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -70,18 +96,17 @@ function SubscribeContent() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4">
-      <div className="max-w-[680px] w-full">
+      <div className="max-w-[900px] w-full">
         <div className="text-center mb-10">
           <h1 className="text-[28px] md:text-[36px] font-bold tracking-tight text-gray-950">
-            Deblocheaza puterea completa
+            Alege planul potrivit
           </h1>
           <p className="mt-3 text-[15px] text-gray-500 max-w-[460px] mx-auto">
-            Comparabile avansate, rapoarte PDF, scor detaliat si multe altele.
-            Alege planul potrivit pentru tine.
+            Comparabile avansate, rapoarte PDF, scor detaliat si multe altele. Fara angajament, anulezi oricand.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {tiers.map((tier) => (
             <button
               key={tier.code}
@@ -93,7 +118,6 @@ function SubscribeContent() {
                   : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
               }`}
             >
-              {/* Radio indicator */}
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-[16px] font-semibold text-gray-900">{tier.name}</h3>
                 <div
@@ -127,11 +151,13 @@ function SubscribeContent() {
         <button
           onClick={handleSubscribe}
           disabled={loading}
-          className="mt-6 w-full rounded-xl px-6 py-3.5 bg-gradient-to-r from-blue-600 to-violet-600 text-white text-[14px] font-semibold shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="mt-6 w-full rounded-xl px-6 py-3.5 bg-gray-900 text-white text-[14px] font-semibold shadow-sm hover:bg-gray-800 active:scale-[0.97] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading
             ? "Se proceseaza..."
-            : `Aboneaza-te la ${selected === "pro" ? "Pro" : "Standard"} - ${selected === "pro" ? "99" : "49"} RON/luna`}
+            : selected === "enterprise"
+              ? "Contacteaza-ne pentru Enterprise"
+              : `Aboneaza-te la ${selectedTier.name} - ${selectedTier.price} RON/luna`}
         </button>
 
         {error && (
@@ -140,7 +166,7 @@ function SubscribeContent() {
           </div>
         )}
 
-        <p className="mt-4 text-center text-[12px] text-gray-400">
+        <p className="mt-4 text-center text-[13px] text-gray-400">
           Plata securizata prin Stripe. Fara angajament, anulezi oricand.
         </p>
       </div>

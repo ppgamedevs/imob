@@ -44,7 +44,7 @@ const plans = [
     period: "RON/luna",
     subtitle: "Agentii si investitori",
     cta: "Contacteaza-ne",
-    ctaHref: "/subscribe?plan=enterprise",
+    ctaHref: "/contact",
     highlight: false,
     badge: "Nelimitat",
   },
@@ -64,7 +64,7 @@ const features: FeatureRow[] = [
   { label: "Cautari/luna", free: "10", standard: "50", pro: "200", enterprise: "Nelimitat" },
   { label: "Verdict (subevaluat/corect/supraevaluat)", free: true, standard: true, pro: true, enterprise: true },
   { label: "Comparabile", free: "3 preview", standard: "Complete", pro: "Complete cu harta", enterprise: "Complete cu harta" },
-  { label: "Rapoarte PDF", free: "1/luna", standard: "10/luna", pro: "50/luna", enterprise: "Nelimitat" },
+  { label: "Rapoarte PDF", free: "1/luna", standard: "10/luna", pro: "30/luna", enterprise: "Nelimitat" },
   { label: "Scor detaliat (AVM, TTS, Yield, Risk)", free: false, standard: true, pro: true, enterprise: true },
   { label: "Analiza AI (text)", free: true, standard: true, pro: true, enterprise: true },
   { label: "Analiza AI (fotografii)", free: false, standard: false, pro: true, enterprise: true },
@@ -73,7 +73,7 @@ const features: FeatureRow[] = [
   { label: "Export CSV", free: false, standard: false, pro: true, enterprise: true },
   { label: "Alerte salvate", free: false, standard: "5", pro: "20", enterprise: "Nelimitat" },
   { label: "Link-uri share", free: false, standard: "10/luna", pro: "50/luna", enterprise: "Nelimitat" },
-  { label: "Suport", free: "Comunitate", standard: "Email", pro: "Prioritar", enterprise: "Dedicat" },
+  { label: "Suport", free: "Help center", standard: "Email", pro: "Prioritar", enterprise: "Dedicat" },
 ];
 
 function FeatureCell({ value }: { value: FeatureValue }) {
@@ -224,10 +224,10 @@ export default function PricingPage() {
 
       {/* Footer note */}
       <div className="mt-10 text-center">
-        <p className="text-[13px] text-gray-400">
+        <p className="text-[13px] text-gray-500">
           Platile procesate securizat prin Stripe. Poti anula oricand din contul tau.
         </p>
-        <p className="mt-2 text-[12px] text-gray-300">
+        <p className="mt-2 text-[13px] text-gray-400">
           Analizam date de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro, lajumate.ro si homezz.ro
         </p>
       </div>

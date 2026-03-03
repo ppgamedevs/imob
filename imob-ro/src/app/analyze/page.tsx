@@ -40,11 +40,13 @@ function AnalyzePageContent() {
     e?.preventDefault();
     if (!url.trim()) return;
 
-    // Check anon wall: after 3 anonymous searches, require account
-    const anonCount = getAnonSearchCount();
-    if (anonCount >= ANON_LIMIT) {
-      setAnonWall(true);
-      return;
+    const limitsOff = process.env.NEXT_PUBLIC_LIMITS_DISABLED === "true";
+    if (!limitsOff) {
+      const anonCount = getAnonSearchCount();
+      if (anonCount >= ANON_LIMIT) {
+        setAnonWall(true);
+        return;
+      }
     }
 
     setError(null);

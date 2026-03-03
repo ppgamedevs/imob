@@ -24,6 +24,7 @@ model User {
   stripeSubscriptionId String?
   stripeSubscriptionStatus String?
   stripeSubscriptionCurrentPeriodEnd DateTime?
+  newsletterOptIn Boolean   @default(false)
 
   accounts Account[]
   sessions Session[]

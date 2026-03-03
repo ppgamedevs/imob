@@ -17,6 +17,7 @@ import CookieBanner from "@/components/CookieBanner";
 import AppFooter from "@/components/layout/AppFooter";
 import AppHeader from "@/components/layout/AppHeader";
 import MobileBar from "@/components/layout/MobileBar";
+import NewsletterSync from "@/components/NewsletterSync";
 import Tour from "@/components/onboarding/Tour";
 import WhatsNew from "@/components/system/WhatsNew";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -142,6 +143,7 @@ export default function RootLayout({
               <MobileBar />
             </div>
             <CookieBanner />
+            <NewsletterSync />
             {flags.tour && <Tour />}
             {flags.whatsNew && <WhatsNew />}
           </ToastProvider>

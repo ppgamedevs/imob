@@ -18,7 +18,7 @@ const FREE_DEFAULTS: PlanFeatures = {
   history: false,
   historyDays: 0,
   csvExport: false,
-  support: "community",
+  support: "help_center",
 };
 
 export async function getSubscription(userId: string) {

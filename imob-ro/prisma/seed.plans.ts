@@ -13,7 +13,7 @@ export async function seedPlans() {
         detailedScore: false,
         history: false,
         csvExport: false,
-        support: "community",
+        support: "help_center",
       },
     },
     create: {
@@ -29,7 +29,7 @@ export async function seedPlans() {
         detailedScore: false,
         history: false,
         csvExport: false,
-        support: "community",
+        support: "help_center",
       },
     },
   });
@@ -79,7 +79,7 @@ export async function seedPlans() {
       stripePrice: process.env.STRIPE_PRICE_PRO ?? null,
       features: {
         analyze: 200,
-        pdf: 50,
+        pdf: 30,
         share: 50,
         alerts: 20,
         advancedComps: true,
@@ -97,7 +97,7 @@ export async function seedPlans() {
       stripePrice: process.env.STRIPE_PRICE_PRO ?? null,
       features: {
         analyze: 200,
-        pdf: 50,
+        pdf: 30,
         share: 50,
         alerts: 20,
         advancedComps: true,
