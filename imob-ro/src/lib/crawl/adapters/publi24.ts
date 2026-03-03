@@ -54,9 +54,9 @@ export const adapterPubli24: SourceAdapter = {
     // --- Title ---
     const title =
       (ld?.name as string) ??
-      $("h1").first().text().trim() ||
-      $("title").text().split("|")[0]?.trim() ||
-      $("title").text().split("•")[0]?.trim();
+      ($("h1").first().text().trim() ||
+        $("title").text().split("|")[0]?.trim() ||
+        $("title").text().split("•")[0]?.trim());
 
     // --- Price ---
     let price: number | undefined;

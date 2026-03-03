@@ -87,9 +87,9 @@ export const adapterOlx: SourceAdapter = {
     const title =
       ad?.title ??
       ld?.name ??
-      $('h1[data-cy="ad_title"]').text().trim() ||
-      $("h1").first().text().trim() ||
-      $("title").text().split("|")[0]?.trim();
+      ($('h1[data-cy="ad_title"]').text().trim() ||
+        $("h1").first().text().trim() ||
+        $("title").text().split("|")[0]?.trim());
 
     // ---- Price ----
     let price: number | undefined;
@@ -228,9 +228,9 @@ export const adapterOlx: SourceAdapter = {
     // ---- Description ----
     const description =
       ad?.description ??
-      $('[data-cy="ad_description"] div').first().text().trim().slice(0, 2000) ||
-      $('[data-testid="ad-description"]').first().text().trim().slice(0, 2000) ||
-      undefined;
+      ($('[data-cy="ad_description"] div').first().text().trim().slice(0, 2000) ||
+        $('[data-testid="ad-description"]').first().text().trim().slice(0, 2000) ||
+        undefined);
 
     // ---- Seller type ----
     let sellerType: string | undefined;
