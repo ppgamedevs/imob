@@ -123,7 +123,7 @@ export default function PricingPage() {
                 <span
                   className={`inline-flex items-center rounded-full px-3.5 py-1 text-[11px] font-semibold tracking-wide uppercase ${
                     plan.highlight
-                      ? "bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-sm"
+                      ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm"
                       : "bg-gray-900 text-white"
                   }`}
                 >
@@ -146,7 +146,7 @@ export default function PricingPage() {
               href={plan.ctaHref}
               className={`block w-full rounded-xl py-3 text-center text-[14px] font-semibold transition-all duration-200 active:scale-[0.97] ${
                 plan.highlight
-                  ? "bg-gradient-to-r from-blue-600 to-violet-600 text-white shadow-sm hover:shadow-md hover:brightness-110"
+                  ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm hover:shadow-md hover:brightness-110"
                   : plan.code === "enterprise"
                     ? "bg-gray-900 text-white hover:bg-gray-800"
                     : plan.code === "pro"

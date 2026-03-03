@@ -103,7 +103,7 @@ function AnalyzePageContent() {
           </p>
           <Link
             href="/auth/signin?callbackUrl=/analyze"
-            className="mt-4 inline-flex items-center rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 px-6 py-2.5 text-[13px] font-semibold text-white shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200"
+            className="mt-4 inline-flex items-center rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-2.5 text-[13px] font-semibold text-white shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200"
           >
             Creeaza cont gratuit
           </Link>
@@ -116,13 +116,13 @@ function AnalyzePageContent() {
             value={url}
             onChange={(e) => { setUrl(e.target.value); setError(null); }}
             type="url"
-            placeholder="https://www.imobiliare.ro/... sau storia.ro, olx.ro, publi24.ro, lajumate.ro, homezz.ro"
+            placeholder="https://www.imobiliare.ro/vanzare-apartamente/bucuresti/zona/apartament-de-vanzare-2-camere-XY12345"
             className="flex-1 bg-transparent text-[14px] text-gray-900 placeholder:text-gray-400 px-3 py-3 outline-none"
           />
           <button
             type="submit"
             disabled={status === "fetching"}
-            className="rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 px-6 py-3 text-[13px] font-semibold text-white shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 text-[13px] font-semibold text-white shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {status === "fetching" ? "Se analizeaza..." : "Analizeaza"}
           </button>

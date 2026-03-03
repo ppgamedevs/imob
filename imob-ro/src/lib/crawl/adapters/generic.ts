@@ -77,6 +77,15 @@ export const adapterGeneric: SourceAdapter = {
       }
     });
 
+    // Description: try common selectors, then fall back to meta description
+    const descEl = $(
+      '[class*="description"], [class*="descriere"], [itemprop="description"], article p',
+    ).first();
+    const description =
+      descEl.text().trim().slice(0, 2000) ||
+      $('meta[name="description"]').attr("content")?.trim() ||
+      undefined;
+
     return {
       extracted: {
         title,
@@ -85,8 +94,12 @@ export const adapterGeneric: SourceAdapter = {
         areaM2,
         rooms,
         yearBuilt,
-        photos: [...photos].slice(0, 20), // limit to 20 photos
-        sourceMeta: { via: "generic", crawledAt: new Date().toISOString() },
+        photos: [...photos].slice(0, 20),
+        sourceMeta: {
+          via: "generic",
+          description,
+          crawledAt: new Date().toISOString(),
+        },
       },
     };
   },

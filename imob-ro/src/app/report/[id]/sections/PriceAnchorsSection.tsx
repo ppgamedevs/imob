@@ -18,13 +18,6 @@ function fmt(n: number | null | undefined, currency = "EUR"): string {
   return `${Intl.NumberFormat("ro-RO", { maximumFractionDigits: 0 }).format(n)} ${currency}`;
 }
 
-function pct(asking: number, reference: number): string {
-  const diff = Math.round(((asking - reference) / reference) * 100);
-  if (diff > 0) return `+${diff}%`;
-  if (diff < 0) return `${diff}%`;
-  return "0%";
-}
-
 export default function PriceAnchorsSection({
   askingPrice,
   avmLow,
@@ -40,40 +33,6 @@ export default function PriceAnchorsSection({
   const hasNotarial = showNotarial && notarialTotal != null;
 
   if (!hasAvm && !askingPrice) return null;
-
-  const anchors: { value: number; label: string; color: string; subLabel?: string }[] = [];
-
-  if (hasNotarial && notarialTotal) {
-    anchors.push({
-      value: notarialTotal,
-      label: "Valoare notariala",
-      color: "#94a3b8",
-      subLabel: notarialZone ? `${notarialZone} (${notarialYear})` : undefined,
-    });
-  }
-
-  if (avmLow != null) {
-    anchors.push({ value: avmLow, label: "Estimare minima", color: "#22c55e" });
-  }
-  if (avmMid != null) {
-    anchors.push({ value: avmMid, label: "Estimare piata", color: "#3b82f6" });
-  }
-  if (avmHigh != null) {
-    anchors.push({ value: avmHigh, label: "Estimare maxima", color: "#f59e0b" });
-  }
-  if (askingPrice != null) {
-    anchors.push({ value: askingPrice, label: "Pret cerut", color: "#ef4444" });
-  }
-
-  anchors.sort((a, b) => a.value - b.value);
-
-  const min = anchors[0]?.value ?? 0;
-  const max = anchors[anchors.length - 1]?.value ?? 1;
-  const range = max - min || 1;
-  const padding = range * 0.1;
-  const barMin = min - padding;
-  const barMax = max + padding;
-  const barRange = barMax - barMin || 1;
 
   const overpricing =
     askingPrice != null && avmMid != null
@@ -103,6 +62,34 @@ export default function PriceAnchorsSection({
       ? askingPrice - avmMid
       : null;
 
+  type Anchor = { value: number; label: string; color: string; dotBorder: string; subLabel?: string };
+  const anchors: Anchor[] = [];
+
+  if (hasNotarial && notarialTotal) {
+    anchors.push({
+      value: notarialTotal,
+      label: "Valoare notariala",
+      color: "bg-slate-400",
+      dotBorder: "border-slate-500",
+      subLabel: notarialZone ? `${notarialZone} (${notarialYear})` : undefined,
+    });
+  }
+  if (avmLow != null) {
+    anchors.push({ value: avmLow, label: "Estimare minima", color: "bg-emerald-500", dotBorder: "border-emerald-600" });
+  }
+  if (avmMid != null) {
+    anchors.push({ value: avmMid, label: "Estimare piata", color: "bg-blue-500", dotBorder: "border-blue-600" });
+  }
+  if (avmHigh != null) {
+    anchors.push({ value: avmHigh, label: "Estimare maxima", color: "bg-amber-500", dotBorder: "border-amber-600" });
+  }
+  if (askingPrice != null) {
+    anchors.push({ value: askingPrice, label: "Pret cerut", color: "bg-red-500", dotBorder: "border-red-600" });
+  }
+  anchors.sort((a, b) => a.value - b.value);
+
+  const noEstimate = !hasAvm && askingPrice != null;
+
   return (
     <Card>
       <CardHeader>
@@ -121,60 +108,84 @@ export default function PriceAnchorsSection({
         </div>
       </CardHeader>
       <CardContent className="space-y-5">
-        {/* Visual bar */}
-        <div className="relative h-10 bg-muted/40 rounded-lg overflow-visible">
-          {/* AVM range band */}
-          {avmLow != null && avmHigh != null && (
-            <div
-              className="absolute top-0 bottom-0 bg-blue-100/60 rounded"
-              style={{
-                left: `${((avmLow - barMin) / barRange) * 100}%`,
-                width: `${((avmHigh - avmLow) / barRange) * 100}%`,
-              }}
-            />
-          )}
-
-          {/* Anchor markers */}
-          {anchors.map((a) => {
-            const pos = ((a.value - barMin) / barRange) * 100;
-            return (
-              <div
-                key={a.label}
-                className="absolute top-0 bottom-0 flex flex-col items-center"
-                style={{ left: `${pos}%`, transform: "translateX(-50%)" }}
-              >
-                <div
-                  className="w-0.5 h-full rounded-full"
-                  style={{ backgroundColor: a.color }}
-                />
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Legend */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {anchors.map((a) => (
-            <div key={a.label} className="flex items-start gap-2">
-              <div
-                className="mt-1.5 w-2.5 h-2.5 rounded-full shrink-0"
-                style={{ backgroundColor: a.color }}
-              />
-              <div className="min-w-0">
-                <div className="text-xs text-muted-foreground">{a.label}</div>
-                <div className="font-semibold text-sm">{fmt(a.value, currency)}</div>
-                {a.subLabel && (
-                  <div className="text-[10px] text-muted-foreground truncate">{a.subLabel}</div>
-                )}
-                {askingPrice != null && a.label !== "Pret cerut" && (
-                  <div className="text-[10px] text-muted-foreground">
-                    {pct(askingPrice, a.value)} fata de pret cerut
-                  </div>
-                )}
-              </div>
+        {noEstimate ? (
+          <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-4 text-center">
+            <div className="text-sm font-medium text-muted-foreground">
+              Nu am suficiente date pentru estimarea pretului
             </div>
-          ))}
-        </div>
+            <div className="mt-1 text-xs text-muted-foreground">
+              Pret cerut: <span className="font-semibold text-foreground">{fmt(askingPrice, currency)}</span>
+            </div>
+            <div className="mt-2 text-xs text-muted-foreground">
+              Sunt necesare mai multe comparabile in zona pentru o estimare corecta.
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Visual bar with inline labels */}
+            {anchors.length > 1 && (() => {
+              const min = anchors[0].value;
+              const max = anchors[anchors.length - 1].value;
+              const range = max - min || 1;
+              const padding = range * 0.1;
+              const barMin = min - padding;
+              const barMax = max + padding;
+              const barRange = barMax - barMin || 1;
+
+              return (
+                <div className="relative pt-6 pb-2">
+                  <div className="relative h-3 bg-gradient-to-r from-emerald-100 via-blue-100 to-amber-100 rounded-full">
+                    {avmLow != null && avmHigh != null && (
+                      <div
+                        className="absolute top-0 bottom-0 bg-blue-200/60 rounded-full"
+                        style={{
+                          left: `${((avmLow - barMin) / barRange) * 100}%`,
+                          width: `${((avmHigh - avmLow) / barRange) * 100}%`,
+                        }}
+                      />
+                    )}
+                    {anchors.map((a, idx) => {
+                      const pos = ((a.value - barMin) / barRange) * 100;
+                      const isTop = idx % 2 === 0;
+                      return (
+                        <div
+                          key={a.label}
+                          className="absolute flex flex-col items-center"
+                          style={{ left: `${pos}%`, transform: "translateX(-50%)", top: "-4px" }}
+                        >
+                          <div
+                            className={`w-5 h-5 rounded-full border-2 ${a.color} ${a.dotBorder} shadow-sm`}
+                          />
+                          <div className={`absolute whitespace-nowrap text-[10px] font-medium ${
+                            isTop ? "-top-6" : "top-6"
+                          }`}>
+                            {fmt(a.value, currency)}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Anchor cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+              {anchors.map((a) => (
+                <div key={a.label} className="flex items-start gap-2.5 p-2 rounded-lg bg-muted/30">
+                  <div className={`mt-1 w-3 h-3 rounded-full shrink-0 ${a.color}`} />
+                  <div className="min-w-0">
+                    <div className="text-xs text-muted-foreground">{a.label}</div>
+                    <div className="font-semibold text-sm">{fmt(a.value, currency)}</div>
+                    {a.subLabel && (
+                      <div className="text-[10px] text-muted-foreground truncate">{a.subLabel}</div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Negotiation margin */}
         {negotiationMargin != null && negotiationMargin > 0 && (
@@ -188,21 +199,12 @@ export default function PriceAnchorsSection({
           </div>
         )}
 
-        {/* Notarial context (only for paid) */}
+        {/* Notarial context */}
         {hasNotarial && notarialTotal && avmMid && (
           <div className="text-xs text-muted-foreground bg-slate-50 rounded p-2.5">
             Valoarea notariala ({fmt(notarialTotal, currency)}) este valoarea minima fiscala
             folosita de notari pentru calculul taxelor. Pretul real de piata este de obicei
             {" "}{Math.round(((avmMid - notarialTotal) / notarialTotal) * 100)}% mai mare.
-          </div>
-        )}
-
-        {!hasNotarial && showNotarial === false && (
-          <div className="text-xs text-muted-foreground bg-slate-50 rounded p-2.5 flex items-center gap-2">
-            <span className="text-amber-500">&#9733;</span>
-            <span>
-              Valoarea notariala si marja de negociere detaliata sunt disponibile cu planul Standard.
-            </span>
           </div>
         )}
       </CardContent>

@@ -145,6 +145,12 @@ export async function POST(req: Request) {
   // Ensure photos is an array (JSON) and use sanitized data
   const photos = Array.isArray(sanitizedExtracted.photos) ? sanitizedExtracted.photos : [];
 
+  // Merge description into sourceMeta so the LLM worker can use it
+  const sourceMeta = {
+    ...(sanitizedExtracted.sourceMeta as Record<string, unknown> || {}),
+    ...(sanitizedExtracted.description ? { description: sanitizedExtracted.description } : {}),
+  };
+
   // Upsert ExtractedListing for this analysis
   await prisma.extractedListing.upsert({
     where: { analysisId: analysis.id },
@@ -163,7 +169,7 @@ export async function POST(req: Request) {
       lat: sanitizedExtracted.lat || undefined,
       lng: sanitizedExtracted.lng || undefined,
       photos: photos,
-      sourceMeta: sanitizedExtracted.sourceMeta || undefined,
+      sourceMeta: Object.keys(sourceMeta).length > 0 ? sourceMeta : undefined,
     } as any,
 
     update: {
@@ -179,7 +185,7 @@ export async function POST(req: Request) {
       lat: sanitizedExtracted.lat || undefined,
       lng: sanitizedExtracted.lng || undefined,
       photos: photos,
-      sourceMeta: sanitizedExtracted.sourceMeta || undefined,
+      sourceMeta: Object.keys(sourceMeta).length > 0 ? sourceMeta : undefined,
     } as any,
   });
 

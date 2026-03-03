@@ -179,6 +179,16 @@ export const adapterStoria: SourceAdapter = {
     // Description for sourceMeta
     const description = nextData?.ad?.description ?? $('section[data-cy="adDescription"] div').text().trim() ?? undefined;
 
+    // Seller type
+    let sellerType: string | undefined;
+    const agencyName = nextData?.ad?.agency?.name;
+    if (agencyName) sellerType = "agentie";
+    else {
+      const rawLower = $.html().toLowerCase();
+      if (/\b(?:proprietar|particular)\b/.test(rawLower)) sellerType = "proprietar";
+      else if (/\b(?:dezvoltator|constructor)\b/.test(rawLower)) sellerType = "dezvoltator";
+    }
+
     return {
       extracted: {
         title,
@@ -195,6 +205,7 @@ export const adapterStoria: SourceAdapter = {
         sourceMeta: {
           source: "storia.ro",
           description,
+          sellerType,
           extractedAt: new Date().toISOString(),
         },
       },

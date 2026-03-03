@@ -23,11 +23,11 @@ export default function AppHeader() {
             href="/"
             className="flex items-center gap-2.5 group"
           >
-            <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-violet-600 text-[11px] font-extrabold text-white shadow-sm shadow-blue-500/25 group-hover:shadow-md group-hover:shadow-blue-500/30 transition-shadow">
+            <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 via-blue-500 to-blue-700 text-[11px] font-extrabold text-white shadow-sm shadow-blue-500/25 group-hover:shadow-md group-hover:shadow-blue-500/30 transition-shadow">
               iI
             </span>
             <span className="text-[17px] font-bold tracking-tight text-gray-900">
-              Imob<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">Intel</span>
+              Imob<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-blue-700">Intel</span>
             </span>
           </Link>
 

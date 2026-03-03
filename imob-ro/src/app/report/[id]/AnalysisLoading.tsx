@@ -45,8 +45,8 @@ export default function AnalysisLoading({ status, title }: { status: string; tit
       <div className="w-full max-w-lg text-center">
         {/* Animated gradient orb */}
         <div className="relative mx-auto mb-8 h-20 w-20">
-          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 animate-pulse opacity-30 blur-xl" />
-          <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-violet-600 shadow-lg shadow-blue-500/20">
+          <div className="absolute inset-0 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 animate-pulse opacity-30 blur-xl" />
+          <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-700 shadow-lg shadow-blue-500/20">
             <svg className="h-8 w-8 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -67,7 +67,7 @@ export default function AnalysisLoading({ status, title }: { status: string; tit
         <div className="mb-4 mx-auto max-w-xs">
           <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
             <div
-              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500 transition-all duration-1000 ease-out"
+              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-1000 ease-out"
               style={{ width: `${currentStep.pct}%` }}
             />
           </div>

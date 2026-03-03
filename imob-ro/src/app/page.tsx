@@ -80,7 +80,7 @@ function Hero() {
             />
             <button
               type="submit"
-              className="rounded-xl bg-gradient-to-r from-blue-600 to-violet-600 px-7 py-3.5 text-[14px] font-semibold text-white shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200"
+              className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-7 py-3.5 text-[14px] font-semibold text-white shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200"
             >
               Analizeaza
             </button>
@@ -96,7 +96,7 @@ function Hero() {
                 if (input) input.value = "https://www.imobiliare.ro/vanzare-apartamente/bucuresti/floreasca/apartament-de-vanzare-2-camere-XY12345";
               }}
             >
-              imobiliare.ro/vanzare-apartamente/bucuresti/...
+              imobiliare.ro/vanzare-apartamente/bucuresti/floreasca/apartament-de-vanzare-2-camere-XY12345
             </button>
           </p>
         </div>
@@ -148,7 +148,7 @@ const features = [
     icon: Clock,
     title: "Viteza la vanzare",
     description: "Estimare conservatoare in luni, cu interval de incredere.",
-    color: "text-violet-600 bg-violet-50",
+    color: "text-blue-600 bg-blue-50",
   },
   {
     icon: Shield,
@@ -252,12 +252,12 @@ function HowItWorks() {
           {/* Connecting line (desktop) */}
           <div
             aria-hidden
-            className="hidden md:block absolute top-8 left-[calc(16.67%+20px)] right-[calc(16.67%+20px)] h-px bg-gradient-to-r from-blue-200 via-violet-200 to-blue-200"
+            className="hidden md:block absolute top-8 left-[calc(16.67%+20px)] right-[calc(16.67%+20px)] h-px bg-gradient-to-r from-blue-200 via-blue-300 to-blue-200"
           />
 
           {steps.map((s) => (
             <div key={s.num} className="relative text-center">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-violet-600 text-[20px] font-bold text-white shadow-lg shadow-blue-200/50">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-[20px] font-bold text-white shadow-lg shadow-blue-200/50">
                 {s.num}
               </div>
               <h3 className="mt-5 text-[17px] font-semibold text-gray-900">
@@ -281,7 +281,7 @@ function CtaSection() {
     <section className="relative isolate py-24 md:py-32">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-blue-600/[0.04] via-violet-600/[0.06] to-blue-600/[0.03]"
+        className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-blue-600/[0.04] via-blue-500/[0.06] to-blue-600/[0.03]"
       />
 
       <div className="mx-auto max-w-[600px] px-5 text-center">
@@ -293,7 +293,7 @@ function CtaSection() {
         </p>
         <Link
           href="/analyze"
-          className="mt-8 inline-flex items-center rounded-full bg-gradient-to-r from-blue-600 to-violet-600 px-8 py-3.5 text-[15px] font-semibold text-white shadow-md shadow-blue-200/50 hover:shadow-lg hover:shadow-blue-200/60 hover:brightness-110 active:scale-[0.97] transition-all duration-200"
+          className="mt-8 inline-flex items-center rounded-full bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-3.5 text-[15px] font-semibold text-white shadow-md shadow-blue-200/50 hover:shadow-lg hover:shadow-blue-200/60 hover:brightness-110 active:scale-[0.97] transition-all duration-200"
         >
           Analizeaza un anunt
         </Link>

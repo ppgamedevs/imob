@@ -30,7 +30,7 @@ export default function CheckoutButton({
 
   return (
     <button
-      className="w-full rounded-xl py-3 bg-gradient-to-r from-blue-600 to-violet-600 text-white text-[14px] font-semibold shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200"
+      className="w-full rounded-xl py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-[14px] font-semibold shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200"
       onClick={onClick}
     >
       {children}

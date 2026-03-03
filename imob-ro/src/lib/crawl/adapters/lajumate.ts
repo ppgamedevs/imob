@@ -107,6 +107,18 @@ export const adapterLajumate: SourceAdapter = {
       lng = parseFloat(lngMatch[1]);
     }
 
+    // Description
+    const descEl =
+      $(".offer-description, .description-text, [class*=descriere]").first();
+    const description = descEl.text().trim().slice(0, 2000) || undefined;
+
+    // Seller type
+    let sellerType: string | undefined;
+    const rawLower = $.html().toLowerCase();
+    if (/\b(?:agentie|agenție|agent imobiliar|intermediar)\b/.test(rawLower)) sellerType = "agentie";
+    else if (/\b(?:proprietar|particular)\b/.test(rawLower)) sellerType = "proprietar";
+    else if (/\b(?:dezvoltator|constructor)\b/.test(rawLower)) sellerType = "dezvoltator";
+
     return {
       extracted: {
         title,
@@ -122,6 +134,8 @@ export const adapterLajumate: SourceAdapter = {
         photos: photos.slice(0, 20),
         sourceMeta: {
           source: "lajumate.ro",
+          description,
+          sellerType,
           extractedAt: new Date().toISOString(),
         },
       },

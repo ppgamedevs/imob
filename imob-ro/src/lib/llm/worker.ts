@@ -96,8 +96,20 @@ export async function enrichTextForAnalysis(analysisId: string): Promise<boolean
     }
 
     const title = el.title ?? "";
-    const description =
-      (el.sourceMeta as Record<string, unknown>)?.description as string ?? "";
+    const meta = el.sourceMeta as Record<string, unknown> | null;
+    let description = (meta?.description as string) ?? "";
+
+    // Fallback: synthesize context from structured fields when no description
+    if (!description && title) {
+      const parts: string[] = [];
+      if (el.price) parts.push(`Pret: ${el.price} ${(el as any).currency ?? "EUR"}`);
+      if (el.areaM2) parts.push(`Suprafata: ${el.areaM2} mp`);
+      if (el.rooms) parts.push(`Camere: ${el.rooms}`);
+      if ((el as any).floorRaw) parts.push(`Etaj: ${(el as any).floorRaw}`);
+      if (el.yearBuilt) parts.push(`An constructie: ${el.yearBuilt}`);
+      if ((el as any).addressRaw) parts.push(`Adresa: ${(el as any).addressRaw}`);
+      if (parts.length > 0) description = parts.join(". ");
+    }
 
     recordCall();
     const raw = await extractTextWithLlm(title, description);

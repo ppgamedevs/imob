@@ -13,10 +13,13 @@ export type PdfReportData = {
   areaM2?: number | null;
   rooms?: number | null;
   level?: number | null;
+  floorRaw?: string | null;
   yearBuilt?: number | null;
   city?: string | null;
   areaSlug?: string | null;
   distMetroM?: number | null;
+  sellerType?: string | null;
+  currency?: string | null;
   avmLow?: number | null;
   avmMid?: number | null;
   avmHigh?: number | null;
@@ -28,12 +31,10 @@ export type PdfReportData = {
   yieldNet?: number | null;
   riskClass?: string | null;
   riskSource?: string | null;
-  // Notarial grid
   notarialTotal?: number | null;
   notarialEurM2?: number | null;
   notarialZone?: string | null;
   notarialYear?: number | null;
-  // Day 20: Provenance
   trustScore?: number | null;
   trustBadge?: string | null;
   trustReasons?: { plus?: string[]; minus?: string[] } | null;
@@ -95,17 +96,22 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
   const notarialYear =
     typeof ssRecord?.notarialYear === "number" ? (ssRecord.notarialYear as number) : null;
 
+  const sourceMeta = (a.extractedListing?.sourceMeta ?? {}) as Record<string, unknown>;
+
   return {
     id: a.id,
     url: a.sourceUrl,
     title: a.extractedListing?.title ?? null,
     address: a.extractedListing?.addressRaw ?? null,
     photos,
-    priceEur: typeof f?.priceEur === "number" ? f.priceEur : null,
-    areaM2: typeof f?.areaM2 === "number" ? f.areaM2 : null,
-    rooms: typeof f?.rooms === "number" ? f.rooms : null,
+    priceEur: typeof f?.priceEur === "number" ? f.priceEur : (a.extractedListing?.price as number | null) ?? null,
+    areaM2: typeof f?.areaM2 === "number" ? f.areaM2 : (a.extractedListing?.areaM2 as number | null) ?? null,
+    rooms: typeof f?.rooms === "number" ? f.rooms : (a.extractedListing?.rooms as number | null) ?? null,
     level: typeof f?.level === "number" ? f.level : null,
-    yearBuilt: typeof f?.yearBuilt === "number" ? f.yearBuilt : null,
+    floorRaw: (a.extractedListing?.floorRaw as string) ?? null,
+    yearBuilt: typeof f?.yearBuilt === "number" ? f.yearBuilt : (a.extractedListing?.yearBuilt as number | null) ?? null,
+    sellerType: typeof sourceMeta?.sellerType === "string" ? (sourceMeta.sellerType as string) : null,
+    currency: (a.extractedListing?.currency as string) ?? "EUR",
     city: typeof f?.city === "string" ? f.city : null,
     areaSlug: typeof f?.areaSlug === "string" ? f.areaSlug : null,
     distMetroM: typeof f?.distMetroM === "number" ? f.distMetroM : null,

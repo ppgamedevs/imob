@@ -168,6 +168,13 @@ export const adapterPubli24: SourceAdapter = {
     const descEl = $("h5:contains('Descriere')").next();
     const description = descEl.text().trim() || undefined;
 
+    // Seller type
+    let sellerType: string | undefined;
+    const rawLower = $.html().toLowerCase();
+    if (/\b(?:agentie|agenție|agent imobiliar|intermediar)\b/.test(rawLower)) sellerType = "agentie";
+    else if (/\b(?:proprietar|particular)\b/.test(rawLower)) sellerType = "proprietar";
+    else if (/\b(?:dezvoltator|constructor)\b/.test(rawLower)) sellerType = "dezvoltator";
+
     return {
       extracted: {
         title,
@@ -184,6 +191,7 @@ export const adapterPubli24: SourceAdapter = {
         sourceMeta: {
           source: "publi24.ro",
           description,
+          sellerType,
           extractedAt: new Date().toISOString(),
         },
       },

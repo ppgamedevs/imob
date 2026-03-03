@@ -1,5 +1,5 @@
 /**
- * Day 32: Imobiliare.ro Adapter
+ * Imobiliare.ro Adapter
  * Sitemap discovery + HTML extraction for imobiliare.ro
  */
 
@@ -8,19 +8,41 @@ import { XMLParser } from "fast-xml-parser";
 
 import type { DiscoverResult, SourceAdapter } from "../types";
 
+function findSpecText($: cheerio.CheerioAPI, label: string): string | undefined {
+  let result: string | undefined;
+
+  $("li, tr, div, span, dt, dd").each((_, el) => {
+    const txt = $(el).text();
+    if (txt.toLowerCase().includes(label.toLowerCase())) {
+      const parts = txt.split(/[:]\s*/);
+      if (parts.length >= 2) {
+        const val = parts.slice(1).join(":").trim();
+        if (val && val.length < 100) {
+          result = val;
+          return false;
+        }
+      }
+    }
+  });
+
+  if (!result) {
+    const re = new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[:\\s]+([^<\\n]{1,80})", "i");
+    const raw = $.html();
+    const m = raw.match(re);
+    if (m) result = m[1].trim();
+  }
+
+  return result;
+}
+
 export const adapterImobiliare: SourceAdapter = {
   domain: "imobiliare.ro",
 
-  /**
-   * Discover listing URLs from sitemap or listing pages
-   */
   async discover(listUrl: URL): Promise<DiscoverResult> {
-    // If it's a sitemap URL
     if (listUrl.pathname.includes("sitemap") || listUrl.pathname.endsWith(".xml")) {
       return await discoverFromSitemap(listUrl.toString());
     }
 
-    // Otherwise, scrape listing page
     const res = await fetch(listUrl.toString(), {
       headers: { "User-Agent": "ImobIntelBot/1.0 (+https://imobintel.ro/bot)" },
     });
@@ -28,9 +50,9 @@ export const adapterImobiliare: SourceAdapter = {
     const $ = cheerio.load(html);
 
     const links: string[] = [];
-    $('a[href*="/vanzare-"]').each((_, el) => {
+    $('a[href*="/oferta/"], a[href*="/vanzare-"]').each((_, el) => {
       const href = $(el).attr("href");
-      if (href && href.includes("/vanzare-")) {
+      if (href && (href.includes("/oferta/") || href.includes("/vanzare-"))) {
         const absolute = new URL(href, listUrl).toString();
         if (absolute.includes("imobiliare.ro") && !absolute.includes("?")) {
           links.push(absolute);
@@ -38,103 +60,208 @@ export const adapterImobiliare: SourceAdapter = {
       }
     });
 
-    // Try to find next page
     const nextHref = $('a[rel="next"]').attr("href") || $('a:contains("Următoarea")').attr("href");
     const next = nextHref ? new URL(nextHref, listUrl).toString() : null;
 
     return { links: [...new Set(links)], next };
   },
 
-  /**
-   * Extract structured data from listing detail page
-   */
   async extract({ url, html }) {
     const $ = cheerio.load(html);
+    const rawHtml = $.html();
 
-    // Title
+    // --- Title ---
     const title =
-      $('h1[itemprop="name"]').text().trim() ||
-      $("h1.titlu-anunt").text().trim() ||
+      $("h1").first().text().trim() ||
+      $('meta[property="og:title"]').attr("content")?.split("|")[0]?.trim() ||
       $("title").text().split("|")[0]?.trim();
 
-    // Price
+    // --- Description ---
+    const descEl = $(".descriere-text, .content-text, [class*=descriere]").first();
+    const description = descEl.length
+      ? descEl.text().trim().slice(0, 2000)
+      : $('meta[name="description"]').attr("content")?.trim();
+
+    // --- Price ---
     let price: number | undefined;
     let currency = "EUR";
-    const priceText =
-      $('[itemprop="price"]').attr("content") ||
-      $(".pret-mare").text() ||
-      $(".pret").first().text();
-    if (priceText) {
-      const match = priceText.match(/[\d\s,.]+/);
-      if (match) {
-        price = parseInt(match[0].replace(/[\s,.]/g, ""));
-      }
-      if (priceText.includes("lei") || priceText.includes("RON")) {
-        currency = "RON";
+
+    const priceContent = $('[itemprop="price"]').attr("content");
+    if (priceContent) {
+      price = parseInt(priceContent.replace(/\D/g, ""), 10) || undefined;
+    }
+
+    if (!price) {
+      const pricePatterns = [
+        /(?:preț|pret)[^0-9]*?([\d][0-9\s.,]+)\s*(?:€|EUR)/i,
+        /([\d][0-9\s.,]+)\s*€/,
+        /(\d{2,3}(?:[.,]\d{3})*)\s*(?:€|EUR|eur)/i,
+      ];
+      for (const pat of pricePatterns) {
+        const m = rawHtml.match(pat);
+        if (m) {
+          price = parseInt(m[1].replace(/[\s.,]/g, ""), 10) || undefined;
+          if (price) break;
+        }
       }
     }
 
-    // Area
+    if (!price) {
+      const boldPriceMatch = rawHtml.match(/>(\d{2,3}(?:[.,]\d{3})*)\s*€\s*</);
+      if (boldPriceMatch) {
+        price = parseInt(boldPriceMatch[1].replace(/[\s.,]/g, ""), 10) || undefined;
+      }
+    }
+
+    const currencyMeta = $('[itemprop="priceCurrency"]').attr("content");
+    if (currencyMeta) currency = currencyMeta;
+    else if (rawHtml.match(/\b(?:lei|RON)\b/i) && !rawHtml.match(/€|EUR/i)) currency = "RON";
+
+    // --- Suprafata ---
     let areaM2: number | undefined;
-    const areaText =
-      $('[itemprop="floorSize"]').text() ||
-      $('.features:contains("mp")').text() ||
-      $('li:contains("Suprafață utilă:")').text();
-    const areaMatch = areaText.match(/(\d+)\s*mp/i);
-    if (areaMatch) {
-      areaM2 = parseInt(areaMatch[1]);
+
+    const suputilaText = findSpecText($, "Suprafață utilă") || findSpecText($, "Sup. utilă") || findSpecText($, "Suprafata utila");
+    if (suputilaText) {
+      const m = suputilaText.match(/(\d+)/);
+      if (m) areaM2 = parseInt(m[1], 10);
     }
 
-    // Rooms
+    if (!areaM2) {
+      const floorSizeEl = $('[itemprop="floorSize"]');
+      if (floorSizeEl.length) {
+        const m = floorSizeEl.text().match(/(\d+)/);
+        if (m) areaM2 = parseInt(m[1], 10);
+      }
+    }
+
+    if (!areaM2) {
+      const areaPatterns = [
+        /Sup(?:rafață|\.)\s*util[aă]\s*[:]\s*(\d+)\s*mp/i,
+        /(\d+)\s*mp\s*util/i,
+      ];
+      for (const pat of areaPatterns) {
+        const m = rawHtml.match(pat);
+        if (m) { areaM2 = parseInt(m[1], 10); break; }
+      }
+    }
+
+    // --- Rooms ---
     let rooms: number | undefined;
-    const roomsText =
-      $('[itemprop="numberOfRooms"]').text() ||
-      $('li:contains("Număr camere:")').text() ||
-      $('.features:contains("camere")').text();
-    const roomsMatch = roomsText.match(/(\d+)/);
-    if (roomsMatch) {
-      rooms = parseInt(roomsMatch[1]);
+
+    const roomsText = findSpecText($, "Nr. cam") || findSpecText($, "Număr camere") || findSpecText($, "camere");
+    if (roomsText) {
+      const m = roomsText.match(/(\d+)/);
+      if (m) rooms = parseInt(m[1], 10);
     }
 
-    // Floor
-    const floorRaw =
-      $('li:contains("Etaj:")').text().replace("Etaj:", "").trim() ||
-      $('.detalii:contains("Etaj")').next().text().trim();
+    if (!rooms) {
+      const roomsMeta = $('[itemprop="numberOfRooms"]').text();
+      if (roomsMeta) {
+        const m = roomsMeta.match(/(\d+)/);
+        if (m) rooms = parseInt(m[1], 10);
+      }
+    }
 
-    // Year built
+    if (!rooms && title) {
+      if (/\bgarsonier[aă]\b/i.test(title) || /\bstudio?\b/i.test(title)) rooms = 1;
+      else {
+        const titleRooms = title.match(/(\d)\s*cam/i);
+        if (titleRooms) rooms = parseInt(titleRooms[1], 10);
+      }
+    }
+
+    // --- Floor ---
+    const floorSpec = findSpecText($, "Etaj");
+    let floorRaw = floorSpec || undefined;
+    if (!floorRaw) {
+      const floorMatch = rawHtml.match(/Etaj\s*[:]\s*([^<\n]{1,30})/i);
+      if (floorMatch) floorRaw = floorMatch[1].trim();
+    }
+
+    // --- Year built ---
     let yearBuilt: number | undefined;
-    const yearText =
-      $('li:contains("An construcție:")').text() || $('.features:contains("An:")').text();
-    const yearMatch = yearText.match(/(\d{4})/);
-    if (yearMatch) {
-      yearBuilt = parseInt(yearMatch[1]);
+    const yearSpec = findSpecText($, "An constr") || findSpecText($, "An construcție");
+    if (yearSpec) {
+      const m = yearSpec.match(/(\d{4})/);
+      if (m) yearBuilt = parseInt(m[1], 10);
     }
 
-    // Address
+    if (!yearBuilt) {
+      const yearMatch = rawHtml.match(/An\s+construc[tț]ie[:\s]*(\d{4})/i);
+      if (yearMatch) yearBuilt = parseInt(yearMatch[1], 10);
+    }
+
+    // --- Address ---
     const addressRaw =
       $('[itemprop="address"]').text().trim() ||
-      $(".localizare-text").text().trim() ||
-      $("h2.subtitle").text().trim();
+      $('meta[property="og:street-address"]').attr("content")?.trim() ||
+      (() => {
+        const h2 = $("h2").first().text().trim();
+        if (h2 && h2.length < 200) return h2;
+        const loc = rawHtml.match(/(?:Militari|Drumul Taberei|Crângași|Sector \d|București)[^<]*/i);
+        return loc ? loc[0].trim().slice(0, 150) : undefined;
+      })();
 
-    // Photos
+    // --- Photos ---
     const photos: string[] = [];
-    $('[itemprop="image"], .gallery img, .carousel img').each((_, el) => {
-      const src = $(el).attr("src") || $(el).attr("data-src") || $(el).attr("data-lazy-src");
-      if (src && !src.includes("placeholder")) {
-        const absolute = new URL(src, url).toString();
-        photos.push(absolute);
+    const seenPhotos = new Set<string>();
+
+    $('img[src*="imobiliare"], img[data-src*="imobiliare"], img[data-lazy-src*="imobiliare"]').each((_, el) => {
+      const src = $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src");
+      if (src && !src.includes("placeholder") && !src.includes("logo") && !seenPhotos.has(src)) {
+        seenPhotos.add(src);
+        photos.push(new URL(src, url).toString());
       }
     });
 
-    // Geocode (if available)
+    if (!photos.length) {
+      const ogImage = $('meta[property="og:image"]').attr("content");
+      if (ogImage) photos.push(ogImage);
+    }
+
+    // gallery images from script data
+    const galleryMatches = rawHtml.matchAll(/https?:\/\/[^"'\s]+(?:\.jpg|\.jpeg|\.png|\.webp)/gi);
+    for (const m of galleryMatches) {
+      const imgUrl = m[0];
+      if (imgUrl.includes("imobiliare") && !imgUrl.includes("logo") && !seenPhotos.has(imgUrl)) {
+        seenPhotos.add(imgUrl);
+        photos.push(imgUrl);
+      }
+    }
+
+    // --- Geocode ---
     let lat: number | undefined;
     let lng: number | undefined;
-    const mapData = $('script:contains("lat")').text();
-    const latMatch = mapData.match(/lat["']?\s*:\s*([\d.]+)/);
-    const lngMatch = mapData.match(/lng["']?\s*:\s*([\d.]+)/);
+    const latMatch = rawHtml.match(/["']?lat(?:itude)?["']?\s*[:=]\s*["']?([\d.]+)/i);
+    const lngMatch = rawHtml.match(/["']?lng|lon(?:gitude)?["']?\s*[:=]\s*["']?([\d.]+)/i);
     if (latMatch && lngMatch) {
-      lat = parseFloat(latMatch[1]);
-      lng = parseFloat(lngMatch[1]);
+      const parsedLat = parseFloat(latMatch[1]);
+      const parsedLng = parseFloat(lngMatch[1]);
+      if (parsedLat > 43 && parsedLat < 49 && parsedLng > 20 && parsedLng < 30) {
+        lat = parsedLat;
+        lng = parsedLng;
+      }
+    }
+
+    // --- Seller type ---
+    let sellerType: string | undefined;
+    const sellerPatterns = [
+      { re: /\b(?:agentie|agentia|agenție|agenția|agent\b|intermediar)/i, type: "agentie" },
+      { re: /\b(?:proprietar|particular)/i, type: "proprietar" },
+      { re: /\b(?:dezvoltator|constructor|ansamblu\s*rezidential)/i, type: "dezvoltator" },
+    ];
+    const sellerHtml = rawHtml.toLowerCase();
+    for (const sp of sellerPatterns) {
+      if (sp.re.test(sellerHtml)) { sellerType = sp.type; break; }
+    }
+    if (!sellerType) {
+      const sellerSpec = findSpecText($, "Tip vânzător") || findSpecText($, "Tip vanzator") || findSpecText($, "Oferit de");
+      if (sellerSpec) {
+        const sl = sellerSpec.toLowerCase();
+        if (sl.includes("agent") || sl.includes("agentie") || sl.includes("agenție")) sellerType = "agentie";
+        else if (sl.includes("proprietar") || sl.includes("particular")) sellerType = "proprietar";
+        else if (sl.includes("dezvoltator") || sl.includes("constructor")) sellerType = "dezvoltator";
+      }
     }
 
     return {
@@ -149,19 +276,18 @@ export const adapterImobiliare: SourceAdapter = {
         addressRaw,
         lat,
         lng,
-        photos: photos.slice(0, 20), // Limit to 20 photos
+        photos: photos.slice(0, 20),
         sourceMeta: {
           source: "imobiliare.ro",
           extractedAt: new Date().toISOString(),
+          description: description ?? undefined,
+          sellerType,
         },
       },
     };
   },
 };
 
-/**
- * Discover URLs from XML sitemap
- */
 async function discoverFromSitemap(sitemapUrl: string): Promise<DiscoverResult> {
   const res = await fetch(sitemapUrl, {
     headers: { "User-Agent": "ImobIntelBot/1.0 (+https://imobintel.ro/bot)" },
@@ -173,7 +299,6 @@ async function discoverFromSitemap(sitemapUrl: string): Promise<DiscoverResult> 
 
   const links: string[] = [];
 
-  // Handle sitemap index (points to other sitemaps)
   if (parsed.sitemapindex?.sitemap) {
     const sitemaps = Array.isArray(parsed.sitemapindex.sitemap)
       ? parsed.sitemapindex.sitemap
@@ -184,12 +309,11 @@ async function discoverFromSitemap(sitemapUrl: string): Promise<DiscoverResult> 
     }
   }
 
-  // Handle regular sitemap (contains URLs)
   if (parsed.urlset?.url) {
     const urls = Array.isArray(parsed.urlset.url) ? parsed.urlset.url : [parsed.urlset.url];
 
     for (const u of urls) {
-      if (u.loc && u.loc.includes("/vanzare-")) {
+      if (u.loc && (u.loc.includes("/vanzare-") || u.loc.includes("/oferta/"))) {
         links.push(u.loc);
       }
     }

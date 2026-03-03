@@ -65,7 +65,7 @@ export default function AppFooter() {
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 text-[10px] font-extrabold text-white">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-[10px] font-extrabold text-white">
                 iI
               </span>
               <span className="text-[16px] font-bold tracking-tight text-gray-900">ImobIntel</span>

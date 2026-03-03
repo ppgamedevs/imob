@@ -39,6 +39,34 @@ function safeDisplay(val: unknown, maxLen = 30): string {
   return s;
 }
 
+/** Format floor for display: ground_floor -> Parter, 1/7 -> Etaj 1/7, P/8 -> Parter/8 */
+function displayFloor(val: unknown): string {
+  if (val == null) return "-";
+  const raw = String(val).trim().toLowerCase();
+  if (!raw || raw === "null" || raw === "undefined") return "-";
+
+  const GROUND = ["ground_floor", "ground", "parter", "p", "0"];
+  const DEMISOL = ["demisol", "subsol", "-1", "basement"];
+  const MANSARDA = ["mansarda", "mansardă", "attic", "99"];
+
+  if (GROUND.includes(raw)) return "Parter";
+  if (DEMISOL.includes(raw)) return "Demisol";
+  if (MANSARDA.includes(raw)) return "Mansarda";
+
+  const slash = raw.match(/^(p|parter|ground_floor|ground|\d{1,2})\s*\/\s*(\d{1,2})$/i);
+  if (slash) {
+    const left = slash[1].toLowerCase();
+    const total = slash[2];
+    if (GROUND.includes(left)) return `Parter/${total}`;
+    return `Etaj ${left}/${total}`;
+  }
+
+  const etaj = raw.match(/^(?:etaj\s*)?(\d{1,2})$/i);
+  if (etaj) return `Etaj ${etaj[1]}`;
+
+  return safeDisplay(val);
+}
+
 type Props = { params: Promise<{ id?: string | string[] }> };
 
 async function loadAnalysis(id: string) {
@@ -147,15 +175,16 @@ export default async function ReportPage({ params }: Props) {
   const isAdmin = session?.user?.role === "admin";
 
   // Tier check for notarial data visibility
-  let showNotarial = false;
-  if (session?.user?.id) {
-    try {
-      const { canAccess } = await import("@/lib/billing/entitlements");
-      const access = await canAccess(session.user.id, "detailedScore");
-      showNotarial = access.allowed;
-    } catch { /* free tier by default */ }
-  }
-  if (isAdmin) showNotarial = true;
+  // TODO: re-enable paywall before going live
+  let showNotarial = true;
+  // if (session?.user?.id) {
+  //   try {
+  //     const { canAccess } = await import("@/lib/billing/entitlements");
+  //     const access = await canAccess(session.user.id, "detailedScore");
+  //     showNotarial = access.allowed;
+  //   } catch { /* free tier by default */ }
+  // }
+  // if (isAdmin) showNotarial = true;
 
   // Notarial grid data from ScoreSnapshot
   const notarialTotal = analysis?.scoreSnapshot?.notarialTotal ?? null;
@@ -179,7 +208,6 @@ export default async function ReportPage({ params }: Props) {
   // Override seismic from pipeline data if available
   if (seismicExplain?.riskClass) {
     const rc = String(seismicExplain.riskClass);
-    const isRisk = ["RsI", "RsII", "RS1", "RS2"].includes(rc);
     const mappedLevel = rc === "RsI" || rc === "RS1" ? "RS1"
       : rc === "RsII" || rc === "RS2" ? "RS2"
       : rc === "RsIII" || rc === "RS3" ? "RS3"
@@ -216,10 +244,21 @@ export default async function ReportPage({ params }: Props) {
             <Card>
               <CardHeader>
                 <CardTitle>{extracted.title ?? "Fara titlu"}</CardTitle>
-                <CardDescription>{extracted.addressRaw ?? "-"}</CardDescription>
+                <CardDescription>
+                  {extracted.addressRaw ? (
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(extracted.addressRaw + ", Bucuresti")}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      {extracted.addressRaw}
+                    </a>
+                  ) : "-"}
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 text-sm">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
                   <div>
                     <div className="text-muted-foreground">Pret</div>
                     <div className="font-semibold">{extracted.price ? `${extracted.price.toLocaleString("ro-RO")} ${extracted.currency ?? "EUR"}` : "-"}</div>
@@ -234,16 +273,52 @@ export default async function ReportPage({ params }: Props) {
                   </div>
                   <div>
                     <div className="text-muted-foreground">Etaj</div>
-                    <div className="font-semibold">{safeDisplay(extracted.floor ?? extracted.floorRaw ?? f?.floorRaw)}</div>
+                    <div className="font-semibold">{displayFloor(extracted.floor ?? extracted.floorRaw ?? f?.floorRaw)}</div>
                   </div>
                   <div>
                     <div className="text-muted-foreground">An</div>
                     <div className="font-semibold">{extracted.yearBuilt ?? "-"}</div>
                   </div>
+                  {(() => {
+                    const st = (extracted.sourceMeta as Record<string, unknown>)?.sellerType as string | undefined;
+                    const label = st === "agentie" ? "Agentie" : st === "proprietar" ? "Proprietar" : st === "dezvoltator" ? "Dezvoltator" : null;
+                    return label ? (
+                      <div>
+                        <div className="text-muted-foreground">Tip vanzator</div>
+                        <div className="font-semibold">{label}</div>
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
               </CardContent>
             </Card>
           )}
+
+          {/* Photo gallery */}
+          {extracted && Array.isArray(extracted.photos) && (extracted.photos as unknown[]).length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 rounded-xl overflow-hidden">
+              {(extracted.photos as string[]).slice(0, 6).map((src, i) => (
+                <div key={i} className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={src}
+                    alt={`Foto ${i + 1}`}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading={i < 2 ? "eager" : "lazy"}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* LLM Analysis - detailed listing insights */}
+          <ListingInsightsSection
+            llmText={llmText}
+            llmVision={llmVision}
+            isEnriching={isLlmEnriching}
+            showVision={showVision}
+            llmFailed={llmFailed}
+          />
 
           {/* Comparables */}
           <Card>
@@ -326,6 +401,13 @@ export default async function ReportPage({ params }: Props) {
             yearBuilt={extracted?.yearBuilt ?? f?.yearBuilt}
             suggestedLow={compsStats?.q1 && f?.areaM2 ? Math.round(compsStats.q1 * f.areaM2) : null}
             suggestedHigh={compsStats?.median && f?.areaM2 ? Math.round(compsStats.median * f.areaM2) : null}
+            floor={f?.level ?? null}
+            areaM2={extracted?.areaM2 ?? (f?.areaM2 as number) ?? null}
+            rooms={extracted?.rooms ?? (f?.rooms as number) ?? null}
+            compsCount={comps.length}
+            seismicRisk={["RS1", "RS2", "RS3", "RsI", "RsII", "RsIII"].includes(seismic.level)}
+            eurPerM2={actualPrice && extracted?.areaM2 ? actualPrice / extracted.areaM2 : null}
+            zoneMedianEurM2={compsStats?.median ?? null}
           />
 
           <DataInsightsSection
@@ -340,14 +422,6 @@ export default async function ReportPage({ params }: Props) {
             compsCount={comps.length}
             confidenceLevel={confidenceData?.level}
             seismicLevel={seismic.level}
-          />
-
-          <ListingInsightsSection
-            llmText={llmText}
-            llmVision={llmVision}
-            isEnriching={isLlmEnriching}
-            showVision={showVision}
-            llmFailed={llmFailed}
           />
 
           <SellerChecklist
@@ -368,6 +442,7 @@ export default async function ReportPage({ params }: Props) {
             llmRedFlags={llmText?.redFlags ?? null}
             llmCondition={llmText?.condition ?? null}
             llmBalconyM2={llmText?.balconyM2 ?? null}
+            description={((extracted?.sourceMeta as Record<string, unknown>)?.description as string) ?? null}
           />
 
           <MethodologySection

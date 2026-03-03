@@ -163,6 +163,19 @@ export const adapterOlx: SourceAdapter = {
       }
     }
 
+    // Description
+    const descEl =
+      $('[data-cy="ad_description"] div').first() ||
+      $('[data-testid="ad-description"]').first();
+    const description = descEl.text().trim().slice(0, 2000) || undefined;
+
+    // Seller type
+    let sellerType: string | undefined;
+    const rawLower = $.html().toLowerCase();
+    if (/\b(?:agentie|agenție|agent imobiliar|intermediar)\b/.test(rawLower)) sellerType = "agentie";
+    else if (/\b(?:proprietar|particular)\b/.test(rawLower)) sellerType = "proprietar";
+    else if (/\b(?:dezvoltator|constructor)\b/.test(rawLower)) sellerType = "dezvoltator";
+
     return {
       extracted: {
         title,
@@ -175,9 +188,11 @@ export const adapterOlx: SourceAdapter = {
         addressRaw,
         lat,
         lng,
-        photos: photos.slice(0, 20), // Limit to 20 photos
+        photos: photos.slice(0, 20),
         sourceMeta: {
           source: "olx.ro",
+          description,
+          sellerType,
           extractedAt: new Date().toISOString(),
         },
       },

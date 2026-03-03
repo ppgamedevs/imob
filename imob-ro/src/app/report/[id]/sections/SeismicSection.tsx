@@ -81,7 +81,6 @@ export default function SeismicSection({
 }: Props) {
   const config = riskClass ? RISK_CONFIG[riskClass] : null;
   const isInList = config != null;
-  const isHighRisk = riskClass === "RsI" || riskClass === "RsII";
   const conf = confidence ?? 0;
   const confBadge = confidenceBadge(conf);
 
@@ -90,7 +89,7 @@ export default function SeismicSection({
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">Status risc seismic</CardTitle>
-          {conf > 0 && (
+          {isInList && conf > 0 && (
             <Badge variant={confBadge.variant} className="text-xs">
               Incredere: {confBadge.label}
             </Badge>

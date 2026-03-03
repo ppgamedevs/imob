@@ -49,22 +49,22 @@ export default function DataInsightsSection(props: Props) {
   if (props.compsCount > 3) {
     known.push(`${props.compsCount} comparabile gasite`);
   } else if (props.compsCount > 0) {
-    alerts.push(`Doar ${props.compsCount} comparabile gasite — estimarea este mai putin precisa`);
+    alerts.push(`Doar ${props.compsCount} comparabile gasite - estimarea este orientativa`);
   } else {
-    alerts.push("Nicio comparabila gasita — nu putem estima valoarea de piata");
+    alerts.push("Nu am gasit comparabile suficiente in zona. Estimarea este orientativa.");
   }
 
   if (props.confidenceLevel === "low") {
-    alerts.push("Nivelul de incredere al estimarii este scazut");
+    alerts.push("Nivelul de incredere al estimarii este scazut - datele disponibile sunt limitate");
   }
 
   const sl = props.seismicLevel;
   if (sl === "RS1" || sl === "RsI") {
-    alerts.push("Cladirea este in clasa de risc seismic RsI (bulina rosie) - necesita consolidare urgenta");
+    alerts.push("Cladirea este in clasa de risc seismic RsI (bulina rosie) - se recomanda verificarea documentelor de consolidare");
   } else if (sl === "RS2" || sl === "RsII") {
-    alerts.push("Cladirea este in clasa de risc seismic RsII - verificati starea structurala");
+    alerts.push("Cladirea este in clasa de risc seismic RsII - se recomanda verificarea starii structurale");
   } else if (sl === "RS3" || sl === "RsIII") {
-    alerts.push("Cladirea are degradari structurale identificate (RsIII)");
+    alerts.push("Cladirea are degradari structurale identificate (RsIII) - monitorizare recomandata");
   }
 
   const completeness = Math.round((known.length / (known.length + missing.length)) * 100);
@@ -113,11 +113,11 @@ export default function DataInsightsSection(props: Props) {
 
         {alerts.length > 0 && (
           <div>
-            <div className="text-xs font-medium text-muted-foreground mb-1">De verificat urgent</div>
+            <div className="text-xs font-medium text-muted-foreground mb-1">De stiut</div>
             <ul className="space-y-1">
               {alerts.map((a) => (
-                <li key={a} className="text-xs text-red-700 flex items-start gap-1.5 font-medium">
-                  <span className="text-red-500 mt-0.5">⚠</span>
+                <li key={a} className="text-xs text-amber-700 flex items-start gap-1.5 font-medium">
+                  <span className="text-amber-500 mt-0.5">&#9432;</span>
                   <span>{a}</span>
                 </li>
               ))}

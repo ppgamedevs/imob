@@ -70,12 +70,17 @@ export default function SignInPage() {
 
             {/* Terms acceptance (required) */}
             <div className="space-y-3">
-              <label className="flex items-start gap-2.5 cursor-pointer">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <span className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border-2 transition-colors ${acceptTerms ? "border-blue-600 bg-blue-600" : "border-gray-300 bg-white group-hover:border-gray-400"}`}>
+                  {acceptTerms && (
+                    <svg className="h-3 w-3 text-white" viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  )}
+                </span>
                 <input
                   type="checkbox"
                   checked={acceptTerms}
                   onChange={(e) => { setAcceptTerms(e.target.checked); setError(null); }}
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500/30"
+                  className="sr-only"
                 />
                 <span className="text-[13px] leading-snug text-gray-600">
                   Accept{" "}
@@ -91,12 +96,17 @@ export default function SignInPage() {
               </label>
 
               {/* Newsletter (optional, pre-selected) */}
-              <label className="flex items-start gap-2.5 cursor-pointer">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <span className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border-2 transition-colors ${newsletter ? "border-blue-600 bg-blue-600" : "border-gray-300 bg-white group-hover:border-gray-400"}`}>
+                  {newsletter && (
+                    <svg className="h-3 w-3 text-white" viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                  )}
+                </span>
                 <input
                   type="checkbox"
                   checked={newsletter}
                   onChange={(e) => setNewsletter(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500/30"
+                  className="sr-only"
                 />
                 <span className="text-[13px] leading-snug text-gray-600">
                   Vreau sa primesc noutati si sfaturi imobiliare prin email (optional)
