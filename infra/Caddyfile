@@ -2,6 +2,41 @@
 	email {$ACME_EMAIL:admin@imob.ro}
 }
 
+# ─── ImobIntel site (frontend + API on same origin) ───────────
+{$SITE_DOMAIN:imobintel.ro}, www.{$SITE_DOMAIN:imobintel.ro} {
+	encode gzip zstd
+
+	# Redirect www → non-www (canonical)
+	@www host www.{$SITE_DOMAIN:imobintel.ro}
+	handle @www {
+		redir https://{$SITE_DOMAIN:imobintel.ro}{uri} permanent
+	}
+
+	handle {
+		header {
+			-Server
+			Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+			X-Content-Type-Options "nosniff"
+			X-Frame-Options "DENY"
+			X-XSS-Protection "1; mode=block"
+			Referrer-Policy "strict-origin-when-cross-origin"
+			Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		}
+
+		reverse_proxy imobintel-api:3000 {
+			health_uri /api/health
+			health_interval 30s
+		}
+
+		log {
+			output file /data/site-access.log {
+				roll_size 10mb
+				roll_keep 5
+			}
+		}
+	}
+}
+
 # ─── ImobIntel API ───────────────────────────────────────────
 {$API_DOMAIN:api.imobintel.ro} {
 	encode gzip zstd
