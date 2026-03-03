@@ -1,9 +1,16 @@
 /**
  * Afișează câte apartamente au fost scrape-uite și câte sunt în baza de date.
- * Rulează: pnpm run count-listings
- * (sau: npx dotenv -e .env.local -- tsx scripts/count-listings.ts)
+ *
+ * Rulează (din imob-ro):
+ *   pnpm run count-listings
+ *   pnpm exec tsx scripts/count-listings.ts
+ *   DOTENV_CONFIG_PATH=.env.local pnpm exec tsx scripts/count-listings.ts   # dacă folosești .env.local
  */
-import "dotenv/config";
+import { config } from "dotenv";
+
+// Încarcă .env.local dacă există, altfel .env
+config({ path: ".env.local" });
+config({ path: ".env" });
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
