@@ -40,14 +40,15 @@ function AnalyzePageContent() {
     e?.preventDefault();
     if (!url.trim()) return;
 
-    const limitsOff = process.env.NEXT_PUBLIC_LIMITS_DISABLED === "true";
-    if (!limitsOff) {
-      const anonCount = getAnonSearchCount();
-      if (anonCount >= ANON_LIMIT) {
-        setAnonWall(true);
-        return;
-      }
-    }
+    // TODO: re-enable anon wall before going live
+    // const limitsOff = process.env.NEXT_PUBLIC_LIMITS_DISABLED === "true";
+    // if (!limitsOff) {
+    //   const anonCount = getAnonSearchCount();
+    //   if (anonCount >= ANON_LIMIT) {
+    //     setAnonWall(true);
+    //     return;
+    //   }
+    // }
 
     setError(null);
     setAnonWall(false);
@@ -91,7 +92,8 @@ function AnalyzePageContent() {
         Introdu un link de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro, lajumate.ro sau homezz.ro si primesti estimare de pret, comparabile si analiza completa.
       </p>
 
-      {anonWall && (
+      {/* TODO: re-enable anon wall before going live */}
+      {/* {anonWall && (
         <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50/60 p-5 text-center">
           <p className="text-[15px] font-semibold text-gray-900">
             Creeaza un cont gratuit pentru a continua
@@ -106,7 +108,7 @@ function AnalyzePageContent() {
             Creeaza cont gratuit
           </Link>
         </div>
-      )}
+      )} */}
 
       <form onSubmit={handleSubmit} className="mt-8">
         <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white p-2 shadow-sm transition-shadow duration-300 focus-within:shadow-md focus-within:border-gray-300">
