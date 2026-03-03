@@ -28,13 +28,6 @@
 			health_interval 30s
 		}
 	}
-
-	log {
-		output file /data/site-access.log {
-			roll_size 10mb
-			roll_keep 5
-		}
-	}
 }
 
 # ─── ImobIntel API ───────────────────────────────────────────
