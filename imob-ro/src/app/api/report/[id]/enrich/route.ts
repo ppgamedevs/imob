@@ -3,6 +3,18 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { enrichTextForAnalysis, enrichVisionForAnalysis } from "@/lib/llm/worker";
 
+const ENRICH_TIMEOUT_MS = 30_000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("timeout")), ms);
+    promise.then(
+      (v) => { clearTimeout(timer); resolve(v); },
+      (e) => { clearTimeout(timer); reject(e); },
+    );
+  });
+}
+
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -24,13 +36,30 @@ export async function POST(
   const results: Record<string, boolean> = {};
 
   if (!el.llmEnrichedAt) {
-    results.text = await enrichTextForAnalysis(id);
+    try {
+      results.text = await withTimeout(enrichTextForAnalysis(id), ENRICH_TIMEOUT_MS);
+    } catch {
+      // Timeout or error — mark as attempted so UI stops spinning
+      await prisma.extractedListing.update({
+        where: { analysisId: id },
+        data: { llmEnrichedAt: new Date() },
+      }).catch(() => {});
+      results.text = false;
+    }
   } else {
     results.text = true;
   }
 
   if (includeVision && !el.llmVisionAt) {
-    results.vision = await enrichVisionForAnalysis(id);
+    try {
+      results.vision = await withTimeout(enrichVisionForAnalysis(id), ENRICH_TIMEOUT_MS);
+    } catch {
+      await prisma.extractedListing.update({
+        where: { analysisId: id },
+        data: { llmVisionAt: new Date() },
+      }).catch(() => {});
+      results.vision = false;
+    }
   } else if (includeVision) {
     results.vision = true;
   }

@@ -1,17 +1,19 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function LlmEnrichTrigger({ analysisId }: { analysisId: string }) {
   const triggered = useRef(false);
   const router = useRouter();
+  const [showSkip, setShowSkip] = useState(false);
+  const cancelledRef = useRef(false);
 
   useEffect(() => {
     if (!analysisId || triggered.current) return;
     triggered.current = true;
 
-    let cancelled = false;
+    const skipTimer = setTimeout(() => setShowSkip(true), 10_000);
 
     async function triggerAndPoll() {
       try {
@@ -23,13 +25,13 @@ export function LlmEnrichTrigger({ analysisId }: { analysisId: string }) {
       } catch { /* ignore trigger errors */ }
 
       let attempts = 0;
-      const maxAttempts = 20;
+      const maxAttempts = 12;
       const interval = 3000;
 
-      while (!cancelled && attempts < maxAttempts) {
+      while (!cancelledRef.current && attempts < maxAttempts) {
         attempts++;
         await new Promise((r) => setTimeout(r, interval));
-        if (cancelled) break;
+        if (cancelledRef.current) break;
 
         try {
           const res = await fetch(`/api/report/${analysisId}/enrich/status`);
@@ -43,14 +45,28 @@ export function LlmEnrichTrigger({ analysisId }: { analysisId: string }) {
         } catch { /* ignore poll errors */ }
       }
 
-      // After max attempts, refresh anyway so the user sees the failed state
-      if (!cancelled) router.refresh();
+      if (!cancelledRef.current) router.refresh();
     }
 
     triggerAndPoll();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelledRef.current = true;
+      clearTimeout(skipTimer);
+    };
   }, [analysisId, router]);
 
-  return null;
+  if (!showSkip) return null;
+
+  return (
+    <button
+      onClick={() => {
+        cancelledRef.current = true;
+        router.refresh();
+      }}
+      className="text-xs text-muted-foreground hover:text-foreground underline transition-colors"
+    >
+      Analiza dureaza prea mult? Sari peste
+    </button>
+  );
 }

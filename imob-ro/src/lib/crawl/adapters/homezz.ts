@@ -6,22 +6,37 @@ function findSpecValue($: cheerio.CheerioAPI, label: string): string | undefined
   const lf = label.toLowerCase();
   let result: string | undefined;
 
-  $("div, dt, td, span, li, th").each((_, el) => {
+  // Strategy 1: label in one element, value in next sibling
+  $("div, dt, td, span, li, th, strong, b").each((_, el) => {
     if (result) return;
     const node = $(el);
-    const text = node.contents().filter((_, c) => c.type === "text").text().trim();
-    if (!text.toLowerCase().includes(lf)) return;
+    const text = node.text().trim().toLowerCase();
+    if (!text.includes(lf) || text.length > 100) return;
+
     const sibling = node.next();
     const sibText = sibling.text().trim();
-    if (sibText && sibText.length < 100 && sibText.length > 0) {
+    if (sibText && sibText.length < 100 && sibText.length > 0 && sibText.toLowerCase() !== text) {
       result = sibText;
+      return;
+    }
+
+    // Strategy 2: value inline within parent (label and value in same container)
+    const parent = node.parent();
+    const parentText = parent.text().trim();
+    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const re = new RegExp(escaped + "[:\\s]+(.+)", "i");
+    const m = parentText.match(re);
+    if (m) {
+      const val = m[1].trim().split("\n")[0].trim();
+      if (val.length < 80) result = val;
     }
   });
 
+  // Strategy 3: regex on raw HTML
   if (!result) {
+    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const re = new RegExp(
-      label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") +
-        `[^<]*<\\/[^>]+>\\s*(?:<[^>]+>\\s*)*([^<]{1,80})`,
+      escaped + `[^<]*<\\/[^>]+>\\s*(?:<[^>]+>\\s*)*([^<]{1,80})`,
       "i",
     );
     const m = $.html().match(re);
@@ -139,6 +154,24 @@ export const adapterHomezz: SourceAdapter = {
       $('[itemprop="address"]').text().trim() ||
       $('[class*="location"], [class*="adresa"]').first().text().trim() ||
       undefined;
+
+    // Homezz shows location as breadcrumb-like text
+    if (!addressRaw) {
+      const locText = $('a[href*="/bucuresti"], a[href*="/sector"], a[href*="/zona"]')
+        .map((_, el) => $(el).text().trim())
+        .get()
+        .filter((t) => t.length > 2 && t.length < 50);
+      if (locText.length > 0) {
+        addressRaw = locText.join(", ");
+      }
+    }
+
+    // Fallback from title
+    if (!addressRaw && title) {
+      const KNOWN_AREAS = /\b(Militari|Rahova|Berceni|Titan|Colentina|Pantelimon|Floreasca|Dorobanti|Pipera|Tineretului|Dristor|Iancului|Obor|Cotroceni|Lujerului|Crangasi|Drumul Taberei|Victoriei|Unirii|Baneasa|Herastrau|Giulesti)\b/i;
+      const areaMatch = title.match(KNOWN_AREAS);
+      if (areaMatch) addressRaw = `${areaMatch[1]}, Bucuresti`;
+    }
 
     if (!addressRaw && description) {
       const addrMatch = description.match(

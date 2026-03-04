@@ -42,12 +42,12 @@ describe("computeValueScore", () => {
 
   it("caps score based on confidence", () => {
     const lowConf = computeValueScore(baseInput({ listingPriceEur: 95_000, confidence: 20 }));
-    expect(lowConf).toBeLessThanOrEqual(60);
+    expect(lowConf).toBeLessThanOrEqual(68);
   });
 
-  it("returns 50 when fairLikely is zero", () => {
+  it("returns 55 when fairLikely is zero", () => {
     const score = computeValueScore(baseInput({ fairLikelyEur: 0 }));
-    expect(score).toBe(50);
+    expect(score).toBe(55);
   });
 });
 

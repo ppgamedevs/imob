@@ -6,7 +6,19 @@ interface Props {
   priceRange: { low: number; high: number; mid: number } | null;
   askingPrice: number | null;
   currency: string;
-  analysisId: string;
+  analysisId?: string;
+}
+
+function enrichCommissionText(text: string, price: number | null): string {
+  if (!price || price <= 0 || !/comision/i.test(text)) return text;
+  const pctMatch = text.match(/(\d+)\s*[-–]\s*(\d+)\s*%/);
+  if (!pctMatch) return text;
+  const lo = parseInt(pctMatch[1], 10);
+  const hi = parseInt(pctMatch[2], 10);
+  const eurLo = Math.round(price * (lo / 100));
+  const eurHi = Math.round(price * (hi / 100));
+  const fmt = (n: number) => n.toLocaleString("ro-RO");
+  return `${text} (intre ${fmt(eurLo)} EUR si ${fmt(eurHi)} EUR)`;
 }
 
 const VERDICT_CONFIG: Record<Verdict, { label: string; bg: string; text: string; ring: string; icon: string }> = {
@@ -39,12 +51,13 @@ const SEVERITY_STYLE: Record<string, { bg: string; text: string; icon: string }>
   info: { bg: "bg-blue-50", text: "text-blue-700", icon: "ℹ" },
 };
 
-function DealKillerPill({ killer }: { killer: DealKiller }) {
+function DealKillerPill({ killer, price }: { killer: DealKiller; price: number | null }) {
   const style = SEVERITY_STYLE[killer.severity] ?? SEVERITY_STYLE.info;
+  const displayText = enrichCommissionText(killer.text, price);
   return (
     <div className={`flex items-start gap-2 rounded-lg px-3 py-2 text-sm ${style.bg} ${style.text}`}>
       <span className="shrink-0 text-base leading-none mt-0.5">{style.icon}</span>
-      <span>{killer.text}</span>
+      <span>{displayText}</span>
     </div>
   );
 }
@@ -105,7 +118,6 @@ export default function ExecutiveSummarySection({
   priceRange,
   askingPrice,
   currency,
-  analysisId,
 }: Props) {
   const cfg = VERDICT_CONFIG[v.verdict];
 
@@ -119,14 +131,18 @@ export default function ExecutiveSummarySection({
           </div>
           <div className="flex-1 min-w-0">
             <div className={`text-xl font-bold ${cfg.text}`}>{cfg.label}</div>
-            <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-              {v.reasons.map((r, i) => (
-                <span key={i} className={`text-sm ${cfg.text} opacity-80`}>
-                  {i > 0 && <span className="mr-1.5 opacity-50">·</span>}
-                  {r}
-                </span>
-              ))}
-            </div>
+            {v.summary ? (
+              <p className="mt-1.5 text-sm leading-relaxed text-gray-700">{v.summary}</p>
+            ) : (
+              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
+                {v.reasons.map((r, i) => (
+                  <span key={i} className={`text-sm ${cfg.text} opacity-80`}>
+                    {i > 0 && <span className="mr-1.5 opacity-50">·</span>}
+                    {r}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -148,7 +164,7 @@ export default function ExecutiveSummarySection({
               <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Riscuri identificate</div>
               <div className="grid gap-1.5">
                 {v.dealKillers.map((k, i) => (
-                  <DealKillerPill key={i} killer={k} />
+                  <DealKillerPill key={i} killer={k} price={askingPrice} />
                 ))}
               </div>
             </div>
@@ -156,17 +172,6 @@ export default function ExecutiveSummarySection({
 
           {/* Confidence bar */}
           <ConfidenceBar score={v.confidenceScore} label={v.confidenceLabel} />
-
-          {/* CTA */}
-          <a
-            href={`/api/report/${analysisId}/pdf`}
-            className="flex items-center justify-center gap-2 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-            Descarca PDF complet
-          </a>
         </div>
       </CardContent>
     </Card>

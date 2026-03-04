@@ -210,27 +210,45 @@ export const adapterImobiliare: SourceAdapter = {
     // --- Photos ---
     const photos: string[] = [];
     const seenPhotos = new Set<string>();
+    const PHOTO_EXCLUDE = /logo|avatar|agent|banner|sprite|icon|favicon|placeholder|widget|\/similar\b|\/recomandate\b|1x1|pixel/i;
 
-    $('img[src*="imobiliare"], img[data-src*="imobiliare"], img[data-lazy-src*="imobiliare"]').each((_, el) => {
+    // Prefer gallery container images first
+    $('[class*="gallery"] img, [class*="carousel"] img, [class*="slider"] img, [data-gallery] img').each((_, el) => {
       const src = $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src");
-      if (src && !src.includes("placeholder") && !src.includes("logo") && !seenPhotos.has(src)) {
+      if (src && !PHOTO_EXCLUDE.test(src) && !seenPhotos.has(src)) {
         seenPhotos.add(src);
         photos.push(new URL(src, url).toString());
       }
     });
+
+    // Fallback: broader img search scoped to listing content
+    if (photos.length < 3) {
+      $('img[src*="imobiliare"], img[data-src*="imobiliare"], img[data-lazy-src*="imobiliare"]').each((_, el) => {
+        const src = $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src");
+        if (src && !PHOTO_EXCLUDE.test(src) && !seenPhotos.has(src)) {
+          seenPhotos.add(src);
+          photos.push(new URL(src, url).toString());
+        }
+      });
+    }
 
     if (!photos.length) {
       const ogImage = $('meta[property="og:image"]').attr("content");
       if (ogImage) photos.push(ogImage);
     }
 
-    // gallery images from script data
-    const galleryMatches = rawHtml.matchAll(/https?:\/\/[^"'\s]+(?:\.jpg|\.jpeg|\.png|\.webp)/gi);
-    for (const m of galleryMatches) {
-      const imgUrl = m[0];
-      if (imgUrl.includes("imobiliare") && !imgUrl.includes("logo") && !seenPhotos.has(imgUrl)) {
-        seenPhotos.add(imgUrl);
-        photos.push(imgUrl);
+    // Gallery images from JSON/script data — restrict to gallery-like structures
+    const gallerySection = rawHtml.match(/"gallery":\s*\[([^\]]+)\]/i)
+      ?? rawHtml.match(/"images":\s*\[([^\]]+)\]/i)
+      ?? rawHtml.match(/"photos":\s*\[([^\]]+)\]/i);
+    if (gallerySection) {
+      const urls = gallerySection[1].matchAll(/https?:\/\/[^"'\s]+(?:\.jpg|\.jpeg|\.png|\.webp)/gi);
+      for (const m of urls) {
+        const imgUrl = m[0];
+        if (!PHOTO_EXCLUDE.test(imgUrl) && !seenPhotos.has(imgUrl)) {
+          seenPhotos.add(imgUrl);
+          photos.push(imgUrl);
+        }
       }
     }
 

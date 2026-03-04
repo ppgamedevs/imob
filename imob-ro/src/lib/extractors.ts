@@ -121,6 +121,52 @@ export function extractGeneric(html: string): Extracted {
     }
   }
 
+  // Fallback: extract address from title using neighborhoods and project names
+  if (!result.addressRaw && result.title) {
+    const titleLower = result.title.toLowerCase();
+    // Known Bucharest neighborhoods
+    const NEIGHBORHOODS = [
+      "Militari", "Drumul Taberei", "Crangasi", "Rahova", "Berceni", "Titan",
+      "Colentina", "Pantelimon", "Floreasca", "Dorobanti", "Pipera", "Aviatorilor",
+      "Aviației", "Tineretului", "Dristor", "Iancului", "Obor", "Mosilor",
+      "Cotroceni", "Grozavesti", "Lujerului", "Politehnica", "Victoriei",
+      "Unirii", "Universitate", "Romana", "Piata Muncii", "1 Mai", "Giulesti",
+      "Bucurestii Noi", "Pajura", "Damaroaia", "Grivita", "Chitila",
+      "Baneasa", "Herastrau", "Primaverii", "Domenii", "Kiseleff",
+      "13 Septembrie", "Sebastian", "Ferentari", "Giurgiului",
+      "Timpuri Noi", "Vitan", "Mihai Bravu", "Decebal", "Alba Iulia",
+      "Nerva Traian", "Calea Calarasi", "Calea Mosilor",
+      "Popesti Leordeni", "Voluntari", "Chiajna", "Bragadiru", "Magurele",
+      "Otopeni", "Stefanestii de Jos",
+    ];
+    for (const n of NEIGHBORHOODS) {
+      if (titleLower.includes(n.toLowerCase())) {
+        const sectorMatch = result.title.match(/sector(?:ul)?\s*(\d)/i);
+        result.addressRaw = sectorMatch
+          ? `${n}, Sector ${sectorMatch[1]}, Bucuresti`
+          : `${n}, Bucuresti`;
+        break;
+      }
+    }
+
+    // Known residential projects
+    if (!result.addressRaw) {
+      const PROJECT_PATTERN = /(?:residence|residential|park|garden|city|plaza|towers?|heights?|greenfield|gran via|cortina|aviatiei|cosmopolis|metalurgiei|rin grand|one herastrau|asmita|ivory|nusco|sky|upground|belvedere|central|premium|luxuria)/i;
+      const projMatch = result.title.match(PROJECT_PATTERN);
+      if (projMatch) {
+        result.addressRaw = result.title.replace(/\s+/g, " ").trim().slice(0, 100);
+      }
+    }
+
+    // Sector mention in title
+    if (!result.addressRaw) {
+      const sectorMatch = result.title.match(/sector(?:ul)?\s*(\d)/i);
+      if (sectorMatch) {
+        result.addressRaw = `Sector ${sectorMatch[1]}, Bucuresti`;
+      }
+    }
+  }
+
   // Extract area from title (often inflated with balcony)
   if (result.title) {
     const titleArea = result.title.match(/(\d{2,3})\s*(?:m2|m²|mp)\b/i);
@@ -163,6 +209,8 @@ export async function maybeFetchServer(url: string) {
     rl.last = now;
     rateLimits[host] = rl;
 
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15_000);
     const res = await fetch(url, {
       method: "GET",
       headers: {
@@ -170,7 +218,9 @@ export async function maybeFetchServer(url: string) {
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "ro-RO,ro;q=0.9,en;q=0.8",
       },
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
     if (!res.ok) return null;
     const contentType = res.headers.get("content-type") || "";
     if (!contentType.includes("text/html")) return null;

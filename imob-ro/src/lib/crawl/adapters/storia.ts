@@ -168,8 +168,12 @@ export const adapterStoria: SourceAdapter = {
     if (!addressRaw && title) {
       const sectorMatch = title.match(/sector(?:ul)?\s*(\d)/i);
       const zoneMatch = title.match(/(?:zona|cartier(?:ul)?)\s+([A-ZÀ-Ž][A-Za-zÀ-ž\s.-]{3,30})/i);
+      // Known neighborhoods often appear directly in the title
+      const KNOWN_AREAS = /\b(Militari|Drumul Taberei|Crangasi|Rahova|Berceni|Titan|Colentina|Pantelimon|Floreasca|Dorobanti|Pipera|Tineretului|Dristor|Iancului|Obor|Cotroceni|Lujerului|Victoriei|Unirii|Romana|Giulesti|Baneasa|Herastrau|Primaverii|Domenii|13 Septembrie|Sebastian|Ferentari|Giurgiului|Vitan|Mihai Bravu|Decebal|Alba Iulia|Popesti Leordeni|Voluntari|Chiajna|Bragadiru)\b/i;
+      const areaMatch = title.match(KNOWN_AREAS);
       if (sectorMatch) addressRaw = `Sector ${sectorMatch[1]}, Bucuresti`;
       else if (zoneMatch) addressRaw = zoneMatch[1].trim() + ", Bucuresti";
+      else if (areaMatch) addressRaw = `${areaMatch[1]}, Bucuresti`;
     }
 
     // Photos

@@ -8,6 +8,18 @@ function confidenceLabel(v: number): { text: string; color: string } {
   return { text: "scazuta", color: "text-red-500" };
 }
 
+function enrichCommissionFlag(flag: string, price: number | null | undefined): string {
+  if (!price || price <= 0) return flag;
+  const pctMatch = flag.match(/(\d+)\s*[-–]\s*(\d+)\s*%/);
+  if (!pctMatch) return flag;
+  const lo = parseInt(pctMatch[1], 10);
+  const hi = parseInt(pctMatch[2], 10);
+  const eurLo = Math.round(price * (lo / 100));
+  const eurHi = Math.round(price * (hi / 100));
+  const fmt = (n: number) => n.toLocaleString("ro-RO");
+  return `${flag} (intre ${fmt(eurLo)} EUR si ${fmt(eurHi)} EUR la pretul de ${fmt(price)} EUR)`;
+}
+
 const CONDITION_LABELS: Record<string, string> = {
   nou: "Constructie noua",
   renovat: "Renovat recent",
@@ -168,12 +180,17 @@ export default function ListingInsightsSection({ llmText, llmVision, isEnriching
           <div>
             <div className="text-sm font-medium text-red-600 mb-1">Semnale de alarma</div>
             <ul className="space-y-1">
-              {llmText.redFlags.map((flag, i) => (
-                <li key={i} className="text-sm flex items-start gap-1.5">
-                  <span className="text-red-500 mt-0.5 flex-shrink-0">!</span>
-                  <span>{flag}</span>
-                </li>
-              ))}
+              {llmText.redFlags.map((flag, i) => {
+                const display = /comision/i.test(flag)
+                  ? enrichCommissionFlag(flag, priceEur)
+                  : flag;
+                return (
+                  <li key={i} className="text-sm flex items-start gap-1.5">
+                    <span className="text-red-500 mt-0.5 flex-shrink-0">!</span>
+                    <span>{display}</span>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         )}

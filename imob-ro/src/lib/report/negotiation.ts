@@ -343,25 +343,44 @@ export function buildWhatsAppDraft(
 
   lines.push("Buna ziua,");
   lines.push("");
-  if (title) {
-    lines.push(`Ma refer la anuntul: ${title}`);
-  }
-  lines.push("Am cateva intrebari inainte de a face o oferta:");
-  lines.push("");
 
-  for (let i = 0; i < Math.min(points.length, 5); i++) {
-    lines.push(`${i + 1}. ${points[i].suggestedSellerQuestion}`);
+  if (title) {
+    lines.push(`Sunt interesat de proprietatea: ${title}`);
+    lines.push("");
+  }
+
+  // Key negotiation claims (concise, not just questions)
+  const topPoints = points.slice(0, 3);
+  if (topPoints.length > 0) {
+    lines.push("Am analizat proprietatea si am cateva observatii:");
+    for (let i = 0; i < topPoints.length; i++) {
+      lines.push(`${i + 1}. ${topPoints[i].claim}`);
+    }
+    lines.push("");
+  }
+
+  // Key questions for the seller
+  const questions = points
+    .slice(0, 3)
+    .map((p) => p.suggestedSellerQuestion)
+    .filter(Boolean);
+  if (questions.length > 0) {
+    lines.push("As dori sa clarificam:");
+    for (let i = 0; i < questions.length; i++) {
+      lines.push(`- ${questions[i]}`);
+    }
+    lines.push("");
   }
 
   if (askingPrice != null && fairMid != null && askingPrice > fairMid) {
-    lines.push("");
+    const diff = Math.round(((askingPrice - fairMid) / fairMid) * 100);
     lines.push(
-      `Pe baza analizei pietei, o oferta corecta ar fi in jurul a ${fmt(fairMid)} ${currency}. As fi interesat sa discutam.`,
+      `Conform analizei de piata, valoarea estimata este in jurul a ${fmt(fairMid)} ${currency}${diff > 5 ? ` (cu ~${diff}% sub pretul cerut)` : ""}. Sunt deschis la o discutie.`,
     );
+    lines.push("");
   }
 
-  lines.push("");
-  lines.push("Multumesc,");
+  lines.push("Multumesc si astept un raspuns.");
 
   return lines.join("\n");
 }

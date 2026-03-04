@@ -20,6 +20,7 @@ export interface DealKiller {
 export interface ExecutiveVerdict {
   verdict: Verdict;
   reasons: string[];
+  summary: string;
   dealKillers: DealKiller[];
   confidenceScore: number; // 0-100
   confidenceLabel: string;
@@ -39,7 +40,7 @@ export interface VerdictInput {
   compsCount: number;
 
   // Seismic
-  seismicRiskClass: string | null; // "RsI" | "RsII" | "RsIII" | "RsIV" | "RS1" | "RS2" | ...
+  seismicRiskClass: string | null;
   seismicConfidence: number | null;
   seismicMethod: string | null;
 
@@ -55,6 +56,17 @@ export interface VerdictInput {
   // Building
   yearBuilt: number | null;
   hasPhotos: boolean;
+
+  // Listing details for rich summary (all optional for backward compat)
+  rooms?: number | null;
+  areaM2?: number | null;
+  floor?: number | null;
+  totalFloors?: number | null;
+  address?: string | null;
+  title?: string | null;
+  hasParking?: boolean | null;
+  hasElevator?: boolean | null;
+  heatingType?: string | null;
 }
 
 // ---- Logic ----
@@ -102,7 +114,7 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
     score -= 8;
   }
 
-  // Major overpricing
+  // Overpricing — more aggressive thresholds
   const overpricingPct =
     input.askingPrice && input.avmMid
       ? Math.round(((input.askingPrice - input.avmMid) / input.avmMid) * 100)
@@ -115,6 +127,26 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
       severity: overpricingPct > 35 ? "critical" : "warning",
     });
     score -= Math.min(overpricingPct, 40);
+  } else if (overpricingPct != null && overpricingPct > 10) {
+    killers.push({
+      type: "price",
+      text: `Pret peste estimare cu ${overpricingPct}%`,
+      severity: "warning",
+    });
+    score -= Math.min(overpricingPct, 25);
+  } else if (overpricingPct != null && overpricingPct > 5) {
+    reasons.push(`Pret usor peste estimare (+${overpricingPct}%)`);
+    score -= 5;
+  }
+
+  // No comps at all — hard to evaluate price
+  if (input.compsCount === 0 && input.askingPrice) {
+    killers.push({
+      type: "data",
+      text: "Date insuficiente pentru evaluarea pretului",
+      severity: "warning",
+    });
+    score -= 10;
   }
 
   // LLM red flags
@@ -202,10 +234,14 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
   let confidenceScore = input.confidenceScore ?? 50;
   if (input.confidenceLevel === "high") confidenceScore = Math.max(confidenceScore, 80);
   else if (input.confidenceLevel === "medium") confidenceScore = Math.max(confidenceScore, 55);
-  else if (input.confidenceLevel === "low") confidenceScore = Math.min(confidenceScore, 40);
+  else if (input.confidenceLevel === "low") confidenceScore = Math.min(confidenceScore, 45);
 
-  if (input.compsCount < 3) confidenceScore = Math.min(confidenceScore, 35);
-  else if (input.compsCount >= 8) confidenceScore = Math.max(confidenceScore, 70);
+  // Graduated caps based on comps count — avoid always-35% issue
+  if (input.compsCount === 0) confidenceScore = Math.min(confidenceScore, 20);
+  else if (input.compsCount <= 2) confidenceScore = Math.min(confidenceScore, 45);
+  else if (input.compsCount <= 5) confidenceScore = Math.min(confidenceScore, 65);
+  else if (input.compsCount <= 8) confidenceScore = Math.min(confidenceScore, 80);
+  if (input.compsCount >= 8) confidenceScore = Math.max(confidenceScore, 70);
 
   confidenceScore = Math.max(10, Math.min(100, confidenceScore));
 
@@ -237,11 +273,100 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
     else reasons.push("Nu au fost identificate probleme majore");
   }
 
+  const summary = buildSummary(input, verdict, overpricingPct, killers);
+
   return {
     verdict,
     reasons: reasons.slice(0, 3),
+    summary,
     dealKillers: killers,
     confidenceScore,
     confidenceLabel,
   };
+}
+
+// ---------------------------------------------------------------------------
+// Rich narrative summary
+// ---------------------------------------------------------------------------
+
+function buildSummary(
+  input: VerdictInput,
+  verdict: Verdict,
+  overpricingPct: number | null,
+  killers: DealKiller[],
+): string {
+  const parts: string[] = [];
+  const fmt = (n: number) => n.toLocaleString("ro-RO");
+  const cur = input.currency || "EUR";
+
+  // Part 1: describe the apartment
+  const desc: string[] = [];
+  if (input.rooms) desc.push(`${input.rooms} ${input.rooms === 1 ? "camera" : "camere"}`);
+  if (input.areaM2) desc.push(`${input.areaM2} mp`);
+  if (input.floor != null) {
+    desc.push(
+      input.totalFloors
+        ? `etaj ${input.floor}/${input.totalFloors}`
+        : `etaj ${input.floor}`,
+    );
+  }
+  if (input.yearBuilt) desc.push(`constructie ${input.yearBuilt}`);
+
+  const location = input.address || input.title || null;
+  if (desc.length > 0) {
+    parts.push(
+      `Apartament ${desc.join(", ")}${location ? `, in zona ${location}` : ""}.`,
+    );
+  } else if (location) {
+    parts.push(`Proprietate in zona ${location}.`);
+  }
+
+  // Part 2: price assessment
+  if (input.askingPrice && input.avmMid && overpricingPct != null) {
+    if (overpricingPct < -10) {
+      parts.push(
+        `Pretul de ${fmt(input.askingPrice)} ${cur} este sub valoarea estimata cu ${Math.abs(overpricingPct)}%, ceea ce il face atractiv.`,
+      );
+    } else if (overpricingPct <= 5) {
+      parts.push(
+        `Pretul de ${fmt(input.askingPrice)} ${cur} se incadreaza in intervalul corect fata de comparabile.`,
+      );
+    } else if (overpricingPct <= 20) {
+      parts.push(
+        `Pretul de ${fmt(input.askingPrice)} ${cur} este cu ${overpricingPct}% peste estimarea noastra — exista spatiu de negociere.`,
+      );
+    } else {
+      parts.push(
+        `Pretul de ${fmt(input.askingPrice)} ${cur} este semnificativ peste piata (+${overpricingPct}%).`,
+      );
+    }
+  } else if (input.askingPrice && !input.avmMid) {
+    parts.push(
+      `Pretul cerut este ${fmt(input.askingPrice)} ${cur}, dar nu avem suficiente comparabile pentru a evalua corectitudinea.`,
+    );
+  }
+
+  // Part 3: key features and risks
+  const highlights: string[] = [];
+  if (input.llmCondition === "nou") highlights.push("constructie noua");
+  else if (input.llmCondition === "renovat") highlights.push("renovat recent");
+  if (input.hasParking) highlights.push("loc de parcare");
+  if (input.hasElevator) highlights.push("lift");
+  if (input.heatingType && /central[aă]/i.test(input.heatingType))
+    highlights.push("centrala proprie");
+
+  if (highlights.length > 0) {
+    parts.push(`Puncte forte: ${highlights.join(", ")}.`);
+  }
+
+  const riskCount = killers.filter(
+    (k) => k.severity === "critical" || k.severity === "warning",
+  ).length;
+  if (verdict === "EVITA") {
+    parts.push("Recomandam evitarea achizitiei fara consultarea unui specialist.");
+  } else if (riskCount > 0) {
+    parts.push(`Exista ${riskCount} ${riskCount === 1 ? "risc identificat" : "riscuri identificate"} care necesita atentie.`);
+  }
+
+  return parts.join(" ");
 }

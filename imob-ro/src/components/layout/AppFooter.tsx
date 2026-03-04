@@ -2,6 +2,7 @@ import Link from "next/link";
 
 const productLinks = [
   { href: "/analyze", label: "Analizeaza" },
+  { href: "/estimare", label: "Estimare pret" },
   { href: "/pricing", label: "Preturi" },
   { href: "/how-we-estimate", label: "Metodologie" },
   { href: "/help", label: "Help Center" },

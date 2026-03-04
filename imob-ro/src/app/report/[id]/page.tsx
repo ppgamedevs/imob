@@ -28,6 +28,7 @@ import AnalysisLoading from "./AnalysisLoading";
 import CompsClientBlock from "./CompsClientBlock";
 import { LlmEnrichTrigger } from "./LlmEnrichTrigger";
 import { PdfActions } from "./PdfActions";
+import AcquisitionCostsSection from "./sections/AcquisitionCostsSection";
 import DataInsightsSection from "./sections/DataInsightsSection";
 import ApartmentScoreSection from "./sections/ApartmentScoreSection";
 import ExecutiveSummarySection from "./sections/ExecutiveSummarySection";
@@ -35,7 +36,6 @@ import ListingHistorySection from "./sections/ListingHistorySection";
 import ListingInsightsSection from "./sections/ListingInsightsSection";
 import MethodologySection from "./sections/MethodologySection";
 import NeighborhoodIntelSection from "./sections/NeighborhoodIntelSection";
-import NegotiationSection from "./sections/NegotiationSection";
 import NegotiationPointsSection from "./sections/NegotiationPointsSection";
 import TransportSection from "./sections/TransportSection";
 import PriceAnchorsSection from "./sections/PriceAnchorsSection";
@@ -64,6 +64,14 @@ const PHOTO_BLACKLIST_PATTERNS = [
   /play\.google\.com/i,
   /apple\.com\/.*badge/i,
   /\.svg$/i,
+  /\/agent\//i,
+  /\/similar\//i,
+  /\/recomandate\//i,
+  /\/thumbnail\//i,
+  /1x1\./i,
+  /pixel\./i,
+  /\/ad[sv]?\//i,
+  /profile[-_]?pic/i,
 ];
 
 function isPropertyPhoto(url: string): boolean {
@@ -467,6 +475,15 @@ export default async function ReportPage({ params }: Props) {
     vibeZoneTypeKey: vibeResult?.scores?.zoneTypeKey ?? null,
     yearBuilt: extracted?.yearBuilt ?? f?.yearBuilt ?? null,
     hasPhotos: Array.isArray(extracted?.photos) && (extracted.photos as unknown[]).length > 0,
+    rooms: extracted?.rooms ?? f?.rooms ?? null,
+    areaM2: extracted?.areaM2 ?? f?.areaM2 ?? null,
+    floor: f?.level ?? null,
+    totalFloors: f?.totalFloors ?? null,
+    address: extracted?.addressRaw ?? null,
+    title: extracted?.title ?? null,
+    hasParking: llmText?.hasParking ?? null,
+    hasElevator: f?.hasLift ?? null,
+    heatingType: llmText?.heatingType ?? null,
   };
   const executiveVerdict = computeExecutiveVerdict(verdictInput);
 
@@ -958,7 +975,7 @@ export default async function ReportPage({ params }: Props) {
 
         {/* Right: analysis cards */}
         <div className="lg:col-span-5 space-y-4">
-          <ApartmentScoreSection score={apartmentScore} variant="full" />
+          <ApartmentScoreSection score={apartmentScore} variant="full" showActions={false} />
 
           <VerdictSection
             priceRange={priceRange}
@@ -1021,23 +1038,19 @@ export default async function ReportPage({ params }: Props) {
             })()}
           />
 
-          <NegotiationPointsSection points={negotiationPoints} whatsAppDraft={whatsAppDraft} />
-
-          <NegotiationSection
-            overpricingPct={overpricingPct}
-            yearBuilt={extracted?.yearBuilt ?? f?.yearBuilt}
+          <NegotiationPointsSection
+            points={negotiationPoints}
+            whatsAppDraft={whatsAppDraft}
             suggestedLow={compsStats?.q1 && f?.areaM2 ? Math.round(compsStats.q1 * f.areaM2) : null}
-            suggestedHigh={
-              compsStats?.median && f?.areaM2 ? Math.round(compsStats.median * f.areaM2) : null
+            suggestedHigh={compsStats?.median && f?.areaM2 ? Math.round(compsStats.median * f.areaM2) : null}
+            currency={extracted?.currency ?? "EUR"}
+          />
+
+          <AcquisitionCostsSection
+            priceEur={actualPrice}
+            hasCommission={
+              llmText?.redFlags?.some((f) => /comision/i.test(f)) ?? false
             }
-            floor={f?.level ?? null}
-            hasParking={llmText?.hasParking ?? null}
-            areaM2={extracted?.areaM2 ?? (f?.areaM2 as number) ?? null}
-            rooms={extracted?.rooms ?? (f?.rooms as number) ?? null}
-            compsCount={comps.length}
-            seismicRisk={["RS1", "RS2", "RS3", "RsI", "RsII", "RsIII"].includes(seismic.level)}
-            eurPerM2={actualPrice && extracted?.areaM2 ? actualPrice / extracted.areaM2 : null}
-            zoneMedianEurM2={compsStats?.median ?? null}
           />
 
           <DataInsightsSection

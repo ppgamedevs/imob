@@ -8,6 +8,9 @@ import type { NegotiationPoint } from "@/lib/report/negotiation";
 interface Props {
   points: NegotiationPoint[];
   whatsAppDraft: string;
+  suggestedLow?: number | null;
+  suggestedHigh?: number | null;
+  currency?: string;
 }
 
 const ICON_MAP: Record<string, string> = {
@@ -125,8 +128,15 @@ function PointCard({ point, index }: { point: NegotiationPoint; index: number })
   );
 }
 
-export default function NegotiationPointsSection({ points, whatsAppDraft }: Props) {
+export default function NegotiationPointsSection({
+  points,
+  whatsAppDraft,
+  suggestedLow,
+  suggestedHigh,
+  currency = "EUR",
+}: Props) {
   if (points.length === 0) return null;
+  const fmt = (n: number) => n.toLocaleString("ro-RO");
 
   return (
     <Card>
@@ -142,6 +152,20 @@ export default function NegotiationPointsSection({ points, whatsAppDraft }: Prop
         <p className="text-xs text-muted-foreground">
           Argumente de negociere generate automat din datele raportului. Apasa pentru detalii si intrebari sugerate.
         </p>
+
+        {suggestedLow != null && suggestedHigh != null && (
+          <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 space-y-1">
+            <div className="text-[10px] uppercase tracking-wide text-blue-600 font-semibold">
+              Interval de oferta sugerat
+            </div>
+            <div className="text-sm font-bold text-blue-900">
+              {fmt(suggestedLow)} — {fmt(suggestedHigh)} {currency}
+            </div>
+            <p className="text-[10px] text-blue-700">
+              Bazat pe quartila inferioara si mediana comparabilelor din zona.
+            </p>
+          </div>
+        )}
 
         <div className="space-y-2">
           {points.map((pt, i) => (

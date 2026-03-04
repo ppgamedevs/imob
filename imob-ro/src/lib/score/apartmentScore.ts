@@ -89,7 +89,7 @@ export function computeValueScore(input: ApartmentScoreInput): number {
   const { fairLikelyEur, confidence } = input;
   const price = input.listingPriceEur ?? fairLikelyEur;
 
-  if (fairLikelyEur <= 0) return 50;
+  if (fairLikelyEur <= 0) return 55;
 
   const deviation = (price - fairLikelyEur) / fairLikelyEur;
   const absDev = Math.abs(deviation);
@@ -112,7 +112,7 @@ export function computeValueScore(input: ApartmentScoreInput): number {
     scoreBase -= clamp(overPct * 2, 0, 20);
   }
 
-  const cap = 50 + confidence / 2;
+  const cap = 60 + confidence * 0.4;
   return clamp(Math.round(Math.min(scoreBase, cap)), 0, 100);
 }
 

@@ -46,7 +46,21 @@ export default function TransportSection({ transport, legacyDistMetroM, legacyNe
   const metroDistM = metroStop?.distanceM ?? (legacyDistMetroM ? Math.round(legacyDistMetroM) : null);
   const metroWalkMin = metroStop?.walkMinutes ?? (legacyDistMetroM ? Math.round(legacyDistMetroM / 80) : null);
 
-  if (!metroName && !hasData) return null;
+  if (!metroName && !hasData) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Transport public</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Locatia exacta nu a fost detectata — datele de transport nu sunt disponibile.
+            Adaugati o adresa precisa pentru a vedea statiile din apropiere.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   const within400m = transport?.within400m ?? { METRO: 0, TRAM: 0, BUS: 0, TROLLEY: 0 };
   const within800m = transport?.within800m ?? { METRO: 0, TRAM: 0, BUS: 0, TROLLEY: 0 };

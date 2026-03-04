@@ -100,23 +100,24 @@ export const adapterPubli24: SourceAdapter = {
     }
 
     // --- Specs ---
-    // Publi24 has a "Specificatii" section with pairs like:
-    // <strong>Suprafata utila</strong> ... 29 m2
+    // Publi24 has a "Specificatii" section with labels and values
+    // e.g. "Suprafata utila" in one element, "30 m2" in next sibling or child
     function findSpec(label: string): string | undefined {
       const lf = label.toLowerCase();
       let result: string | undefined;
 
       // Strategy 1: walk elements looking for label text
-      $("div, dt, td, span, li, th, strong, b").each((_, el) => {
+      $("div, dt, td, span, li, th, strong, b, p").each((_, el) => {
         if (result) return;
         const node = $(el);
-        const text = node.text().trim().toLowerCase();
+        const nodeText = node.text().trim();
+        const text = nodeText.toLowerCase();
         if (!text.includes(lf) || text.length > 100) return;
 
         // Value in next sibling
         const sibling = node.next();
         const sibText = sibling.text().trim();
-        if (sibText && sibText.length < 80 && sibText !== text) {
+        if (sibText && sibText.length < 80 && sibText.toLowerCase() !== text) {
           result = sibText;
           return;
         }
@@ -124,9 +125,21 @@ export const adapterPubli24: SourceAdapter = {
         // Value inline after label (e.g. "Suprafata utila\n29 m2")
         const parent = node.parent();
         const parentText = parent.text().trim();
-        const re = new RegExp(label + "[:\\s]*(.+)", "i");
+        const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const re = new RegExp(escaped + "[:\\s]+(.+)", "i");
         const m = parentText.match(re);
-        if (m) result = m[1].trim();
+        if (m) {
+          const val = m[1].trim().split("\n")[0].trim();
+          if (val.length < 80) result = val;
+          return;
+        }
+
+        // Value in child elements (e.g. <span>label</span> <span>value</span>)
+        const children = node.children();
+        if (children.length >= 2) {
+          const lastChild = children.last().text().trim();
+          if (lastChild && lastChild.length < 80) result = lastChild;
+        }
       });
 
       // Strategy 2: regex on raw HTML

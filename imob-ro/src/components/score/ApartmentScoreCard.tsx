@@ -49,8 +49,8 @@ const SUB_LABELS: Record<string, { label: string; tooltip: string }> = {
     tooltip: "Cat de bun e pretul fata de comparabile si intervalul estimat.",
   },
   risk: {
-    label: "Risc",
-    tooltip: "Risc structural, seismic, an constructie, lipsa lift.",
+    label: "Siguranta",
+    tooltip: "Nivel de siguranta: structura, seismic, an constructie, lift. Scor mare = risc mic.",
   },
   liquidity: {
     label: "Lichiditate",
@@ -175,7 +175,7 @@ function CompactScore({ data }: { data: ApartmentScore }) {
       <TooltipContent side="bottom" className="max-w-[280px] text-xs space-y-1">
         <p className="font-semibold">Scor bazat pe 4 criterii:</p>
         <p>
-          Valoare {data.subscores.value} · Risc {data.subscores.risk} · Lichiditate{" "}
+          Valoare {data.subscores.value} · Siguranta {data.subscores.risk} · Lichiditate{" "}
           {data.subscores.liquidity} · Stil de viata {data.subscores.lifestyle}
         </p>
       </TooltipContent>
@@ -187,7 +187,7 @@ function CompactScore({ data }: { data: ApartmentScore }) {
 // Full variant
 // ---------------------------------------------------------------------------
 
-function FullScore({ data }: { data: ApartmentScore }) {
+function FullScore({ data, showActions = true }: { data: ApartmentScore; showActions?: boolean }) {
   const cfg = LABEL_CONFIG[data.label];
 
   return (
@@ -232,26 +232,28 @@ function FullScore({ data }: { data: ApartmentScore }) {
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="px-5 py-4">
-        <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-2">
-          Cum cresti scorul
-        </p>
-        {data.actions.map((a, i) => (
-          <div key={i} className="flex items-start gap-2 text-xs text-gray-700 py-1">
-            <svg
-              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-500"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2.5}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-            {a}
-          </div>
-        ))}
-      </div>
+      {/* Actions — only shown on /estimare where user can improve inputs */}
+      {showActions && (
+        <div className="px-5 py-4">
+          <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-2">
+            Cum cresti scorul
+          </p>
+          {data.actions.map((a, i) => (
+            <div key={i} className="flex items-start gap-2 text-xs text-gray-700 py-1">
+              <svg
+                className="mt-0.5 h-3.5 w-3.5 shrink-0 text-blue-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+              {a}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -263,9 +265,14 @@ function FullScore({ data }: { data: ApartmentScore }) {
 interface ApartmentScoreCardProps {
   score: ApartmentScore;
   variant?: "compact" | "full";
+  showActions?: boolean;
 }
 
-export default function ApartmentScoreCard({ score, variant = "full" }: ApartmentScoreCardProps) {
+export default function ApartmentScoreCard({
+  score,
+  variant = "full",
+  showActions = true,
+}: ApartmentScoreCardProps) {
   if (variant === "compact") return <CompactScore data={score} />;
-  return <FullScore data={score} />;
+  return <FullScore data={score} showActions={showActions} />;
 }
