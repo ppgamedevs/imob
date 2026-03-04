@@ -55,8 +55,18 @@ export async function enqueueUrl(opts: {
 /**
  * Take a batch of jobs from queue.
  * Round-robin across domains to avoid hammering one site (max 5 per domain per batch).
+ * Also recovers stuck "fetching" jobs older than 10 minutes.
  */
 export async function takeBatch(n: number) {
+  const STUCK_AFTER_MS = 10 * 60 * 1000;
+  await prisma.crawlJob.updateMany({
+    where: {
+      status: "fetching",
+      lockedAt: { lt: new Date(Date.now() - STUCK_AFTER_MS) },
+    },
+    data: { status: "queued", lockedAt: null },
+  });
+
   const queued = await prisma.crawlJob.findMany({
     where: { status: "queued" },
     orderBy: [{ priority: "desc" }, { scheduledAt: "asc" }],

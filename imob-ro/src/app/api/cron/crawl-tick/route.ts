@@ -43,42 +43,78 @@ export const GET = withCronTracking("crawl-tick", async (_req) => {
       if (job.kind === "discover") {
         const result = await adapter.discover(url);
         let enqueued = 0;
+        const STALE_MS = 12 * 60 * 60 * 1000; // re-crawl details older than 12h
+
         for (const link of result.links) {
           try {
             const linkUrl = new URL(link);
             const norm = linkUrl.toString();
-            await prisma.crawlJob.create({
-              data: {
-                url: link,
-                normalized: norm,
-                domain: linkUrl.hostname.replace(/^www\./, ""),
-                kind: "detail",
-                status: "queued",
-                priority: 5,
-              },
+
+            const existing = await prisma.crawlJob.findUnique({
+              where: { normalized: norm },
             });
-            enqueued++;
+
+            if (!existing) {
+              await prisma.crawlJob.create({
+                data: {
+                  url: link,
+                  normalized: norm,
+                  domain: linkUrl.hostname.replace(/^www\./, ""),
+                  kind: "detail",
+                  status: "queued",
+                  priority: 5,
+                },
+              });
+              enqueued++;
+            } else if (
+              existing.status !== "queued" &&
+              existing.status !== "fetching" &&
+              existing.updatedAt.getTime() < Date.now() - STALE_MS
+            ) {
+              await prisma.crawlJob.update({
+                where: { id: existing.id },
+                data: {
+                  status: "queued",
+                  tries: 0,
+                  lastError: null,
+                  lockedAt: null,
+                },
+              });
+              enqueued++;
+            }
           } catch {
-            // duplicate or invalid URL
+            // invalid URL
           }
         }
         discovered += enqueued;
 
-        // Enqueue next page if available
         if (result.next) {
           try {
             const nextUrl = new URL(result.next);
-            await prisma.crawlJob.create({
-              data: {
-                url: result.next,
-                normalized: nextUrl.toString(),
-                domain: nextUrl.hostname.replace(/^www\./, ""),
-                kind: "discover",
-                status: "queued",
-                priority: 3,
-              },
+            const nextNorm = nextUrl.toString();
+            const existingNext = await prisma.crawlJob.findUnique({
+              where: { normalized: nextNorm },
             });
-          } catch { /* duplicate */ }
+            if (!existingNext) {
+              await prisma.crawlJob.create({
+                data: {
+                  url: result.next,
+                  normalized: nextNorm,
+                  domain: nextUrl.hostname.replace(/^www\./, ""),
+                  kind: "discover",
+                  status: "queued",
+                  priority: 3,
+                },
+              });
+            } else if (existingNext.status !== "queued" && existingNext.status !== "fetching") {
+              await prisma.crawlJob.update({
+                where: { id: existingNext.id },
+                data: { status: "queued", tries: 0, lastError: null, lockedAt: null },
+              });
+            }
+          } catch {
+            /* invalid URL */
+          }
         }
 
         await markDone({ id: job.id, status: "done" });

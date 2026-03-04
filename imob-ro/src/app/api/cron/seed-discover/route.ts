@@ -63,16 +63,7 @@ const DISCOVER_URLS = [
   "https://homezz.ro/vanzare-apartamente/bucuresti-if?pagina=3",
 ];
 
-const DOMAINS = [
-  "imobiliare.ro",
-  "storia.ro",
-  "olx.ro",
-  "publi24.ro",
-  "lajumate.ro",
-  "homezz.ro",
-];
-
-const REQUEUE_AFTER_MS = 4 * 60 * 60 * 1000; // 4 hours
+const DOMAINS = ["imobiliare.ro", "storia.ro", "olx.ro", "publi24.ro", "lajumate.ro", "homezz.ro"];
 
 export const GET = withCronTracking("seed-discover", async () => {
   for (const domain of DOMAINS) {
@@ -90,12 +81,15 @@ export const GET = withCronTracking("seed-discover", async () => {
   let skipped = 0;
 
   for (const url of DISCOVER_URLS) {
-    try {
-      const linkUrl = new URL(url);
-      const normalized = linkUrl.toString();
-      const domain = linkUrl.hostname.replace(/^www\./, "");
+    const linkUrl = new URL(url);
+    const normalized = linkUrl.toString();
+    const domain = linkUrl.hostname.replace(/^www\./, "");
 
-      // Try to create new job
+    const existing = await prisma.crawlJob.findUnique({
+      where: { normalized },
+    });
+
+    if (!existing) {
       await prisma.crawlJob.create({
         data: {
           url,
@@ -107,29 +101,20 @@ export const GET = withCronTracking("seed-discover", async () => {
         },
       });
       created++;
-    } catch {
-      // Already exists - re-queue if old enough
-      try {
-        const existing = await prisma.crawlJob.findUnique({
-          where: { normalized: new URL(url).toString() },
-        });
-        if (
-          existing &&
-          existing.status !== "queued" &&
-          existing.status !== "running" &&
-          existing.updatedAt.getTime() < Date.now() - REQUEUE_AFTER_MS
-        ) {
-          await prisma.crawlJob.update({
-            where: { id: existing.id },
-            data: { status: "queued", tries: 0, lastError: null, lockedAt: null },
-          });
-          requeued++;
-        } else {
-          skipped++;
-        }
-      } catch {
-        skipped++;
-      }
+    } else if (existing.status === "queued" || existing.status === "fetching") {
+      skipped++;
+    } else {
+      await prisma.crawlJob.update({
+        where: { id: existing.id },
+        data: {
+          status: "queued",
+          tries: 0,
+          lastError: null,
+          lockedAt: null,
+          contentHash: null,
+        },
+      });
+      requeued++;
     }
   }
 

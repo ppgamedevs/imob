@@ -23,6 +23,8 @@ export const GET = withCronTracking("crawl-refresh", async () => {
     take: 200,
   });
 
+  const REFRESH_STALE_MS = 6 * 60 * 60 * 1000; // re-crawl if last crawl > 6h ago
+
   let enqueued = 0;
   for (const a of recent) {
     if (!a.sourceUrl || a.sourceUrl === "") continue;
@@ -31,20 +33,42 @@ export const GET = withCronTracking("crawl-refresh", async () => {
       const u = new URL(a.sourceUrl);
       const normalized = u.toString();
 
-      await prisma.crawlJob.create({
-        data: {
-          url: normalized,
-          normalized,
-          domain: u.hostname.replace(/^www\./, ""),
-          kind: "detail",
-          status: "queued",
-          priority: 2,
-          analysisId: a.id,
-        },
+      const existing = await prisma.crawlJob.findUnique({
+        where: { normalized },
       });
-      enqueued++;
+
+      if (!existing) {
+        await prisma.crawlJob.create({
+          data: {
+            url: normalized,
+            normalized,
+            domain: u.hostname.replace(/^www\./, ""),
+            kind: "detail",
+            status: "queued",
+            priority: 2,
+            analysisId: a.id,
+          },
+        });
+        enqueued++;
+      } else if (
+        existing.status !== "queued" &&
+        existing.status !== "fetching" &&
+        existing.updatedAt.getTime() < Date.now() - REFRESH_STALE_MS
+      ) {
+        await prisma.crawlJob.update({
+          where: { id: existing.id },
+          data: {
+            status: "queued",
+            tries: 0,
+            lastError: null,
+            lockedAt: null,
+            analysisId: a.id,
+          },
+        });
+        enqueued++;
+      }
     } catch {
-      // duplicate or invalid URL
+      // invalid URL
     }
   }
 
