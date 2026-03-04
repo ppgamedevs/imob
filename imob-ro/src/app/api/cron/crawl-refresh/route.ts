@@ -3,12 +3,15 @@
  * Revisits recent analyses to check for price/content updates
  */
 
+import { NextResponse } from "next/server";
+
 import { prisma } from "@/lib/db";
+import { withCronTracking } from "@/lib/obs/cron-tracker";
 
 export const runtime = "nodejs";
+export const maxDuration = 30;
 
-export async function GET() {
-  // Re-visit analyses from last 21 days to check for updates
+export const GET = withCronTracking("crawl-refresh", async () => {
   const cutoff = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000);
 
   const recent = await prisma.analysis.findMany({
@@ -35,17 +38,37 @@ export async function GET() {
           domain: u.hostname.replace(/^www\./, ""),
           kind: "detail",
           status: "queued",
-          priority: 2, // Medium priority
+          priority: 2,
           analysisId: a.id,
         },
       });
       enqueued++;
     } catch {
-      // Ignore duplicates or invalid URLs
+      // duplicate or invalid URL
     }
   }
 
-  return new Response(JSON.stringify({ ok: true, checked: recent.length, enqueued }), {
-    headers: { "Content-Type": "application/json" },
-  });
+  if (enqueued > 0) {
+    triggerCrawlTick().catch(() => {});
+  }
+
+  return NextResponse.json({ ok: true, checked: recent.length, enqueued });
+});
+
+async function triggerCrawlTick() {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXTAUTH_URL;
+  if (!baseUrl) return;
+  const secret = process.env.CRON_SECRET;
+  const headers: Record<string, string> = {};
+  if (secret) headers["authorization"] = `Bearer ${secret}`;
+
+  try {
+    await fetch(`${baseUrl}/api/cron/crawl-tick`, {
+      method: "GET",
+      headers,
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch {
+    // best-effort trigger
+  }
 }

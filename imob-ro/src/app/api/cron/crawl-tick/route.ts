@@ -11,6 +11,7 @@ import { fetchWithCache } from "@/lib/crawl/fetcher";
 import { sleep } from "@/lib/crawl/helpers";
 import { hasContentChanged, hashContent, markDone, takeBatch } from "@/lib/crawl/queue";
 import { prisma } from "@/lib/db";
+import { createListingSnapshot } from "@/lib/integrity/snapshot";
 import { withCronTracking } from "@/lib/obs/cron-tracker";
 import { normalizeUrl } from "@/lib/url";
 
@@ -167,6 +168,19 @@ export const GET = withCronTracking("crawl-tick", async (_req) => {
 
       await startAnalysis(analysis.id, norm);
 
+      // Create integrity snapshot (non-blocking)
+      const desc = (ext.sourceMeta as Record<string, unknown>)?.description as string | undefined;
+      createListingSnapshot({
+        analysisId: analysis.id,
+        title: ext.title,
+        description: desc ?? null,
+        priceEur: ext.price,
+        photos: ext.photos as string[] | undefined,
+        source: new URL(job.url).hostname.replace(/^www\./, ""),
+        url: job.url,
+        status: "ACTIVE",
+      }).catch(() => {});
+
       await markDone({
         id: job.id,
         status: "done",
@@ -187,6 +201,15 @@ export const GET = withCronTracking("crawl-tick", async (_req) => {
     }
   }
 
+  // Self-chain: if there are more jobs in queue, trigger another tick
+  const remaining = await prisma.crawlJob.count({
+    where: { status: "queued" },
+  });
+
+  if (remaining > 0) {
+    scheduleNextTick().catch(() => {});
+  }
+
   return NextResponse.json({
     ok: true,
     batch: batch.length,
@@ -194,5 +217,24 @@ export const GET = withCronTracking("crawl-tick", async (_req) => {
     skipped,
     errors,
     discovered,
+    remaining,
   });
 });
+
+async function scheduleNextTick() {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXTAUTH_URL;
+  if (!baseUrl) return;
+  const secret = process.env.CRON_SECRET;
+  const headers: Record<string, string> = {};
+  if (secret) headers["authorization"] = `Bearer ${secret}`;
+
+  try {
+    await fetch(`${baseUrl}/api/cron/crawl-tick`, {
+      method: "GET",
+      headers,
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch {
+    // best-effort self-chain
+  }
+}

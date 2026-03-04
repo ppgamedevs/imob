@@ -58,7 +58,7 @@ function Hero() {
         <h1 className="text-[40px] leading-[1.1] md:text-[72px] md:leading-[1.05] font-extrabold tracking-[-0.04em] text-gray-950 animate-fade-up [animation-delay:100ms]">
           Analiza imobiliara
           <br />
-          <span className="text-gradient">pentru investitori inteligenti</span>
+          <span className="text-gradient">pentru cumparatori si investitori inteligenti</span>
         </h1>
 
         {/* Subtitle */}

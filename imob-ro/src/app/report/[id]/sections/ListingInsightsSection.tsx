@@ -22,9 +22,16 @@ interface Props {
   isEnriching: boolean;
   showVision: boolean;
   llmFailed?: boolean;
+  priceEur?: number | null;
+  areaM2?: number | null;
+  rooms?: number | null;
+  yearBuilt?: number | null;
+  zoneMedianEurM2?: number | null;
+  avmMid?: number | null;
+  floor?: string | null;
 }
 
-export default function ListingInsightsSection({ llmText, llmVision, isEnriching, showVision, llmFailed }: Props) {
+export default function ListingInsightsSection({ llmText, llmVision, isEnriching, showVision, llmFailed, priceEur, areaM2, rooms, yearBuilt, zoneMedianEurM2, avmMid, floor }: Props) {
   if (isEnriching && !llmText) {
     return (
       <Card>
@@ -72,6 +79,49 @@ export default function ListingInsightsSection({ llmText, llmVision, isEnriching
         {llmText.summary && (
           <p className="text-sm leading-relaxed">{llmText.summary}</p>
         )}
+
+        {/* Computed market context */}
+        {(() => {
+          const insights: string[] = [];
+          const eurM2 = priceEur && areaM2 && areaM2 > 0 ? Math.round(priceEur / areaM2) : null;
+
+          if (eurM2 && zoneMedianEurM2 && zoneMedianEurM2 > 0) {
+            const diff = Math.round(((eurM2 - zoneMedianEurM2) / zoneMedianEurM2) * 100);
+            if (diff > 10) insights.push(`Pretul pe mp (${eurM2} EUR) este cu ${diff}% peste mediana zonei (${Math.round(zoneMedianEurM2)} EUR/mp).`);
+            else if (diff < -10) insights.push(`Pretul pe mp (${eurM2} EUR) este cu ${Math.abs(diff)}% sub mediana zonei (${Math.round(zoneMedianEurM2)} EUR/mp) - posibila oportunitate.`);
+            else insights.push(`Pretul pe mp (${eurM2} EUR) este in jurul medianei zonei (${Math.round(zoneMedianEurM2)} EUR/mp).`);
+          }
+
+          if (yearBuilt) {
+            const age = new Date().getFullYear() - yearBuilt;
+            if (age <= 5) insights.push(`Constructie recenta (${yearBuilt}) - costuri reduse de mentenanta.`);
+            else if (age > 40) insights.push(`Constructie veche (${yearBuilt}, ${age} ani) - verificati starea instalatiilor si structurii.`);
+          }
+
+          if (rooms && areaM2) {
+            const mpPerRoom = Math.round(areaM2 / rooms);
+            if (mpPerRoom < 15) insights.push(`Suprafata medie pe camera de doar ${mpPerRoom} mp - apartament compact.`);
+            else if (mpPerRoom > 30) insights.push(`Suprafata generoasa: ${mpPerRoom} mp/camera.`);
+          }
+
+          if (avmMid && priceEur) {
+            const margin = priceEur - avmMid;
+            if (margin > 0) insights.push(`Marja de negociere potentiala: ~${Intl.NumberFormat("ro-RO").format(Math.round(margin))} EUR fata de estimarea pietei.`);
+          }
+
+          if (insights.length === 0) return null;
+          return (
+            <div className="rounded-lg bg-slate-50 p-3 space-y-1.5">
+              <div className="text-sm font-medium text-slate-700 mb-1">Context piata</div>
+              {insights.map((ins, i) => (
+                <p key={i} className="text-xs text-slate-600 flex items-start gap-1.5">
+                  <span className="text-blue-500 mt-0.5 shrink-0">●</span>
+                  <span>{ins}</span>
+                </p>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* Condition */}
         {llmText.condition && (

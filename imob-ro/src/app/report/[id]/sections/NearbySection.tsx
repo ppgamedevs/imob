@@ -18,6 +18,8 @@ interface NearbyData {
   supermarkets: POI[];
   hospitals: POI[];
   landmarks: POI[];
+  restaurants: POI[];
+  pharmacies: POI[];
 }
 
 interface Props {
@@ -41,12 +43,43 @@ const CATEGORY_CONFIG: {
   { key: "parks", label: "Parcuri", icon: "🌳", goodIfClose: true, thresholdM: 600 },
   { key: "supermarkets", label: "Supermarketuri", icon: "🛒", goodIfClose: true, thresholdM: 500 },
   { key: "hospitals", label: "Spitale / Clinici", icon: "🏥", goodIfClose: true, thresholdM: 2000 },
+  { key: "restaurants", label: "Restaurante / Baruri", icon: "🍽️", goodIfClose: true, thresholdM: 500 },
+  { key: "pharmacies", label: "Farmacii", icon: "💊", goodIfClose: true, thresholdM: 500 },
   { key: "landmarks", label: "Obiective", icon: "📍", goodIfClose: true, thresholdM: 1500 },
 ];
 
 function formatDist(m: number): string {
   if (m < 1000) return `${Math.round(m)} m`;
   return `${(m / 1000).toFixed(1)} km`;
+}
+
+function deriveZoneCharacter(data: NearbyData): string[] {
+  const tags: string[] = [];
+
+  if (data.restaurants.length >= 5) {
+    tags.push("Zona cu restaurante si baruri");
+  }
+
+  const totalPOI = Object.values(data).reduce((sum, arr) => sum + arr.length, 0);
+  const hasSchools = data.schools.length > 0 || data.kindergartens.length > 0;
+  const hasSupermarkets = data.supermarkets.length > 0;
+  const hasParks = data.parks.length > 0;
+
+  if (hasSchools && hasSupermarkets && hasParks && totalPOI > 8) {
+    tags.push("Zona rezidentiala completa");
+  } else if (totalPOI < 4) {
+    tags.push("Zona cu facilitati limitate");
+  }
+
+  if (data.parks.length >= 2 && data.parks[0].distM < 500) {
+    tags.push("Zona verde");
+  }
+
+  if (data.metro.length > 0 && data.metro[0].distM < 500 && data.restaurants.length >= 3) {
+    tags.push("Zona centrala / activa");
+  }
+
+  return tags;
 }
 
 export default function NearbySection({ lat, lng, distMetroM, nearestMetro, hasParking }: Props) {
@@ -77,10 +110,15 @@ export default function NearbySection({ lat, lng, distMetroM, nearestMetro, hasP
     if (data.schools.length > 0 && data.schools[0].distM < 800) benefits.push(`Scoala aproape: ${data.schools[0].name} (${formatDist(data.schools[0].distM)})`);
     if (data.kindergartens.length > 0 && data.kindergartens[0].distM < 600) benefits.push(`Gradinita aproape: ${data.kindergartens[0].name} (${formatDist(data.kindergartens[0].distM)})`);
     if (data.supermarkets.length > 0 && data.supermarkets[0].distM < 400) benefits.push(`Supermarket la ${formatDist(data.supermarkets[0].distM)}: ${data.supermarkets[0].name}`);
-    if (data.hospitals.length === 0) downsides.push("Niciun spital/clinica in zona apropiata");
-    if (data.parks.length === 0) downsides.push("Niciun parc in apropiere");
-    if (data.supermarkets.length === 0) downsides.push("Niciun supermarket in apropiere");
+    if (data.restaurants.length >= 3) benefits.push(`${data.restaurants.length} restaurante/baruri in apropiere`);
+    if (data.pharmacies.length > 0 && data.pharmacies[0].distM < 500) benefits.push(`Farmacie la ${formatDist(data.pharmacies[0].distM)}`);
+    if (data.hospitals.length === 0) downsides.push("Niciun spital/clinica in raza de 1.5 km");
+    if (data.parks.length === 0) downsides.push("Niciun parc in raza de 1.5 km");
+    if (data.supermarkets.length === 0) downsides.push("Niciun supermarket in raza de 1.5 km");
+    if (data.pharmacies.length === 0) downsides.push("Nicio farmacie in raza de 1.5 km");
   }
+
+  const zoneTags = data ? deriveZoneCharacter(data) : [];
 
   return (
     <Card>
@@ -88,6 +126,17 @@ export default function NearbySection({ lat, lng, distMetroM, nearestMetro, hasP
         <CardTitle className="text-base">Zona si vecinatati</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Zone character tags */}
+        {zoneTags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {zoneTags.map((tag) => (
+              <span key={tag} className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 border border-blue-100">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Parking highlight */}
         {hasParking != null && (
           <div className={`flex items-center gap-2 text-sm rounded-lg px-3 py-2 ${hasParking ? "bg-emerald-50 text-emerald-800" : "bg-amber-50 text-amber-800"}`}>
@@ -183,9 +232,14 @@ async function fetchNearby(lat: number, lng: number): Promise<NearbyData> {
   node["leisure"="park"](around:${radius},${lat},${lng});
   way["leisure"="park"](around:${radius},${lat},${lng});
   node["shop"="supermarket"](around:${radius},${lat},${lng});
+  way["shop"="supermarket"](around:${radius},${lat},${lng});
   node["amenity"="hospital"](around:${radius},${lat},${lng});
   way["amenity"="hospital"](around:${radius},${lat},${lng});
   node["amenity"="clinic"](around:${radius},${lat},${lng});
+  node["amenity"="pharmacy"](around:${radius},${lat},${lng});
+  node["amenity"="restaurant"](around:${radius},${lat},${lng});
+  node["amenity"="bar"](around:${radius},${lat},${lng});
+  node["amenity"="cafe"](around:${radius},${lat},${lng});
   node["tourism"~"museum|attraction|gallery"](around:${radius},${lat},${lng});
   way["tourism"~"museum|attraction|gallery"](around:${radius},${lat},${lng});
 );
@@ -194,7 +248,8 @@ out center tags;
 
   const result: NearbyData = {
     metro: [], schools: [], kindergartens: [],
-    parks: [], supermarkets: [], hospitals: [], landmarks: [],
+    parks: [], supermarkets: [], hospitals: [],
+    landmarks: [], restaurants: [], pharmacies: [],
   };
 
   try {
@@ -228,17 +283,21 @@ out center tags;
         result.supermarkets.push({ name, type: "Supermarket", distM: dist });
       } else if (tags.amenity === "hospital" || tags.amenity === "clinic") {
         result.hospitals.push({ name, type: "Spital", distM: dist });
+      } else if (tags.amenity === "pharmacy") {
+        result.pharmacies.push({ name, type: "Farmacie", distM: dist });
+      } else if (tags.amenity === "restaurant" || tags.amenity === "bar" || tags.amenity === "cafe") {
+        const typeName = tags.amenity === "bar" ? "Bar" : tags.amenity === "cafe" ? "Cafenea" : "Restaurant";
+        result.restaurants.push({ name, type: typeName, distM: dist });
       } else if (tags.tourism) {
         result.landmarks.push({ name, type: tags.tourism, distM: dist });
       }
     }
 
-    // Sort by distance
     for (const key of Object.keys(result) as (keyof NearbyData)[]) {
       result[key].sort((a, b) => a.distM - b.distM);
     }
   } catch {
-    // Overpass API might be slow/down - return empty
+    // Overpass API might be slow/down
   }
 
   return result;

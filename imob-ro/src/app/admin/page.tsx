@@ -198,6 +198,32 @@ export default async function AdminHomePage() {
           </Card>
         </Link>
 
+        <Link href="/admin/intel">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader>
+              <CardTitle>Intel Data</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Import seismic, POI, transport data and manage feature flags
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/estimates">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader>
+              <CardTitle>User Estimates</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                View recent price estimates from /estimare page
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
         <Link href="/admin/flags">
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
             <CardHeader>

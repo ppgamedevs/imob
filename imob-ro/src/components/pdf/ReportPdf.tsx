@@ -158,7 +158,15 @@ export default function ReportPdf(props: {
 
         <View style={s.titleBlock}>
           <Text style={s.h1}>{data.title || "Raport analiza imobiliara"}</Text>
-          {data.address && <Text style={s.address}>{data.address}, Bucuresti</Text>}
+          {data.address && data.addressIsExact && (
+            <Text style={s.address}>{data.address}, Bucuresti</Text>
+          )}
+          {data.address && !data.addressIsExact && (
+            <Text style={s.address}>{data.address} (adresa aproximativa){data.sector ? ` - ${data.sector}` : ""}</Text>
+          )}
+          {!data.address && data.sector && (
+            <Text style={s.address}>{data.sector}, Bucuresti - adresa exacta nu poate fi determinata</Text>
+          )}
           {data.url && <Text style={{ ...s.address, marginTop: 2 }}>{data.url}</Text>}
         </View>
 
@@ -354,6 +362,87 @@ export default function ReportPdf(props: {
                   data.distMetroM != null && data.distMetroM >= 1000 && data.distMetroM < 2000 && `Metrou la ${(data.distMetroM / 1000).toFixed(1)} km${data.nearestMetro ? ` (${data.nearestMetro})` : ""} - necesita transport.`,
                   data.distMetroM != null && data.distMetroM >= 2000 && `Departe de metrou (${(data.distMetroM / 1000).toFixed(1)} km) - zona dependenta de masina.`,
                 ].filter(Boolean).join(" ")}
+              </Text>
+            </View>
+          </>
+        )}
+
+        {/* Yield & TTS */}
+        {sections.yield && (data.yieldGross != null || data.estRent != null) && (
+          <>
+            <Text style={s.sectionTitle}>Randament investitie</Text>
+            <View style={s.metricsRow}>
+              {data.estRent != null && (
+                <View style={s.metricCard}>
+                  <Text style={s.metricLabel}>Chirie estimata</Text>
+                  <Text style={s.metricValue}>{fmt(data.estRent)} {cur}/luna</Text>
+                </View>
+              )}
+              {data.yieldGross != null && (
+                <View style={s.metricCard}>
+                  <Text style={s.metricLabel}>Randament brut</Text>
+                  <Text style={s.metricValue}>{(data.yieldGross * 100).toFixed(1)}%</Text>
+                </View>
+              )}
+              {data.yieldNet != null && (
+                <View style={s.metricCard}>
+                  <Text style={s.metricLabel}>Randament net</Text>
+                  <Text style={s.metricValue}>{(data.yieldNet * 100).toFixed(1)}%</Text>
+                </View>
+              )}
+            </View>
+          </>
+        )}
+
+        {/* TTS */}
+        {sections.tts && data.ttsBucket && (
+          <>
+            <Text style={s.sectionTitle}>Timp estimat de vanzare</Text>
+            <View style={s.infoBox}>
+              <Text style={s.infoText}>
+                Estimare: ~{data.ttsBucket} zile
+                {data.ttsMinMonths != null && data.ttsMaxMonths != null
+                  ? ` (intre ${data.ttsMinMonths} si ${data.ttsMaxMonths} luni)`
+                  : ""}
+              </Text>
+            </View>
+          </>
+        )}
+
+        {/* LLM Insights */}
+        {data.llmSummary && (
+          <>
+            <Text style={s.sectionTitle}>Analiza detaliata</Text>
+            <View style={s.infoBox}>
+              <Text style={s.infoText}>{data.llmSummary}</Text>
+            </View>
+            {data.llmRedFlags && data.llmRedFlags.length > 0 && (
+              <View style={{ marginTop: 4, marginBottom: 4 }}>
+                <Text style={{ fontSize: 9, color: "#DC2626", fontFamily: "Helvetica-Bold", marginBottom: 2 }}>Semnale de alarma:</Text>
+                {data.llmRedFlags.map((flag, i) => (
+                  <Text key={i} style={{ fontSize: 8, color: "#DC2626", marginLeft: 8 }}>{"\u2022"} {flag}</Text>
+                ))}
+              </View>
+            )}
+            {data.llmPositives && data.llmPositives.length > 0 && (
+              <View style={{ marginTop: 4, marginBottom: 4 }}>
+                <Text style={{ fontSize: 9, color: "#16A34A", fontFamily: "Helvetica-Bold", marginBottom: 2 }}>Puncte forte:</Text>
+                {data.llmPositives.map((pos, i) => (
+                  <Text key={i} style={{ fontSize: 8, color: "#16A34A", marginLeft: 8 }}>{"\u2022"} {pos}</Text>
+                ))}
+              </View>
+            )}
+          </>
+        )}
+
+        {/* Comps summary */}
+        {data.compsCount != null && data.compsCount > 0 && (
+          <>
+            <Text style={s.sectionTitle}>Comparabile</Text>
+            <View style={s.infoBox}>
+              <Text style={s.infoText}>
+                {data.compsCount} proprietati similare identificate in zona.
+                {data.zoneMedianEurM2 ? ` Mediana zonei: ${fmt(Math.round(data.zoneMedianEurM2))} EUR/mp.` : ""}
               </Text>
             </View>
           </>

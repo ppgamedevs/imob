@@ -11,24 +11,67 @@ export interface NotarialLookupResult {
 }
 
 const NEIGHBORHOOD_ALIASES: Record<string, string[]> = {
-  Crangasi: ["Crangasi", "Crângași"],
-  Herastrau: ["Herastrau", "Herăstrău", "Herastrau Nord"],
+  Crangasi: ["Crangasi", "Crângași", "Crangași"],
+  Herastrau: ["Herastrau", "Herăstrău", "Herastrau Nord", "Herastru"],
   Floreasca: ["Floreasca", "Florească"],
-  Dorobanti: ["Dorobanti", "Dorobanți", "Dorobantilor"],
-  Baneasa: ["Baneasa", "Băneasa"],
-  Titan: ["Titan", "Baba Novac"],
+  Dorobanti: ["Dorobanti", "Dorobanți", "Dorobantilor", "Dorobanți"],
+  Baneasa: ["Baneasa", "Băneasa", "Baneasa Nord", "Baneasa Sud"],
+  Titan: ["Titan", "Baba Novac", "Baba novac"],
   Tineretului: ["Tineretului", "Timpuri Noi"],
-  Unirii: ["Unirii", "Piata Unirii"],
+  Unirii: ["Unirii", "Piata Unirii", "Piața Unirii"],
   Cotroceni: ["Cotroceni", "Eroilor"],
-  Militari: ["Militari", "Militari Residence"],
-  Aviatorilor: ["Aviatorilor", "Piata Aviatorilor"],
+  Militari: ["Militari", "Militari Residence", "Militari Residence"],
+  Aviatorilor: ["Aviatorilor", "Piata Aviatorilor", "Piața Aviatorilor"],
   Primaverii: ["Primaverii", "Primăverii"],
+  Colentina: ["Colentina", "Fundeni"],
+  Iancului: ["Iancului", "Piata Iancului", "Piața Iancului"],
+  Obor: ["Obor", "Piata Obor", "Piața Obor"],
+  Pantelimon: ["Pantelimon", "Delfinului"],
+  Tei: ["Tei", "Lacul Tei", "Circului"],
+  Mosilor: ["Mosilor", "Moșilor", "Calea Mosilor"],
+  Dristor: ["Dristor", "Piata Muncii", "Mihai Bravu"],
+  "Balta Alba": ["Balta Alba", "Balta Albă", "Ozana"],
+  Vitan: ["Vitan", "Vitan Barzesti"],
+  Dudesti: ["Dudesti", "Dudești"],
+  Berceni: ["Berceni", "Piata Sudului"],
+  "Aparatorii Patriei": ["Aparatorii Patriei", "Aparatorii", "Apărătorii Patriei", "Apărătorii"],
+  Brancoveanu: ["Brancoveanu", "Brâncoveanu"],
+  Oltenitei: ["Oltenitei", "Oltenței", "Calea Oltenitei"],
+  "Piata Sudului": ["Piata Sudului", "Piața Sudului"],
+  Progresul: ["Progresul"],
+  Rahova: ["Rahova", "Calea Rahovei"],
+  "13 Septembrie": ["13 Septembrie"],
+  Ferentari: ["Ferentari"],
+  Sebastian: ["Sebastian", "Calea Sebastian"],
+  Ghencea: ["Ghencea"],
+  Panduri: ["Panduri"],
+  "Drumul Taberei": ["Drumul Taberei"],
+  Lujerului: ["Lujerului", "Politehnica"],
+  Pacii: ["Pacii", "Păcii"],
+  Virtutii: ["Virtutii", "Virtuții"],
+  Gorjului: ["Gorjului"],
+  "Bucurestii Noi": ["Bucurestii Noi", "Bucureștii Noi"],
+  Chitila: ["Chitila"],
+  Pajura: ["Pajura", "Păjura"],
+  Domenii: ["Domenii"],
+  Kisseleff: ["Kisseleff", "Kiseleff"],
+  Victoriei: ["Victoriei", "Piata Victoriei", "Piața Victoriei"],
+  "1 Decembrie": ["1 Decembrie"],
+  "Splaiul Unirii": ["Splaiul Unirii"],
+  Baicului: ["Baicului", "Băicului"],
+  Andronache: ["Andronache"],
+  Apusului: ["Apusului"],
+  Giulesti: ["Giulesti", "Giulești"],
 };
 
+function stripDiacritics(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 function normalizeNeighborhood(name: string): string {
-  const lower = name.toLowerCase().trim();
+  const lower = stripDiacritics(name.toLowerCase().trim());
   for (const [canonical, aliases] of Object.entries(NEIGHBORHOOD_ALIASES)) {
-    if (aliases.some((a) => a.toLowerCase() === lower)) {
+    if (aliases.some((a) => stripDiacritics(a.toLowerCase()) === lower)) {
       return canonical;
     }
   }
@@ -36,10 +79,33 @@ function normalizeNeighborhood(name: string): string {
 }
 
 function extractSectorFromAddress(address: string): number | null {
-  const m = address.match(/sector(?:ul)?\s*(\d)/i);
-  if (m) return Number(m[1]);
-  const m2 = address.match(/\bS(\d)\b/);
-  if (m2) return Number(m2[1]);
+  const norm = stripDiacritics(address.toLowerCase());
+  const patterns = [
+    /sector(?:ul)?\s*(\d)/i,
+    /\bsect\.?\s*(\d)/i,
+    /\bS(\d)\b/,
+    /\bsector\s*(\d)/i,
+    /,\s*(\d)\s*$/,
+  ];
+  for (const p of patterns) {
+    const m = norm.match(p);
+    if (m) {
+      const s = Number(m[1]);
+      if (s >= 1 && s <= 6) return s;
+    }
+  }
+  return null;
+}
+
+function extractNeighborhoodFromAddress(address: string): string | null {
+  const norm = stripDiacritics(address.toLowerCase());
+  for (const [canonical, aliases] of Object.entries(NEIGHBORHOOD_ALIASES)) {
+    for (const alias of aliases) {
+      if (norm.includes(stripDiacritics(alias.toLowerCase()))) {
+        return canonical;
+      }
+    }
+  }
   return null;
 }
 
@@ -80,6 +146,9 @@ export async function lookupNotarialGrid(params: {
 
   if (!neighborhood && params.areaSlug) {
     neighborhood = extractNeighborhoodFromSlug(params.areaSlug);
+  }
+  if (!neighborhood && params.addressRaw) {
+    neighborhood = extractNeighborhoodFromAddress(params.addressRaw);
   }
   if (!sector && params.addressRaw) {
     sector = extractSectorFromAddress(params.addressRaw);

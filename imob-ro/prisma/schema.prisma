@@ -173,6 +173,9 @@ model Analysis {
   provenanceEvents ProvenanceEvent[]
   trustSnapshot    TrustSnapshot?
   ownerDraft       OwnerDraft?
+  snapshots        ListingSnapshot[]
+  duplicatesA      ListingDuplicate[] @relation("dupA")
+  duplicatesB      ListingDuplicate[] @relation("dupB")
 
   @@index([sourceUrl])
   @@index([userId])
@@ -1272,5 +1275,137 @@ model DevLead {
   
   @@index([developmentId, createdAt])
   @@index([unitId])
+}
+
+// ========================================
+// Listing Integrity: Snapshots & Duplicates
+// ========================================
+
+enum ListingStatus {
+  ACTIVE
+  REMOVED
+  UNKNOWN
+}
+
+enum DupReason {
+  TEXT_HASH
+  IMAGES_HASH
+  ADDRESS_NEAR
+}
+
+model ListingSnapshot {
+  id          String        @id @default(cuid())
+  listingId   String
+  capturedAt  DateTime      @default(now())
+  priceEur    Int?
+  status      ListingStatus @default(ACTIVE)
+  textHash    String
+  imagesHash  String?
+  source      String?
+  url         String?
+  createdAt   DateTime      @default(now())
+
+  analysis    Analysis      @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([listingId, capturedAt])
+  @@index([textHash])
+  @@index([imagesHash])
+}
+
+model ListingDuplicate {
+  id           String    @id @default(cuid())
+  listingIdA   String
+  listingIdB   String
+  reason       DupReason
+  confidence   Int       @default(50)
+  createdAt    DateTime  @default(now())
+
+  analysisA    Analysis  @relation("dupA", fields: [listingIdA], references: [id], onDelete: Cascade)
+  analysisB    Analysis  @relation("dupB", fields: [listingIdB], references: [id], onDelete: Cascade)
+
+  @@unique([listingIdA, listingIdB])
+  @@index([listingIdA])
+  @@index([listingIdB])
+  @@index([reason])
+}
+
+// ========================================
+// Geo POI: Neighborhood intelligence
+// ========================================
+
+enum PoiCategory {
+  BAR
+  RESTAURANT
+  NIGHTCLUB
+  PARK
+  SCHOOL
+  KINDERGARTEN
+  PLAYGROUND
+  SUPERMARKET
+  PHARMACY
+  GYM
+}
+
+model GeoPOI {
+  id         String      @id @default(cuid())
+  lat        Float
+  lng        Float
+  category   PoiCategory
+  name       String?
+  source     String      @default("OSM")
+  osmId      String?     @unique
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@index([lat, lng])
+  @@index([category])
+}
+
+// ========================================
+// Geo Transport: Stops & transit density
+// ========================================
+
+enum TransportMode {
+  METRO
+  TRAM
+  BUS
+  TROLLEY
+}
+
+model GeoTransportStop {
+  id        String        @id @default(cuid())
+  lat       Float
+  lng       Float
+  name      String
+  mode      TransportMode
+  stopId    String        @unique
+  source    String        @default("GTFS")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@index([lat, lng])
+  @@index([mode])
+}
+
+// ========================================
+// User Estimates: store inputs + results for analytics
+// ========================================
+
+model UserEstimate {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  inputs     Json
+  result     Json
+  lat        Float?
+  lng        Float?
+  confidence Int
+  fairMin    Int
+  fairMax    Int
+  fairLikely Int
+  compsCount Int
+  dispersion Float
+
+  @@index([createdAt])
+  @@index([lat, lng])
 }
 

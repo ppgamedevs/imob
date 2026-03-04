@@ -133,12 +133,33 @@ export const GET = withCronTracking("seed-discover", async () => {
     }
   }
 
+  // Immediately trigger crawl-tick to start processing the seeded jobs
+  triggerCrawlTick().catch(() => {});
+
   return NextResponse.json({
     ok: true,
     created,
     requeued,
     skipped,
     total: DISCOVER_URLS.length,
-    message: "Run /api/cron/crawl-tick to process the queue.",
+    message: "Crawl-tick triggered automatically.",
   });
 });
+
+async function triggerCrawlTick() {
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXTAUTH_URL;
+  if (!baseUrl) return;
+  const secret = process.env.CRON_SECRET;
+  const headers: Record<string, string> = {};
+  if (secret) headers["authorization"] = `Bearer ${secret}`;
+
+  try {
+    await fetch(`${baseUrl}/api/cron/crawl-tick`, {
+      method: "GET",
+      headers,
+      signal: AbortSignal.timeout(5000),
+    });
+  } catch {
+    // best-effort trigger
+  }
+}

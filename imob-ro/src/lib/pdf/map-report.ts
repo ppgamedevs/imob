@@ -10,6 +10,8 @@ export type PdfReportData = {
   url?: string | null;
   title?: string | null;
   address?: string | null;
+  addressIsExact?: boolean;
+  sector?: string | null;
   photos?: string[];
   priceEur?: number | null;
   areaM2?: number | null;
@@ -28,6 +30,8 @@ export type PdfReportData = {
   avmConf?: number | null;
   priceBadge?: string | null;
   ttsBucket?: string | null;
+  ttsMinMonths?: number | null;
+  ttsMaxMonths?: number | null;
   estRent?: number | null;
   yieldGross?: number | null;
   yieldNet?: number | null;
@@ -43,6 +47,12 @@ export type PdfReportData = {
   events?: Array<{ kind: string; happenedAt: Date; payload?: unknown }>;
   hasParking?: boolean | null;
   nearestMetro?: string | null;
+  compsCount?: number | null;
+  zoneMedianEurM2?: number | null;
+  llmCondition?: string | null;
+  llmSummary?: string | null;
+  llmRedFlags?: string[] | null;
+  llmPositives?: string[] | null;
 };
 
 export async function loadPdfReportData(analysisId: string): Promise<PdfReportData | null> {
@@ -106,11 +116,35 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
   const lng = typeof f?.lng === "number" ? f.lng : null;
   const metro = lat != null && lng != null ? nearestStationM(lat, lng) : null;
 
+  const addressRaw = a.extractedListing?.addressRaw ?? null;
+  const streetPatterns = [/\bstr\.?\s/i, /\bstrada\s/i, /\bbld\.?\s/i, /\bcalea\s/i, /\bsoseaua\s/i, /\bnr\.?\s?\d/i];
+  const addressIsExact = addressRaw ? streetPatterns.some((p) => p.test(addressRaw)) : false;
+
+  let sector: string | null = null;
+  if (addressRaw) {
+    const sm = addressRaw.match(/sector(?:ul)?\s*(\d)/i);
+    if (sm) sector = `Sector ${sm[1]}`;
+  }
+  if (!sector) {
+    const aSlug = typeof f?.areaSlug === "string" ? f.areaSlug : null;
+    if (aSlug) {
+      const sm = aSlug.match(/sector-?(\d)/i);
+      if (sm) sector = `Sector ${sm[1]}`;
+    }
+  }
+
+  const compsExplain = (ssRecord?.explain as Record<string, unknown> | null)?.comps as Record<string, unknown> | undefined;
+  const compsStats = compsExplain?.eurM2 as { median?: number } | undefined;
+
+  const comps = await prisma.compMatch.count({ where: { analysisId } });
+
   return {
     id: a.id,
     url: a.sourceUrl,
     title: a.extractedListing?.title ?? null,
-    address: a.extractedListing?.addressRaw ?? null,
+    address: addressRaw,
+    addressIsExact,
+    sector,
     photos,
     priceEur: typeof f?.priceEur === "number" ? f.priceEur : (a.extractedListing?.price as number | null) ?? null,
     areaM2: typeof f?.areaM2 === "number" ? f.areaM2 : (a.extractedListing?.areaM2 as number | null) ?? null,
@@ -129,6 +163,8 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     avmConf,
     priceBadge,
     ttsBucket,
+    ttsMinMonths: typeof ssRecord?.ttsMinMonths === "number" ? (ssRecord.ttsMinMonths as number) : null,
+    ttsMaxMonths: typeof ssRecord?.ttsMaxMonths === "number" ? (ssRecord.ttsMaxMonths as number) : null,
     estRent,
     yieldGross,
     yieldNet,
@@ -144,5 +180,11 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     events,
     hasParking: llmText?.hasParking ?? null,
     nearestMetro: metro?.name ?? null,
+    compsCount: comps,
+    zoneMedianEurM2: compsStats?.median ?? null,
+    llmCondition: llmText?.condition ?? null,
+    llmSummary: llmText?.summary ?? null,
+    llmRedFlags: llmText?.redFlags ?? null,
+    llmPositives: llmText?.positives ?? null,
   };
 }
