@@ -22,6 +22,7 @@ interface Props {
     rsII: number;
     buildings: NearbyBuilding[];
   } | null;
+  titleMentionsRisk?: boolean;
 }
 
 const RISK_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string; description: string }> = {
@@ -78,6 +79,7 @@ export default function SeismicSection({
   matchedAddress,
   intervention,
   nearby,
+  titleMentionsRisk,
 }: Props) {
   const config = riskClass ? RISK_CONFIG[riskClass] : null;
   const isInList = config != null;
@@ -116,6 +118,31 @@ export default function SeismicSection({
                 </Badge>
               </div>
             )}
+          </div>
+        ) : titleMentionsRisk ? (
+          <div className="space-y-2">
+            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-lg">&#9888;</span>
+                <span className="font-semibold text-sm text-red-800">
+                  Risc seismic mentionat in anunt
+                </span>
+              </div>
+              <p className="text-xs text-red-700">
+                Titlul sau descrierea anuntului mentioneaza risc seismic. Nu am putut confirma automat din baza de date AMCCRS (adresa poate lipsi sau diferi), dar va recomandam sa verificati personal cu un expert tehnic atestat.
+              </p>
+            </div>
+            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-lg">&#8505;</span>
+                <span className="font-semibold text-sm text-amber-800">
+                  Nu apare in lista publica AMCCRS
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Imobilul nu a fost identificat in baza de date publica. Lipsa din lista nu inseamna absenta riscului - verificati expertiza tehnica a cladirii.
+              </p>
+            </div>
           </div>
         ) : (
           <div className="rounded-lg border border-green-200 bg-green-50 p-3">

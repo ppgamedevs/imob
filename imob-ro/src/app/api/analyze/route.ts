@@ -58,7 +58,15 @@ function isListingUrl(urlStr: string): boolean {
 
     if (host === "lajumate.ro") {
       if (path.includes("/ad/")) return true;
+      if (/\d{5,}/.test(path)) return true;
       if (/^\/[a-z-]+\/[a-z-]+$/.test(path) && !path.includes("/ad/")) return false;
+      return true;
+    }
+
+    if (host === "homezz.ro") {
+      if (/\d{4,}\.html$/.test(path)) return true;
+      if (path.includes("/anunt/") || path.includes("/oferta/") || path.includes("/proprietate/")) return true;
+      if (path === "/" || /^\/[a-z-]+\/?$/.test(path)) return false;
       return true;
     }
 

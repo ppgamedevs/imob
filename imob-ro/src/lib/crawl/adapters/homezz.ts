@@ -36,7 +36,11 @@ export const adapterHomezz: SourceAdapter = {
 
   async discover(listUrl: URL): Promise<DiscoverResult> {
     const res = await fetch(listUrl.toString(), {
-      headers: { "User-Agent": "ImobIntelBot/1.0 (+https://imobintel.ro/bot)" },
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "ro-RO,ro;q=0.9,en;q=0.8",
+      },
     });
     const html = await res.text();
     const $ = cheerio.load(html);
@@ -44,9 +48,11 @@ export const adapterHomezz: SourceAdapter = {
     const links: string[] = [];
     $("a[href]").each((_, el) => {
       const href = $(el).attr("href");
-      if (href && /\d{5,}\.html$/.test(href)) {
-        const absolute = new URL(href, listUrl).toString();
-        if (absolute.includes("homezz.ro")) links.push(absolute);
+      if (!href) return;
+      const absolute = new URL(href, listUrl).toString();
+      if (!absolute.includes("homezz.ro")) return;
+      if (/\d{4,}\.html$/.test(href) || /\/anunt\//.test(href) || /\/oferta\//.test(href) || /\/proprietate\//.test(href)) {
+        links.push(absolute);
       }
     });
 
@@ -62,10 +68,23 @@ export const adapterHomezz: SourceAdapter = {
   async extract({ url, html }) {
     const $ = cheerio.load(html);
 
+    // Try JSON-LD first
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let ld: any = null;
+    $('script[type="application/ld+json"]').each((_, el) => {
+      if (ld) return;
+      try {
+        const obj = JSON.parse($(el).html() ?? "");
+        const node = Array.isArray(obj) ? obj[0] : obj;
+        if (node?.["@type"] || node?.name) ld = node;
+      } catch { /* ignore */ }
+    });
+
     const title =
-      $("h1").first().text().trim() ||
+      (ld?.name as string) ??
+      ($("h1").first().text().trim() ||
       $("title").text().split(",")[0]?.trim() ||
-      $("title").text().split("-")[0]?.trim();
+      $("title").text().split("-")[0]?.trim());
 
     let price: number | undefined;
     let currency = "EUR";
@@ -112,10 +131,25 @@ export const adapterHomezz: SourceAdapter = {
     const yearMatch = yearText?.match(/(\d{4})/);
     if (yearMatch) yearBuilt = parseInt(yearMatch[1]);
 
-    const addressRaw =
+    // Description (extract early for address fallback)
+    const descEl = $('[class*="description"], [class*="descriere"]');
+    const description = descEl.first().text().trim().slice(0, 2000) || undefined;
+
+    let addressRaw =
       $('[itemprop="address"]').text().trim() ||
       $('[class*="location"], [class*="adresa"]').first().text().trim() ||
       undefined;
+
+    if (!addressRaw && description) {
+      const addrMatch = description.match(
+        /(?:pe\s+|strada\s+|str\.?\s+|bulevardul\s+|bd\.?\s+|calea\s+|aleea\s+|soseaua\s+|sos\.?\s+)([A-ZÀ-Ž][A-Za-zÀ-ž\s.-]{3,50})/i
+      );
+      if (addrMatch) {
+        const street = addrMatch[0].trim();
+        const sectorMatch = description.match(/sector(?:ul)?\s*(\d)/i);
+        addressRaw = sectorMatch ? `${street}, Sector ${sectorMatch[1]}, Bucuresti` : street;
+      }
+    }
 
     const photos: string[] = [];
     $("img").each((_, el) => {
@@ -149,9 +183,6 @@ export const adapterHomezz: SourceAdapter = {
         }
       }
     });
-
-    const descEl = $('[class*="description"], [class*="descriere"]');
-    const description = descEl.first().text().trim().slice(0, 2000) || undefined;
 
     return {
       extracted: {

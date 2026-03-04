@@ -109,16 +109,37 @@ export default function PriceAnchorsSection({
       </CardHeader>
       <CardContent className="space-y-5">
         {noEstimate ? (
-          <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-4 text-center">
-            <div className="text-sm font-medium text-muted-foreground">
-              Nu am suficiente date pentru estimarea pretului
+          <div className="space-y-3">
+            <div className="rounded-lg border border-dashed border-muted-foreground/30 bg-muted/20 p-4 text-center">
+              <div className="text-sm font-medium text-muted-foreground">
+                Nu am suficiente date pentru estimarea pretului
+              </div>
+              <div className="mt-1 text-xs text-muted-foreground">
+                Pret cerut: <span className="font-semibold text-foreground">{fmt(askingPrice, currency)}</span>
+              </div>
+              <div className="mt-2 text-xs text-muted-foreground">
+                Sunt necesare mai multe comparabile in zona pentru o estimare corecta.
+              </div>
             </div>
-            <div className="mt-1 text-xs text-muted-foreground">
-              Pret cerut: <span className="font-semibold text-foreground">{fmt(askingPrice, currency)}</span>
-            </div>
-            <div className="mt-2 text-xs text-muted-foreground">
-              Sunt necesare mai multe comparabile in zona pentru o estimare corecta.
-            </div>
+
+            {/* Show notarial price as reference when AVM is unavailable */}
+            {hasNotarial && notarialTotal != null && (
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <div className="flex items-start gap-2.5">
+                  <div className="mt-1 w-3 h-3 rounded-full shrink-0 bg-slate-400" />
+                  <div>
+                    <div className="text-xs text-muted-foreground">Valoare notariala (referinta fiscala)</div>
+                    <div className="font-semibold text-sm">{fmt(notarialTotal, currency)}</div>
+                    {notarialZone && (
+                      <div className="text-[10px] text-muted-foreground">{notarialZone} ({notarialYear})</div>
+                    )}
+                    <div className="mt-1 text-[10px] text-muted-foreground leading-relaxed">
+                      Aceasta este valoarea minima fiscala din grila notariala, folosita la calculul taxelor. Pretul real de piata este de obicei semnificativ mai mare.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <>

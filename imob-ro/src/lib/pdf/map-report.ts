@@ -1,6 +1,8 @@
 import type { ScoreSnapshot } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
+import { nearestStationM } from "@/lib/geo";
+import type { LlmTextExtraction } from "@/lib/llm/types";
 import type { NormalizedFeatures } from "@/types/analysis";
 
 export type PdfReportData = {
@@ -39,6 +41,8 @@ export type PdfReportData = {
   trustBadge?: string | null;
   trustReasons?: { plus?: string[]; minus?: string[] } | null;
   events?: Array<{ kind: string; happenedAt: Date; payload?: unknown }>;
+  hasParking?: boolean | null;
+  nearestMetro?: string | null;
 };
 
 export async function loadPdfReportData(analysisId: string): Promise<PdfReportData | null> {
@@ -97,6 +101,10 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     typeof ssRecord?.notarialYear === "number" ? (ssRecord.notarialYear as number) : null;
 
   const sourceMeta = (a.extractedListing?.sourceMeta ?? {}) as Record<string, unknown>;
+  const llmText = a.extractedListing?.llmTextExtract as unknown as LlmTextExtraction | null;
+  const lat = typeof f?.lat === "number" ? f.lat : null;
+  const lng = typeof f?.lng === "number" ? f.lng : null;
+  const metro = lat != null && lng != null ? nearestStationM(lat, lng) : null;
 
   return {
     id: a.id,
@@ -134,5 +142,7 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     trustBadge,
     trustReasons,
     events,
+    hasParking: llmText?.hasParking ?? null,
+    nearestMetro: metro?.name ?? null,
   };
 }

@@ -130,12 +130,47 @@ export const adapterStoria: SourceAdapter = {
       if (m) yearBuilt = parseInt(m[1]);
     }
 
+    // Floor - also try total floors for "X/Y" format
+    const ndTotalFloors = chars["building_floors_num"] ?? chars["number_of_floors"] ?? nextData?.ad?.target?.Building_floors_num;
+    if (floorRaw && ndTotalFloors) {
+      const total = String(ndTotalFloors).match(/(\d+)/);
+      if (total && !floorRaw.includes("/")) {
+        floorRaw = `${floorRaw}/${total[1]}`;
+      }
+    }
+    if (!floorRaw) {
+      const floorLabelText = findLabelValue($, "Etaj");
+      if (floorLabelText && floorLabelText.length < 30) floorRaw = floorLabelText.trim();
+    }
+
+    // Description (extract early so address fallback can use it)
+    const description: string | undefined = nextData?.ad?.description ?? $('section[data-cy="adDescription"] div').text().trim() ?? undefined;
+
     // Address
-    const addressRaw =
+    let addressRaw =
       $('[data-cy="adPageHeaderLocation"]').text().trim() ||
       $(".offer-location").text().trim() ||
       $("a.address").text().trim() ||
       undefined;
+
+    // Fallback: extract address from description using Romanian street patterns
+    if (!addressRaw && description) {
+      const addrMatch = description.match(
+        /(?:pe\s+|pe\s+strada\s+|str\.?\s+|strada\s+|in\s+zona\s+|bulevardul\s+|bd\.?\s+|calea\s+|aleea\s+|soseaua\s+|sos\.?\s+|intrarea\s+|drumul\s+|piata\s+|splaiul\s+)([A-ZÀ-Ž][A-Za-zÀ-ž\s.-]{3,50})/i
+      );
+      if (addrMatch) {
+        const street = addrMatch[0].trim();
+        const sectorMatch = description.match(/sector(?:ul)?\s*(\d)/i);
+        addressRaw = sectorMatch ? `${street}, Sector ${sectorMatch[1]}, Bucuresti` : street;
+      }
+    }
+    // Fallback: try title for address patterns
+    if (!addressRaw && title) {
+      const sectorMatch = title.match(/sector(?:ul)?\s*(\d)/i);
+      const zoneMatch = title.match(/(?:zona|cartier(?:ul)?)\s+([A-ZÀ-Ž][A-Za-zÀ-ž\s.-]{3,30})/i);
+      if (sectorMatch) addressRaw = `Sector ${sectorMatch[1]}, Bucuresti`;
+      else if (zoneMatch) addressRaw = zoneMatch[1].trim() + ", Bucuresti";
+    }
 
     // Photos
     const photos: string[] = [];
@@ -175,9 +210,6 @@ export const adapterStoria: SourceAdapter = {
         lng = parseFloat(adMap.longitude);
       }
     }
-
-    // Description for sourceMeta
-    const description = nextData?.ad?.description ?? $('section[data-cy="adDescription"] div').text().trim() ?? undefined;
 
     // Seller type
     let sellerType: string | undefined;

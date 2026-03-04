@@ -41,7 +41,8 @@ export const adapterLajumate: SourceAdapter = {
     const rawHtml = html as string;
 
     // --- JSON-LD ---
-    let ld: Record<string, unknown> | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let ld: any = null;
     $('script[type="application/ld+json"]').each((_, el) => {
       if (ld) return;
       try {

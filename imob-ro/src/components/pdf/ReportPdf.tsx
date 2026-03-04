@@ -169,6 +169,19 @@ export default function ReportPdf(props: {
               <Text style={s.metricLabel}>Pret cerut</Text>
               <Text style={s.metricValue}>{fmt(data.priceEur)} {cur}</Text>
             </View>
+            {data.priceEur && data.areaM2 && data.areaM2 > 0 && (
+              <View style={s.metricCard}>
+                <Text style={s.metricLabel}>Pret/mp</Text>
+                <Text style={s.metricValue}>{fmt(Math.round(data.priceEur / data.areaM2))} {cur}/mp</Text>
+                {data.avmMid && data.areaM2 > 0 && (() => {
+                  const actual = Math.round(data.priceEur! / data.areaM2!);
+                  const avg = Math.round(data.avmMid / data.areaM2!);
+                  const diff = Math.round(((actual - avg) / avg) * 100);
+                  if (Math.abs(diff) < 3) return <Text style={s.metricSub}>~media zonei</Text>;
+                  return <Text style={{ ...s.metricSub, color: diff > 0 ? "#DC2626" : "#16A34A" }}>{diff > 0 ? `+${diff}` : diff}% vs zona</Text>;
+                })()}
+              </View>
+            )}
             <View style={s.metricCard}>
               <Text style={s.metricLabel}>Suprafata</Text>
               <Text style={s.metricValue}>{data.areaM2 ? `${data.areaM2} mp` : "-"}</Text>
@@ -195,6 +208,14 @@ export default function ReportPdf(props: {
               <View style={s.metricCard}>
                 <Text style={s.metricLabel}>Tip vanzator</Text>
                 <Text style={s.metricValue}>{sellerLabel(data.sellerType)}</Text>
+              </View>
+            )}
+            {data.hasParking != null && (
+              <View style={{ ...s.metricCard, borderColor: data.hasParking ? "#22C55E" : "#F59E0B" }}>
+                <Text style={s.metricLabel}>Parcare</Text>
+                <Text style={{ ...s.metricValue, color: data.hasParking ? "#16A34A" : "#D97706" }}>
+                  {data.hasParking ? "Da" : "Nu"}
+                </Text>
               </View>
             )}
             {verdictText && (
@@ -296,6 +317,44 @@ export default function ReportPdf(props: {
                   <Text style={s.metricValue}>{Math.round(data.avmConf * 100)}%</Text>
                 </View>
               )}
+            </View>
+          </>
+        )}
+
+        {/* Zona si vecinatati */}
+        {sections.overview && (data.hasParking != null || data.distMetroM != null) && (
+          <>
+            <Text style={s.sectionTitle}>Zona si vecinatati</Text>
+            <View style={s.metricsRow}>
+              {data.hasParking != null && (
+                <View style={{ ...s.metricCard, borderColor: data.hasParking ? "#22C55E" : "#F59E0B" }}>
+                  <Text style={s.metricLabel}>Loc de parcare</Text>
+                  <Text style={{ ...s.metricValue, color: data.hasParking ? "#16A34A" : "#D97706" }}>
+                    {data.hasParking ? "Da" : "Nementionat"}
+                  </Text>
+                </View>
+              )}
+              {data.distMetroM != null && (
+                <View style={{ ...s.metricCard, borderColor: data.distMetroM < 800 ? "#22C55E" : BORDER }}>
+                  <Text style={s.metricLabel}>Distanta metrou</Text>
+                  <Text style={s.metricValue}>
+                    {data.distMetroM < 1000 ? `${Math.round(data.distMetroM)} m` : `${(data.distMetroM / 1000).toFixed(1)} km`}
+                  </Text>
+                  {data.nearestMetro && <Text style={s.metricSub}>{data.nearestMetro}</Text>}
+                </View>
+              )}
+            </View>
+            <View style={s.infoBox}>
+              <Text style={s.infoText}>
+                {[
+                  data.hasParking === true && "Loc de parcare inclus in oferta.",
+                  data.hasParking === false && "Nu este mentionat loc de parcare in anunt.",
+                  data.distMetroM != null && data.distMetroM < 500 && `Foarte aproape de metrou${data.nearestMetro ? ` (${data.nearestMetro})` : ""} - acces excelent transport public.`,
+                  data.distMetroM != null && data.distMetroM >= 500 && data.distMetroM < 1000 && `Metrou la distanta de mers pe jos${data.nearestMetro ? ` (${data.nearestMetro})` : ""}.`,
+                  data.distMetroM != null && data.distMetroM >= 1000 && data.distMetroM < 2000 && `Metrou la ${(data.distMetroM / 1000).toFixed(1)} km${data.nearestMetro ? ` (${data.nearestMetro})` : ""} - necesita transport.`,
+                  data.distMetroM != null && data.distMetroM >= 2000 && `Departe de metrou (${(data.distMetroM / 1000).toFixed(1)} km) - zona dependenta de masina.`,
+                ].filter(Boolean).join(" ")}
+              </Text>
             </View>
           </>
         )}

@@ -217,7 +217,13 @@ function Detail({ label, value, conf }: { label: string; value: string; conf?: n
 
 function ConfidenceBadge({ value }: { value: number }) {
   const { text, color } = confidenceLabel(value);
+  const tooltip =
+    value >= 0.8
+      ? "Informatia a fost gasita explicit in textul anuntului"
+      : value >= 0.5
+        ? "Informatia a fost dedusa din context, poate necesita verificare"
+        : "Informatia este incerta - recomandam verificarea cu vanzatorul";
   return (
-    <span className={`ml-1 text-[10px] ${color}`}>({text})</span>
+    <span className={`ml-1 text-[10px] ${color} cursor-help`} title={tooltip}>({text})</span>
   );
 }

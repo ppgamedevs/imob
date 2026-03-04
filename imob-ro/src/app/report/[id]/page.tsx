@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db";
 import estimatePriceRange, { type AreaStats } from "@/lib/ml/avm";
 import estimateTTS from "@/lib/ml/tts";
 import { computeYield, estimateRent, type YieldResult } from "@/lib/ml/yield";
+import { nearestStationM } from "@/lib/geo";
 import { matchSeismic } from "@/lib/risk/seismic";
 import type { NormalizedFeatures } from "@/lib/types/pipeline";
 
@@ -24,6 +25,7 @@ import PriceAnchorsSection from "./sections/PriceAnchorsSection";
 import SeismicSection from "./sections/SeismicSection";
 import SellerChecklist from "./sections/SellerChecklist";
 import TtsSection from "./sections/TtsSection";
+import NearbySection from "./sections/NearbySection";
 import VerdictSection from "./sections/VerdictSection";
 import ReportChat from "./ReportChat";
 import { ViewTracker } from "./ViewTracker";
@@ -258,6 +260,26 @@ export default async function ReportPage({ params }: Props) {
 
       <h1 className="text-2xl font-semibold mb-6">Raport analiza</h1>
 
+      {/* Non-Bucharest disclaimer */}
+      {(() => {
+        const city = f?.city as string | undefined;
+        const addr = extracted?.addressRaw as string | undefined;
+        const combinedText = `${city ?? ""} ${addr ?? ""} ${extracted?.title ?? ""}`.toLowerCase();
+        const isBucharest = combinedText.includes("bucuresti") || combinedText.includes("bucurești") || combinedText.includes("ilfov") || combinedText.includes("sector");
+        const hasCity = city || addr;
+        if (hasCity && !isBucharest) {
+          return (
+            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm">
+              <div className="font-medium text-amber-800">Zona cu acoperire limitata</div>
+              <div className="mt-0.5 text-amber-700 text-xs">
+                ImobIntel are suport complet doar pentru Bucuresti si Ilfov. Rapoartele pentru alte zone pot avea estimari mai putin precise din cauza numarului redus de comparabile si date disponibile.
+              </div>
+            </div>
+          );
+        }
+        return null;
+      })()}
+
       {!extracted && (
         <div className="mb-6 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm">
           <div className="font-medium">Nu avem inca date extrase pentru acest raport.</div>
@@ -296,6 +318,38 @@ export default async function ReportPage({ params }: Props) {
                     <div className="font-semibold">{extracted.price ? `${extracted.price.toLocaleString("ro-RO")} ${extracted.currency ?? "EUR"}` : "-"}</div>
                   </div>
                   <div>
+                    <div className="text-muted-foreground">Pret/mp</div>
+                    <div className="font-semibold">
+                      {(() => {
+                        const price = extracted.price as number | null;
+                        const area = extracted.areaM2 as number | null;
+                        if (!price || !area || area <= 0) return "-";
+                        const pricePerM2 = Math.round(price / area);
+                        const medianM2 = compsStats?.median;
+                        return (
+                          <span className="flex items-center gap-1.5">
+                            {pricePerM2.toLocaleString("ro-RO")} {extracted.currency ?? "EUR"}/mp
+                            {medianM2 && medianM2 > 0 && (
+                              <span className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
+                                pricePerM2 < medianM2 * 0.95
+                                  ? "bg-emerald-50 text-emerald-700"
+                                  : pricePerM2 > medianM2 * 1.05
+                                    ? "bg-red-50 text-red-700"
+                                    : "bg-gray-50 text-gray-600"
+                              }`}>
+                                {pricePerM2 < medianM2
+                                  ? `${Math.round(((medianM2 - pricePerM2) / medianM2) * 100)}% sub zona`
+                                  : pricePerM2 > medianM2
+                                    ? `${Math.round(((pricePerM2 - medianM2) / medianM2) * 100)}% peste zona`
+                                    : "~media zonei"}
+                              </span>
+                            )}
+                          </span>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                  <div>
                     <div className="text-muted-foreground">Suprafata</div>
                     <div className="font-semibold">{extracted.areaM2 ? `${extracted.areaM2} mp` : "-"}</div>
                   </div>
@@ -321,6 +375,14 @@ export default async function ReportPage({ params }: Props) {
                       </div>
                     ) : null;
                   })()}
+                  {llmText?.hasParking != null && (
+                    <div>
+                      <div className="text-muted-foreground">Parcare</div>
+                      <div className={`font-semibold ${llmText.hasParking ? "text-emerald-600" : "text-amber-600"}`}>
+                        {llmText.hasParking ? "Da" : "Nu"}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -354,6 +416,17 @@ export default async function ReportPage({ params }: Props) {
             showVision={showVision}
             llmFailed={llmFailed}
           />
+
+          {/* Nearby POI section */}
+          {f?.lat != null && f?.lng != null && (
+            <NearbySection
+              lat={f.lat}
+              lng={f.lng}
+              distMetroM={f.distMetroM}
+              nearestMetro={nearestStationM(f.lat, f.lng)?.name ?? null}
+              hasParking={llmText?.hasParking ?? null}
+            />
+          )}
 
           {/* Comparables */}
           <Card>
@@ -429,6 +502,10 @@ export default async function ReportPage({ params }: Props) {
             matchedAddress={seismicExplain?.matchedAddress as string ?? null}
             intervention={seismicExplain?.intervention as string ?? null}
             nearby={seismicExplain?.nearby as { total: number; rsI: number; rsII: number; buildings: { address: string; riskClass: string; distanceM: number; intervention: string | null }[] } ?? null}
+            titleMentionsRisk={(() => {
+              const text = `${extracted?.title ?? ""} ${((extracted?.sourceMeta as Record<string, unknown>)?.description as string) ?? ""}`.toLowerCase();
+              return /risc\s*seismic|bulina\s*rosie|clasa\s*de\s*risc|expertiza\s*tehnic/.test(text);
+            })()}
           />
 
           <NegotiationSection
@@ -437,6 +514,7 @@ export default async function ReportPage({ params }: Props) {
             suggestedLow={compsStats?.q1 && f?.areaM2 ? Math.round(compsStats.q1 * f.areaM2) : null}
             suggestedHigh={compsStats?.median && f?.areaM2 ? Math.round(compsStats.median * f.areaM2) : null}
             floor={f?.level ?? null}
+            hasParking={llmText?.hasParking ?? null}
             areaM2={extracted?.areaM2 ?? (f?.areaM2 as number) ?? null}
             rooms={extracted?.rooms ?? (f?.rooms as number) ?? null}
             compsCount={comps.length}

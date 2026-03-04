@@ -11,8 +11,9 @@ Reguli stricte:
 - Daca nu gasesti o informatie, pune campul pe null.
 - Daca nu esti sigur, pune confidence sub 0.5 si lasa campul null.
 - Pentru fiecare camp non-null, adauga un citat exact din text in "evidence".
-- "redFlags" = semne de alarma pentru cumparator (comision agentie/cumparator, urgent, fara CF, pret negociabil). NU pune "comision 0%" ca red flag - acesta e un lucru pozitiv.
-- "positives" = puncte forte (renovat, aproape metrou, zona linistita, centrala proprie).
+- "redFlags" = semne de alarma pentru cumparator. Format: "Problema: explicatie scurta de ce e un risc". Exemple: "Comision standard agentie: cumparatorul va plati un comision suplimentar de 1-3% din pret", "Fara CF mentionat: lipseste certitudinea juridica a proprietatii", "Pret negociabil: poate indica probleme cu proprietatea sau urgenta vanzarii". NU pune "comision 0%" ca red flag - acesta e un lucru pozitiv.
+- "hasParking": true daca se mentioneaza loc de parcare, garaj, parcare subterana/exterioara. false daca se spune explicit "fara parcare". null daca nu se mentioneaza.
+- "positives" = puncte forte (renovat, aproape metrou, zona linistita, centrala proprie, loc de parcare).
 - "summary" = 2 propozitii in romana care rezuma anuntul obiectiv.
 - "sellerMotivation": "urgent" daca apar cuvinte ca "urgent", "pret negociabil", "accept orice oferta".
 - "balconyM2" si "usableAreaM2" doar daca sunt explicit mentionate in text.

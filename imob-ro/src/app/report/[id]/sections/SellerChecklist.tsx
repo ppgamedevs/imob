@@ -191,7 +191,7 @@ export default function SellerChecklist(props: Props) {
           <ul className="space-y-3">
             {questions.map((item, i) => (
               <li key={i} className="flex items-start gap-2">
-                <span className="mt-1 h-4 w-4 rounded border border-border flex-shrink-0" />
+                <span className="mt-0.5 text-amber-500 shrink-0 text-sm">&#10148;</span>
                 <div className="min-w-0">
                   <span className="text-sm font-medium">{item.text}</span>
                   {item.tip && (

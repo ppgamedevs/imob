@@ -108,6 +108,19 @@ export function extractGeneric(html: string): Extracted {
     if (addr) result.addressRaw = addr[1].trim();
   }
 
+  // Fallback: extract Romanian street address from description in HTML
+  if (!result.addressRaw) {
+    const textBlob = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+    const addrMatch = textBlob.match(
+      /(?:pe\s+|strada\s+|str\.?\s+|bulevardul\s+|bd\.?\s+|calea\s+|aleea\s+|soseaua\s+|sos\.?\s+|splaiul\s+)([A-ZÀ-Ž][A-Za-zÀ-ž\s.-]{3,50})/i
+    );
+    if (addrMatch) {
+      const street = addrMatch[0].trim();
+      const sectorMatch = textBlob.match(/sector(?:ul)?\s*(\d)/i);
+      result.addressRaw = sectorMatch ? `${street}, Sector ${sectorMatch[1]}, Bucuresti` : street;
+    }
+  }
+
   // Extract area from title (often inflated with balcony)
   if (result.title) {
     const titleArea = result.title.match(/(\d{2,3})\s*(?:m2|m²|mp)\b/i);
@@ -167,7 +180,7 @@ export async function maybeFetchServer(url: string) {
     try {
       const adapter = pickAdapter(u);
       if (adapter.domain !== "*") {
-        const result = await adapter.extract({ url, html });
+        const result = await adapter.extract({ url: u, html });
         return result.extracted as Extracted;
       }
     } catch {
