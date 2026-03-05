@@ -9,19 +9,19 @@ import { normalizeUrl } from "@/lib/url";
 
 // Validation schema for incoming request
 const analyzeRequestSchema = z.object({
-  originUrl: z.string().url("Invalid origin URL"),
+  originUrl: z.string().url("Invalid origin URL").max(2048),
   extracted: z
     .object({
-      title: z.string().optional(),
-      description: z.string().optional(),
-      price: z.number().optional(),
-      areaM2: z.number().optional(),
-      rooms: z.number().optional(),
-      addressRaw: z.string().optional(),
-      sourceUrl: z.string().url().optional(),
-      photos: z.array(z.string().url()).optional(),
+      title: z.string().max(500).optional(),
+      description: z.string().max(5000).optional(),
+      price: z.number().min(0).max(100_000_000).optional(),
+      areaM2: z.number().min(1).max(50_000).optional(),
+      rooms: z.number().min(1).max(100).optional(),
+      addressRaw: z.string().max(500).optional(),
+      sourceUrl: z.string().url().max(2048).optional(),
+      photos: z.array(z.string().url().max(2048)).max(50).optional(),
     })
-    .passthrough(), // Allow additional fields
+    .passthrough(),
 });
 
 function isDisallowedDomain(urlStr: string) {

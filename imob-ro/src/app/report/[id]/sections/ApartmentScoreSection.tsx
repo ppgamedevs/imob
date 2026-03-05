@@ -7,12 +7,14 @@ interface Props {
   score: ApartmentScore;
   variant?: "compact" | "full";
   showActions?: boolean;
+  scoreLabel?: string;
 }
 
 export default function ApartmentScoreSection({
   score,
   variant = "full",
   showActions = true,
+  scoreLabel = "Scor apartament",
 }: Props) {
-  return <ApartmentScoreCard score={score} variant={variant} showActions={showActions} />;
+  return <ApartmentScoreCard score={score} variant={variant} showActions={showActions} scoreLabel={scoreLabel} />;
 }

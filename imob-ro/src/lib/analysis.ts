@@ -4,6 +4,41 @@ import type { Extracted } from "./extractors";
 import { maybeFetchServer } from "./extractors";
 import { logger } from "./obs/logger";
 
+/**
+ * Post-extraction check: detects rentals, non-real-estate, etc.
+ * Returns "rental" | "not_realestate" | null (null = OK).
+ */
+function checkExtractedContentType(
+  title: string | null | undefined,
+  description: string | null | undefined,
+  url: string,
+): "rental" | "not_realestate" | null {
+  const text = `${title ?? ""} ${description ?? ""}`.toLowerCase();
+  const host = (() => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; } })();
+  const path = (() => { try { return new URL(url).pathname.toLowerCase(); } catch { return ""; } })();
+
+  // Rental detection
+  if (/\bregim\s+hotelier\b/.test(text)) return "rental";
+  if (/\bde\s+inchiriat\b/.test(text) && !/\bde\s+vanzare\b/.test(text)) return "rental";
+  if (/\binchiriez\b/.test(text) && !/\bvand\b/.test(text)) return "rental";
+  if (/\/inchirieri?\b/.test(path) || /\/de-inchiriat\b/.test(path)) return "rental";
+
+  // Non-real-estate detection (mainly OLX which has all categories)
+  if (host === "olx.ro") {
+    const REALESTATE_SIGNALS = [
+      /\b(?:apartament|garsonier|camera|camere|casa|vila|teren|imobil|etaj|bloc|mansarda|penthouse|duplex|spatiu\s+comercial)\b/,
+      /\b(?:mp|m2|m²|suprafata|suprafață)\b/,
+      /\b(?:vanzare|vand|vânzare|vînd)\b/,
+      /\b(?:decomandat|semidecomandat|circular|open.?space)\b/,
+      /\b(?:sector\s*\d|bucuresti|cluj|iasi|timisoara|brasov|constanta)\b/,
+    ];
+    const hasRealEstateSignal = REALESTATE_SIGNALS.some((p) => p.test(text));
+    if (!hasRealEstateSignal) return "not_realestate";
+  }
+
+  return null;
+}
+
 export async function getAnalysis(id: string) {
   return prisma.analysis.findUnique({
     where: { id },
@@ -209,26 +244,38 @@ export async function startAnalysis(analysisId: string, url: string) {
       extracted = serverData;
     }
 
-    // 2. Provenance ingestion (non-critical)
+    // 2. Post-extraction content check (rental, non-real-estate)
+    const contentIssue = checkExtractedContentType(
+      extracted.title,
+      (extracted.sourceMeta as Record<string, unknown>)?.description as string | undefined,
+      url,
+    );
+    if (contentIssue) {
+      log.info({ contentIssue }, "Listing rejected after extraction");
+      await setStatus(analysisId, contentIssue === "rental" ? "rejected_rental" : "rejected_not_realestate");
+      return;
+    }
+
+    // 3. Provenance ingestion (non-critical)
     try {
       await stepProvenance(analysisId, url);
     } catch (err) {
       log.warn({ err }, "Provenance ingestion failed");
     }
 
-    // 3. Normalize
+    // 4. Normalize
     await setStatus(analysisId, "normalizing");
     await stepNormalize(analysisId);
 
-    // 4. Scoring pipeline
+    // 5. Scoring pipeline
     await setStatus(analysisId, "scoring");
     await runScoringPipeline(analysisId);
 
-    // 5. Done
+    // 6. Done
     await setStatus(analysisId, "done");
     log.info("Analysis completed");
 
-    // 6. Async LLM enrichment (non-blocking, runs after report is available)
+    // 7. Async LLM enrichment (non-blocking, runs after report is available)
     enqueueLlmEnrichment(analysisId).catch((e) =>
       log.warn({ err: e }, "LLM enrichment enqueue failed"),
     );

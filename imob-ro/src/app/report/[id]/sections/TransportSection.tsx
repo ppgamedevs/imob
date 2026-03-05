@@ -192,7 +192,7 @@ export default function TransportSection({
         )}
 
         <p className="text-[10px] text-muted-foreground border-t pt-2">
-          Distantele sunt in linie dreapta. Timpul de mers pe jos este estimat la ~80m/min. Datele provin din GTFS si OpenStreetMap.
+          Distantele sunt in linie dreapta. Timpul de mers pe jos este estimat la o viteza medie de ~5 km/h. Datele provin din GTFS si OpenStreetMap.
           {locationInferred && (
             <span className="block mt-1 text-amber-600">
               Locatia a fost estimata din titlul anuntului — distantele pot varia fata de adresa reala.

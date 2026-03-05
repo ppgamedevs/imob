@@ -1242,11 +1242,10 @@ export default function EstimarePage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {["1", "2", "3", "4", "5"].map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c} {parseInt(c) === 1 ? "camera" : "camere"}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="1">1 camera</SelectItem>
+                      <SelectItem value="2">2 camere</SelectItem>
+                      <SelectItem value="3">3 camere</SelectItem>
+                      <SelectItem value="4">4+ camere</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

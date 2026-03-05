@@ -176,7 +176,7 @@ export default function MapCard({
       {metroStation && (
         <div className="text-sm text-muted text-center">
           <MapPin className="h-4 w-4 inline mr-1" />~{Math.ceil(distanceM / 80)} minute mers pe jos
-          <span className="text-xs ml-1">(80m/min)</span>
+          <span className="text-xs ml-1">(~5 km/h)</span>
         </div>
       )}
 

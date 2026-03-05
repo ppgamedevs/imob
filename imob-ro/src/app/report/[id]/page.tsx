@@ -24,6 +24,14 @@ import { findComparables, computeFairRange, type FairPriceResult } from "@/lib/r
 import { computeExecutiveVerdict, type VerdictInput } from "@/lib/report/verdict";
 import { computeApartmentScore, type ApartmentScoreInput } from "@/lib/score/apartmentScore";
 import { detectDevelopmentStatus } from "@/lib/analysis/development-detect";
+import {
+  detectPropertyType,
+  isHouseType,
+  isNonResidential,
+  propertyTypeLabel,
+  propertyScoreLabel,
+  sanitizeRooms,
+} from "@/lib/property-type";
 
 import AnalysisLoading from "./AnalysisLoading";
 import CompsClientBlock from "./CompsClientBlock";
@@ -261,7 +269,7 @@ export default async function ReportPage({ params }: Props) {
           lat: feat.lat ?? null,
           lng: feat.lng ?? null,
           areaM2: subjectArea,
-          rooms: feat.rooms ?? (extracted?.rooms as number) ?? null,
+          rooms: saneRooms,
           yearBuilt: feat.yearBuilt ?? extracted?.yearBuilt ?? null,
         });
         compsFairRange = computeFairRange(tightComps, subjectArea);
@@ -317,6 +325,15 @@ export default async function ReportPage({ params }: Props) {
   const extracted = analysis?.extractedListing ?? null;
   const f = (analysis?.featureSnapshot?.features ?? null) as NormalizedFeatures | null;
 
+  // Property type detection and rooms sanitization
+  const rawRooms = (extracted?.rooms ?? f?.rooms ?? null) as number | null;
+  const saneRooms = sanitizeRooms(rawRooms, extracted?.title as string | null);
+  const propType = detectPropertyType(extracted?.title as string | null, saneRooms);
+  const propLabel = propertyTypeLabel(propType);
+  const propScoreLabel = propertyScoreLabel(propType);
+  const isHouse = isHouseType(propType);
+  const isUnsupportedType = isNonResidential(propType);
+
   // Score explain data
   const scoreExplain = analysis?.scoreSnapshot?.explain as Record<string, unknown> | null;
   const compsExplain = scoreExplain?.comps as Record<string, unknown> | undefined;
@@ -335,9 +352,15 @@ export default async function ReportPage({ params }: Props) {
   };
 
   const areaSlug = f?.areaSlug ?? ((f as Record<string, unknown>)?.area_slug as string | undefined);
+  const isRon = String(extracted?.currency ?? "").toUpperCase() === "RON";
+  const ronToEurRate = Number(process.env.EURRON_RATE ?? process.env.EXCHANGE_RATE_EUR_TO_RON ?? 4.95);
+  const priceEurConverted = isRon && extracted?.price
+    ? Math.round((extracted.price as number) / ronToEurRate)
+    : null;
   const actualPrice =
     f?.priceEur ??
     ((f as Record<string, unknown>)?.price_eur as number | undefined) ??
+    priceEurConverted ??
     (extracted?.price as number | undefined);
 
   if (areaSlug) {
@@ -500,9 +523,10 @@ export default async function ReportPage({ params }: Props) {
     vibeZoneTypeKey: vibeResult?.scores?.zoneTypeKey ?? null,
     yearBuilt: extracted?.yearBuilt ?? f?.yearBuilt ?? null,
     hasPhotos: Array.isArray(extracted?.photos) && (extracted.photos as unknown[]).length > 0,
-    rooms: extracted?.rooms ?? f?.rooms ?? null,
+    photoCount: Array.isArray(extracted?.photos) ? (extracted.photos as unknown[]).length : 0,
+    rooms: saneRooms,
     areaM2: extracted?.areaM2 ?? f?.areaM2 ?? null,
-    floor: f?.level ?? null,
+    floor: isHouse ? null : (f?.level ?? null),
     totalFloors: f?.totalFloors ?? null,
     address: extracted?.addressRaw ?? null,
     title: extracted?.title ?? null,
@@ -525,9 +549,9 @@ export default async function ReportPage({ params }: Props) {
     compsUsed: compsFairRange?.compsUsed ?? comps.length,
     currency: extracted?.currency ?? "EUR",
     areaM2: extracted?.areaM2 ?? (f?.areaM2 as number) ?? null,
-    rooms: extracted?.rooms ?? (f?.rooms as number) ?? null,
+    rooms: saneRooms,
     yearBuilt: extracted?.yearBuilt ?? f?.yearBuilt ?? null,
-    floor: f?.level ?? null,
+    floor: isHouse ? null : (f?.level ?? null),
     hasParking: llmText?.hasParking ?? null,
     hasElevator: llmText?.hasElevator ?? null,
     condition: llmText?.condition ?? null,
@@ -616,7 +640,7 @@ export default async function ReportPage({ params }: Props) {
     hasElevator: llmText?.hasElevator ?? undefined,
     hasParking: llmText?.hasParking ?? undefined,
     heatingType: llmText?.heatingType ?? undefined,
-    rooms: (extracted?.rooms as number) ?? undefined,
+    rooms: saneRooms ?? undefined,
     areaM2: (extracted?.areaM2 as number) ?? (f?.areaM2 as number) ?? undefined,
     sellerType: sourceMeta?.sellerType as string | undefined,
     isUnderConstruction: devSignals.isUnderConstruction,
@@ -697,7 +721,27 @@ export default async function ReportPage({ params }: Props) {
         return null;
       })()}
 
-      {!extracted && (
+      {String(analysis?.status ?? "") === "rejected_rental" && (
+        <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
+          <div className="font-medium text-blue-800">Anunt de inchiriere detectat</div>
+          <div className="mt-1 text-blue-700">
+            ImobIntel analizeaza momentan doar anunturi de vanzare. Suportul pentru chirii si regim hotelier
+            este in constructie si va fi disponibil in curand.
+          </div>
+        </div>
+      )}
+
+      {String(analysis?.status ?? "") === "rejected_not_realestate" && (
+        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm">
+          <div className="font-medium text-red-800">Anunt non-imobiliar detectat</div>
+          <div className="mt-1 text-red-700">
+            Acest link nu pare sa fie un anunt imobiliar. ImobIntel analizeaza doar apartamente, case, vile
+            si alte proprietati imobiliare de vanzare.
+          </div>
+        </div>
+      )}
+
+      {!extracted && !["rejected_rental", "rejected_not_realestate"].includes(String(analysis?.status ?? "")) && (
         <div className="mb-6 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm">
           <div className="font-medium">Nu avem inca date extrase pentru acest raport.</div>
           <div className="mt-1 text-muted-foreground">
@@ -706,16 +750,32 @@ export default async function ReportPage({ params }: Props) {
         </div>
       )}
 
-      {/* Executive Summary — always visible at top */}
+      {isUnsupportedType && extracted && (
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm">
+          <div className="font-medium text-amber-800">Tip de proprietate nesustinut</div>
+          <div className="mt-1 text-amber-700">
+            ImobIntel nu ofera inca suport complet pentru analiza de {propLabel}. Lucram la
+            extinderea platformei pentru a include si acest tip de proprietate.
+            Datele prezentate mai jos sunt orientative.
+          </div>
+        </div>
+      )}
+
+      {/* Executive Summary — only when extraction succeeded */}
+      {extracted && (
       <div className="mb-6 space-y-3">
         <ExecutiveSummarySection
           verdict={executiveVerdict}
           priceRange={bestRange}
-          askingPrice={actualPrice}
-          currency={extracted?.currency ?? "EUR"}
+          askingPrice={actualPrice ?? null}
+          currency="EUR"
+          originalPrice={isRon && extracted?.price ? (extracted.price as number) : undefined}
+          originalCurrency={isRon ? "RON" : undefined}
         />
       </div>
+      )}
 
+      {extracted && (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left: listing details */}
         <div className="lg:col-span-7 space-y-4">
@@ -832,7 +892,16 @@ export default async function ReportPage({ params }: Props) {
                     <div className="text-muted-foreground">Pret</div>
                     <div className="font-semibold">
                       {extracted.price
-                        ? `${extracted.price.toLocaleString("ro-RO")} ${extracted.currency ?? "EUR"}`
+                        ? (
+                          <>
+                            {(extracted.price as number).toLocaleString("ro-RO")} {extracted.currency ?? "EUR"}
+                            {isRon && priceEurConverted && (
+                              <span className="block text-xs text-muted-foreground font-normal">
+                                ~{priceEurConverted.toLocaleString("ro-RO")} EUR
+                              </span>
+                            )}
+                          </>
+                        )
                         : "-"}
                     </div>
                   </div>
@@ -844,9 +913,11 @@ export default async function ReportPage({ params }: Props) {
                         const area = extracted.areaM2 as number | null;
                         if (!price || !area || area <= 0) return "-";
                         const pricePerM2 = Math.round(price / area);
+                        const eurPerM2 = isRon ? Math.round(pricePerM2 / ronToEurRate) : null;
                         const medianM2 = compsStats?.median;
                         return (
-                          <span className="flex items-center gap-1.5">
+                          <span className="flex flex-col">
+                            <span className="flex items-center gap-1.5">
                             {pricePerM2.toLocaleString("ro-RO")} {extracted.currency ?? "EUR"}/mp
                             {medianM2 && medianM2 > 0 && (
                               <span
@@ -865,6 +936,12 @@ export default async function ReportPage({ params }: Props) {
                                     : "~media zonei"}
                               </span>
                             )}
+                            </span>
+                            {isRon && eurPerM2 && (
+                              <span className="text-xs text-muted-foreground font-normal">
+                                ~{eurPerM2.toLocaleString("ro-RO")} EUR/mp
+                              </span>
+                            )}
                           </span>
                         );
                       })()}
@@ -878,7 +955,7 @@ export default async function ReportPage({ params }: Props) {
                   </div>
                   <div>
                     <div className="text-muted-foreground">Camere</div>
-                    <div className="font-semibold">{extracted.rooms ?? f?.rooms ?? "-"}</div>
+                    <div className="font-semibold">{saneRooms ?? "-"}</div>
                   </div>
                   <div>
                     <div className="text-muted-foreground">Etaj</div>
@@ -959,7 +1036,7 @@ export default async function ReportPage({ params }: Props) {
             llmFailed={llmFailed}
             priceEur={actualPrice ?? null}
             areaM2={extracted?.areaM2 ?? (f?.areaM2 as number) ?? null}
-            rooms={extracted?.rooms ?? (f?.rooms as number) ?? null}
+            rooms={saneRooms}
             yearBuilt={extracted?.yearBuilt ?? f?.yearBuilt ?? null}
             zoneMedianEurM2={compsStats?.median ?? null}
             avmMid={priceRange?.mid ?? null}
@@ -985,13 +1062,7 @@ export default async function ReportPage({ params }: Props) {
               nearestStationM(geoLat ?? f?.lat ?? 0, geoLng ?? f?.lng ?? 0)?.name ?? null
             }
             locationInferred={locationInferred}
-            propertyType={
-              extracted?.rooms === 1
-                ? "garsoniera"
-                : extracted?.rooms
-                  ? "apartament"
-                  : "proprietate"
-            }
+            propertyType={propLabel}
           />
 
           {/* Neighborhood Intelligence (Vibe Index) */}
@@ -1042,7 +1113,7 @@ export default async function ReportPage({ params }: Props) {
 
         {/* Right: analysis cards */}
         <div className="lg:col-span-5 space-y-4">
-          <ApartmentScoreSection score={apartmentScore} variant="full" showActions={false} />
+          <ApartmentScoreSection score={apartmentScore} variant="full" showActions={false} scoreLabel={propScoreLabel} />
 
           <VerdictSection
             priceRange={priceRange}
@@ -1123,10 +1194,11 @@ export default async function ReportPage({ params }: Props) {
           <DataInsightsSection
             hasPrice={!!extracted?.price}
             hasArea={!!extracted?.areaM2}
-            hasRooms={!!(extracted?.rooms ?? f?.rooms)}
+            hasRooms={saneRooms != null}
             hasFloor={extracted?.floor != null || extracted?.floorRaw != null || f?.level != null}
             hasYear={!!(extracted?.yearBuilt ?? f?.yearBuilt)}
             hasAddress={!!extracted?.addressRaw}
+            isHouse={isHouse}
             hasCoords={f?.lat != null && f?.lng != null}
             hasPhotos={
               Array.isArray(extracted?.photos) && (extracted.photos as unknown[]).length > 0
@@ -1157,7 +1229,7 @@ export default async function ReportPage({ params }: Props) {
             confidenceLevel={confidenceData?.level}
             areaM2={extracted?.areaM2 ?? (f?.areaM2 as number) ?? null}
             titleAreaM2={((extracted as Record<string, unknown>)?.titleAreaM2 as number) ?? null}
-            rooms={extracted?.rooms ?? (f?.rooms as number) ?? null}
+            rooms={saneRooms}
             title={extracted?.title ?? null}
             llmRedFlags={llmText?.redFlags ?? null}
             llmCondition={llmText?.condition ?? null}
@@ -1175,6 +1247,7 @@ export default async function ReportPage({ params }: Props) {
           />
         </div>
       </div>
+      )}
 
       {/* PDF Download */}
       {analysis?.status === "done" && (

@@ -6,6 +6,8 @@ interface Props {
   priceRange: { low: number; high: number; mid: number } | null;
   askingPrice: number | null;
   currency: string;
+  originalPrice?: number;
+  originalCurrency?: string;
 }
 
 function enrichCommissionText(text: string, price: number | null): string {
@@ -82,12 +84,14 @@ function ConfidenceBar({ score, label }: { score: number; label: string }) {
 }
 
 function PriceRangeCard({
-  low, high, mid, askingPrice, currency,
+  low, high, mid, askingPrice, currency, originalPrice, originalCurrency,
 }: {
   low: number; high: number; mid: number; askingPrice: number | null; currency: string;
+  originalPrice?: number; originalCurrency?: string;
 }) {
   const fmt = (n: number) => n.toLocaleString("ro-RO");
   const pctFromMid = askingPrice ? Math.round(((askingPrice - mid) / mid) * 100) : null;
+  const showOriginal = originalPrice && originalCurrency && originalCurrency !== currency;
 
   return (
     <div className="rounded-lg border p-3 space-y-2">
@@ -101,6 +105,9 @@ function PriceRangeCard({
       {askingPrice != null && pctFromMid != null && (
         <div className="text-xs text-muted-foreground">
           Pret cerut: <span className="font-semibold text-foreground">{fmt(askingPrice)} {currency}</span>
+          {showOriginal && (
+            <span className="ml-1 text-muted-foreground">({fmt(originalPrice)} {originalCurrency})</span>
+          )}
           {pctFromMid !== 0 && (
             <span className={`ml-1.5 font-medium ${pctFromMid > 0 ? "text-red-600" : "text-emerald-600"}`}>
               ({pctFromMid > 0 ? "+" : ""}{pctFromMid}% fata de medie)
@@ -117,6 +124,8 @@ export default function ExecutiveSummarySection({
   priceRange,
   askingPrice,
   currency,
+  originalPrice,
+  originalCurrency,
 }: Props) {
   const cfg = VERDICT_CONFIG[v.verdict];
 
@@ -154,6 +163,8 @@ export default function ExecutiveSummarySection({
               mid={priceRange.mid}
               askingPrice={askingPrice}
               currency={currency}
+              originalPrice={originalPrice}
+              originalCurrency={originalCurrency}
             />
           )}
 

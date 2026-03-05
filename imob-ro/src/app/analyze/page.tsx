@@ -38,17 +38,24 @@ function AnalyzePageContent() {
 
   const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!url.trim()) return;
+    const trimmed = url.trim();
+    if (!trimmed) return;
 
-    // TODO: re-enable anon wall before going live
-    // const limitsOff = process.env.NEXT_PUBLIC_LIMITS_DISABLED === "true";
-    // if (!limitsOff) {
-    //   const anonCount = getAnonSearchCount();
-    //   if (anonCount >= ANON_LIMIT) {
-    //     setAnonWall(true);
-    //     return;
-    //   }
-    // }
+    // Client-side URL validation
+    try {
+      const parsed = new URL(trimmed);
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        setError("URL-ul trebuie sa inceapa cu https:// sau http://");
+        return;
+      }
+      if (trimmed.length > 2048) {
+        setError("URL-ul este prea lung.");
+        return;
+      }
+    } catch {
+      setError("URL invalid. Introdu un link complet (ex: https://www.imobiliare.ro/oferta/...).");
+      return;
+    }
 
     setError(null);
     setAnonWall(false);
@@ -58,7 +65,7 @@ function AnalyzePageContent() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: url.trim() }),
+        body: JSON.stringify({ url: trimmed }),
       });
 
       const data = await res.json().catch(() => ({}));

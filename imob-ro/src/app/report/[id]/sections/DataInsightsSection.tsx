@@ -12,6 +12,7 @@ interface Props {
   compsCount: number;
   confidenceLevel?: string | null;
   seismicLevel?: string | null;
+  isHouse?: boolean;
 }
 
 const CHECK = "✓";
@@ -31,8 +32,13 @@ export default function DataInsightsSection(props: Props) {
   if (props.hasRooms) known.push("Numar camere");
   else missing.push("Numarul de camere nu a fost detectat");
 
-  if (props.hasFloor) known.push("Etaj");
-  else missing.push("Etajul nu a fost detectat");
+  if (props.isHouse) {
+    // Houses/villas don't need floor information
+  } else if (props.hasFloor) {
+    known.push("Etaj");
+  } else {
+    missing.push("Etajul nu a fost detectat");
+  }
 
   if (props.hasYear) known.push("Anul constructiei");
   else missing.push("Anul constructiei nu este specificat");

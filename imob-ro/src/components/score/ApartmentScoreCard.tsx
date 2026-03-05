@@ -154,7 +154,7 @@ function SubScoreBar({ id, value }: { id: string; value: number }) {
 // Compact variant
 // ---------------------------------------------------------------------------
 
-function CompactScore({ data }: { data: ApartmentScore }) {
+function CompactScore({ data, scoreLabel }: { data: ApartmentScore; scoreLabel: string }) {
   const cfg = LABEL_CONFIG[data.label];
 
   return (
@@ -168,7 +168,7 @@ function CompactScore({ data }: { data: ApartmentScore }) {
             <span className={`text-[11px] font-bold uppercase tracking-wide ${cfg.text}`}>
               {data.label}
             </span>
-            <span className="block text-[10px] text-gray-500">Scor apartament</span>
+            <span className="block text-[10px] text-gray-500">{scoreLabel}</span>
           </div>
         </div>
       </TooltipTrigger>
@@ -187,7 +187,7 @@ function CompactScore({ data }: { data: ApartmentScore }) {
 // Full variant
 // ---------------------------------------------------------------------------
 
-function FullScore({ data, showActions = true }: { data: ApartmentScore; showActions?: boolean }) {
+function FullScore({ data, showActions = true, scoreLabel }: { data: ApartmentScore; showActions?: boolean; scoreLabel: string }) {
   const cfg = LABEL_CONFIG[data.label];
 
   return (
@@ -196,7 +196,7 @@ function FullScore({ data, showActions = true }: { data: ApartmentScore; showAct
       <div className={`px-5 py-4 flex items-center gap-4 ${cfg.bg} ring-1 ring-inset ${cfg.ring}`}>
         <ScoreRing score={data.score} />
         <div className="flex-1 min-w-0">
-          <p className={`text-lg font-extrabold ${cfg.text}`}>Scor apartament: {data.label}</p>
+          <p className={`text-lg font-extrabold ${cfg.text}`}>{scoreLabel}: {data.label}</p>
           <p className="text-[11px] text-gray-500 mt-0.5">
             Scor compus din valoare, risc, lichiditate si stil de viata.
           </p>
@@ -266,13 +266,15 @@ interface ApartmentScoreCardProps {
   score: ApartmentScore;
   variant?: "compact" | "full";
   showActions?: boolean;
+  scoreLabel?: string;
 }
 
 export default function ApartmentScoreCard({
   score,
   variant = "full",
   showActions = true,
+  scoreLabel = "Scor apartament",
 }: ApartmentScoreCardProps) {
-  if (variant === "compact") return <CompactScore data={score} />;
-  return <FullScore data={score} showActions={showActions} />;
+  if (variant === "compact") return <CompactScore data={score} scoreLabel={scoreLabel} />;
+  return <FullScore data={score} showActions={showActions} scoreLabel={scoreLabel} />;
 }

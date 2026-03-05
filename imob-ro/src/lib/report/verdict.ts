@@ -56,6 +56,7 @@ export interface VerdictInput {
   // Building
   yearBuilt: number | null;
   hasPhotos: boolean;
+  photoCount?: number | null;
 
   // Listing details for rich summary (all optional for backward compat)
   rooms?: number | null;
@@ -177,6 +178,13 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
       severity: "warning",
     });
     score -= 8;
+  } else if (input.photoCount != null && input.photoCount <= 2) {
+    killers.push({
+      type: "data",
+      text: "Foarte putine fotografii — verificati starea reala la vizionare",
+      severity: "info",
+    });
+    score -= 3;
   }
 
   // Very old building without seismic classification
@@ -299,9 +307,26 @@ function buildSummary(
   const fmt = (n: number) => n.toLocaleString("ro-RO");
   const cur = input.currency || "EUR";
 
-  // Determine property type label
-  const propType =
-    input.rooms === 1 ? "garsoniera" : input.rooms ? `apartament cu ${input.rooms} camere` : "proprietate";
+  // Determine property type label from title or rooms
+  const titleLower = (input.title ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  let propType: string;
+  if (/\bvila\b|\bvile\b/.test(titleLower)) {
+    propType = input.rooms ? `vila cu ${input.rooms} camere` : "vila";
+  } else if (/\bcasa\b|\bcase\b/.test(titleLower)) {
+    propType = input.rooms ? `casa cu ${input.rooms} camere` : "casa";
+  } else if (/\bpenthouse\b/.test(titleLower)) {
+    propType = "penthouse";
+  } else if (/\bduplex\b/.test(titleLower)) {
+    propType = input.rooms ? `duplex cu ${input.rooms} camere` : "duplex";
+  } else if (/\bmansarda\b/.test(titleLower)) {
+    propType = "mansarda";
+  } else if (/\bgarsonier[aă]?\b/.test(titleLower) || input.rooms === 1) {
+    propType = "garsoniera";
+  } else if (input.rooms) {
+    propType = `apartament cu ${input.rooms} camere`;
+  } else {
+    propType = "proprietate";
+  }
 
   // Build location context — prefer address; if only title, extract zone hint
   let location = input.address || null;
@@ -316,8 +341,9 @@ function buildSummary(
   }
   const yearInfo = input.yearBuilt ? ` din ${input.yearBuilt}` : "";
   const areaInfo = input.areaM2 ? ` de ${input.areaM2} mp` : "";
+  const isHouseVerdictType = /\bcasa\b|\bvila\b|\bduplex\b/.test(propType);
   const floorInfo =
-    input.floor != null
+    !isHouseVerdictType && input.floor != null
       ? input.totalFloors
         ? `, etaj ${input.floor} din ${input.totalFloors}`
         : `, etaj ${input.floor}`
@@ -338,7 +364,7 @@ function buildSummary(
 
   if (input.yearBuilt && input.yearBuilt < 1978)
     weaknesses.push("bloc vechi (inainte de 1977)");
-  if (input.floor != null && input.floor >= 4 && !input.hasElevator)
+  if (!isHouseVerdictType && input.floor != null && input.floor >= 4 && !input.hasElevator)
     weaknesses.push("etaj inalt fara lift");
   if (input.compsCount === 0)
     weaknesses.push("nu avem suficiente date comparative in zona");

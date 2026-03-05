@@ -75,14 +75,15 @@ export default function AddressAutocomplete({
 
     setIsLoading(true);
     try {
+      const needsCity = !/bucure[sș]ti|ilfov|sector/i.test(query);
+      const q = needsCity ? `${query}, Bucuresti` : query;
       const params = new URLSearchParams({
-        q: query,
+        q,
         format: "json",
         addressdetails: "1",
         limit: "6",
         countrycodes: "ro",
         viewbox: BUCHAREST_BBOX,
-        bounded: "1",
       });
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?${params}`,
