@@ -1,18 +1,20 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
+import { rateLimit } from "@/lib/http/rate";
 
 export const runtime = "nodejs";
 
-/**
- * Beacon endpoint for tracking usage actions (DOWNLOAD_PDF, SAVE_REPORT, etc.)
- * Designed to be called via navigator.sendBeacon() for fire-and-forget tracking
- */
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    try { await rateLimit(`usage:${ip}`, 60, 60_000); } catch {
+      return NextResponse.json({ ok: true });
+    }
+
     const json = await req.json().catch(() => null);
 
-    if (!json?.analysisId || !json?.action) {
+    if (!json?.analysisId || !json?.action || typeof json.action !== "string" || json.action.length > 50) {
       return NextResponse.json(
         { ok: false, error: "Missing analysisId or action" },
         { status: 400 },

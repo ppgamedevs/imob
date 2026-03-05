@@ -1,8 +1,17 @@
 import Link from "next/link";
 
-export const metadata = {
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
   title: "Despre ImobIntel - Platforma de analiza imobiliara",
-  description: "ImobIntel este o platforma de analiza imobiliara care ajuta cumparatorii si investitorii din Romania sa ia decizii informate.",
+  description:
+    "ImobIntel este o platforma de analiza imobiliara care ajuta cumparatorii si investitorii din Romania sa ia decizii informate.",
+  openGraph: {
+    title: "Despre ImobIntel",
+    description: "Platforma de analiza imobiliara pentru cumparatori si investitori din Romania.",
+    type: "website",
+  },
+  alternates: { canonical: "/despre" },
 };
 
 export default function DesprePage() {

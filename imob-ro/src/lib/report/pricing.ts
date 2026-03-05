@@ -1,5 +1,5 @@
 /**
- * Comps-driven fair price range calculation — report adapter.
+ * Comps-driven fair price range calculation - report adapter.
  *
  * Delegates to the shared src/lib/estimate/ library and re-exports
  * types that the report page and VerdictSection depend on.
@@ -18,7 +18,7 @@ export type { ScoredComp as ComparableListing } from "@/lib/estimate/findCompara
 export type { FairPriceResult } from "@/lib/estimate/priceRange";
 
 /**
- * findComparables — wraps findCompsForReport from the shared lib.
+ * findComparables - wraps findCompsForReport from the shared lib.
  * Signature matches what report/[id]/page.tsx expects.
  */
 export async function findComparables(params: {
@@ -33,7 +33,7 @@ export async function findComparables(params: {
 }
 
 /**
- * computeFairRange — wraps the shared lib version.
+ * computeFairRange - wraps the shared lib version.
  * Signature matches what report/[id]/page.tsx expects.
  */
 export function computeFairRange(comps: ScoredComp[], subjectAreaM2: number): FairPriceResult {

@@ -41,10 +41,23 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const url = new URL(req.url);
   const q = url.searchParams;
 
+  let logoUrl = q.get("logo") ?? process.env.PDF_BRAND_LOGO_URL ?? undefined;
+  if (logoUrl) {
+    try {
+      const logoHost = new URL(logoUrl).hostname;
+      const siteHost = new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://imobintel.ro").hostname;
+      if (logoHost !== siteHost && !logoHost.endsWith(`.${siteHost}`)) {
+        logoUrl = undefined;
+      }
+    } catch {
+      logoUrl = undefined;
+    }
+  }
+
   const brand = {
     name: q.get("brand") ?? process.env.PDF_BRAND_NAME ?? "ImobIntel",
     color: q.get("color") ?? process.env.PDF_BRAND_COLOR ?? "#6A7DFF",
-    logoUrl: q.get("logo") ?? process.env.PDF_BRAND_LOGO_URL ?? undefined,
+    logoUrl,
   };
 
   const sections = {

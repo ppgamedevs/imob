@@ -8,11 +8,18 @@ import { ro } from "@/i18n/ro";
 export const metadata: Metadata = {
   title: "Glosar - Termeni Imobiliari",
   description:
-    "Explicații clare pentru termeni tehnici: AVM, Time to Sell, €/m², Randament, Risc Seismic și mai multe.",
+    "Explicatii clare pentru termeni tehnici: AVM, Time to Sell, EUR/mp, Randament, Risc Seismic si mai multe.",
   openGraph: {
     title: "Glosar - Termeni Imobiliari",
-    description: "Explicații clare pentru termeni tehnici folosiți în evaluările imobiliare",
+    description: "Explicatii clare pentru termeni tehnici folositi in evaluarile imobiliare.",
+    type: "website",
   },
+  twitter: {
+    card: "summary",
+    title: "Glosar Imobiliar",
+    description: "Termeni tehnici explicati simplu: AVM, TTS, randament, risc seismic.",
+  },
+  alternates: { canonical: "/glosar" },
 };
 
 const glossaryTerms = [

@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "Suport - ImobIntel",
+  description:
+    "Ai nevoie de ajutor? Gaseste raspunsuri la intrebarile frecvente sau contacteaza echipa de suport ImobIntel.",
+  alternates: { canonical: "/support" },
+};
 
 export default function SupportPage() {
   const faq = [

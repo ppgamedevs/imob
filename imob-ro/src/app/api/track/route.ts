@@ -1,17 +1,26 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
+import { rateLimit } from "@/lib/http/rate";
 
 type TrackBody = { areaSlug: string; event: string };
 
 function isTrackBody(u: unknown): u is TrackBody {
   if (!u || typeof u !== "object") return false;
   const o = u as Record<string, unknown>;
-  return typeof o.areaSlug === "string" && typeof o.event === "string";
+  return (
+    typeof o.areaSlug === "string" && o.areaSlug.length <= 100 &&
+    typeof o.event === "string" && o.event.length <= 50
+  );
 }
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    try { await rateLimit(`track:${ip}`, 60, 60_000); } catch {
+      return NextResponse.json({ error: "rate_limit" }, { status: 429 });
+    }
+
     const body = await req.json();
     if (!isTrackBody(body)) return NextResponse.json({ error: "invalid" }, { status: 400 });
 

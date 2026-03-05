@@ -192,7 +192,7 @@ export default function PhotoUpload({ photos, onChange, maxPhotos = MAX_PHOTOS }
                   : `Adauga inca ${maxPhotos - photos.length} ${maxPhotos - photos.length === 1 ? "poza" : "poze"}`}
               </p>
               <p className="text-[10px] text-gray-400">
-                Trage pozele aici sau apasa pentru a selecta. JPG, PNG, WebP — max 5MB.
+                Trage pozele aici sau apasa pentru a selecta. JPG, PNG, WebP - max 5MB.
               </p>
             </>
           )}

@@ -122,7 +122,7 @@ function sellerLabel(type?: string | null): string | null {
   return null;
 }
 
-function computeAcquisitionCosts(priceEur: number, hasCommission: boolean) {
+function computeAcquisitionCosts(priceEur: number, commissionStatus: string, vatAmount?: number | null) {
   const priceRon = priceEur * 5;
   const notarLow = Math.max(250, Math.round(priceEur * 0.01));
   const notarHigh = Math.max(400, Math.round(priceEur * 0.02));
@@ -131,9 +131,9 @@ function computeAcquisitionCosts(priceEur: number, hasCommission: boolean) {
   const intabulareLow = 50, intabulareHigh = 100;
   const evaluatorLow = 60, evaluatorHigh = 100;
   const specialistLow = 200, specialistHigh = 500;
-  let totalLow = notarLow + impozitEur + intabulareLow + evaluatorLow + specialistLow;
-  let totalHigh = notarHigh + impozitEur + intabulareHigh + evaluatorHigh + specialistHigh;
-  if (hasCommission) {
+  let totalLow = notarLow + impozitEur + intabulareLow + evaluatorLow + specialistLow + (vatAmount ?? 0);
+  let totalHigh = notarHigh + impozitEur + intabulareHigh + evaluatorHigh + specialistHigh + (vatAmount ?? 0);
+  if (commissionStatus === "standard") {
     totalLow += Math.round(priceEur * 0.01);
     totalHigh += Math.round(priceEur * 0.03);
   }
@@ -201,7 +201,7 @@ export default function ReportPdf(props: {
         {data.verdictLabel && (
           <View style={{ backgroundColor: vCfg.bg, borderRadius: 8, padding: 12, marginBottom: 14 }}>
             <Text style={{ fontSize: 14, fontFamily: "Helvetica-Bold", color: vCfg.text, marginBottom: 4 }}>
-              {data.verdictLabel === "RECOMANDAT" ? "Recomandat" : data.verdictLabel === "EVITA" ? "Evita" : "Atentie"}
+              {data.verdictLabel === "RECOMANDAT" ? "Recomandam" : data.verdictLabel === "EVITA" ? "Nu recomandam" : "Recomandam cu rezerve"}
             </Text>
             {data.verdictSummary && (
               <Text style={{ fontSize: 9, color: vCfg.text, lineHeight: 1.5 }}>{data.verdictSummary}</Text>
@@ -229,7 +229,10 @@ export default function ReportPdf(props: {
           <View style={s.metricsRow}>
             <View style={s.metricCard}>
               <Text style={s.metricLabel}>Pret cerut</Text>
-              <Text style={s.metricValue}>{fmt(data.priceEur)} {cur}</Text>
+              <Text style={s.metricValue}>{fmt(data.priceEur)} {cur}{data.hasPlusTVA ? " + TVA" : ""}</Text>
+              {data.hasPlusTVA && data.priceWithVAT && (
+                <Text style={s.metricSub}>Cu TVA {data.vatRate ?? 19}%: {fmt(data.priceWithVAT)} {cur}</Text>
+              )}
             </View>
             {data.priceEur && data.areaM2 && data.areaM2 > 0 && (
               <View style={s.metricCard}>
@@ -598,16 +601,25 @@ export default function ReportPdf(props: {
           <>
             <Text style={s.sectionTitle}>Costuri estimative achizitie</Text>
             {(() => {
-              const costs = computeAcquisitionCosts(data.priceEur!, data.hasCommission ?? false);
-              const rows = [
+              const cs = data.commissionStatus ?? "unknown";
+              const costs = computeAcquisitionCosts(data.priceEur!, cs, data.vatAmount);
+              const rows: { label: string; low: number; high: number }[] = [];
+              if (data.hasPlusTVA && data.vatAmount) {
+                rows.push({ label: `TVA ${data.vatRate ?? 19}%`, low: data.vatAmount, high: data.vatAmount });
+              }
+              rows.push(
                 { label: "Taxe notariale", low: costs.notarLow, high: costs.notarHigh },
                 { label: "Impozit transfer", low: costs.impozitEur, high: costs.impozitEur },
                 { label: "Intabulare / CF", low: costs.intabulareLow, high: costs.intabulareHigh },
                 { label: "Evaluator bancar", low: costs.evaluatorLow, high: costs.evaluatorHigh },
                 { label: "Verificare specialist", low: costs.specialistLow, high: costs.specialistHigh },
-              ];
-              if (data.hasCommission) {
+              );
+              if (cs === "zero") {
+                rows.push({ label: "Comision agentie (0% cumparator)", low: 0, high: 0 });
+              } else if (cs === "standard") {
                 rows.push({ label: "Comision agentie (1-3%)", low: Math.round(data.priceEur! * 0.01), high: Math.round(data.priceEur! * 0.03) });
+              } else {
+                rows.push({ label: "Comision agentie (neclar)", low: Math.round(data.priceEur! * 0.01), high: Math.round(data.priceEur! * 0.03) });
               }
               return (
                 <View>

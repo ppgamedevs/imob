@@ -39,47 +39,47 @@ async function checkDatabase(): Promise<CheckResult> {
   try {
     await prisma.$queryRaw`SELECT 1`;
     return { ok: true, latency: Date.now() - start };
-  } catch (error) {
-    return { ok: false, error: (error as Error).message };
+  } catch {
+    return { ok: false, error: "connection_failed" };
   }
 }
 
 async function checkStripe(): Promise<CheckResult> {
   const key = process.env.STRIPE_SECRET_KEY;
-  if (!key) return { ok: false, error: "STRIPE_SECRET_KEY not set" };
+  if (!key) return { ok: false, error: "not_configured" };
   const start = Date.now();
   try {
     const res = await fetch("https://api.stripe.com/v1/balance", {
       headers: { Authorization: `Bearer ${key}` },
     });
-    return { ok: res.ok, latency: Date.now() - start, error: res.ok ? undefined : `HTTP ${res.status}` };
-  } catch (error) {
-    return { ok: false, error: (error as Error).message };
+    return { ok: res.ok, latency: Date.now() - start, error: res.ok ? undefined : "api_error" };
+  } catch {
+    return { ok: false, error: "unreachable" };
   }
 }
 
 async function checkResend(): Promise<CheckResult> {
   const key = process.env.RESEND_API_KEY;
-  if (!key) return { ok: false, error: "RESEND_API_KEY not set" };
+  if (!key) return { ok: false, error: "not_configured" };
   const start = Date.now();
   try {
     const res = await fetch("https://api.resend.com/domains", {
       headers: { Authorization: `Bearer ${key}` },
     });
-    return { ok: res.ok, latency: Date.now() - start, error: res.ok ? undefined : `HTTP ${res.status}` };
-  } catch (error) {
-    return { ok: false, error: (error as Error).message };
+    return { ok: res.ok, latency: Date.now() - start, error: res.ok ? undefined : "api_error" };
+  } catch {
+    return { ok: false, error: "unreachable" };
   }
 }
 
 function checkBaseUrl(): CheckResult {
   const url = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL;
-  if (!url) return { ok: false, error: "NEXT_PUBLIC_BASE_URL not set" };
+  if (!url) return { ok: false, error: "not_configured" };
   try {
     new URL(url);
     return { ok: true };
   } catch {
-    return { ok: false, error: `Invalid URL: ${url}` };
+    return { ok: false, error: "invalid" };
   }
 }
 

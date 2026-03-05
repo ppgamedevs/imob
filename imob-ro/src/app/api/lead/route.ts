@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
+import { rateLimit } from "@/lib/http/rate";
 
 export const runtime = "nodejs";
 
@@ -54,9 +55,20 @@ Mesaj: ${payload.message || "-"}`;
 }
 
 export async function POST(req: Request) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  try {
+    await rateLimit(`lead:${ip}`, 5, 60_000);
+  } catch {
+    return NextResponse.json({ error: "rate_limit" }, { status: 429 });
+  }
+
   const json = await req.json();
   const { analysisId, name, email, phone, message, source } = json || {};
   if (!analysisId || !name || !email) return NextResponse.json({ ok: false }, { status: 400 });
+
+  if (typeof name !== "string" || name.length > 200) return NextResponse.json({ ok: false }, { status: 400 });
+  if (typeof email !== "string" || email.length > 320 || !email.includes("@")) return NextResponse.json({ ok: false }, { status: 400 });
+  if (message && (typeof message !== "string" || message.length > 2000)) return NextResponse.json({ ok: false }, { status: 400 });
 
   const assignedTo = await resolveAssignee(analysisId);
 

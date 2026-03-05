@@ -1,5 +1,5 @@
 /**
- * Price range computation — shared between /report and /api/estimate.
+ * Price range computation - shared between /report and /api/estimate.
  *
  * Pure functions only (no DB calls).
  */

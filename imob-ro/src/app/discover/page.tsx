@@ -8,11 +8,18 @@ import FiltersBar from "./FiltersBar";
 export const metadata: Metadata = {
   title: "Descopera proprietati in Bucuresti - ImobIntel",
   description:
-    "Caută și compară proprietăți cu filtre avansate. Hartă interactivă, estimări AVM, TTS, randamente.",
+    "Cauta si compara proprietati cu filtre avansate. Harta interactiva, estimari AVM, TTS, randamente. Date actualizate zilnic.",
   openGraph: {
-    title: "Descoperă proprietăți în București",
-    description: "Filtrare avansată + hartă interactivă cu date în timp real",
+    title: "Descopera proprietati in Bucuresti",
+    description: "Filtrare avansata si harta interactiva cu date in timp real.",
+    type: "website",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Descopera proprietati in Bucuresti",
+    description: "Filtrare avansata si harta interactiva cu date in timp real.",
+  },
+  alternates: { canonical: "/discover" },
 };
 
 export default async function DiscoverPage() {

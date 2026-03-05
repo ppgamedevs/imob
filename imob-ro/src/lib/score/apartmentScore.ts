@@ -1,5 +1,5 @@
 /**
- * Apartment Score engine — deterministic, transparent, reusable.
+ * Apartment Score engine - deterministic, transparent, reusable.
  *
  * Produces a 0–100 composite score from 4 weighted sub-scores:
  *   Value (40%) · Risk (25%) · Liquidity (20%) · Lifestyle (15%)
@@ -48,6 +48,7 @@ export interface ApartmentScoreInput {
   sellerType?: string;
 
   isUnderConstruction?: boolean;
+  isNeverLivedIn?: boolean;
 
   liquidity?: {
     daysMin?: number;
@@ -97,10 +98,10 @@ export function computeValueScore(input: ApartmentScoreInput): number {
   const { fairLikelyEur, confidence } = input;
   const price = input.listingPriceEur ?? fairLikelyEur;
 
-  // No AVM data at all — low but not flatlined
+  // No AVM data at all - low but not flatlined
   if (fairLikelyEur <= 0) {
     if (!input.listingPriceEur) return 40;
-    // We have a price but no fair estimate — score based on area price reasonableness
+    // We have a price but no fair estimate - score based on area price reasonableness
     if (input.areaM2 && input.areaM2 > 0) {
       const eurM2 = input.listingPriceEur / input.areaM2;
       if (eurM2 > 4000) return 30;
@@ -142,7 +143,7 @@ export function computeValueScore(input: ApartmentScoreInput): number {
     scoreBase -= clamp(overPct * 1.5, 0, 15);
   }
 
-  // Cap based on confidence — but with a wider range
+  // Cap based on confidence - but with a wider range
   const cap = 50 + confidence * 0.5; // conf 0→cap 50, conf 50→cap 75, conf 100→cap 100
   return clamp(Math.round(Math.min(scoreBase, cap)), 0, 100);
 }
@@ -201,6 +202,9 @@ export function computeRiskScore(input: ApartmentScoreInput): number {
 
   // --- Parking ---
   if (input.hasParking === true) score += 3;
+
+  // --- Never lived in ---
+  if (input.isNeverLivedIn) score += 3;
 
   // --- Heating ---
   if (input.heatingType) {
@@ -351,7 +355,7 @@ function generatePros(input: ApartmentScoreInput): string[] {
     signals.push({ text: "Pret in intervalul corect", strength: 6 });
 
   if (input.isUnderConstruction) {
-    signals.push({ text: "Constructie noua — normative actuale", strength: 7 });
+    signals.push({ text: "Constructie noua - normative actuale", strength: 7 });
     if (input.sellerType === "dezvoltator")
       signals.push({ text: "Direct de la dezvoltator", strength: 5 });
   } else {
@@ -374,6 +378,7 @@ function generatePros(input: ApartmentScoreInput): string[] {
 
   if (input.hasElevator === true) signals.push({ text: "Bloc cu lift", strength: 3 });
   if (input.hasParking === true) signals.push({ text: "Loc de parcare inclus", strength: 4 });
+  if (input.isNeverLivedIn) signals.push({ text: "Proprietate nelocuita", strength: 3 });
 
   if (input.heatingType && /central[aă]/i.test(input.heatingType))
     signals.push({ text: "Centrala termica proprie", strength: 3 });
@@ -419,7 +424,7 @@ function generateCons(input: ApartmentScoreInput): string[] {
   else if (deviation > 0.07) signals.push({ text: "Supraevaluat fata de comparabile", strength: 10 });
 
   if (input.isUnderConstruction) {
-    signals.push({ text: "Apartament nefinalizat — risc de intarziere", strength: 7 });
+    signals.push({ text: "Apartament nefinalizat - risc de intarziere", strength: 7 });
     if (input.yearBuilt && input.yearBuilt > new Date().getFullYear() + 2)
       signals.push({ text: "Termen predare indepartat", strength: 6 });
   } else {
@@ -523,7 +528,7 @@ function generateActions(input: ApartmentScoreInput): string[] {
 }
 
 // ---------------------------------------------------------------------------
-// Main — computeApartmentScore
+// Main - computeApartmentScore
 // ---------------------------------------------------------------------------
 
 const W_VALUE = 0.4;

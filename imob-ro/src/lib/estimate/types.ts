@@ -29,7 +29,7 @@ export const EstimateInputSchema = z.object({
     .enum(["decomandat", "semidecomandat", "circular", "nedecomandat", "unknown"])
     .optional(),
   isThermoRehab: z.boolean().optional(),
-  photos: z.array(z.string()).max(5).optional(),
+  photos: z.array(z.string().max(5_000_000)).max(5).optional(),
 });
 
 export type EstimateInput = z.infer<typeof EstimateInputSchema>;

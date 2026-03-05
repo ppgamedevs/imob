@@ -34,9 +34,11 @@ const VAT_PATTERNS = [
   { re: /\+\s*TVA/i, included: false },
   { re: /TVA\s+inclus/i, included: true },
   { re: /pre[tț]\s+f[aă]r[aă]\s+TVA/i, included: false },
+  { re: /nu\s+include\s+TVA/i, included: false },
   { re: /pre[tț]\s+cu\s+TVA/i, included: true },
   { re: /TVA\s+5\s*%/i, included: false, rate: 5 },
   { re: /TVA\s+19\s*%/i, included: false, rate: 19 },
+  { re: /TVA\s+9\s*%/i, included: false, rate: 9 },
 ];
 
 const DELIVERY_PATTERNS = [
@@ -135,9 +137,17 @@ export function detectDevelopmentStatus(
   result.confidence = Math.min(score, 100);
   result.isUnderConstruction = score >= 30;
 
-  // Photos are likely renders if under construction and future year
-  if (result.isUnderConstruction && yearBuilt != null && yearBuilt > CURRENT_YEAR) {
-    result.isRender = true;
+  // Photos are likely renders if under construction
+  // Future year: almost certain renders. Current year: very likely renders.
+  // High confidence under-construction with developer: also likely renders.
+  if (result.isUnderConstruction) {
+    if (yearBuilt != null && yearBuilt > CURRENT_YEAR) {
+      result.isRender = true;
+    } else if (yearBuilt != null && yearBuilt === CURRENT_YEAR && score >= 40) {
+      result.isRender = true;
+    } else if (score >= 50 && sellerType === "dezvoltator") {
+      result.isRender = true;
+    }
   }
 
   return result;

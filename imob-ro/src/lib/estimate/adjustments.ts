@@ -1,6 +1,6 @@
 /**
  * Price adjustment rules based on property characteristics.
- * Pure function — no DB or side effects.
+ * Pure function - no DB or side effects.
  */
 
 // ---------------------------------------------------------------------------
@@ -44,11 +44,11 @@ export function computeAdjustments(input: AdjustmentInput, vision?: VisionSignal
 
   // Condition
   const condDelta: Record<string, { d: number; r: string }> = {
-    nou: { d: 6, r: "Finisaje noi / bloc nou — prima maxima" },
+    nou: { d: 6, r: "Finisaje noi / bloc nou - prima maxima" },
     renovat: { d: 3, r: "Apartament renovat recent" },
     locuibil: { d: 0, r: "Stare standard, fara ajustare" },
-    necesita_renovare: { d: -6, r: "Necesita renovare — discount asteptat" },
-    de_renovat: { d: -10, r: "De renovat complet — discount semnificativ" },
+    necesita_renovare: { d: -6, r: "Necesita renovare - discount asteptat" },
+    de_renovat: { d: -10, r: "De renovat complet - discount semnificativ" },
   };
   if (input.condition) {
     const cd = condDelta[input.condition];
@@ -64,12 +64,12 @@ export function computeAdjustments(input: AdjustmentInput, vision?: VisionSignal
         reason: "Parterul are cerere mai scazuta",
       });
     else if (input.floor === 1)
-      adj.push({ name: "Etaj 1", deltaPct: -2, reason: "Etajul 1 — zgomot stradal, vizibilitate" });
+      adj.push({ name: "Etaj 1", deltaPct: -2, reason: "Etajul 1 - zgomot stradal, vizibilitate" });
     else if (input.totalFloors && input.floor >= input.totalFloors)
       adj.push({
         name: "Ultimul etaj",
         deltaPct: -3,
-        reason: "Ultimul etaj — risc infiltratii, caldura",
+        reason: "Ultimul etaj - risc infiltratii, caldura",
       });
     else if (input.floor >= 2 && input.floor <= 5)
       adj.push({
@@ -81,7 +81,7 @@ export function computeAdjustments(input: AdjustmentInput, vision?: VisionSignal
       adj.push({
         name: "Etaj inalt",
         deltaPct: 3,
-        reason: "Etajele inalte — panorama, mai putina poluare",
+        reason: "Etajele inalte - panorama, mai putina poluare",
       });
   }
 
@@ -97,13 +97,13 @@ export function computeAdjustments(input: AdjustmentInput, vision?: VisionSignal
       adj.push({
         name: "Constructie 1978-1990",
         deltaPct: -2,
-        reason: "Bloc comunist tipic — uzura medie",
+        reason: "Bloc comunist tipic - uzura medie",
       });
     else if (input.yearBuilt >= 2006)
       adj.push({
         name: "Constructie dupa 2006",
         deltaPct: 4,
-        reason: "Bloc nou — izolatie, eficienta energetica",
+        reason: "Bloc nou - izolatie, eficienta energetica",
       });
   }
 
@@ -130,13 +130,13 @@ export function computeAdjustments(input: AdjustmentInput, vision?: VisionSignal
     adj.push({
       name: "Centrala proprie",
       deltaPct: 1,
-      reason: "Independenta termica — costuri mai mici",
+      reason: "Independenta termica - costuri mai mici",
     });
   else if (input.heatingType === "RADET")
     adj.push({
       name: "Incalzire RADET",
       deltaPct: 0,
-      reason: "RADET — standard pentru Bucuresti",
+      reason: "RADET - standard pentru Bucuresti",
     });
   else if (input.heatingType === "pompa_caldura")
     adj.push({ name: "Pompa de caldura", deltaPct: 4, reason: "Eficienta energetica superioara" });
@@ -152,7 +152,7 @@ export function computeAdjustments(input: AdjustmentInput, vision?: VisionSignal
     adj.push({
       name: "Decomandat",
       deltaPct: 2,
-      reason: "Compartimentare preferata — camere independente",
+      reason: "Compartimentare preferata - camere independente",
     });
   else if (input.layoutType === "nedecomandat")
     adj.push({
@@ -180,7 +180,7 @@ export function computeAdjustments(input: AdjustmentInput, vision?: VisionSignal
     adj.push({
       name: "Balcon generos",
       deltaPct: 2,
-      reason: `Balcon de ${input.balconyM2} mp — spatiu suplimentar`,
+      reason: `Balcon de ${input.balconyM2} mp - spatiu suplimentar`,
     });
 
   // Vision-based adjustments (from user-uploaded photos)

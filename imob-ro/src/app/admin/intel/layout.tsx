@@ -2,7 +2,7 @@ import { requireAdmin } from "@/lib/auth-guards";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Intel Management — Admin" };
+export const metadata = { title: "Intel Management - Admin" };
 
 export default async function IntelLayout({
   children,

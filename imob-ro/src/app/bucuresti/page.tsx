@@ -11,9 +11,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = {
-  title: "Prețuri imobiliare București · Statistici & tendințe 2024",
+  title: "Preturi imobiliare Bucuresti - Statistici si tendinte 2026",
   description:
-    "Preț median pe m², top zone, oferte active și tendințe imobiliare București. Date actualizate zilnic.",
+    "Pret median pe mp, top zone, oferte active si tendinte imobiliare Bucuresti. Date actualizate zilnic din piata reala.",
+  openGraph: {
+    title: "Preturi imobiliare Bucuresti 2026",
+    description: "Statistici imobiliare Bucuresti: pret median mp, top zone, oferte active.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Preturi imobiliare Bucuresti 2026",
+    description: "Statistici si tendinte imobiliare actualizate zilnic.",
+  },
   alternates: { canonical: "/bucuresti" },
 };
 

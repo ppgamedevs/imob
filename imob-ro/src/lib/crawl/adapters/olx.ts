@@ -114,6 +114,9 @@ export const adapterOlx: SourceAdapter = {
       }
     }
 
+    // ---- TVA detection ----
+    const plusTVA = /\+\s*TVA/i.test(rawHtml) || /(?:nu\s+include|fara|f[aă]r[aă])\s+TVA/i.test(rawHtml);
+
     // ---- Parameters (from ad JSON or DOM) ----
     const params = new Map<string, string>();
 
@@ -257,6 +260,7 @@ export const adapterOlx: SourceAdapter = {
           description: typeof description === "string" ? description.slice(0, 2000) : undefined,
           sellerType,
           extractedAt: new Date().toISOString(),
+          plusTVA: plusTVA || undefined,
         },
       },
     };

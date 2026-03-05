@@ -8,6 +8,10 @@ interface Props {
   currency: string;
   originalPrice?: number;
   originalCurrency?: string;
+  hasPlusTVA?: boolean;
+  vatRate?: number | null;
+  priceWithVAT?: number | null;
+  quickTake?: string[];
 }
 
 function enrichCommissionText(text: string, price: number | null): string {
@@ -22,23 +26,26 @@ function enrichCommissionText(text: string, price: number | null): string {
   return `${text} (intre ${fmt(eurLo)} EUR si ${fmt(eurHi)} EUR)`;
 }
 
-const VERDICT_CONFIG: Record<Verdict, { label: string; bg: string; text: string; ring: string; icon: string }> = {
+const VERDICT_CONFIG: Record<Verdict, { label: string; subtitle: string; bg: string; text: string; ring: string; icon: string }> = {
   RECOMANDAT: {
-    label: "Recomandat",
+    label: "Recomandam",
+    subtitle: "Proprietate fara riscuri majore",
     bg: "bg-emerald-50",
     text: "text-emerald-700",
     ring: "ring-emerald-200",
     icon: "✓",
   },
   ATENTIE: {
-    label: "Atentie",
+    label: "Recomandam cu rezerve",
+    subtitle: "Exista aspecte de verificat",
     bg: "bg-amber-50",
     text: "text-amber-700",
     ring: "ring-amber-200",
     icon: "!",
   },
   EVITA: {
-    label: "Evita",
+    label: "Nu recomandam",
+    subtitle: "Riscuri semnificative identificate",
     bg: "bg-red-50",
     text: "text-red-700",
     ring: "ring-red-200",
@@ -85,12 +92,15 @@ function ConfidenceBar({ score, label }: { score: number; label: string }) {
 
 function PriceRangeCard({
   low, high, mid, askingPrice, currency, originalPrice, originalCurrency,
+  hasPlusTVA, vatRate, priceWithVAT,
 }: {
   low: number; high: number; mid: number; askingPrice: number | null; currency: string;
   originalPrice?: number; originalCurrency?: string;
+  hasPlusTVA?: boolean; vatRate?: number | null; priceWithVAT?: number | null;
 }) {
   const fmt = (n: number) => n.toLocaleString("ro-RO");
-  const pctFromMid = askingPrice ? Math.round(((askingPrice - mid) / mid) * 100) : null;
+  const effectivePrice = hasPlusTVA && priceWithVAT ? priceWithVAT : askingPrice;
+  const pctFromMid = effectivePrice ? Math.round(((effectivePrice - mid) / mid) * 100) : null;
   const showOriginal = originalPrice && originalCurrency && originalCurrency !== currency;
 
   return (
@@ -98,18 +108,31 @@ function PriceRangeCard({
       <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Interval pret corect</div>
       <div className="flex items-baseline gap-1.5">
         <span className="text-lg font-bold">{fmt(low)}</span>
-        <span className="text-muted-foreground mx-1">—</span>
+        <span className="text-muted-foreground mx-1">-</span>
         <span className="text-lg font-bold">{fmt(high)}</span>
         <span className="text-sm text-muted-foreground ml-1">{currency}</span>
       </div>
       {askingPrice != null && pctFromMid != null && (
-        <div className="text-xs text-muted-foreground">
-          Pret cerut: <span className="font-semibold text-foreground">{fmt(askingPrice)} {currency}</span>
-          {showOriginal && (
-            <span className="ml-1 text-muted-foreground">({fmt(originalPrice)} {originalCurrency})</span>
+        <div className="text-xs text-muted-foreground space-y-0.5">
+          <div>
+            Pret cerut: <span className="font-semibold text-foreground">{fmt(askingPrice)} {currency}</span>
+            {hasPlusTVA && <span className="font-medium text-amber-600 ml-1">+ TVA</span>}
+            {showOriginal && (
+              <span className="ml-1 text-muted-foreground">({fmt(originalPrice)} {originalCurrency})</span>
+            )}
+          </div>
+          {hasPlusTVA && priceWithVAT && vatRate && (
+            <div>
+              Cu TVA {vatRate}%: <span className="font-semibold text-foreground">{fmt(priceWithVAT)} {currency}</span>
+              {pctFromMid !== 0 && (
+                <span className={`ml-1.5 font-medium ${pctFromMid > 0 ? "text-red-600" : "text-emerald-600"}`}>
+                  ({pctFromMid > 0 ? "+" : ""}{pctFromMid}% fata de medie)
+                </span>
+              )}
+            </div>
           )}
-          {pctFromMid !== 0 && (
-            <span className={`ml-1.5 font-medium ${pctFromMid > 0 ? "text-red-600" : "text-emerald-600"}`}>
+          {(!hasPlusTVA || !priceWithVAT) && pctFromMid !== 0 && (
+            <span className={`font-medium ${pctFromMid > 0 ? "text-red-600" : "text-emerald-600"}`}>
               ({pctFromMid > 0 ? "+" : ""}{pctFromMid}% fata de medie)
             </span>
           )}
@@ -126,32 +149,48 @@ export default function ExecutiveSummarySection({
   currency,
   originalPrice,
   originalCurrency,
+  hasPlusTVA,
+  vatRate,
+  priceWithVAT,
+  quickTake,
 }: Props) {
   const cfg = VERDICT_CONFIG[v.verdict];
 
   return (
     <Card className="overflow-hidden">
       <CardContent className="p-0">
-        {/* Verdict banner */}
-        <div className={`flex items-center gap-4 px-5 py-4 ${cfg.bg} ring-1 ring-inset ${cfg.ring}`}>
-          <div className={`flex items-center justify-center h-12 w-12 rounded-full text-xl font-bold ${cfg.bg} ${cfg.text} ring-2 ring-inset ${cfg.ring}`}>
-            {cfg.icon}
+        {/* Verdict banner with recommendation */}
+        <div className={`px-5 py-5 ${cfg.bg} ring-1 ring-inset ${cfg.ring}`}>
+          <div className="flex items-start gap-4">
+            <div className={`flex items-center justify-center h-12 w-12 shrink-0 rounded-full text-xl font-bold ${cfg.bg} ${cfg.text} ring-2 ring-inset ${cfg.ring}`}>
+              {cfg.icon}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className={`text-xl font-bold ${cfg.text}`}>{cfg.label}</div>
+              <div className={`text-xs font-medium ${cfg.text} opacity-70 mt-0.5`}>{cfg.subtitle}</div>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className={`text-xl font-bold ${cfg.text}`}>{cfg.label}</div>
-            {v.summary ? (
-              <p className="mt-1.5 text-sm leading-relaxed text-gray-700">{v.summary}</p>
-            ) : (
-              <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1">
-                {v.reasons.map((r, i) => (
-                  <span key={i} className={`text-sm ${cfg.text} opacity-80`}>
-                    {i > 0 && <span className="mr-1.5 opacity-50">·</span>}
-                    {r}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
+
+          {/* Review paragraph */}
+          {v.summary && (
+            <p className="mt-3 text-sm leading-relaxed text-gray-700">
+              {v.summary}
+            </p>
+          )}
+
+          {/* Quick-take bullets */}
+          {quickTake && quickTake.length > 0 && (
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1">
+              {quickTake.map((b, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
+                  <span className={`shrink-0 h-1.5 w-1.5 rounded-full ${
+                    v.verdict === "RECOMANDAT" ? "bg-emerald-500" : v.verdict === "ATENTIE" ? "bg-amber-500" : "bg-red-500"
+                  }`} />
+                  {b}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="px-5 py-4 space-y-4">
@@ -165,6 +204,9 @@ export default function ExecutiveSummarySection({
               currency={currency}
               originalPrice={originalPrice}
               originalCurrency={originalCurrency}
+              hasPlusTVA={hasPlusTVA}
+              vatRate={vatRate}
+              priceWithVAT={priceWithVAT}
             />
           )}
 

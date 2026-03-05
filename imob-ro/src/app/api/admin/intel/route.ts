@@ -30,7 +30,7 @@ const JOB_SCRIPTS: Record<JobName, { cmd: string; args: string[] }> = {
 };
 
 /**
- * GET /api/admin/intel — returns status of all jobs
+ * GET /api/admin/intel - returns status of all jobs
  */
 export async function GET(req: Request) {
   if (!(await requireAdminApi(req))) {
@@ -53,7 +53,7 @@ export async function GET(req: Request) {
 }
 
 /**
- * POST /api/admin/intel — trigger a job
+ * POST /api/admin/intel - trigger a job
  * Body: { action: "seismic-import" | "poi-import" | "gtfs-import" | "dedup-recompute" }
  */
 export async function POST(req: Request) {

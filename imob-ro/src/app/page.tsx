@@ -9,6 +9,7 @@ import {
   Shield,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function HomePage() {
   return (
@@ -25,12 +26,14 @@ export default function HomePage() {
 /* ---------- Hero ---------- */
 
 function Hero() {
+  const router = useRouter();
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const query = (formData.get("q") as string)?.trim();
     if (!query) return;
-    window.location.href = `/analyze?url=${encodeURIComponent(query)}`;
+    router.push(`/analyze?url=${encodeURIComponent(query)}`);
   };
 
   return (

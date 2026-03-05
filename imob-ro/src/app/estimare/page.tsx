@@ -13,6 +13,11 @@ const LocationPicker = dynamic(() => import("@/components/LocationPicker"), {
   ),
 });
 
+const NeighborhoodIntelV2Lazy = dynamic(
+  () => import("@/components/geo/NeighborhoodIntelV2"),
+  { ssr: false },
+);
+
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import ApartmentScoreCard from "@/components/score/ApartmentScoreCard";
 import PhotoUpload from "@/components/PhotoUpload";
@@ -41,6 +46,7 @@ interface FormData {
   suprafata: string;
   camere: string;
   etaj: string;
+  etajTotal: string;
   anConstructie: string;
   stare: string;
   parcare: string;
@@ -107,6 +113,7 @@ const INITIAL_FORM: FormData = {
   suprafata: "",
   camere: "2",
   etaj: "",
+  etajTotal: "",
   anConstructie: "",
   stare: "locuibil",
   parcare: "nu",
@@ -162,6 +169,7 @@ function validate(form: FormData, pinLat: number | null): Record<string, string>
 function buildApiPayload(form: FormData, pinLat: number | null, pinLng: number | null, photos: string[]) {
   const zone = ZONE_MAP[form.zona];
   const floor = parseInt(form.etaj, 10);
+  const totalFloors = parseInt(form.etajTotal, 10);
   const year = parseInt(form.anConstructie, 10);
 
   return {
@@ -171,6 +179,7 @@ function buildApiPayload(form: FormData, pinLat: number | null, pinLng: number |
     rooms: parseInt(form.camere, 10) || 2,
     usableAreaM2: parseFloat(form.suprafata),
     floor: isNaN(floor) ? undefined : floor,
+    totalFloors: isNaN(totalFloors) || totalFloors < 1 ? undefined : totalFloors,
     yearBuilt: isNaN(year) || year < 1800 ? undefined : year,
     condition: form.stare as "nou" | "renovat" | "locuibil" | "necesita_renovare" | "de_renovat",
     hasParking: form.parcare === "da" ? true : form.parcare === "nu" ? false : undefined,
@@ -954,6 +963,7 @@ function buildScoreInput(data: ApiResult, form: FormData): ApartmentScoreInput {
     yearBucket,
     condition: form.stare as ApartmentScoreInput["condition"],
     floor: form.etaj ? parseInt(form.etaj, 10) || undefined : undefined,
+    totalFloors: form.etajTotal ? parseInt(form.etajTotal, 10) || undefined : undefined,
     hasElevator: undefined,
     liquidity: {
       daysMin: data.liquidity.daysMin,
@@ -1279,16 +1289,33 @@ export default function EstimarePage() {
                   </p>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="etaj">Etaj</Label>
-                      <Input
-                        id="etaj"
-                        type="number"
-                        min={-1}
-                        max={30}
-                        placeholder="ex: 3"
-                        value={form.etaj}
-                        onChange={(e) => updateField("etaj", e.target.value)}
-                      />
+                      <Label>Etaj</Label>
+                      <div className="flex items-center gap-1.5">
+                        <Input
+                          id="etaj"
+                          type="number"
+                          min={-1}
+                          max={30}
+                          placeholder="3"
+                          value={form.etaj}
+                          onChange={(e) => updateField("etaj", e.target.value)}
+                          className="w-[72px]"
+                        />
+                        <span className="text-sm text-gray-400 shrink-0">din</span>
+                        <Input
+                          id="etajTotal"
+                          type="number"
+                          min={1}
+                          max={50}
+                          placeholder="8"
+                          value={form.etajTotal}
+                          onChange={(e) => updateField("etajTotal", e.target.value)}
+                          className="w-[72px]"
+                        />
+                      </div>
+                      <p className="text-[10px] text-gray-400">
+                        Etajul apartamentului si nr. total de etaje al blocului.
+                      </p>
                     </div>
                     <div className="space-y-1.5">
                       <Label htmlFor="anConstructie">An constructie</Label>
@@ -1400,6 +1427,18 @@ export default function EstimarePage() {
             />
           </div>
         </div>
+
+        {/* Neighborhood Intel Map (shown after estimate result when we have coords) */}
+        {result && pinLat != null && pinLng != null && (
+          <div className="mx-auto max-w-[980px] px-5 mt-8">
+            <NeighborhoodIntelV2Lazy
+              lat={pinLat}
+              lng={pinLng}
+              initialRadiusM={1000}
+              mode="estimate"
+            />
+          </div>
+        )}
       </section>
     </main>
   );

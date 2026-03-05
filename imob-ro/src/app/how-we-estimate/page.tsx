@@ -1,6 +1,24 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Script from "next/script";
 import React from "react";
+
+export const metadata: Metadata = {
+  title: "Cum estimam pretul apartamentului - Metodologie ImobIntel",
+  description:
+    "Afla cum functioneaza modelul de estimare AVM: comparabile, ajustari, scor de cerere, viteza de vanzare si risc seismic. Metodologie transparenta.",
+  openGraph: {
+    title: "Cum estimam pretul - Metodologie ImobIntel",
+    description: "Metodologie transparenta: AVM, comparabile, ajustari, cerere si risc.",
+    type: "article",
+  },
+  twitter: {
+    card: "summary",
+    title: "Cum estimam pretul apartamentului",
+    description: "Metodologie transparenta de estimare a pretului.",
+  },
+  alternates: { canonical: "/how-we-estimate" },
+};
 
 export default function HowWeEstimatePage() {
   const faq = [

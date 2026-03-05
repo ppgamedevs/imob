@@ -232,7 +232,7 @@ function FullScore({ data, showActions = true, scoreLabel }: { data: ApartmentSc
         </div>
       </div>
 
-      {/* Actions — only shown on /estimare where user can improve inputs */}
+      {/* Actions - only shown on /estimare where user can improve inputs */}
       {showActions && (
         <div className="px-5 py-4">
           <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-2">

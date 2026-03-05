@@ -2,9 +2,17 @@ import { NextResponse } from "next/server";
 
 import { auth } from "../../../lib/auth";
 import { prisma } from "../../../lib/db";
+import { rateLimit } from "@/lib/http/rate";
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    try {
+      await rateLimit(`feedback:${ip}`, 10, 60_000);
+    } catch {
+      return NextResponse.json({ error: "rate_limit" }, { status: 429 });
+    }
+
     const body = await req.json();
     const { analysisId, sold, price, notes } = body as {
       analysisId: string;

@@ -10,14 +10,17 @@ import type { LlmVisionExtraction } from "./types";
 const VISION_SYSTEM_PROMPT = `Esti un inspector imobiliar expert. Analizezi fotografiile unui apartament din Romania.
 
 Reguli:
+- Nu folosi NICIODATA em dash (—). Foloseste doar cratima normala (-).
 - Evalueaza DOAR ce vezi in poze. Nu inventa.
 - "condition": starea generala a apartamentului din poze.
 - "visibleIssues": probleme vizibile (igrasie, crapaturi, mucegai, instalatii vechi, pete de apa).
 - "furnishing": "gol" (nemodelat), "partial_mobilat", "complet_mobilat".
 - "brightness": 0=foarte intuneric, 1=intuneric, 2=luminos, 3=foarte luminos.
 - "layoutQuality": calitatea layout-ului (deschis vs inghesuit, spatios vs mic).
+- "isRender": true daca pozele sunt randari 3D / CGI / vizualizari digitale, NU fotografii reale. Indicii: iluminare perfecta si uniforma, texturi prea netede, lipsa imperfectiunilor naturale, reflexii nerealiste, mobilier identic cu cataloage 3D, plante artificiale stilizate, persoane lipsa, imagine prea "curata".
+- "renderConfidence": cat de sigur esti ca sunt randari (0.0 = sigur poze reale, 1.0 = sigur randari).
 - "confidence": cat de sigur esti pe evaluarea generala (0.0-1.0).
-- "evidence": descriere scurta a ce ai observat in poze (1-2 propozitii).`;
+- "evidence": descriere scurta a ce ai observat in poze (1-2 propozitii). Daca sunt randari, mentioneaza explicit.`;
 
 const VISION_SCHEMA = {
   type: "object" as const,
@@ -36,12 +39,15 @@ const VISION_SCHEMA = {
       type: ["string", "null"] as const,
       enum: ["bun", "mediu", "slab", null],
     },
+    isRender: { type: "boolean" as const },
+    renderConfidence: { type: "number" as const },
     confidence: { type: "number" as const },
     evidence: { type: "string" as const },
   },
   required: [
     "condition", "visibleIssues", "furnishing",
-    "brightness", "layoutQuality", "confidence", "evidence",
+    "brightness", "layoutQuality", "isRender", "renderConfidence",
+    "confidence", "evidence",
   ],
   additionalProperties: false,
 };

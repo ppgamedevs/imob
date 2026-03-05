@@ -1,16 +1,28 @@
 import { NextResponse } from "next/server";
 
+import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { rateLimit } from "@/lib/http/rate";
 
 export async function POST(req: Request) {
   try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+    const userId = session.user.id;
+
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    try { await rateLimit(`saved:${ip}`, 20, 60_000); } catch {
+      return NextResponse.json({ error: "rate_limit" }, { status: 429 });
+    }
+
     const body = await req.json();
-    const { userId, analysisId, notes } = body as {
-      userId?: string;
+    const { analysisId, notes } = body as {
       analysisId?: string;
       notes?: string;
     };
-    if (!userId || !analysisId) return NextResponse.json({ error: "invalid" }, { status: 400 });
+    if (!analysisId) return NextResponse.json({ error: "invalid" }, { status: 400 });
 
     const db = prisma as unknown as {
       savedAnalysis: {
@@ -27,9 +39,12 @@ export async function POST(req: Request) {
 
 export async function GET(req: Request) {
   try {
-    const url = new URL(req.url);
-    const userId = url.searchParams.get("userId");
-    if (!userId) return NextResponse.json({ error: "missing userId" }, { status: 400 });
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
+    const userId = session.user.id;
+
     const db = prisma as unknown as {
       savedAnalysis: {
         findMany: (args: unknown) => Promise<unknown[]>;

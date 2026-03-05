@@ -311,7 +311,7 @@ export default function VerdictSection({
 
         {confLevel === "low" && (
           <div className="text-xs text-amber-600 bg-amber-50 rounded p-2">
-            Estimare orientativa — date insuficiente in zona. Rezultatele pot varia semnificativ.
+            Estimare orientativa - date insuficiente in zona. Rezultatele pot varia semnificativ.
           </div>
         )}
 

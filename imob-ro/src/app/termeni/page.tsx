@@ -1,8 +1,12 @@
 import Link from "next/link";
 
-export const metadata = {
-  title: "Termeni și Condiții",
-  description: "Termenii și condițiile de utilizare ale platformei imobintel.ro",
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Termeni si Conditii",
+  description: "Termenii si conditiile de utilizare ale platformei ImobIntel.",
+  alternates: { canonical: "/termeni" },
+  robots: { index: true, follow: true },
 };
 
 export default function TermeniPage() {

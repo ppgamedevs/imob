@@ -2,48 +2,82 @@ import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
+interface SitemapEntry {
+  loc: string;
+  lastmod?: string;
+  changefreq: string;
+  priority: string;
+}
+
 export async function GET() {
   const base =
     process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+  const now = new Date().toISOString().split("T")[0];
 
-  // collect public reports (analyses that are completed and not private)
-  const analyses = await prisma.analysis.findMany({
-    where: { status: "completed" },
-    select: { id: true },
-  });
+  const [analyses, areas] = await Promise.all([
+    prisma.analysis.findMany({
+      where: { status: "completed" },
+      select: { id: true, updatedAt: true },
+      orderBy: { updatedAt: "desc" },
+      take: 5000,
+    }),
+    prisma.area.findMany({ select: { slug: true } }),
+  ]);
 
-  // collect areas for zone pages
-  const areas = await prisma.area.findMany({ select: { slug: true } });
+  const entries: SitemapEntry[] = [
+    { loc: `${base}/`, lastmod: now, changefreq: "daily", priority: "1.0" },
+    { loc: `${base}/bucuresti`, lastmod: now, changefreq: "daily", priority: "0.9" },
+    { loc: `${base}/discover`, lastmod: now, changefreq: "daily", priority: "0.8" },
+    { loc: `${base}/search`, lastmod: now, changefreq: "daily", priority: "0.7" },
+    { loc: `${base}/estimare`, lastmod: now, changefreq: "weekly", priority: "0.9" },
+    { loc: `${base}/vinde`, lastmod: now, changefreq: "weekly", priority: "0.8" },
+    { loc: `${base}/pricing`, lastmod: now, changefreq: "monthly", priority: "0.7" },
+    { loc: `${base}/analyze`, lastmod: now, changefreq: "weekly", priority: "0.8" },
+    { loc: `${base}/glosar`, lastmod: now, changefreq: "monthly", priority: "0.5" },
+    { loc: `${base}/help`, lastmod: now, changefreq: "monthly", priority: "0.5" },
+    { loc: `${base}/how-we-estimate`, lastmod: now, changefreq: "monthly", priority: "0.6" },
+    { loc: `${base}/despre`, lastmod: now, changefreq: "monthly", priority: "0.4" },
+    { loc: `${base}/contact`, lastmod: now, changefreq: "monthly", priority: "0.4" },
+    { loc: `${base}/developments`, lastmod: now, changefreq: "weekly", priority: "0.7" },
+    { loc: `${base}/compare/areas`, lastmod: now, changefreq: "weekly", priority: "0.6" },
+    { loc: `${base}/termeni`, lastmod: now, changefreq: "yearly", priority: "0.2" },
+    { loc: `${base}/confidentialitate`, lastmod: now, changefreq: "yearly", priority: "0.2" },
+    { loc: `${base}/cookies`, lastmod: now, changefreq: "yearly", priority: "0.2" },
+    { loc: `${base}/prelucrare-date`, lastmod: now, changefreq: "yearly", priority: "0.2" },
+  ];
 
-  const urls: string[] = [];
-  // Day 30: Add home and main pages
-  urls.push(base + "/");
-  urls.push(base + "/bucuresti"); // Day 30: City page
-  urls.push(base + "/pricing");
-  urls.push(base + "/discover");
-  urls.push(base + "/search");
-
-  // Day 30: Fixed URLs - use /zona/ instead of /area/
   for (const a of areas) {
-    urls.push(`${base}/zona/${encodeURIComponent(a.slug)}`);
+    entries.push({
+      loc: `${base}/zona/${encodeURIComponent(a.slug)}`,
+      lastmod: now,
+      changefreq: "daily",
+      priority: "0.8",
+    });
   }
 
   for (const r of analyses) {
-    urls.push(`${base}/report/${r.id}`);
+    entries.push({
+      loc: `${base}/report/${r.id}`,
+      lastmod: r.updatedAt?.toISOString().split("T")[0] ?? now,
+      changefreq: "weekly",
+      priority: "0.6",
+    });
   }
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
-    .map((u, i) => {
-      // Day 30: Better changefreq based on page type
-      const isZone = u.includes("/zona/");
-      const isBucharest = u.includes("/bucuresti");
-      const changefreq = isBucharest ? "hourly" : isZone ? "daily" : "weekly";
-      const priority = i === 0 ? "1.0" : isBucharest || isZone ? "0.8" : "0.6";
-      return `<url><loc>${u}</loc><changefreq>${changefreq}</changefreq><priority>${priority}</priority></url>`;
-    })
-    .join("\n")}\n</urlset>`;
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${entries
+  .map(
+    (e) =>
+      `  <url>
+    <loc>${e.loc}</loc>${e.lastmod ? `\n    <lastmod>${e.lastmod}</lastmod>` : ""}
+    <changefreq>${e.changefreq}</changefreq>
+    <priority>${e.priority}</priority>
+  </url>`,
+  )
+  .join("\n")}
+</urlset>`;
 
-  // Day 30: Add cache headers
   return new Response(xml, {
     headers: {
       "Content-Type": "application/xml",

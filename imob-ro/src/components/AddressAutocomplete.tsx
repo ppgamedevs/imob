@@ -3,20 +3,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 
-interface NominatimResult {
-  place_id: number;
-  display_name: string;
-  lat: string;
-  lon: string;
+interface GeoResult {
+  placeId: string;
+  display: string;
+  lat: number;
+  lng: number;
   type: string;
-  address?: {
-    road?: string;
-    house_number?: string;
-    suburb?: string;
-    city_district?: string;
-    city?: string;
-    county?: string;
-  };
+  road?: string;
+  houseNumber?: string;
+  suburb?: string;
+  district?: string;
+  city?: string;
 }
 
 interface AddressAutocompleteProps {
@@ -27,24 +24,7 @@ interface AddressAutocompleteProps {
   className?: string;
 }
 
-const BUCHAREST_BBOX = "44.33,25.93,44.55,26.30";
-const DEBOUNCE_MS = 350;
-
-function formatDisplayName(result: NominatimResult): string {
-  const addr = result.address;
-  if (!addr) {
-    return result.display_name.split(",").slice(0, 3).join(",").trim();
-  }
-  const parts: string[] = [];
-  if (addr.road) {
-    parts.push(addr.house_number ? `${addr.road} ${addr.house_number}` : addr.road);
-  }
-  if (addr.suburb || addr.city_district) {
-    parts.push(addr.suburb || addr.city_district || "");
-  }
-  if (addr.city) parts.push(addr.city);
-  return parts.filter(Boolean).join(", ") || result.display_name.split(",").slice(0, 3).join(",").trim();
-}
+const DEBOUNCE_MS = 300;
 
 export default function AddressAutocomplete({
   value,
@@ -53,7 +33,7 @@ export default function AddressAutocomplete({
   placeholder = "ex: Bulevardul Mihai Bravu 13",
   className,
 }: AddressAutocompleteProps) {
-  const [suggestions, setSuggestions] = useState<NominatimResult[]>([]);
+  const [suggestions, setSuggestions] = useState<GeoResult[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -63,7 +43,7 @@ export default function AddressAutocomplete({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchSuggestions = useCallback(async (query: string) => {
-    if (query.length < 3) {
+    if (query.length < 2) {
       setSuggestions([]);
       setIsOpen(false);
       return;
@@ -75,27 +55,15 @@ export default function AddressAutocomplete({
 
     setIsLoading(true);
     try {
-      const needsCity = !/bucure[sș]ti|ilfov|sector/i.test(query);
-      const q = needsCity ? `${query}, Bucuresti` : query;
-      const params = new URLSearchParams({
-        q,
-        format: "json",
-        addressdetails: "1",
-        limit: "6",
-        countrycodes: "ro",
-        viewbox: BUCHAREST_BBOX,
-      });
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?${params}`,
-        {
-          signal: controller.signal,
-          headers: { "Accept-Language": "ro" },
-        },
+        `/api/geocode?q=${encodeURIComponent(query)}`,
+        { signal: controller.signal },
       );
-      if (!res.ok) throw new Error("Nominatim error");
-      const data: NominatimResult[] = await res.json();
-      setSuggestions(data);
-      setIsOpen(data.length > 0);
+      if (!res.ok) throw new Error("Geocode error");
+      const json = await res.json();
+      const results: GeoResult[] = json.results ?? [];
+      setSuggestions(results);
+      setIsOpen(results.length > 0);
       setActiveIndex(-1);
     } catch (err) {
       if ((err as Error).name !== "AbortError") {
@@ -119,10 +87,9 @@ export default function AddressAutocomplete({
   );
 
   const handleSelect = useCallback(
-    (result: NominatimResult) => {
-      const display = formatDisplayName(result);
-      onChange(display);
-      onSelect(parseFloat(result.lat), parseFloat(result.lon), display);
+    (result: GeoResult) => {
+      onChange(result.display);
+      onSelect(result.lat, result.lng, result.display);
       setIsOpen(false);
       setSuggestions([]);
       inputRef.current?.blur();
@@ -150,7 +117,6 @@ export default function AddressAutocomplete({
     [isOpen, suggestions, activeIndex, handleSelect],
   );
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -161,7 +127,6 @@ export default function AddressAutocomplete({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       abortRef.current?.abort();
@@ -208,39 +173,41 @@ export default function AddressAutocomplete({
 
       {isOpen && suggestions.length > 0 && (
         <div className="absolute z-50 mt-1 w-full rounded-lg border border-gray-200 bg-white shadow-lg overflow-hidden">
-          {suggestions.map((s, i) => {
-            const display = formatDisplayName(s);
-            return (
-              <button
-                key={s.place_id}
-                type="button"
-                onClick={() => handleSelect(s)}
-                onMouseEnter={() => setActiveIndex(i)}
-                className={`w-full text-left px-3 py-2.5 text-sm transition-colors flex items-start gap-2
-                  ${i === activeIndex ? "bg-blue-50 text-blue-900" : "text-gray-700 hover:bg-gray-50"}`}
+          {suggestions.map((s, i) => (
+            <button
+              key={s.placeId}
+              type="button"
+              onClick={() => handleSelect(s)}
+              onMouseEnter={() => setActiveIndex(i)}
+              className={`w-full text-left px-3 py-2.5 text-sm transition-colors flex items-start gap-2
+                ${i === activeIndex ? "bg-blue-50 text-blue-900" : "text-gray-700 hover:bg-gray-50"}`}
+            >
+              <svg
+                className="h-4 w-4 mt-0.5 flex-shrink-0 text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={1.5}
               >
-                <svg
-                  className="h-4 w-4 mt-0.5 flex-shrink-0 text-gray-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-                  />
-                </svg>
-                <span className="leading-snug">{display}</span>
-              </button>
-            );
-          })}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+                />
+              </svg>
+              <div className="min-w-0 flex-1">
+                <span className="leading-snug block truncate">{s.display}</span>
+                {s.suburb && s.suburb !== s.city && (
+                  <span className="text-[11px] text-gray-400 block truncate">{s.suburb}</span>
+                )}
+              </div>
+            </button>
+          ))}
         </div>
       )}
     </div>

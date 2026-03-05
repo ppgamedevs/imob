@@ -159,7 +159,7 @@ export default function NegotiationPointsSection({
               Interval de oferta sugerat
             </div>
             <div className="text-sm font-bold text-blue-900">
-              {fmt(suggestedLow)} — {fmt(suggestedHigh)} {currency}
+              {fmt(suggestedLow)} - {fmt(suggestedHigh)} {currency}
             </div>
             <p className="text-[10px] text-blue-700">
               Bazat pe quartila inferioara si mediana comparabilelor din zona.

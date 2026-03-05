@@ -1,8 +1,11 @@
 import Link from "next/link";
 
-export const metadata = {
-  title: "Politica de Confidențialitate",
-  description: "Cum prelucram si protejam datele personale pe imobintel.ro",
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Politica de Confidentialitate",
+  description: "Cum prelucram si protejam datele personale pe ImobIntel.",
+  alternates: { canonical: "/confidentialitate" },
 };
 
 export default function ConfidentialitatePage() {

@@ -1,6 +1,6 @@
 /**
  * Actionable recommendations to increase property value.
- * Pure function — no DB or side effects.
+ * Pure function - no DB or side effects.
  */
 
 import type { PropertyProfile, Recommendation } from "./liquidity";
@@ -37,7 +37,7 @@ export function computeRecommendations(input: PropertyProfile): Recommendation[]
       title: "Reparatii mici + curatenie",
       impactEurMin: Math.round(base * 0.01),
       impactEurMax: Math.round(base * 0.03),
-      why: "Varuire, reparatii usi/prize, curatat rosturi — cost mic, impact vizual mare",
+      why: "Varuire, reparatii usi/prize, curatat rosturi - cost mic, impact vizual mare",
     });
   }
 

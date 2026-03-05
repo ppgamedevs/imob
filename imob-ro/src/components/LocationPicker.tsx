@@ -6,6 +6,14 @@ import L from "leaflet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
+// Fix Leaflet default icon path detection (breaks in bundled environments)
+delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
 const BUCHAREST_CENTER: [number, number] = [44.4268, 26.1025];
 const DEFAULT_ZOOM = 12;
 const PIN_ZOOM = 16;
@@ -133,6 +141,7 @@ export default function LocationPicker({ lat, lng, onChange, onClear }: Location
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            crossOrigin="anonymous"
           />
           <ClickHandler onPick={handlePick} />
           <FlyToHandler lat={lat} lng={lng} />

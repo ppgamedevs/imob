@@ -2,10 +2,10 @@
  * Neighborhood Vibe Index: computes scores from pre-imported GeoPOI data.
  *
  * Four dimensions:
- *   nightlifeScore  — bars, restaurants, nightclubs
- *   familyScore     — schools, kindergartens, playgrounds, parks
- *   convenienceScore — supermarkets, pharmacies, gyms
- *   greenScore      — parks, playgrounds (weighted by proximity)
+ *   nightlifeScore  - bars, restaurants, nightclubs
+ *   familyScore     - schools, kindergartens, playgrounds, parks
+ *   convenienceScore - supermarkets, pharmacies, gyms
+ *   greenScore      - parks, playgrounds (weighted by proximity)
  */
 import { prisma } from "@/lib/db";
 import { haversineM } from "@/lib/geo";

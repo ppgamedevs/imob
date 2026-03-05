@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { nearestStationM, inferLocationFromText } from "@/lib/geo";
 import { computeApartmentScore } from "@/lib/score/apartmentScore";
 import { computeExecutiveVerdict, type VerdictInput } from "@/lib/report/verdict";
-import { detectDevelopmentStatus } from "@/lib/analysis/development-detect";
+import { detectDevelopmentStatus, computePriceWithVAT, checkReducedVATEligibility } from "@/lib/analysis/development-detect";
 import type { LlmTextExtraction } from "@/lib/llm/types";
 import type { NormalizedFeatures } from "@/types/analysis";
 
@@ -80,7 +80,15 @@ export type PdfReportData = {
   heatingType?: string | null;
 
   // Acquisition costs
-  hasCommission?: boolean | null;
+  commissionStatus?: "zero" | "standard" | "unknown" | null;
+
+  // VAT
+  hasPlusTVA?: boolean;
+  vatRate?: number | null;
+  vatAmount?: number | null;
+  priceWithVAT?: number | null;
+  reducedVATEligible?: boolean;
+  reducedVATReason?: string | null;
 };
 
 export async function loadPdfReportData(analysisId: string): Promise<PdfReportData | null> {
@@ -174,7 +182,10 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
   const totalFloors = typeof f?.totalFloors === "number" ? f.totalFloors : null;
   const hasElevator = typeof f?.hasLift === "boolean" ? f.hasLift : null;
   const distMetroM = typeof f?.distMetroM === "number" ? f.distMetroM : null;
-  const hasCommission = llmText?.redFlags?.some((r: string) => /comision/i.test(r)) ?? false;
+  const sm = a.extractedListing?.sourceMeta as Record<string, unknown> | null | undefined;
+  const commissionStatus: "zero" | "standard" | "unknown" = sm?.zeroCommission === true
+    ? "zero"
+    : (llmText?.redFlags?.some((r: string) => /comision/i.test(r)) ? "standard" : "unknown");
 
   // Infer location if needed for metro
   let effectiveLat = lat;
@@ -191,6 +202,26 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     ? nearestStationM(effectiveLat, effectiveLng)
     : null;
   const nearestMetroMinutes = metroData ? Math.round(metroData.distM / 80) : null;
+
+  // Under-construction detection
+  const devPriceText = sm?.plusTVA ? "+ TVA" : null;
+  const pdfDevSignals = detectDevelopmentStatus(
+    a.extractedListing?.title ?? null,
+    (sourceMeta?.description as string | null) ?? (a.extractedListing as unknown as Record<string, unknown>)?.description as string | null,
+    yearBuilt,
+    typeof sourceMeta?.sellerType === "string" ? sourceMeta.sellerType as string : null,
+    devPriceText,
+  );
+
+  // VAT computation
+  const hasPlusTVA = pdfDevSignals.hasVAT || (sm?.plusTVA === true);
+  const vatRate = pdfDevSignals.vatRate ?? (hasPlusTVA ? 19 : null);
+  const vatComputed = hasPlusTVA && priceEur && vatRate
+    ? computePriceWithVAT(priceEur, vatRate)
+    : null;
+  const reducedVATCheck = hasPlusTVA && priceEur
+    ? checkReducedVATEligibility(priceEur, areaM2)
+    : null;
 
   // Compute executive verdict for PDF
   const verdictInput: VerdictInput = {
@@ -221,17 +252,15 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     hasParking: llmText?.hasParking ?? null,
     hasElevator,
     heatingType: llmText?.heatingType ?? null,
+    sellerType: typeof sourceMeta?.sellerType === "string" ? sourceMeta.sellerType as string : null,
+    isUnderConstruction: pdfDevSignals.isUnderConstruction,
+    isNeverLivedIn: sm?.neverLivedIn === true,
+    hasPlusTVA,
+    isRender: pdfDevSignals.isRender,
+    photosAreRenders: pdfDevSignals.isRender,
+    estimatedDelivery: pdfDevSignals.estimatedDelivery,
   };
   const verdict = computeExecutiveVerdict(verdictInput);
-
-  // Under-construction detection
-  const pdfDevSignals = detectDevelopmentStatus(
-    a.extractedListing?.title ?? null,
-    (a.extractedListing as unknown as Record<string, unknown>)?.description as string | null,
-    yearBuilt,
-    typeof sourceMeta?.sellerType === "string" ? sourceMeta.sellerType as string : null,
-    a.extractedListing?.addressRaw ?? null,
-  );
 
   // Compute apartment score for PDF
   const yearBucket = yearBuilt
@@ -258,6 +287,7 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     areaM2: areaM2 ?? undefined,
     sellerType: typeof sourceMeta?.sellerType === "string" ? sourceMeta.sellerType as string : undefined,
     isUnderConstruction: pdfDevSignals.isUnderConstruction,
+    isNeverLivedIn: sm?.neverLivedIn === true,
   });
 
   return {
@@ -324,6 +354,12 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     nearestMetroMinutes,
     hasElevator,
     heatingType: llmText?.heatingType ?? null,
-    hasCommission,
+    commissionStatus,
+    hasPlusTVA,
+    vatRate,
+    vatAmount: vatComputed?.vatAmount ?? null,
+    priceWithVAT: vatComputed?.priceWithVAT ?? null,
+    reducedVATEligible: reducedVATCheck?.eligible,
+    reducedVATReason: reducedVATCheck?.reason ?? null,
   };
 }

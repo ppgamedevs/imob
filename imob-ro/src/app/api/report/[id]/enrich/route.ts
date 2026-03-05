@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
+import { rateLimit } from "@/lib/http/rate";
 import { enrichTextForAnalysis, enrichVisionForAnalysis } from "@/lib/llm/worker";
 
 const ENRICH_TIMEOUT_MS = 30_000;
@@ -19,7 +20,20 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  try {
+    await rateLimit(`enrich:${ip}`, 10, 60_000);
+  } catch {
+    return NextResponse.json({ error: "rate_limit" }, { status: 429 });
+  }
+
   const { id } = await params;
+
+  try {
+    await rateLimit(`enrich:id:${id}`, 3, 300_000);
+  } catch {
+    return NextResponse.json({ error: "enrich_limit" }, { status: 429 });
+  }
 
   const el = await prisma.extractedListing.findUnique({
     where: { analysisId: id },
@@ -39,7 +53,7 @@ export async function POST(
     try {
       results.text = await withTimeout(enrichTextForAnalysis(id), ENRICH_TIMEOUT_MS);
     } catch {
-      // Timeout or error — mark as attempted so UI stops spinning
+      // Timeout or error - mark as attempted so UI stops spinning
       await prisma.extractedListing.update({
         where: { analysisId: id },
         data: { llmEnrichedAt: new Date() },

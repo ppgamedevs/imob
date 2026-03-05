@@ -1,7 +1,7 @@
 /**
  * Liquidity estimation and tighten tips.
  * Recommendations and risks live in their own modules.
- * Pure functions — no DB or side effects.
+ * Pure functions - no DB or side effects.
  */
 
 export { computeRecommendations } from "./recommendations";
@@ -76,7 +76,7 @@ export function computeLiquidity(rooms: number, usableAreaM2: number): Liquidity
       daysMin: 20,
       daysMax: 60,
       label: "ridicata",
-      why: "Garsonierele se vand rapid — cerere mare pentru investitori si tineri",
+      why: "Garsonierele se vand rapid - cerere mare pentru investitori si tineri",
     };
   if (rooms >= 4)
     return {
@@ -133,7 +133,7 @@ export function computeTightenTips(input: PropertyProfile, compsUsed: number): T
   if (compsUsed < 5 && input.lat && input.lng)
     tips.push({
       field: "zona",
-      tip: "Putine comparabile in zona — incearca o locatie intr-o zona mai centrala.",
+      tip: "Putine comparabile in zona - incearca o locatie intr-o zona mai centrala.",
     });
 
   return tips;

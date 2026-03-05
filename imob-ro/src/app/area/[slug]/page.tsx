@@ -100,7 +100,7 @@ export default async function AreaPage({ params, searchParams }: AreaPageProps) 
           longitude: (tiles.bounds[0] + tiles.bounds[2]) / 2,
         }
       : undefined,
-    aggregateRating:
+    aggregateOffer:
       kpis.listingsNow > 0
         ? {
             "@type": "AggregateOffer",

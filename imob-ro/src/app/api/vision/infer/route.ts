@@ -1,15 +1,34 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
+import { rateLimit } from "@/lib/http/rate";
+import { assertSafeUrl, IMAGE_DOMAINS } from "@/lib/http/ssrf";
 import { mapScoreToVerdict } from "@/lib/ml/vision/condition";
 
 export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    try {
+      await rateLimit(`vision-infer:${ip}`, 15, 60_000);
+    } catch {
+      return NextResponse.json({ error: "rate_limit" }, { status: 429 });
+    }
+
     const body = await req.json();
     const photos: string[] = Array.isArray(body.photos) ? body.photos : [];
     const analysisId: string | undefined = body.analysisId;
 
     if (!photos.length) return NextResponse.json({ error: "no photos" }, { status: 400 });
+
+    const validatedPhotos = photos.filter((u) => {
+      try {
+        assertSafeUrl(u, { allowedDomains: IMAGE_DOMAINS });
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    if (!validatedPhotos.length) return NextResponse.json({ error: "no_valid_photos" }, { status: 400 });
 
     // Attempt to use tfjs-node if installed for better perf on server
     let mobilenet: any = null;
@@ -78,8 +97,10 @@ export async function POST(req: Request) {
         // fetch image as buffer and decode in tfjs-node
         // In tfjs-node we can use tf.node.decodeImage
         const tf: any = (globalThis as any).tf;
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
+        if (!res.ok) return 0.5;
         const buf = Buffer.from(await res.arrayBuffer());
+        if (buf.byteLength > 10_000_000) return 0.5;
         const img = tf.node.decodeImage(buf);
         const predictions: any = await model.classify(img as any);
         // simple heuristics similar to client
@@ -99,7 +120,7 @@ export async function POST(req: Request) {
       }
     }
 
-    const sample = photos.slice(0, 3);
+    const sample = validatedPhotos.slice(0, 3);
     const scores = [] as number[];
     for (const u of sample) {
       const sc = await classifyUrl(u);

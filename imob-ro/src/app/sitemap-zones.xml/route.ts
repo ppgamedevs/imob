@@ -3,18 +3,19 @@ import { prisma } from "@/lib/db";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+
   const areas = await prisma.area.findMany({
-    select: {
-      slug: true,
-    },
+    select: { slug: true },
     orderBy: { slug: "asc" },
   });
 
-  const now = new Date().toISOString();
+  const now = new Date().toISOString().split("T")[0];
 
   const entries = areas.map(
     (a) => `  <url>
-    <loc>${process.env.NEXT_PUBLIC_APP_URL}/zona/${a.slug}</loc>
+    <loc>${base}/zona/${a.slug}</loc>
     <lastmod>${now}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -29,6 +30,7 @@ ${entries.join("\n")}
   return new Response(xml, {
     headers: {
       "Content-Type": "application/xml",
+      "Cache-Control": "s-maxage=3600, stale-while-revalidate=86400",
     },
   });
 }

@@ -1,6 +1,6 @@
 /**
  * Confidence scoring and input-completeness helpers.
- * Pure functions — no DB or side effects.
+ * Pure functions - no DB or side effects.
  */
 
 // ---------------------------------------------------------------------------
@@ -67,22 +67,22 @@ export function computeConfidenceWhy(
 ): string[] {
   const reasons: string[] = [];
 
-  if (compsUsed >= 15) reasons.push(`${compsUsed} comparabile gasite — esantion solid`);
-  else if (compsUsed >= 8) reasons.push(`${compsUsed} comparabile — esantion bun`);
-  else if (compsUsed >= 3) reasons.push(`Doar ${compsUsed} comparabile — esantion limitat`);
-  else if (compsUsed > 0) reasons.push(`Foarte putine comparabile (${compsUsed}) — interval larg`);
-  else reasons.push("Nicio comparabila gasita — estimare bazata pe medii de zona");
+  if (compsUsed >= 15) reasons.push(`${compsUsed} comparabile gasite - esantion solid`);
+  else if (compsUsed >= 8) reasons.push(`${compsUsed} comparabile - esantion bun`);
+  else if (compsUsed >= 3) reasons.push(`Doar ${compsUsed} comparabile - esantion limitat`);
+  else if (compsUsed > 0) reasons.push(`Foarte putine comparabile (${compsUsed}) - interval larg`);
+  else reasons.push("Nicio comparabila gasita - estimare bazata pe medii de zona");
 
-  if (dispersion < 0.1) reasons.push("Preturi consistente in zona — dispersie mica");
+  if (dispersion < 0.1) reasons.push("Preturi consistente in zona - dispersie mica");
   else if (dispersion < 0.2) reasons.push("Dispersie moderata a preturilor");
-  else if (dispersion >= 0.3) reasons.push("Preturi variate in zona — interval mai larg");
+  else if (dispersion >= 0.3) reasons.push("Preturi variate in zona - interval mai larg");
 
   if (tightRatio >= 0.7) reasons.push("Majoritatea comparabilelor sunt foarte similare");
   else if (tightRatio < 0.3 && compsUsed > 0)
-    reasons.push("Putine comparabile in raza stransa — s-a extins cautarea");
+    reasons.push("Putine comparabile in raza stransa - s-a extins cautarea");
 
-  if (completeness >= 0.8) reasons.push("Detalii complete furnizate — ajustari precise");
-  else if (completeness < 0.4) reasons.push("Detalii putine completate — precizie redusa");
+  if (completeness >= 0.8) reasons.push("Detalii complete furnizate - ajustari precise");
+  else if (completeness < 0.4) reasons.push("Detalii putine completate - precizie redusa");
 
   return reasons;
 }

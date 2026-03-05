@@ -23,11 +23,25 @@ import {
   totalAdjustmentPct,
 } from "@/lib/estimate";
 import { flags } from "@/lib/feature-flags";
+import { rateLimit } from "@/lib/http/rate";
 import { analyzeUserPhotos } from "@/lib/llm/extract-vision";
 
+const MAX_BODY_BYTES = 6 * 1024 * 1024;
 const QUERY_TIMEOUT_MS = 8_000;
 
 export async function POST(req: Request) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  try {
+    await rateLimit(`estimate:${ip}`, 15, 60_000);
+  } catch {
+    return NextResponse.json({ error: "rate_limit" }, { status: 429 });
+  }
+
+  const contentLength = parseInt(req.headers.get("content-length") ?? "0", 10);
+  if (contentLength > MAX_BODY_BYTES) {
+    return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+  }
+
   if (!flags.estimateEnabled) {
     return NextResponse.json(
       { error: "Estimarile sunt temporar dezactivate. Revino in curand." },
@@ -99,7 +113,7 @@ export async function POST(req: Request) {
         };
       }
     } catch {
-      // Non-fatal — continue without vision
+      // Non-fatal - continue without vision
     }
   }
 
@@ -217,7 +231,7 @@ export async function POST(req: Request) {
         },
       })
       .catch(() => {
-        /* non-fatal — analytics only */
+        /* non-fatal - analytics only */
       });
   }
 

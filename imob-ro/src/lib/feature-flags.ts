@@ -38,6 +38,9 @@ export const flags = {
   get estimatePersist() {
     return isOn(process.env.ESTIMATE_PERSIST);
   },
+  get geoIntel() {
+    return isOn(process.env.GEO_INTEL_ENABLED);
+  },
 } as const;
 
 export type FlagKey = keyof typeof flags;

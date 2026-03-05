@@ -31,6 +31,8 @@ export interface LlmVisionExtraction {
   furnishing: "gol" | "partial_mobilat" | "complet_mobilat";
   brightness: 0 | 1 | 2 | 3;
   layoutQuality: "bun" | "mediu" | "slab" | null;
+  isRender: boolean;
+  renderConfidence: number;
   confidence: number;
   evidence: string;
 }

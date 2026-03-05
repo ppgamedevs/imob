@@ -64,7 +64,7 @@ export default function TransportSection({
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Nu am putut localiza aceasta {propertyType} pe harta — informatiile despre
+            Nu am putut localiza aceasta {propertyType} pe harta - informatiile despre
             transportul public din zona nu sunt disponibile. Daca adresa sau zona devine
             disponibila, sectiunea se va actualiza automat.
           </p>
@@ -93,7 +93,7 @@ export default function TransportSection({
                     : "bg-red-100 text-red-800"
               }`}
             >
-              {transitScore}/100 — {scoreLabel(transitScore)}
+              {transitScore}/100 - {scoreLabel(transitScore)}
             </span>
           )}
         </div>
@@ -117,7 +117,7 @@ export default function TransportSection({
                   Metrou: {metroWalkMin != null ? formatWalk(metroWalkMin) : formatDist(metroDistM)} pe jos
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Statia {metroName} — {formatDist(metroDistM)}
+                  Statia {metroName} - {formatDist(metroDistM)}
                 </div>
               </div>
               {metroDistM <= 500 && (
@@ -195,7 +195,7 @@ export default function TransportSection({
           Distantele sunt in linie dreapta. Timpul de mers pe jos este estimat la o viteza medie de ~5 km/h. Datele provin din GTFS si OpenStreetMap.
           {locationInferred && (
             <span className="block mt-1 text-amber-600">
-              Locatia a fost estimata din titlul anuntului — distantele pot varia fata de adresa reala.
+              Locatia a fost estimata din titlul anuntului - distantele pot varia fata de adresa reala.
             </span>
           )}
         </p>

@@ -1388,6 +1388,70 @@ model GeoTransportStop {
 }
 
 // ========================================
+// Geo POI Cache: server-side Overpass response cache
+// ========================================
+
+model GeoPoiCache {
+  id         String   @id @default(cuid())
+  key        String   @unique
+  latRounded Float
+  lngRounded Float
+  radiusM    Int
+  category   String
+  payload    Json
+  fetchedAt  DateTime @default(now())
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([expiresAt])
+  @@index([latRounded, lngRounded, category])
+}
+
+// ========================================
+// Geo Intel Snapshot: cached full intel computation (24h TTL)
+// ========================================
+
+model GeoIntelSnapshot {
+  id         String   @id @default(cuid())
+  key        String   @unique
+  latRounded Float
+  lngRounded Float
+  radiusM    Int
+  payload    Json
+  computedAt DateTime @default(now())
+  expiresAt  DateTime
+
+  @@index([expiresAt])
+  @@index([latRounded, lngRounded])
+}
+
+// ========================================
+// Geo Demand Signal: aggregated daily demand/supply signals
+// ========================================
+
+model GeoDemandSignal {
+  id         String   @id @default(cuid())
+  day        DateTime @db.Date
+  latRounded Float
+  lngRounded Float
+  radiusM    Int      @default(1000)
+  // Demand signals
+  reportCount   Int   @default(0)
+  searchCount   Int   @default(0)
+  estimateCount Int   @default(0)
+  savedCount    Int   @default(0)
+  // Supply signals
+  activeListings Int  @default(0)
+  medianPriceM2  Float?
+  // Metadata
+  computedAt DateTime @default(now())
+
+  @@unique([day, latRounded, lngRounded, radiusM])
+  @@index([day])
+  @@index([latRounded, lngRounded])
+}
+
+// ========================================
 // User Estimates: store inputs + results for analytics
 // ========================================
 

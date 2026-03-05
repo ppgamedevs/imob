@@ -8,7 +8,7 @@
 
 import { prisma } from "@/lib/db";
 
-const STALE_AFTER_MS = 30 * 60 * 1000; // 30 min — auto-expire stuck jobs
+const STALE_AFTER_MS = 30 * 60 * 1000; // 30 min - auto-expire stuck jobs
 
 export interface LockResult {
   acquired: boolean;

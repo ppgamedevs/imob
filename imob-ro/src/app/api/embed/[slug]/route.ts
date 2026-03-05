@@ -1,9 +1,20 @@
 export const runtime = "edge";
 
+function sanitizeSlug(raw: string): string {
+  return raw.replace(/[^a-zA-Z0-9_-]/g, "");
+}
+
 export async function GET(_req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
-  const host = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "");
-  const slug = resolvedParams.slug;
+  const host = (process.env.NEXT_PUBLIC_APP_URL || "").replace(/\/$/, "").replace(/"/g, "");
+  const slug = sanitizeSlug(resolvedParams.slug);
+
+  if (!slug) {
+    return new Response("// invalid slug", {
+      status: 400,
+      headers: { "Content-Type": "application/javascript" },
+    });
+  }
 
   const js = `
 (function(){

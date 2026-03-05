@@ -67,7 +67,7 @@ export default async function AdminEstimatesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats._avg.confidence != null ? Math.round(stats._avg.confidence) : "—"}%
+              {stats._avg.confidence != null ? Math.round(stats._avg.confidence) : "-"}%
             </div>
           </CardContent>
         </Card>
@@ -77,7 +77,7 @@ export default async function AdminEstimatesPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats._avg.compsCount != null ? Math.round(stats._avg.compsCount * 10) / 10 : "—"}
+              {stats._avg.compsCount != null ? Math.round(stats._avg.compsCount * 10) / 10 : "-"}
             </div>
           </CardContent>
         </Card>
@@ -116,7 +116,7 @@ export default async function AdminEstimatesPage() {
                       })}
                     </td>
                     <td className="px-4 py-2.5 font-medium text-gray-900 max-w-[180px] truncate">
-                      {(inp.zoneSlug as string) ?? "—"}
+                      {(inp.zoneSlug as string) ?? "-"}
                     </td>
                     <td className="px-4 py-2.5 text-right text-gray-700">
                       {inp.usableAreaM2 as number} mp

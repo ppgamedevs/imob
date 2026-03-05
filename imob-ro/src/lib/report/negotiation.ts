@@ -65,7 +65,7 @@ export function generateNegotiationPoints(
   const cur = input.currency || "EUR";
   const fmt = (n: number) => n.toLocaleString("ro-RO");
 
-  // 1 — Overpricing vs fair range
+  // 1 - Overpricing vs fair range
   if (
     input.askingPrice != null &&
     input.fairMax != null &&
@@ -99,7 +99,7 @@ export function generateNegotiationPoints(
       pts.push({
         id: "slightly_over",
         title: "Pret usor peste piata",
-        claim: `Pretul cerut este la limita superioara a intervalului — exista spatiu de negociere de ${fmt(input.askingPrice - input.fairMid)} ${cur}.`,
+        claim: `Pretul cerut este la limita superioara a intervalului - exista spatiu de negociere de ${fmt(input.askingPrice - input.fairMid)} ${cur}.`,
         evidence: `Interval estimat: ${fmt(input.fairMin!)}–${fmt(input.fairMax)} ${cur}. Mediana: ${fmt(input.fairMid)} ${cur} (${input.compsUsed} comparabile).`,
         suggestedSellerQuestion:
           "Pretul este aproape de limita superioara a pietei. Ati fi deschis la o oferta de " +
@@ -111,7 +111,7 @@ export function generateNegotiationPoints(
     }
   }
 
-  // 2 — Price drops signal seller flexibility
+  // 2 - Price drops signal seller flexibility
   if (input.priceDrops > 0) {
     pts.push({
       id: "price_drops",
@@ -123,25 +123,25 @@ export function generateNegotiationPoints(
     });
   }
 
-  // 3 — Duplicates / reposting
+  // 3 - Duplicates / reposting
   if (input.duplicateCount > 0) {
     pts.push({
       id: "duplicates",
       title: "Anunt publicat pe mai multe platforme",
-      claim: `Proprietatea apare pe ${input.duplicateCount + 1} platforme — proprietarul cauta activ un cumparator, ceea ce sugereaza ca vanzarea nu merge usor.`,
+      claim: `Proprietatea apare pe ${input.duplicateCount + 1} platforme - proprietarul cauta activ un cumparator, ceea ce sugereaza ca vanzarea nu merge usor.`,
       evidence: `${input.duplicateCount} anunturi duplicate detectate pe alte surse.`,
       suggestedSellerQuestion:
         "Proprietatea este listata pe mai multe site-uri. De cand este pe piata si cate oferte ati primit?",
     });
   }
 
-  // 4 — Removed and re-posted
+  // 4 - Removed and re-posted
   if (input.wasRemoved) {
     pts.push({
       id: "reposted",
       title: "Anunt repostat",
       claim:
-        "Anuntul a fost sters si republicat — de obicei o strategie de a parea nou dupa ce nu a atras interes la pretul initial.",
+        "Anuntul a fost sters si republicat - de obicei o strategie de a parea nou dupa ce nu a atras interes la pretul initial.",
       evidence:
         "Istoric: anuntul a trecut prin cel putin o pauza (sters/repostat) in ultimele 90 de zile.",
       suggestedSellerQuestion:
@@ -149,7 +149,7 @@ export function generateNegotiationPoints(
     });
   }
 
-  // 5 — Seismic risk on building (only for confirmed RS1-RS3)
+  // 5 - Seismic risk on building (only for confirmed RS1-RS3)
   const _seis = input.seismicRiskClass?.toLowerCase() ?? "";
   const isConfirmedSeismic =
     input.seismicRiskClass &&
@@ -159,7 +159,7 @@ export function generateNegotiationPoints(
     pts.push({
       id: "seismic_direct",
       title: "Risc seismic pe cladire",
-      claim: `Cladirea este clasificata ${classLabel} — un factor major de risc care afecteaza valoarea si asigurabilitatea.`,
+      claim: `Cladirea este clasificata ${classLabel} - un factor major de risc care afecteaza valoarea si asigurabilitatea.`,
       evidence: `Clasificare seismica: ${classLabel}. Sursa: lista AMCCRS.`,
       suggestedSellerQuestion:
         "Cladirea apare in lista AMCCRS cu clasificare " +
@@ -168,7 +168,7 @@ export function generateNegotiationPoints(
     });
   }
 
-  // 6 — Seismic risk nearby
+  // 6 - Seismic risk nearby
   if (
     input.seismicNearbyCount > 0 &&
     input.seismicNearbyClosestM != null &&
@@ -177,33 +177,33 @@ export function generateNegotiationPoints(
     pts.push({
       id: "seismic_nearby",
       title: "Cladiri cu risc seismic in zona",
-      claim: `In apropiere exista ${input.seismicNearbyCount} cladiri cu risc seismic — poate afecta percepția asupra sigurantei zonei.`,
+      claim: `In apropiere exista ${input.seismicNearbyCount} cladiri cu risc seismic - poate afecta percepția asupra sigurantei zonei.`,
       evidence: `${input.seismicNearbyCount} imobile AMCCRS in raza de 500m. Cel mai apropiat: ${input.seismicNearbyClosestM}m.`,
       suggestedSellerQuestion:
         "Stiti daca exista cladiri cu risc seismic in imediata vecinatate? Puteti confirma ca cladirea nu este afectata?",
     });
   }
 
-  // 7 — Nightlife zone (for buyers wanting quiet)
+  // 7 - Nightlife zone (for buyers wanting quiet)
   if (input.nightlifeScore != null && input.nightlifeScore >= 60) {
     pts.push({
       id: "nightlife_noise",
       title: "Zona cu viata de noapte activa",
       claim:
-        "Zona are scor ridicat de viata de noapte — poate fi un dezavantaj daca cautati liniste, dar si un avantaj pentru investitii de inchiriere.",
+        "Zona are scor ridicat de viata de noapte - poate fi un dezavantaj daca cautati liniste, dar si un avantaj pentru investitii de inchiriere.",
       evidence: `Scor viata de noapte: ${input.nightlifeScore}/100. Sursa: analiza POI din zona.`,
       suggestedSellerQuestion:
         "Cum este nivelul de zgomot seara si in weekend? Exista reclamatii din partea vecinilor?",
     });
   }
 
-  // 8 — Poor transit access
+  // 8 - Poor transit access
   if (input.transitScore != null && input.transitScore < 30) {
     pts.push({
       id: "low_transit",
       title: "Acces limitat la transport public",
       claim:
-        "Zona are acces redus la transport public — afecteaza pretul si atractivitatea, mai ales fara masina.",
+        "Zona are acces redus la transport public - afecteaza pretul si atractivitatea, mai ales fara masina.",
       evidence:
         `Scor transport: ${input.transitScore}/100.` +
         (input.nearestMetroName
@@ -214,7 +214,7 @@ export function generateNegotiationPoints(
     });
   }
 
-  // 9 — Good transit (positive leverage for fair price)
+  // 9 - Good transit (positive leverage for fair price)
   if (
     input.transitScore != null &&
     input.transitScore >= 70 &&
@@ -226,7 +226,7 @@ export function generateNegotiationPoints(
       id: "good_transit_fair",
       title: "Transport excelent la pret corect",
       claim:
-        "Combinatia de acces bun la transport si pret in intervalul corect face proprietatea competitiva — actionati rapid.",
+        "Combinatia de acces bun la transport si pret in intervalul corect face proprietatea competitiva - actionati rapid.",
       evidence:
         `Scor transport: ${input.transitScore}/100.` +
         (input.nearestMetroName
@@ -237,20 +237,20 @@ export function generateNegotiationPoints(
     });
   }
 
-  // 10 — Old building
+  // 10 - Old building
   if (input.yearBuilt && input.yearBuilt < 1980) {
     const age = new Date().getFullYear() - input.yearBuilt;
     pts.push({
       id: "old_building",
-      title: "Cladire veche — costuri ascunse",
-      claim: `Constructie din ${input.yearBuilt} (${age} ani) — instalatiile si structura pot necesita investitii suplimentare.`,
+      title: "Cladire veche - costuri ascunse",
+      claim: `Constructie din ${input.yearBuilt} (${age} ani) - instalatiile si structura pot necesita investitii suplimentare.`,
       evidence: `An constructie: ${input.yearBuilt}. Varsta: ${age} ani.`,
       suggestedSellerQuestion:
         "Cand au fost inlocuite ultima data instalatiile (electrica, sanitara, termica)? Exista expertiza de rezistenta?",
     });
   }
 
-  // 11 — Renovation needed
+  // 11 - Renovation needed
   if (
     input.condition === "necesita_renovare" ||
     input.condition === "de_renovat"
@@ -260,8 +260,8 @@ export function generateNegotiationPoints(
       id: "renovation",
       title: isFull ? "Necesita renovare completa" : "Necesita lucrari",
       claim: isFull
-        ? "Proprietatea necesita renovare completa — costul renovarii trebuie dedus din pretul oferit."
-        : "Sunt necesare lucrari de imbunatatire — un argument valid pentru reducerea pretului.",
+        ? "Proprietatea necesita renovare completa - costul renovarii trebuie dedus din pretul oferit."
+        : "Sunt necesare lucrari de imbunatatire - un argument valid pentru reducerea pretului.",
       evidence: `Stare proprietate: ${isFull ? "de renovat" : "necesita renovare"}. Sursa: analiza text anunt.`,
       suggestedSellerQuestion: isFull
         ? "Avand in vedere ca apartamentul necesita renovare completa, pretul include vreo estimare a costurilor de reamenajare?"
@@ -269,7 +269,7 @@ export function generateNegotiationPoints(
     });
   }
 
-  // 12 — Ground floor / basement
+  // 12 - Ground floor / basement
   if (input.floor != null && input.floor <= 0) {
     pts.push({
       id: "ground_floor",
@@ -282,7 +282,7 @@ export function generateNegotiationPoints(
     });
   }
 
-  // 13 — No parking
+  // 13 - No parking
   if (input.hasParking === false) {
     pts.push({
       id: "no_parking",
@@ -295,7 +295,7 @@ export function generateNegotiationPoints(
     });
   }
 
-  // 14 — High floor without elevator
+  // 14 - High floor without elevator
   if (
     input.floor != null &&
     input.floor >= 5 &&
@@ -304,20 +304,20 @@ export function generateNegotiationPoints(
     pts.push({
       id: "no_elevator",
       title: "Etaj inalt fara lift",
-      claim: `Etajul ${input.floor} fara lift reduce considerabil cererea si pretul — un argument clar de negociere.`,
+      claim: `Etajul ${input.floor} fara lift reduce considerabil cererea si pretul - un argument clar de negociere.`,
       evidence: `Etaj: ${input.floor}. Lift: absent.`,
       suggestedSellerQuestion:
         "Exista planuri pentru instalarea unui lift in bloc? Cat costa intretinerea lunara?",
     });
   }
 
-  // 15 — Zone with limited amenities
+  // 15 - Zone with limited amenities
   if (input.zoneTypeKey === "limited") {
     pts.push({
       id: "limited_zone",
       title: "Zona cu putine facilitati",
       claim:
-        "Zona are acces limitat la magazine, scoli, parcuri — un factor care reduce atractivitatea pe termen lung.",
+        "Zona are acces limitat la magazine, scoli, parcuri - un factor care reduce atractivitatea pe termen lung.",
       evidence: `Tip zona: facilitati limitate. Sursa: analiza puncte de interes din proximitate.`,
       suggestedSellerQuestion:
         "Care sunt cele mai aproape magazine si scoli? Cum faceti cumparaturile zilnice?",

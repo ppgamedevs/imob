@@ -117,6 +117,19 @@ export const adapterImobiliare: SourceAdapter = {
     if (currencyMeta) currency = currencyMeta;
     else if (rawHtml.match(/\b(?:lei|RON)\b/i) && !rawHtml.match(/€|EUR/i)) currency = "RON";
 
+    // --- TVA / +TVA detection ---
+    let plusTVA = false;
+    const priceAreaHtml = $('[itemprop="price"]').closest("div, span, h1, h2, h3, section").html() ?? "";
+    if (/\+\s*TVA/i.test(priceAreaHtml) || /\+\s*TVA/i.test(rawHtml.slice(0, 4000))) {
+      plusTVA = true;
+    }
+    if (!plusTVA && /(?:pre[tț]ul?\s+(?:afisat\s+)?nu\s+include|fara|f[aă]r[aă])\s+TVA/i.test(rawHtml)) {
+      plusTVA = true;
+    }
+    if (!plusTVA && /TVA\s+inclus/i.test(rawHtml)) {
+      plusTVA = false; // explicitly included means listed price already has TVA
+    }
+
     // --- Suprafata ---
     let areaM2: number | undefined;
 
@@ -225,25 +238,36 @@ export const adapterImobiliare: SourceAdapter = {
     const photos: string[] = [];
     const seenPhotos = new Set<string>();
     const PHOTO_EXCLUDE = /logo|avatar|agent|banner|sprite|icon|favicon|placeholder|widget|\/similar\b|\/recomandate\b|1x1|pixel|\.svg/i;
-    const SMALL_SIZE_RE = /\/(\d{2,3})x(\d{2,3})\//;
+    const SIZE_RE = /\/(\d{2,4})x(\d{2,4})\//;
 
     function upgradePhotoUrl(imgUrl: string): string {
-      // Imobiliare.ro CDN uses size segments like /300x200/ — upgrade to larger
-      let upgraded = imgUrl.replace(SMALL_SIZE_RE, (_, w, h) => {
+      let upgraded = imgUrl.replace(SIZE_RE, (full, w, h) => {
         const nw = parseInt(w, 10);
         const nh = parseInt(h, 10);
-        if (nw < 800 || nh < 600) return "/1200x900/";
-        return `/${w}x${h}/`;
+        if (nw >= 1200 && nh >= 900) return full;
+        return "/1220x924/";
       });
-      // Also try replacing _thumb or _small suffixes
       upgraded = upgraded.replace(/_thumb\b/i, "").replace(/_small\b/i, "");
       return upgraded;
+    }
+
+    function bestSrcFromSrcset(srcset: string | undefined): string | null {
+      if (!srcset) return null;
+      let best: { url: string; w: number } | null = null;
+      for (const part of srcset.split(",")) {
+        const m = part.trim().match(/^(\S+)\s+(\d+)w$/);
+        if (m) {
+          const w = parseInt(m[2], 10);
+          if (!best || w > best.w) best = { url: m[1], w };
+        }
+      }
+      return best?.url ?? null;
     }
 
     function addPhoto(src: string) {
       if (!src || PHOTO_EXCLUDE.test(src)) return;
       const full = upgradePhotoUrl(new URL(src, url).toString());
-      const key = full.replace(/\?.*$/, ""); // dedup ignoring query params
+      const key = full.replace(/\?.*$/, "").replace(SIZE_RE, "/SIZE/");
       if (seenPhotos.has(key)) return;
       seenPhotos.add(key);
       photos.push(full);
@@ -258,21 +282,31 @@ export const adapterImobiliare: SourceAdapter = {
       for (const m of urls) addPhoto(m[0]);
     }
 
-    // Priority 2: Gallery container images (prefer data-original > data-src > src)
+    // Priority 2: Gallery container images - prefer srcset > data-original > data-src > src
     $('[class*="gallery"] img, [class*="carousel"] img, [class*="slider"] img, [data-gallery] img').each((_, el) => {
-      const src = $(el).attr("data-original") || $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src");
+      const srcset = bestSrcFromSrcset($(el).attr("srcset") || $(el).attr("data-srcset"));
+      const src = srcset || $(el).attr("data-original") || $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src");
       if (src) addPhoto(src);
     });
 
-    // Priority 3: broader img search scoped to listing content
+    // Priority 3: <picture> / <source> elements with high-res srcset
+    if (photos.length < 3) {
+      $("picture source, [class*='gallery'] source").each((_, el) => {
+        const srcset = bestSrcFromSrcset($(el).attr("srcset"));
+        if (srcset) addPhoto(srcset);
+      });
+    }
+
+    // Priority 4: broader img search scoped to listing content
     if (photos.length < 3) {
       $('img[src*="imobiliare"], img[data-src*="imobiliare"], img[data-lazy-src*="imobiliare"]').each((_, el) => {
-        const src = $(el).attr("data-original") || $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src");
+        const srcset = bestSrcFromSrcset($(el).attr("srcset") || $(el).attr("data-srcset"));
+        const src = srcset || $(el).attr("data-original") || $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src");
         if (src) addPhoto(src);
       });
     }
 
-    // Priority 4: OG image fallback
+    // Priority 5: OG image fallback
     if (!photos.length) {
       const ogImage = $('meta[property="og:image"]').attr("content");
       if (ogImage) addPhoto(ogImage);
@@ -338,6 +372,49 @@ export const adapterImobiliare: SourceAdapter = {
       if (/0\s*%/.test(comisionBadge)) sellerType = "dezvoltator";
     }
 
+    // Detect "Comision 0%" from spec fields, badges, and page text
+    let zeroCommission = false;
+    const comisionSpec = findSpecText($, "Comision");
+    if (comisionSpec && /0\s*%/.test(comisionSpec)) {
+      zeroCommission = true;
+    }
+    if (!zeroCommission) {
+      const badgeText = $('[class*="comision"], [class*="commission"], [class*="badge"]').text().toLowerCase();
+      if (/comision\s*0\s*%/.test(badgeText) || /0\s*%\s*comision/.test(badgeText)) {
+        zeroCommission = true;
+      }
+    }
+    if (!zeroCommission) {
+      const fullText = `${title ?? ""} ${description ?? ""}`.toLowerCase();
+      if (/comision\s*0\s*%/.test(fullText) || /0\s*%\s*comision/.test(fullText)) {
+        zeroCommission = true;
+      }
+    }
+    // Also check the raw HTML for badge text patterns
+    if (!zeroCommission && /comision\s*0\s*%/i.test(rawHtml)) {
+      zeroCommission = true;
+    }
+
+    // Detect exclusivity
+    let exclusivitate = false;
+    const exclText = $('[class*="exclusiv"], [class*="badge"]').text().toLowerCase();
+    if (/exclusiv/i.test(exclText) || /proprietate\s+reprezentat/i.test(exclText)) {
+      exclusivitate = true;
+    }
+    if (!exclusivitate && /exclusivitate|proprietate\s+reprezentat/i.test(rawHtml)) {
+      exclusivitate = true;
+    }
+
+    // Detect "Proprietate nelocuita" (never lived in)
+    let neverLivedIn = false;
+    const nelocuitaText = $('[class*="badge"], [class*="feature"], [class*="tag"], li, span').text().toLowerCase();
+    if (/proprietate\s+nelocuit[aă]/i.test(nelocuitaText)) {
+      neverLivedIn = true;
+    }
+    if (!neverLivedIn && /proprietate\s+nelocuit[aă]/i.test(rawHtml)) {
+      neverLivedIn = true;
+    }
+
     return {
       extracted: {
         title,
@@ -356,6 +433,10 @@ export const adapterImobiliare: SourceAdapter = {
           extractedAt: new Date().toISOString(),
           description: description ?? undefined,
           sellerType,
+          zeroCommission: zeroCommission || undefined,
+          exclusivitate: exclusivitate || undefined,
+          plusTVA: plusTVA || undefined,
+          neverLivedIn: neverLivedIn || undefined,
         },
       },
     };

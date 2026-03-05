@@ -50,7 +50,8 @@ export const metadata: Metadata = {
     default: "ImobIntel - Analiza imobiliara inteligenta pentru Bucuresti",
     template: "%s | ImobIntel",
   },
-  description: "Pret estimat, comparabile, viteza de vanzare si risc seismic pentru apartamente din Bucuresti.",
+  description:
+    "Pret estimat, comparabile, viteza de vanzare si risc seismic pentru apartamente din Bucuresti. Analiza gratuita bazata pe date reale.",
   keywords: [
     "imobiliare",
     "Bucuresti",
@@ -59,6 +60,9 @@ export const metadata: Metadata = {
     "AVM",
     "evaluare proprietate",
     "imobintel",
+    "analiza imobiliara",
+    "pret apartament bucuresti",
+    "comparabile imobiliare",
   ],
   authors: [{ name: "ImobIntel" }],
   creator: "ImobIntel",
@@ -80,21 +84,29 @@ export const metadata: Metadata = {
     url: SITE_URL,
     siteName: "ImobIntel",
     title: "ImobIntel - Analiza imobiliara inteligenta pentru Bucuresti",
-    description: "Pret estimat, comparabile, viteza de vanzare si risc seismic pentru apartamente din Bucuresti.",
+    description:
+      "Pret estimat, comparabile, viteza de vanzare si risc seismic pentru apartamente din Bucuresti.",
     images: [
       {
-        url: `${SITE_URL}/logo.png`,
+        url: `${SITE_URL}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "ImobIntel",
+        alt: "ImobIntel - Analiza imobiliara inteligenta",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
     title: "ImobIntel - Analiza imobiliara inteligenta pentru Bucuresti",
-    description: "Pret estimat, comparabile, viteza de vanzare si risc seismic pentru apartamente din Bucuresti.",
-    images: [`${SITE_URL}/logo.png`],
+    description:
+      "Pret estimat, comparabile, viteza de vanzare si risc seismic pentru apartamente din Bucuresti.",
+    images: [`${SITE_URL}/og-image.png`],
+  },
+  alternates: {
+    canonical: "/",
+  },
+  other: {
+    "theme-color": "#6A7DFF",
   },
 };
 
@@ -103,7 +115,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Organization JSON-LD for SEO
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "Organization",
@@ -116,28 +127,45 @@ export default function RootLayout({
       contactType: "Customer Service",
       availableLanguage: "Romanian",
     },
-    sameAs: [
-      // Add social media profiles when available
-    ],
+    sameAs: [],
+  };
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "ImobIntel",
+    url: SITE_URL,
+    description: "Analiza imobiliara inteligenta pentru Bucuresti",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_URL}/analyze?url={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
   };
 
   return (
     <html lang="ro" suppressHydrationWarning>
       <head>
-        {/* Day 30: Performance - Font preconnect */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-        {/* Organization JSON-LD */}
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="theme-color" content="#6A7DFF" />
+        <link rel="icon" href="/logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/logo.png" />
+        <link rel="manifest" href="/manifest.json" />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {/* Google Analytics */}
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-Q40GJ9B2H8" strategy="afterInteractive" />
-        <Script id="gtag-init" strategy="afterInteractive">
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-Q40GJ9B2H8" strategy="lazyOnload" />
+        <Script id="gtag-init" strategy="lazyOnload">
           {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 gtag('js', new Date());

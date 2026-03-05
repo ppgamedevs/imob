@@ -1,6 +1,6 @@
 /**
  * Similarity scoring: weighted multi-dimensional comparison.
- * Pure function — no DB or side effects.
+ * Pure function - no DB or side effects.
  *
  * Weight budget: distance(35) + rooms(20) + area(25) + yearBucket(10) + floor(10) = 100
  */

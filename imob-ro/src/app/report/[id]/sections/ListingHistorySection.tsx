@@ -124,7 +124,7 @@ function computeFlags(snapshots: SnapshotPoint[]) {
 
   const statuses = snapshots.map((s) => s.status);
 
-  // "Anunt instabil" — removed then reappeared
+  // "Anunt instabil" - removed then reappeared
   const removedThenActive =
     statuses.includes("REMOVED") &&
     statuses.indexOf("REMOVED") < statuses.lastIndexOf("ACTIVE");
@@ -137,7 +137,7 @@ function computeFlags(snapshots: SnapshotPoint[]) {
     });
   }
 
-  // "Repostari detectate" — large time gaps (>7 days) between consecutive ACTIVE snapshots
+  // "Repostari detectate" - large time gaps (>7 days) between consecutive ACTIVE snapshots
   const activeSnapshots = snapshots.filter((s) => s.status === "ACTIVE");
   if (activeSnapshots.length >= 2) {
     let gapCount = 0;

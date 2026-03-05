@@ -49,12 +49,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Invalid src URL" }, { status: 400 });
   }
 
-  // Security: only allow whitelisted domains
   if (!isAllowedDomain(src)) {
-    return NextResponse.json(
-      { error: "Domain not allowed", allowed: ALLOWED_DOMAINS },
-      { status: 403 },
-    );
+    return NextResponse.json({ error: "domain_not_allowed" }, { status: 403 });
   }
 
   // Parse width (default 640)
@@ -94,12 +90,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (error) {
     console.error("Image proxy error:", error);
-    return NextResponse.json(
-      {
-        error: "Failed to proxy image",
-        message: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "proxy_failed" }, { status: 500 });
   }
 }

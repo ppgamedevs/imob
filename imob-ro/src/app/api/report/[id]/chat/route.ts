@@ -120,6 +120,7 @@ Informatii despre anunt:
 ${contextParts.join("\n")}
 
 Reguli:
+- Nu folosi NICIODATA em dash (—). Foloseste doar cratima normala (-).
 - Raspunde INTOTDEAUNA in romana.
 - Fii concis si util (max 3-4 propozitii per raspuns).
 - Bazeaza-te pe datele disponibile. Daca nu ai informatia, spune sincer.

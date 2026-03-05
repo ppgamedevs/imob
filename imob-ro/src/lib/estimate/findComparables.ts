@@ -2,8 +2,8 @@
  * Comparable-finding logic: shared between /report and /api/estimate.
  *
  * Two entry points:
- *  - findCompsForReport()  — reads pre-computed CompMatch rows for an analysis
- *  - fetchCompsFromListings() — queries ExtractedListing by geo proximity
+ *  - findCompsForReport()  - reads pre-computed CompMatch rows for an analysis
+ *  - fetchCompsFromListings() - queries ExtractedListing by geo proximity
  *
  * Both funnel through the same scoreAndClassify() pure function.
  */

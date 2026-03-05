@@ -149,7 +149,7 @@ export function extractGeneric(html: string): Extracted {
       }
     }
 
-    // Known residential projects — extract project name + area, not the full title
+    // Known residential projects - extract project name + area, not the full title
     if (!result.addressRaw) {
       const projectNameMatch = result.title.match(
         /\b((?:\w+\s+){0,2}(?:Residence|Residences|Residential|Park|Garden|City|Plaza|Towers?|Heights?|Greenfield|Gran Via|Cortina|Cosmopolis|Rin Grand|One Herastrau|Asmita|Ivory|Nusco|Sky|Upground|Belvedere|Premium|Luxuria|Horizon|Aviatiei\s+Park|West\s+Park|New\s+Point|Colina|Sema)(?:\s+\w+)?)\b/i

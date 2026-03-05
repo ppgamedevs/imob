@@ -4,6 +4,8 @@
  * Sends lead notification emails using Resend API
  */
 
+import { escapeHtml } from "@/lib/http/escape-html";
+
 interface LeadEmailData {
   name?: string;
   contact: string;
@@ -69,8 +71,13 @@ export async function sendOwnerEmail(
  * Generate HTML email template
  */
 function generateEmailHTML(lead: LeadEmailData, property: PropertyContext): string {
-  const { name, contact, message } = lead;
-  const { title, priceEur, area, reportUrl } = property;
+  const name = escapeHtml(lead.name || "Vizitator");
+  const contact = escapeHtml(lead.contact);
+  const message = escapeHtml(lead.message);
+  const title = escapeHtml(property.title);
+  const area = property.area ? escapeHtml(property.area) : undefined;
+  const { priceEur, reportUrl } = property;
+  const safeReportUrl = escapeHtml(reportUrl);
 
   return `
 <!DOCTYPE html>
@@ -103,13 +110,13 @@ function generateEmailHTML(lead: LeadEmailData, property: PropertyContext): stri
     <div class="content">
       <div class="property">
         <h3>${title}</h3>
-        <div class="price">€${priceEur.toLocaleString("ro-RO")}</div>
-        ${area ? `<div class="area">📍 ${area}</div>` : ""}
+        <div class="price">&euro;${priceEur.toLocaleString("ro-RO")}</div>
+        ${area ? `<div class="area">&#x1F4CD; ${area}</div>` : ""}
       </div>
 
       <div class="lead-info">
-        <p><strong>De la:</strong> ${name || "Vizitator"}</p>
-        <p><strong>Contact:</strong> <a href="${contact.includes("@") ? `mailto:${contact}` : `tel:${contact}`}">${contact}</a></p>
+        <p><strong>De la:</strong> ${name}</p>
+        <p><strong>Contact:</strong> <a href="${lead.contact.includes("@") ? `mailto:${contact}` : `tel:${contact}`}">${contact}</a></p>
       </div>
 
       <div class="message">
@@ -117,7 +124,7 @@ function generateEmailHTML(lead: LeadEmailData, property: PropertyContext): stri
         ${message}
       </div>
 
-      <a href="${reportUrl}" class="button">Vezi Raportul Complet</a>
+      <a href="${safeReportUrl}" class="button">Vezi Raportul Complet</a>
     </div>
 
     <div class="footer">
@@ -154,10 +161,10 @@ export async function sendUserConfirmation(
         subject: "Confirmăm primirea cererii tale",
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2>✅ Mesajul tău a fost trimis</h2>
-            <p>Mulțumim pentru interesul manifestat pentru <strong>${propertyTitle}</strong>.</p>
+            <h2>&#x2705; Mesajul tau a fost trimis</h2>
+            <p>Multumim pentru interesul manifestat pentru <strong>${escapeHtml(propertyTitle)}</strong>.</p>
             <p>Proprietarul sau agentul va primi mesajul tău și te va contacta în cel mai scurt timp.</p>
-            <p style="color: #6b7280; font-size: 14px;">Cod referință: <strong>${referenceCode}</strong></p>
+            <p style="color: #6b7280; font-size: 14px;">Cod referinta: <strong>${escapeHtml(referenceCode)}</strong></p>
             <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
             <p style="font-size: 12px; color: #9ca3af;">Dacă nu ai solicitat acest mesaj, poți ignora acest email.</p>
           </div>

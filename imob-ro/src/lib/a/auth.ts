@@ -6,9 +6,11 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import type { AgentSession } from "@/types/agent";
 
-const secret = new TextEncoder().encode(
-  process.env.AGENT_SESSION_SECRET || "change-me-in-production",
-);
+const envSecret = process.env.AGENT_SESSION_SECRET;
+if (!envSecret && process.env.NODE_ENV === "production") {
+  throw new Error("AGENT_SESSION_SECRET must be set in production");
+}
+const secret = new TextEncoder().encode(envSecret || "dev-only-secret-not-for-prod");
 const COOKIE_NAME = "agent-session";
 const SESSION_DURATION = 30 * 24 * 60 * 60; // 30 days
 

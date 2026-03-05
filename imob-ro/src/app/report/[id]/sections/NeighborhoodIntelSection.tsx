@@ -174,7 +174,7 @@ export default function NeighborhoodIntelSection({ scores, topNearby, totalPOIs 
                     <span>{dim.label}</span>
                   </span>
                   <span className={`text-xs font-semibold ${dim.color}`}>
-                    {score} — {scoreLabel(score)}
+                    {score} - {scoreLabel(score)}
                   </span>
                 </div>
                 <div className="h-2 rounded-full bg-gray-100 overflow-hidden">

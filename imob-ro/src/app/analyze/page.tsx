@@ -1,47 +1,89 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
 export const dynamic = "force-dynamic";
 
-const ANON_SEARCH_KEY = "imob_anon_searches";
-const ANON_LIMIT = 3;
+const MIN_LOADING_MS = 6000;
 
-function getAnonSearchCount(): number {
-  if (typeof window === "undefined") return 0;
-  return parseInt(localStorage.getItem(ANON_SEARCH_KEY) || "0", 10);
-}
+const LOADING_STEPS = [
+  { label: "Se extrag datele din anunt...", durationPct: 15 },
+  { label: "Se identifica zona si comparabilele...", durationPct: 35 },
+  { label: "Se calculeaza estimarea de pret...", durationPct: 60 },
+  { label: "Se evalueaza riscurile si oportunitatile...", durationPct: 80 },
+  { label: "Se genereaza raportul complet...", durationPct: 95 },
+];
 
-function incrementAnonSearchCount(): number {
-  const next = getAnonSearchCount() + 1;
-  localStorage.setItem(ANON_SEARCH_KEY, String(next));
-  return next;
+function getStepIndex(elapsed: number, total: number): number {
+  const pct = (elapsed / total) * 100;
+  for (let i = LOADING_STEPS.length - 1; i >= 0; i--) {
+    if (pct >= LOADING_STEPS[i].durationPct) return i;
+  }
+  return 0;
 }
 
 function AnalyzePageContent() {
   const searchParams = useSearchParams();
   const urlParam = searchParams.get("url");
   const [url, setUrl] = useState(urlParam || "");
-  const [status, setStatus] = useState<"idle" | "fetching" | "done">("idle");
+  const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
-  const [anonWall, setAnonWall] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [stepIdx, setStepIdx] = useState(0);
   const router = useRouter();
+  const startTimeRef = useRef(0);
+  const pendingResultRef = useRef<string | null>(null);
+  const animFrameRef = useRef(0);
 
   useEffect(() => {
-    if (urlParam && status === "idle" && !anonWall) {
+    if (urlParam && status === "idle") {
       handleSubmit();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlParam]);
+
+  useEffect(() => {
+    if (status !== "loading") return;
+
+    let cancelled = false;
+    const tick = () => {
+      if (cancelled) return;
+      const elapsed = Date.now() - startTimeRef.current;
+      const apiDone = pendingResultRef.current !== null;
+
+      const target = apiDone
+        ? MIN_LOADING_MS
+        : Math.max(MIN_LOADING_MS, elapsed + 2000);
+      const pct = Math.min((elapsed / target) * 100, apiDone ? 100 : 95);
+
+      setProgress(pct);
+      setStepIdx(getStepIndex(elapsed, target));
+
+      if (apiDone && elapsed >= MIN_LOADING_MS) {
+        setStatus("done");
+        setProgress(100);
+        setTimeout(() => {
+          router.push(`/report/${pendingResultRef.current}`);
+        }, 400);
+        return;
+      }
+
+      animFrameRef.current = requestAnimationFrame(tick);
+    };
+
+    animFrameRef.current = requestAnimationFrame(tick);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(animFrameRef.current);
+    };
+  }, [status, router]);
 
   const handleSubmit = useCallback(async (e?: React.FormEvent) => {
     e?.preventDefault();
     const trimmed = url.trim();
     if (!trimmed) return;
 
-    // Client-side URL validation
     try {
       const parsed = new URL(trimmed);
       if (!["http:", "https:"].includes(parsed.protocol)) {
@@ -58,8 +100,11 @@ function AnalyzePageContent() {
     }
 
     setError(null);
-    setAnonWall(false);
-    setStatus("fetching");
+    pendingResultRef.current = null;
+    startTimeRef.current = Date.now();
+    setProgress(0);
+    setStepIdx(0);
+    setStatus("loading");
 
     try {
       const res = await fetch("/api/analyze", {
@@ -71,9 +116,7 @@ function AnalyzePageContent() {
       const data = await res.json().catch(() => ({}));
 
       if (res.ok && data?.id) {
-        incrementAnonSearchCount();
-        setStatus("done");
-        router.push(`/report/${data.id}`);
+        pendingResultRef.current = data.id;
       } else if (res.status === 402) {
         setStatus("idle");
         setError(`Limita atinsa: ${data.used ?? "?"}/${data.max ?? "?"} analize luna aceasta. Upgradeaza pentru mai multe.`);
@@ -88,7 +131,74 @@ function AnalyzePageContent() {
       setStatus("idle");
       setError("Eroare de conexiune. Verifica conexiunea la internet si incearca din nou.");
     }
-  }, [url, router]);
+  }, [url]);
+
+  if (status === "loading" || status === "done") {
+    return (
+      <div className="mx-auto max-w-[520px] px-5 py-24 md:py-36">
+        <div className="text-center">
+          <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50">
+            <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-blue-200 border-t-blue-600" />
+          </div>
+
+          <h2 className="text-[22px] md:text-[26px] font-bold tracking-tight text-gray-950">
+            {status === "done" ? "Raport gata!" : "Analizam proprietatea"}
+          </h2>
+
+          <p className="mt-2 text-[14px] text-gray-500 transition-all duration-500">
+            {status === "done"
+              ? "Redirectionare catre raportul complet..."
+              : LOADING_STEPS[stepIdx]?.label}
+          </p>
+        </div>
+
+        <div className="mt-10">
+          <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-700 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="mt-3 flex justify-between text-[12px] text-gray-400">
+            <span>{Math.round(progress)}%</span>
+            <span>{status === "done" ? "Complet" : "Se proceseaza..."}</span>
+          </div>
+        </div>
+
+        <div className="mt-10 space-y-3">
+          {LOADING_STEPS.map((step, i) => {
+            const isDone = i < stepIdx || status === "done";
+            const isCurrent = i === stepIdx && status !== "done";
+            return (
+              <div
+                key={i}
+                className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-[13px] transition-all duration-500 ${
+                  isDone
+                    ? "text-green-700 bg-green-50/60"
+                    : isCurrent
+                      ? "text-blue-700 bg-blue-50/60 font-medium"
+                      : "text-gray-400"
+                }`}
+              >
+                <span className="shrink-0 w-5 text-center">
+                  {isDone ? (
+                    <svg className="h-4 w-4 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  ) : isCurrent ? (
+                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-blue-200 border-t-blue-600" />
+                  ) : (
+                    <div className="h-2 w-2 rounded-full bg-gray-300 mx-auto" />
+                  )}
+                </span>
+                <span>{step.label}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-[680px] px-5 py-16 md:py-24">
@@ -98,24 +208,6 @@ function AnalyzePageContent() {
       <p className="mt-2 text-[15px] text-gray-500">
         Introdu un link de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro, lajumate.ro sau homezz.ro si primesti estimare de pret, comparabile si analiza completa.
       </p>
-
-      {/* TODO: re-enable anon wall before going live */}
-      {/* {anonWall && (
-        <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50/60 p-5 text-center">
-          <p className="text-[15px] font-semibold text-gray-900">
-            Creeaza un cont gratuit pentru a continua
-          </p>
-          <p className="mt-1.5 text-[13px] text-gray-500">
-            Ai folosit {ANON_LIMIT} cautari gratuite. Creeaza un cont gratuit si primesti 10 cautari/luna.
-          </p>
-          <Link
-            href="/auth/signin?callbackUrl=/analyze"
-            className="mt-4 inline-flex items-center rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-2.5 text-[13px] font-semibold text-white shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200"
-          >
-            Creeaza cont gratuit
-          </Link>
-        </div>
-      )} */}
 
       <form onSubmit={handleSubmit} className="mt-8">
         <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white p-2 shadow-sm transition-shadow duration-300 focus-within:shadow-md focus-within:border-gray-300">
@@ -128,29 +220,15 @@ function AnalyzePageContent() {
           />
           <button
             type="submit"
-            disabled={status === "fetching"}
-            className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 text-[13px] font-semibold text-white shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-3 text-[13px] font-semibold text-white shadow-sm hover:shadow-md hover:brightness-110 active:scale-[0.97] transition-all duration-200"
           >
-            {status === "fetching" ? "Se analizeaza..." : "Analizeaza"}
+            Analizeaza
           </button>
         </div>
 
         {error && (
           <div className="mt-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-[13px] text-red-700">
             {error}
-          </div>
-        )}
-
-        {status === "fetching" && (
-          <div className="mt-4 flex items-center gap-2.5 text-[13px] text-gray-500">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
-            Se proceseaza analiza. Poate dura pana la 30 de secunde...
-          </div>
-        )}
-
-        {status === "done" && (
-          <div className="mt-4 text-[13px] text-green-600 font-medium">
-            Analiza finalizata. Redirectionare catre raport...
           </div>
         )}
       </form>

@@ -68,6 +68,18 @@ export interface VerdictInput {
   hasParking?: boolean | null;
   hasElevator?: boolean | null;
   heatingType?: string | null;
+
+  // Enriched listing metadata (for better reviews)
+  sellerType?: string | null;
+  isUnderConstruction?: boolean;
+  isNeverLivedIn?: boolean;
+  hasPlusTVA?: boolean;
+  isRender?: boolean;
+  photosAreRenders?: boolean;
+  estimatedDelivery?: string | null;
+  apartmentScore?: number | null;
+  scorePros?: string[] | null;
+  scoreCons?: string[] | null;
 }
 
 // ---- Logic ----
@@ -95,7 +107,7 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
   if (seismic === "RsI") {
     killers.push({
       type: "seismic",
-      text: "Risc seismic major (RsI) — bulina rosie",
+      text: "Risc seismic major (RsI) - bulina rosie",
       severity: "critical",
     });
     score -= 40;
@@ -115,7 +127,7 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
     score -= 8;
   }
 
-  // Overpricing — more aggressive thresholds
+  // Overpricing - more aggressive thresholds
   const overpricingPct =
     input.askingPrice && input.avmMid
       ? Math.round(((input.askingPrice - input.avmMid) / input.avmMid) * 100)
@@ -140,7 +152,7 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
     score -= 5;
   }
 
-  // No comps at all — hard to evaluate price
+  // No comps at all - hard to evaluate price
   if (input.compsCount === 0 && input.askingPrice) {
     killers.push({
       type: "data",
@@ -174,14 +186,14 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
   if (!input.hasPhotos) {
     killers.push({
       type: "data",
-      text: "Fara fotografii — nu se poate verifica starea",
+      text: "Fara fotografii - nu se poate verifica starea",
       severity: "warning",
     });
     score -= 8;
   } else if (input.photoCount != null && input.photoCount <= 2) {
     killers.push({
       type: "data",
-      text: "Foarte putine fotografii — verificati starea reala la vizionare",
+      text: "Foarte putine fotografii - verificati starea reala la vizionare",
       severity: "info",
     });
     score -= 3;
@@ -191,7 +203,7 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
   if (input.yearBuilt && input.yearBuilt < 1945 && !seismic) {
     killers.push({
       type: "age",
-      text: `Cladire din ${input.yearBuilt} — verificati expertiza tehnica`,
+      text: `Cladire din ${input.yearBuilt} - verificati expertiza tehnica`,
       severity: "info",
     });
     score -= 5;
@@ -218,7 +230,7 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
   }
 
   if (input.sellerMotivation === "urgent" || input.sellerMotivation === "foarte_urgent") {
-    reasons.push("Vanzator motivat — potential de negociere");
+    reasons.push("Vanzator motivat - potential de negociere");
     score += 5;
   }
 
@@ -244,7 +256,7 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
   else if (input.confidenceLevel === "medium") confidenceScore = Math.max(confidenceScore, 55);
   else if (input.confidenceLevel === "low") confidenceScore = Math.min(confidenceScore, 45);
 
-  // Graduated caps based on comps count — avoid always-35% issue
+  // Graduated caps based on comps count - avoid always-35% issue
   if (input.compsCount === 0) confidenceScore = Math.min(confidenceScore, 20);
   else if (input.compsCount <= 2) confidenceScore = Math.min(confidenceScore, 45);
   else if (input.compsCount <= 5) confidenceScore = Math.min(confidenceScore, 65);
@@ -294,8 +306,28 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
 }
 
 // ---------------------------------------------------------------------------
-// Rich narrative summary
+// Rich narrative summary - written like a human property review
 // ---------------------------------------------------------------------------
+
+function inferPropType(input: VerdictInput): string {
+  const t = (input.title ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (/\bvila\b|\bvile\b/.test(t)) return input.rooms ? `vila cu ${input.rooms} camere` : "vila";
+  if (/\bcasa\b|\bcase\b/.test(t)) return input.rooms ? `casa cu ${input.rooms} camere` : "casa";
+  if (/\bpenthouse\b/.test(t)) return "penthouse";
+  if (/\bduplex\b/.test(t)) return input.rooms ? `duplex cu ${input.rooms} camere` : "duplex";
+  if (/\bmansarda\b/.test(t)) return "mansarda";
+  if (/\bgarsonier[aă]?\b/.test(t) || input.rooms === 1) return "garsoniera";
+  if (input.rooms) return `apartament cu ${input.rooms} camere`;
+  return "proprietate";
+}
+
+function inferLocation(input: VerdictInput): string | null {
+  if (input.address) return input.address;
+  if (!input.title) return null;
+  const t = input.title.replace(/\|.*/g, "").replace(/^(proprietar|vand|vanzare|inchiriez)\s+/gi, "").trim();
+  const m = t.match(/(?:zona|in|langa|aproape\s+de)\s+(.{3,40}?)(?:\s*[,.\-|]|$)/i);
+  return m ? m[1].trim() : null;
+}
 
 function buildSummary(
   input: VerdictInput,
@@ -303,104 +335,184 @@ function buildSummary(
   overpricingPct: number | null,
   killers: DealKiller[],
 ): string {
-  const parts: string[] = [];
   const fmt = (n: number) => n.toLocaleString("ro-RO");
   const cur = input.currency || "EUR";
+  const propType = inferPropType(input);
+  const location = inferLocation(input);
+  const areaStr = input.areaM2 ? `${input.areaM2} mp` : null;
+  const isHouse = /casa|vila|duplex/.test(propType);
 
-  // Determine property type label from title or rooms
-  const titleLower = (input.title ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  let propType: string;
-  if (/\bvila\b|\bvile\b/.test(titleLower)) {
-    propType = input.rooms ? `vila cu ${input.rooms} camere` : "vila";
-  } else if (/\bcasa\b|\bcase\b/.test(titleLower)) {
-    propType = input.rooms ? `casa cu ${input.rooms} camere` : "casa";
-  } else if (/\bpenthouse\b/.test(titleLower)) {
-    propType = "penthouse";
-  } else if (/\bduplex\b/.test(titleLower)) {
-    propType = input.rooms ? `duplex cu ${input.rooms} camere` : "duplex";
-  } else if (/\bmansarda\b/.test(titleLower)) {
-    propType = "mansarda";
-  } else if (/\bgarsonier[aă]?\b/.test(titleLower) || input.rooms === 1) {
-    propType = "garsoniera";
-  } else if (input.rooms) {
-    propType = `apartament cu ${input.rooms} camere`;
-  } else {
-    propType = "proprietate";
+  // Gather all the things we know
+  const positives: string[] = [];
+  const negatives: string[] = [];
+  const caveats: string[] = [];
+
+  // Price assessment
+  if (overpricingPct != null) {
+    if (overpricingPct < -10) positives.push(`pretul este cu ${Math.abs(overpricingPct)}% sub media zonei - oportunitate de pret`);
+    else if (overpricingPct <= 5) positives.push("pretul este aliniat cu piata din zona");
+    else if (overpricingPct <= 15) negatives.push(`pretul este cu ${overpricingPct}% peste media zonei - exista loc de negociere`);
+    else negatives.push(`pretul este cu ${overpricingPct}% peste piata - semnificativ supraevaluat`);
+  } else if (input.askingPrice && !input.avmMid) {
+    caveats.push("nu avem suficiente date in zona pentru a valida pretul");
   }
 
-  // Build location context — prefer address; if only title, extract zone hint
-  let location = input.address || null;
-  if (!location && input.title) {
-    const t = input.title
-      .replace(/\|.*/g, "")       // strip " | Imobiliare.ro" etc.
-      .replace(/^(proprietar|vand|vanzare|inchiriez)\s+/gi, "")
-      .trim();
-    // Extract zone from title patterns like "zona X", "in X", metro name etc.
-    const zoneMatch = t.match(/(?:zona|in|langa|aproape\s+de)\s+(.{3,40}?)(?:\s*[,.\-|]|$)/i);
-    location = zoneMatch ? zoneMatch[1].trim() : null;
+  // Construction & condition
+  if (input.isUnderConstruction) {
+    positives.push("constructie noua, la normativele actuale");
+    if (input.yearBuilt && input.yearBuilt >= new Date().getFullYear())
+      caveats.push("imobilul nu este inca finalizat - exista riscul intarzierilor");
+    if (input.estimatedDelivery)
+      caveats.push(`predare estimata: ${input.estimatedDelivery}`);
+    if (input.isRender || input.photosAreRenders)
+      negatives.push("fotografiile din anunt sunt randari 3D, nu poze reale - vizitati proprietatea pentru a vedea stadiul real al constructiei");
+  } else if (input.llmCondition === "nou") {
+    positives.push("constructie noua");
+  } else if (input.llmCondition === "renovat") {
+    positives.push("recent renovat");
+  } else if (input.llmCondition === "de_renovat") {
+    negatives.push("necesita renovare completa - bugetati suplimentar");
+  } else if (input.llmCondition === "necesita_renovare") {
+    negatives.push("necesita lucrari de renovare");
   }
-  const yearInfo = input.yearBuilt ? ` din ${input.yearBuilt}` : "";
-  const areaInfo = input.areaM2 ? ` de ${input.areaM2} mp` : "";
-  const isHouseVerdictType = /\bcasa\b|\bvila\b|\bduplex\b/.test(propType);
-  const floorInfo =
-    !isHouseVerdictType && input.floor != null
-      ? input.totalFloors
-        ? `, etaj ${input.floor} din ${input.totalFloors}`
-        : `, etaj ${input.floor}`
-      : "";
 
-  // Strengths and weaknesses
-  const strengths: string[] = [];
-  const weaknesses: string[] = [];
+  // Render warning for non-construction listings too
+  if (!input.isUnderConstruction && input.photosAreRenders) {
+    caveats.push("fotografiile par a fi randari 3D, nu poze reale - verificati starea reala la vizionare");
+  }
 
-  if (input.llmCondition === "nou") strengths.push("constructie noua");
-  else if (input.llmCondition === "renovat") strengths.push("renovat recent");
-  if (input.hasParking) strengths.push("loc de parcare inclus");
-  if (input.hasElevator) strengths.push("bloc cu lift");
-  if (input.heatingType && /central[aă]/i.test(input.heatingType))
-    strengths.push("centrala proprie");
-  if (input.transitScore != null && input.transitScore >= 70)
-    strengths.push("acces foarte bun la transport");
+  if (input.isNeverLivedIn) positives.push("proprietate nelocuita - finisaje in stare originala");
+  if (input.hasParking) positives.push("loc de parcare inclus");
+  if (input.heatingType && /central[aă]/i.test(input.heatingType)) positives.push("centrala termica proprie");
+  if (input.hasElevator) positives.push("bloc cu lift");
+  if (input.sellerType === "dezvoltator") positives.push("achizitie directa de la dezvoltator");
+  if (input.transitScore != null && input.transitScore >= 70) positives.push("acces foarte bun la transport public");
 
-  if (input.yearBuilt && input.yearBuilt < 1978)
-    weaknesses.push("bloc vechi (inainte de 1977)");
-  if (!isHouseVerdictType && input.floor != null && input.floor >= 4 && !input.hasElevator)
-    weaknesses.push("etaj inalt fara lift");
-  if (input.compsCount === 0)
-    weaknesses.push("nu avem suficiente date comparative in zona");
+  // Negatives
+  if (input.yearBuilt && input.yearBuilt < 1978 && !input.isUnderConstruction)
+    negatives.push("cladire veche (inainte de 1977) - verificati expertiza tehnica");
+  if (!isHouse && input.floor != null && input.floor >= 4 && !input.hasElevator)
+    negatives.push("etaj inalt fara lift");
+  if (!input.hasPhotos) negatives.push("fara fotografii in anunt - nu se poate verifica starea reala");
+  if (input.hasPlusTVA) caveats.push("pretul nu include TVA - costul real este mai mare");
 
-  // --- Lead with expert verdict ---
+  // Seismic
+  const seismic = normalizeSeismic(input.seismicRiskClass);
+  if (seismic === "RsI") negatives.push("risc seismic major (bulina rosie)");
+  else if (seismic === "RsII") negatives.push("risc seismic semnificativ");
+
+  // Build the review
+  const parts: string[] = [];
+
+  // Opening - state what it is and our recommendation
+  const propDesc = [propType, areaStr].filter(Boolean).join(" de ");
+  const locationStr = location ? ` din ${location}` : "";
+
   if (verdict === "RECOMANDAT") {
-    parts.push(
-      `Aceasta ${propType}${areaInfo}${yearInfo}${floorInfo}${location ? ` din zona ${location}` : ""} este o optiune solida.`,
-    );
-    if (input.askingPrice && input.avmMid && overpricingPct != null) {
-      if (overpricingPct < -5)
-        parts.push(`Pretul de ${fmt(input.askingPrice)} ${cur} este sub valoarea de piata cu ${Math.abs(overpricingPct)}% — o oportunitate buna.`);
-      else
-        parts.push(`Pretul de ${fmt(input.askingPrice)} ${cur} este in linie cu piata din zona.`);
-    }
-    if (strengths.length > 0)
-      parts.push(`Puncte forte: ${strengths.join(", ")}.`);
+    if (positives.length >= 3)
+      parts.push(`Recomandam aceasta ${propDesc}${locationStr}. Este o proprietate cu mai multe puncte forte si fara riscuri majore.`);
+    else
+      parts.push(`Aceasta ${propDesc}${locationStr} este o optiune buna, fara probleme semnificative identificate.`);
   } else if (verdict === "ATENTIE") {
-    parts.push(
-      `Aceasta ${propType}${areaInfo}${yearInfo}${floorInfo}${location ? ` din zona ${location}` : ""} necesita atentie suplimentara.`,
-    );
-    if (input.askingPrice && input.avmMid && overpricingPct != null && overpricingPct > 5)
-      parts.push(`Pretul de ${fmt(input.askingPrice)} ${cur} este cu ${overpricingPct}% peste estimarea noastra — exista spatiu de negociere.`);
-    else if (input.askingPrice && !input.avmMid)
-      parts.push(`Pretul cerut este ${fmt(input.askingPrice)} ${cur}, dar nu avem suficiente comparabile pentru a valida corectitudinea.`);
-    if (strengths.length > 0) parts.push(`Puncte forte: ${strengths.join(", ")}.`);
-    if (weaknesses.length > 0) parts.push(`De verificat: ${weaknesses.join(", ")}.`);
+    if (negatives.length > 0)
+      parts.push(`Aceasta ${propDesc}${locationStr} are potential, dar exista aspecte care necesita atentie inainte de decizie.`);
+    else
+      parts.push(`Aceasta ${propDesc}${locationStr} pare in regula, dar nu avem suficiente informatii pentru o recomandare ferma.`);
   } else {
-    parts.push(
-      `Aceasta ${propType}${areaInfo}${yearInfo}${floorInfo}${location ? ` din zona ${location}` : ""} prezinta riscuri semnificative.`,
-    );
-    if (input.askingPrice && input.avmMid && overpricingPct != null && overpricingPct > 15)
-      parts.push(`Pretul de ${fmt(input.askingPrice)} ${cur} este cu ${overpricingPct}% peste piata.`);
-    if (weaknesses.length > 0) parts.push(`Probleme identificate: ${weaknesses.join(", ")}.`);
-    parts.push("Recomandam consultarea unui specialist inainte de orice decizie.");
+    parts.push(`Nu recomandam aceasta ${propDesc}${locationStr} in forma actuala. Am identificat riscuri importante care trebuie clarificate.`);
+  }
+
+  // Price sentence
+  if (input.askingPrice) {
+    const priceStr = `${fmt(input.askingPrice)} ${cur}`;
+    if (overpricingPct != null && overpricingPct < -5)
+      parts.push(`La pretul de ${priceStr}, proprietatea este sub valoarea de piata - un avantaj clar pentru cumparator.`);
+    else if (overpricingPct != null && overpricingPct <= 5)
+      parts.push(`Pretul de ${priceStr} este corect raportat la zona si caracteristici.`);
+    else if (overpricingPct != null && overpricingPct > 5)
+      parts.push(`Pretul de ${priceStr} este peste media zonei. Negociati sau comparati cu alte oferte similare.`);
+    else if (!input.avmMid)
+      parts.push(`Pretul cerut este ${priceStr}, dar nu avem suficiente comparabile in zona pentru a confirma daca este corect.`);
+  }
+
+  // Top 2-3 positives woven naturally
+  if (positives.length > 0) {
+    const topPos = positives.slice(0, 3);
+    if (topPos.length === 1) parts.push(`Punct forte: ${topPos[0]}.`);
+    else parts.push(`Puncte forte: ${topPos.join(", ")}.`);
+  }
+
+  // Negatives & caveats
+  const concerns = [...negatives.slice(0, 2), ...caveats.slice(0, 2)];
+  if (concerns.length > 0) {
+    if (verdict === "EVITA")
+      parts.push(`Probleme: ${concerns.join("; ")}.`);
+    else
+      parts.push(`De verificat: ${concerns.join("; ")}.`);
   }
 
   return parts.join(" ");
+}
+
+/**
+ * Build structured quick-take bullet points for the UI.
+ * Each bullet is short (max ~60 chars) and actionable.
+ */
+export function buildQuickTake(input: VerdictInput, verdict: Verdict): string[] {
+  const bullets: string[] = [];
+  const fmt = (n: number) => n.toLocaleString("ro-RO");
+  const cur = input.currency || "EUR";
+
+  const overpricingPct = input.askingPrice && input.avmMid
+    ? Math.round(((input.askingPrice - input.avmMid) / input.avmMid) * 100)
+    : null;
+
+  // Price bullet
+  if (overpricingPct != null) {
+    if (overpricingPct < -5) bullets.push(`Pret bun - ${Math.abs(overpricingPct)}% sub media zonei`);
+    else if (overpricingPct <= 5) bullets.push("Pret corect pentru zona");
+    else if (overpricingPct <= 15) bullets.push(`Pret cu ${overpricingPct}% peste zona - negociabil`);
+    else bullets.push(`Supraevaluat cu ${overpricingPct}% fata de piata`);
+  } else if (input.askingPrice && !input.avmMid) {
+    bullets.push("Pretul nu poate fi validat - date insuficiente");
+  }
+
+  // Condition
+  if (input.isUnderConstruction) {
+    bullets.push("Constructie noua, la normative actuale");
+    if (input.yearBuilt && input.yearBuilt >= new Date().getFullYear())
+      bullets.push("Apartament neterminat - verificati stadiul constructiei");
+    if (input.isRender || input.photosAreRenders)
+      bullets.push("Pozele sunt randari 3D - vizitati pentru stadiul real");
+    if (input.estimatedDelivery)
+      bullets.push(`Predare estimata: ${input.estimatedDelivery}`);
+  } else if (input.llmCondition === "nou") bullets.push("Constructie noua");
+  else if (input.llmCondition === "renovat") bullets.push("Recent renovat");
+  else if (input.llmCondition === "de_renovat") bullets.push("Necesita renovare completa");
+  else if (input.llmCondition === "necesita_renovare") bullets.push("Necesita lucrari de renovare");
+
+  if (!input.isUnderConstruction && input.photosAreRenders)
+    bullets.push("Pozele par a fi randari 3D - verificati la vizionare");
+
+  if (input.isNeverLivedIn) bullets.push("Proprietate nelocuita - stare originala");
+
+  // Amenities
+  if (input.hasParking) bullets.push("Loc de parcare inclus");
+  if (input.heatingType && /central[aă]/i.test(input.heatingType)) bullets.push("Centrala termica proprie");
+  if (input.transitScore != null && input.transitScore >= 70) bullets.push("Transport public la indemana");
+
+  // Risks
+  const seismic = normalizeSeismic(input.seismicRiskClass);
+  if (seismic === "RsI") bullets.push("Risc seismic major (bulina rosie)");
+  else if (seismic === "RsII") bullets.push("Risc seismic semnificativ");
+
+  if (input.yearBuilt && input.yearBuilt < 1978 && !input.isUnderConstruction)
+    bullets.push(`Cladire din ${input.yearBuilt} - verificati structura`);
+
+  if (!input.hasPhotos) bullets.push("Fara fotografii - verificati la vizionare");
+  if (input.hasPlusTVA) bullets.push("Pret + TVA - costul real e mai mare");
+
+  if (input.sellerType === "dezvoltator") bullets.push("Direct de la dezvoltator");
+
+  return bullets.slice(0, 6);
 }

@@ -3,6 +3,7 @@ import { z } from "zod";
 
 import { generateContentHash } from "@/lib/content-hash";
 import { prisma } from "@/lib/db";
+import { isSafeUrl } from "@/lib/http/ssrf";
 import { allowRequest, createRateLimitResponse, getClientIp } from "@/lib/rate-limiter-enhanced";
 import { sanitizeListing } from "@/lib/sanitize";
 import { normalizeUrl } from "@/lib/url";
@@ -142,8 +143,8 @@ export async function POST(req: Request) {
     });
   }
 
-  // Ensure photos is an array (JSON) and use sanitized data
-  const photos = Array.isArray(sanitizedExtracted.photos) ? sanitizedExtracted.photos : [];
+  const rawPhotos = Array.isArray(sanitizedExtracted.photos) ? sanitizedExtracted.photos : [];
+  const photos = rawPhotos.filter((u: string) => isSafeUrl(u).safe);
 
   // Merge description into sourceMeta so the LLM worker can use it
   const sourceMeta = {

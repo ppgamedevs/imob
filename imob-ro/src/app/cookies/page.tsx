@@ -1,8 +1,11 @@
 import Link from "next/link";
 
-export const metadata = {
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
   title: "Politica Cookie-uri",
-  description: "Cum folosim cookie-urile pe platforma imobintel.ro",
+  description: "Cum folosim cookie-urile pe platforma ImobIntel.",
+  alternates: { canonical: "/cookies" },
 };
 
 export default function CookiesPage() {
