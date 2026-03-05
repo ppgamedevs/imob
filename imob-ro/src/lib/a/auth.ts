@@ -6,11 +6,14 @@ import { cookies } from "next/headers";
 import { prisma } from "@/lib/db";
 import type { AgentSession } from "@/types/agent";
 
-const envSecret = process.env.AGENT_SESSION_SECRET;
-if (!envSecret && process.env.NODE_ENV === "production") {
-  throw new Error("AGENT_SESSION_SECRET must be set in production");
+function getSecret(): Uint8Array {
+  const envSecret = process.env.AGENT_SESSION_SECRET;
+  if (!envSecret && process.env.NODE_ENV === "production") {
+    throw new Error("AGENT_SESSION_SECRET must be set in production");
+  }
+  return new TextEncoder().encode(envSecret || "dev-only-secret-not-for-prod");
 }
-const secret = new TextEncoder().encode(envSecret || "dev-only-secret-not-for-prod");
+
 const COOKIE_NAME = "agent-session";
 const SESSION_DURATION = 30 * 24 * 60 * 60; // 30 days
 
@@ -32,7 +35,7 @@ export async function createSession(agentId: string): Promise<void> {
   const token = await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("30d")
-    .sign(secret);
+    .sign(getSecret());
 
   (await cookies()).set(COOKIE_NAME, token, {
     httpOnly: true,
@@ -56,7 +59,7 @@ export async function getSession(): Promise<AgentSession | null> {
   if (!token?.value) return null;
 
   try {
-    const { payload } = await jwtVerify(token.value, secret);
+    const { payload } = await jwtVerify(token.value, getSecret());
     return payload as AgentSession;
   } catch {
     return null;
