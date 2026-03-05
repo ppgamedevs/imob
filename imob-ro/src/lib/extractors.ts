@@ -149,12 +149,20 @@ export function extractGeneric(html: string): Extracted {
       }
     }
 
-    // Known residential projects
+    // Known residential projects — extract project name + area, not the full title
     if (!result.addressRaw) {
-      const PROJECT_PATTERN = /(?:residence|residential|park|garden|city|plaza|towers?|heights?|greenfield|gran via|cortina|aviatiei|cosmopolis|metalurgiei|rin grand|one herastrau|asmita|ivory|nusco|sky|upground|belvedere|central|premium|luxuria)/i;
-      const projMatch = result.title.match(PROJECT_PATTERN);
-      if (projMatch) {
-        result.addressRaw = result.title.replace(/\s+/g, " ").trim().slice(0, 100);
+      const projectNameMatch = result.title.match(
+        /\b((?:\w+\s+){0,2}(?:Residence|Residences|Residential|Park|Garden|City|Plaza|Towers?|Heights?|Greenfield|Gran Via|Cortina|Cosmopolis|Rin Grand|One Herastrau|Asmita|Ivory|Nusco|Sky|Upground|Belvedere|Premium|Luxuria|Horizon|Aviatiei\s+Park|West\s+Park|New\s+Point|Colina|Sema)(?:\s+\w+)?)\b/i
+      );
+      if (projectNameMatch) {
+        const projectName = projectNameMatch[1].trim();
+        const sectorMatch = result.title.match(/sector(?:ul)?\s*(\d)/i);
+        const areaMatch = result.title.match(/[-–—]\s*(Pipera|Militari|Titan|Berceni|Colentina|Drumul Taberei|Rahova|Baneasa|Floreasca|Dorobanti|Cotroceni|Lujerului|Pallady|Pantelimon|Voluntari|Popesti|Chiajna|Bragadiru)\b/i);
+        const parts = [projectName];
+        if (areaMatch) parts.push(areaMatch[1].trim());
+        if (sectorMatch) parts.push(`Sector ${sectorMatch[1]}`);
+        parts.push("Bucuresti");
+        result.addressRaw = parts.join(", ");
       }
     }
 

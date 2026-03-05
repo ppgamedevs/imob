@@ -1,7 +1,10 @@
 import type { ScoreSnapshot } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
-import { nearestStationM } from "@/lib/geo";
+import { nearestStationM, inferLocationFromText } from "@/lib/geo";
+import { computeApartmentScore } from "@/lib/score/apartmentScore";
+import { computeExecutiveVerdict, type VerdictInput } from "@/lib/report/verdict";
+import { detectDevelopmentStatus } from "@/lib/analysis/development-detect";
 import type { LlmTextExtraction } from "@/lib/llm/types";
 import type { NormalizedFeatures } from "@/types/analysis";
 
@@ -53,6 +56,31 @@ export type PdfReportData = {
   llmSummary?: string | null;
   llmRedFlags?: string[] | null;
   llmPositives?: string[] | null;
+
+  // Executive verdict
+  verdictLabel?: string | null;
+  verdictSummary?: string | null;
+  confidenceScore?: number | null;
+  confidenceLabel?: string | null;
+  dealKillers?: string[] | null;
+
+  // Apartment score
+  apartmentScore?: number | null;
+  apartmentScoreLabel?: string | null;
+  scoreValue?: number | null;
+  scoreRisk?: number | null;
+  scoreLiquidity?: number | null;
+  scoreLifestyle?: number | null;
+  scorePros?: string[] | null;
+  scoreCons?: string[] | null;
+
+  // Transport
+  nearestMetroMinutes?: number | null;
+  hasElevator?: boolean | null;
+  heatingType?: string | null;
+
+  // Acquisition costs
+  hasCommission?: boolean | null;
 };
 
 export async function loadPdfReportData(analysisId: string): Promise<PdfReportData | null> {
@@ -138,6 +166,100 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
 
   const comps = await prisma.compMatch.count({ where: { analysisId } });
 
+  const priceEur = typeof f?.priceEur === "number" ? f.priceEur : (a.extractedListing?.price as number | null) ?? null;
+  const areaM2 = typeof f?.areaM2 === "number" ? f.areaM2 : (a.extractedListing?.areaM2 as number | null) ?? null;
+  const rooms = typeof f?.rooms === "number" ? f.rooms : (a.extractedListing?.rooms as number | null) ?? null;
+  const yearBuilt = typeof f?.yearBuilt === "number" ? f.yearBuilt : (a.extractedListing?.yearBuilt as number | null) ?? null;
+  const level = typeof f?.level === "number" ? f.level : null;
+  const totalFloors = typeof f?.totalFloors === "number" ? f.totalFloors : null;
+  const hasElevator = typeof f?.hasLift === "boolean" ? f.hasLift : null;
+  const distMetroM = typeof f?.distMetroM === "number" ? f.distMetroM : null;
+  const hasCommission = llmText?.redFlags?.some((r: string) => /comision/i.test(r)) ?? false;
+
+  // Infer location if needed for metro
+  let effectiveLat = lat;
+  let effectiveLng = lng;
+  if (effectiveLat == null || effectiveLng == null) {
+    const hint = inferLocationFromText(
+      a.extractedListing?.title ?? null,
+      (a.extractedListing as unknown as Record<string, unknown>)?.description as string | null,
+      addressRaw,
+    );
+    if (hint) { effectiveLat = hint.lat; effectiveLng = hint.lng; }
+  }
+  const metroData = effectiveLat != null && effectiveLng != null
+    ? nearestStationM(effectiveLat, effectiveLng)
+    : null;
+  const nearestMetroMinutes = metroData ? Math.round(metroData.distM / 80) : null;
+
+  // Compute executive verdict for PDF
+  const verdictInput: VerdictInput = {
+    askingPrice: priceEur,
+    avmLow: avmLow,
+    avmMid: avmMid,
+    avmHigh: avmHigh,
+    currency: (a.extractedListing?.currency as string) ?? "EUR",
+    confidenceLevel: null,
+    confidenceScore: avmConf != null ? Math.round(avmConf * 100) : null,
+    compsCount: comps,
+    seismicRiskClass: riskClass,
+    seismicConfidence: null,
+    seismicMethod: null,
+    llmRedFlags: llmText?.redFlags ?? null,
+    llmCondition: llmText?.condition ?? null,
+    sellerMotivation: llmText?.sellerMotivation ?? null,
+    transitScore: null,
+    vibeZoneTypeKey: null,
+    yearBuilt,
+    hasPhotos: photos.length > 0,
+    rooms,
+    areaM2,
+    floor: level,
+    totalFloors,
+    address: addressRaw,
+    title: a.extractedListing?.title ?? null,
+    hasParking: llmText?.hasParking ?? null,
+    hasElevator,
+    heatingType: llmText?.heatingType ?? null,
+  };
+  const verdict = computeExecutiveVerdict(verdictInput);
+
+  // Under-construction detection
+  const pdfDevSignals = detectDevelopmentStatus(
+    a.extractedListing?.title ?? null,
+    (a.extractedListing as unknown as Record<string, unknown>)?.description as string | null,
+    yearBuilt,
+    typeof sourceMeta?.sellerType === "string" ? sourceMeta.sellerType as string : null,
+    a.extractedListing?.addressRaw ?? null,
+  );
+
+  // Compute apartment score for PDF
+  const yearBucket = yearBuilt
+    ? yearBuilt < 1978 ? "<1977" as const
+    : yearBuilt <= 1990 ? "1978-1990" as const
+    : yearBuilt <= 2005 ? "1991-2005" as const
+    : "2006+" as const
+    : undefined;
+  const apartmentScoreResult = computeApartmentScore({
+    listingPriceEur: priceEur ?? undefined,
+    fairLikelyEur: avmMid ?? 0,
+    range80: { min: avmLow ?? 0, max: avmHigh ?? 0 },
+    range95: { min: (avmLow ?? 0) * 0.9, max: (avmHigh ?? 0) * 1.1 },
+    confidence: avmConf != null ? Math.round(avmConf * 100) : 30,
+    yearBucket,
+    yearBuilt: yearBuilt ?? undefined,
+    condition: llmText?.condition as "nou" | "renovat" | "locuibil" | "necesita_renovare" | "de_renovat" | undefined,
+    floor: level ?? undefined,
+    totalFloors: totalFloors ?? undefined,
+    hasElevator: hasElevator ?? undefined,
+    hasParking: llmText?.hasParking ?? undefined,
+    heatingType: llmText?.heatingType ?? undefined,
+    rooms: rooms ?? undefined,
+    areaM2: areaM2 ?? undefined,
+    sellerType: typeof sourceMeta?.sellerType === "string" ? sourceMeta.sellerType as string : undefined,
+    isUnderConstruction: pdfDevSignals.isUnderConstruction,
+  });
+
   return {
     id: a.id,
     url: a.sourceUrl,
@@ -146,17 +268,17 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     addressIsExact,
     sector,
     photos,
-    priceEur: typeof f?.priceEur === "number" ? f.priceEur : (a.extractedListing?.price as number | null) ?? null,
-    areaM2: typeof f?.areaM2 === "number" ? f.areaM2 : (a.extractedListing?.areaM2 as number | null) ?? null,
-    rooms: typeof f?.rooms === "number" ? f.rooms : (a.extractedListing?.rooms as number | null) ?? null,
-    level: typeof f?.level === "number" ? f.level : null,
+    priceEur,
+    areaM2,
+    rooms,
+    level,
     floorRaw: (a.extractedListing?.floorRaw as string) ?? null,
-    yearBuilt: typeof f?.yearBuilt === "number" ? f.yearBuilt : (a.extractedListing?.yearBuilt as number | null) ?? null,
+    yearBuilt,
     sellerType: typeof sourceMeta?.sellerType === "string" ? (sourceMeta.sellerType as string) : null,
     currency: (a.extractedListing?.currency as string) ?? "EUR",
     city: typeof f?.city === "string" ? f.city : null,
     areaSlug: typeof f?.areaSlug === "string" ? f.areaSlug : null,
-    distMetroM: typeof f?.distMetroM === "number" ? f.distMetroM : null,
+    distMetroM,
     avmLow,
     avmMid,
     avmHigh,
@@ -179,12 +301,29 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     trustReasons,
     events,
     hasParking: llmText?.hasParking ?? null,
-    nearestMetro: metro?.name ?? null,
+    nearestMetro: metroData?.name ?? null,
     compsCount: comps,
     zoneMedianEurM2: compsStats?.median ?? null,
     llmCondition: llmText?.condition ?? null,
     llmSummary: llmText?.summary ?? null,
     llmRedFlags: llmText?.redFlags ?? null,
     llmPositives: llmText?.positives ?? null,
+    verdictLabel: verdict.verdict,
+    verdictSummary: verdict.summary,
+    confidenceScore: verdict.confidenceScore,
+    confidenceLabel: verdict.confidenceLabel,
+    dealKillers: verdict.dealKillers.map((k) => k.text),
+    apartmentScore: apartmentScoreResult.score,
+    apartmentScoreLabel: apartmentScoreResult.label,
+    scoreValue: apartmentScoreResult.subscores.value,
+    scoreRisk: apartmentScoreResult.subscores.risk,
+    scoreLiquidity: apartmentScoreResult.subscores.liquidity,
+    scoreLifestyle: apartmentScoreResult.subscores.lifestyle,
+    scorePros: apartmentScoreResult.pros,
+    scoreCons: apartmentScoreResult.cons,
+    nearestMetroMinutes,
+    hasElevator,
+    heatingType: llmText?.heatingType ?? null,
+    hasCommission,
   };
 }

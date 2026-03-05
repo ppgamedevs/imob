@@ -183,8 +183,8 @@ export default function SeismicSection({
           </div>
         )}
 
-        {/* Heuristic note */}
-        {method === "heuristic" && note && (
+        {/* Heuristic note — only show if it adds info beyond the status banner */}
+        {method === "heuristic" && note && isInList && (
           <div className="text-xs text-muted-foreground bg-muted/40 rounded p-2">
             {note}
           </div>

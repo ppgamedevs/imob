@@ -9,6 +9,10 @@ interface Props {
   /** Legacy: distance from static metro dataset (features.distMetroM) */
   legacyDistMetroM?: number | null;
   legacyNearestMetro?: string | null;
+  /** True when lat/lng was guessed from title hints, not extracted precisely */
+  locationInferred?: boolean;
+  /** Property type label for fallback messages */
+  propertyType?: string;
 }
 
 const MODE_CONFIG: Record<Mode, { label: string; icon: string; color: string }> = {
@@ -36,7 +40,13 @@ function scoreLabel(score: number): string {
   return "Foarte slab";
 }
 
-export default function TransportSection({ transport, legacyDistMetroM, legacyNearestMetro }: Props) {
+export default function TransportSection({
+  transport,
+  legacyDistMetroM,
+  legacyNearestMetro,
+  locationInferred,
+  propertyType = "proprietate",
+}: Props) {
   // Use transport data if available, otherwise fall back to legacy
   const hasData = transport && transport.totalNearby > 0;
   const metroStop = transport?.nearestMetro;
@@ -54,8 +64,9 @@ export default function TransportSection({ transport, legacyDistMetroM, legacyNe
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Locatia exacta nu a fost detectata — datele de transport nu sunt disponibile.
-            Adaugati o adresa precisa pentru a vedea statiile din apropiere.
+            Nu am putut localiza aceasta {propertyType} pe harta — informatiile despre
+            transportul public din zona nu sunt disponibile. Daca adresa sau zona devine
+            disponibila, sectiunea se va actualiza automat.
           </p>
         </CardContent>
       </Card>
@@ -182,6 +193,11 @@ export default function TransportSection({ transport, legacyDistMetroM, legacyNe
 
         <p className="text-[10px] text-muted-foreground border-t pt-2">
           Distantele sunt in linie dreapta. Timpul de mers pe jos este estimat la ~80m/min. Datele provin din GTFS si OpenStreetMap.
+          {locationInferred && (
+            <span className="block mt-1 text-amber-600">
+              Locatia a fost estimata din titlul anuntului — distantele pot varia fata de adresa reala.
+            </span>
+          )}
         </p>
       </CardContent>
     </Card>

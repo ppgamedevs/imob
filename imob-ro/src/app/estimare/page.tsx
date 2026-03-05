@@ -13,7 +13,9 @@ const LocationPicker = dynamic(() => import("@/components/LocationPicker"), {
   ),
 });
 
+import AddressAutocomplete from "@/components/AddressAutocomplete";
 import ApartmentScoreCard from "@/components/score/ApartmentScoreCard";
+import PhotoUpload from "@/components/PhotoUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,6 +35,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 // ===================================================================
 
 interface FormData {
+  address: string;
   zona: string;
   sector: string;
   suprafata: string;
@@ -82,6 +85,15 @@ interface ApiResult {
       paywallActive: boolean;
     };
   };
+  visionAnalysis?: {
+    condition: string;
+    furnishing: string;
+    brightness: number;
+    layoutQuality: string | null;
+    visibleIssues: string[];
+    confidence: number;
+    evidence: string;
+  };
 }
 
 // ===================================================================
@@ -89,6 +101,7 @@ interface ApiResult {
 // ===================================================================
 
 const INITIAL_FORM: FormData = {
+  address: "",
   zona: "",
   sector: "",
   suprafata: "",
@@ -136,9 +149,9 @@ function fmt(n: number) {
   return n.toLocaleString("ro-RO");
 }
 
-function validate(form: FormData): Record<string, string> {
+function validate(form: FormData, pinLat: number | null): Record<string, string> {
   const errs: Record<string, string> = {};
-  if (!form.zona) errs.zona = "Selecteaza zona";
+  if (!form.zona && pinLat == null) errs.zona = "Selecteaza zona sau introdu adresa";
   const area = parseFloat(form.suprafata);
   if (!form.suprafata) errs.suprafata = "Introdu suprafata";
   else if (isNaN(area) || area < 10) errs.suprafata = "Minim 10 mp";
@@ -146,7 +159,7 @@ function validate(form: FormData): Record<string, string> {
   return errs;
 }
 
-function buildApiPayload(form: FormData, pinLat: number | null, pinLng: number | null) {
+function buildApiPayload(form: FormData, pinLat: number | null, pinLng: number | null, photos: string[]) {
   const zone = ZONE_MAP[form.zona];
   const floor = parseInt(form.etaj, 10);
   const year = parseInt(form.anConstructie, 10);
@@ -161,6 +174,7 @@ function buildApiPayload(form: FormData, pinLat: number | null, pinLng: number |
     yearBuilt: isNaN(year) || year < 1800 ? undefined : year,
     condition: form.stare as "nou" | "renovat" | "locuibil" | "necesita_renovare" | "de_renovat",
     hasParking: form.parcare === "da" ? true : form.parcare === "nu" ? false : undefined,
+    photos: photos.length > 0 ? photos : undefined,
   };
 }
 
@@ -824,6 +838,102 @@ function CtaBlock() {
   );
 }
 
+// -- Vision Analysis Card --
+
+const CONDITION_LABELS: Record<string, string> = {
+  nou: "Nou / finisaje noi",
+  renovat: "Renovat recent",
+  locuibil: "Locuibil",
+  necesita_renovare: "Necesita renovare",
+  de_renovat: "De renovat complet",
+};
+
+const FURNISHING_LABELS: Record<string, string> = {
+  gol: "Nemobilat",
+  partial_mobilat: "Partial mobilat",
+  complet_mobilat: "Complet mobilat",
+};
+
+const BRIGHTNESS_LABELS: Record<number, string> = {
+  0: "Foarte intuneric",
+  1: "Intuneric",
+  2: "Luminos",
+  3: "Foarte luminos",
+};
+
+function VisionAnalysisCard({ vision }: { vision: NonNullable<ApiResult["visionAnalysis"]> }) {
+  const condColor =
+    vision.condition === "nou" || vision.condition === "renovat"
+      ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+      : vision.condition === "locuibil"
+        ? "text-gray-700 bg-gray-50 border-gray-200"
+        : "text-amber-700 bg-amber-50 border-amber-200";
+
+  const brightnessColor =
+    vision.brightness >= 2
+      ? "text-yellow-700 bg-yellow-50 border-yellow-200"
+      : "text-gray-600 bg-gray-50 border-gray-200";
+
+  return (
+    <div className="rounded-2xl border border-purple-200 bg-gradient-to-br from-purple-50/60 to-white p-5 space-y-3">
+      <div className="flex items-center gap-2">
+        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-purple-100">
+          <svg className="h-3.5 w-3.5 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </div>
+        <div>
+          <h3 className="text-sm font-bold text-gray-900">Analiza AI din fotografii</h3>
+          <p className="text-[10px] text-gray-400">
+            Incredere AI: {Math.round(vision.confidence * 100)}%
+          </p>
+        </div>
+      </div>
+
+      {/* Badges */}
+      <div className="flex flex-wrap gap-1.5">
+        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium ${condColor}`}>
+          {CONDITION_LABELS[vision.condition] ?? vision.condition}
+        </span>
+        <span className="inline-flex items-center rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700">
+          {FURNISHING_LABELS[vision.furnishing] ?? vision.furnishing}
+        </span>
+        <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-medium ${brightnessColor}`}>
+          {BRIGHTNESS_LABELS[vision.brightness] ?? `Luminozitate: ${vision.brightness}`}
+        </span>
+        {vision.layoutQuality && (
+          <span className="inline-flex items-center rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[11px] font-medium text-gray-600">
+            Layout: {vision.layoutQuality}
+          </span>
+        )}
+      </div>
+
+      {/* Evidence */}
+      {vision.evidence && (
+        <p className="text-xs text-gray-600 leading-relaxed italic">
+          &ldquo;{vision.evidence}&rdquo;
+        </p>
+      )}
+
+      {/* Issues */}
+      {vision.visibleIssues.length > 0 && (
+        <div className="space-y-1">
+          <p className="text-[11px] font-semibold text-amber-700">Probleme detectate:</p>
+          <ul className="space-y-0.5">
+            {vision.visibleIssues.map((issue, i) => (
+              <li key={i} className="flex items-start gap-1.5 text-[11px] text-amber-700">
+                <span className="mt-1 h-1 w-1 flex-shrink-0 rounded-full bg-amber-400" />
+                {issue}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // -- Full results panel --
 
 function buildScoreInput(data: ApiResult, form: FormData): ApartmentScoreInput {
@@ -875,6 +985,7 @@ function ResultsPanel({
   return (
     <div className="space-y-4">
       <ExecutiveCards data={data} />
+      {data.visionAnalysis && <VisionAnalysisCard vision={data.visionAnalysis} />}
       <ApartmentScoreCard score={apartmentScore} variant="full" />
       <CompsSection comps={data.comps} limits={data.meta.limits} />
       <AdjustmentsSection adjustments={data.adjustments} />
@@ -907,6 +1018,7 @@ export default function EstimarePage() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [pinLat, setPinLat] = useState<number | null>(null);
   const [pinLng, setPinLng] = useState<number | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
   const resultsRef = useRef<HTMLDivElement>(null);
 
   const handlePinChange = useCallback((lat: number, lng: number) => {
@@ -919,6 +1031,20 @@ export default function EstimarePage() {
     setPinLng(null);
   }, []);
 
+  const handleAddressSelect = useCallback(
+    (lat: number, lng: number, displayName: string) => {
+      setPinLat(lat);
+      setPinLng(lng);
+      setForm((prev) => ({ ...prev, address: displayName }));
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.zona;
+        return next;
+      });
+    },
+    [],
+  );
+
   const updateField = useCallback((field: keyof FormData, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => {
@@ -929,7 +1055,7 @@ export default function EstimarePage() {
   }, []);
 
   const doEstimate = useCallback(async () => {
-    const errs = validate(form);
+    const errs = validate(form, pinLat);
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
 
@@ -942,7 +1068,7 @@ export default function EstimarePage() {
     }, 100);
 
     try {
-      const payload = buildApiPayload(form, pinLat, pinLng);
+      const payload = buildApiPayload(form, pinLat, pinLng, photos);
       const res = await fetch("/api/estimate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -961,7 +1087,7 @@ export default function EstimarePage() {
     } finally {
       setLoading(false);
     }
-  }, [form, pinLat, pinLng]);
+  }, [form, pinLat, pinLng, photos]);
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -979,10 +1105,11 @@ export default function EstimarePage() {
     setShowAdvanced(false);
     setPinLat(null);
     setPinLng(null);
+    setPhotos([]);
   }, []);
 
   return (
-    <main className="overflow-hidden">
+    <main className="overflow-x-hidden">
       {/* Hero */}
       <section className="relative isolate">
         <div
@@ -1024,40 +1151,42 @@ export default function EstimarePage() {
                 </p>
               </div>
 
-              {/* Zona */}
+              {/* Address autocomplete */}
               <div className="space-y-1.5">
-                <Label htmlFor="zona">Zona / Cartier *</Label>
-                <Select value={form.zona} onValueChange={(v) => updateField("zona", v)}>
-                  <SelectTrigger className={`w-full ${errors.zona ? "border-red-400" : ""}`}>
-                    <SelectValue placeholder="Selecteaza zona" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ZONE_NAMES.map((z) => (
-                      <SelectItem key={z} value={z}>
-                        {z}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.zona && <p className="text-xs text-red-500">{errors.zona}</p>}
+                <Label>Adresa apartament</Label>
+                <AddressAutocomplete
+                  value={form.address}
+                  onChange={(v) => updateField("address", v)}
+                  onSelect={handleAddressSelect}
+                  placeholder="ex: Bulevardul Mihai Bravu 13, Sector 2"
+                />
+                <p className="text-[10px] text-gray-400">
+                  Introdu adresa si selecteaza din lista pentru a plasa automat pinul pe harta.
+                </p>
               </div>
 
-              {/* Sector */}
-              <div className="space-y-1.5">
-                <Label htmlFor="sector">Sector</Label>
-                <Select value={form.sector} onValueChange={(v) => updateField("sector", v)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Optional" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SECTORS.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        Sector {s}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Zona fallback (if no address pin) */}
+              {pinLat == null && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="zona">Zona / Cartier {pinLat == null ? "*" : ""}</Label>
+                  <Select value={form.zona} onValueChange={(v) => updateField("zona", v)}>
+                    <SelectTrigger className={`w-full ${errors.zona ? "border-red-400" : ""}`}>
+                      <SelectValue placeholder="Selecteaza zona" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ZONE_NAMES.map((z) => (
+                        <SelectItem key={z} value={z}>
+                          {z}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.zona && <p className="text-xs text-red-500">{errors.zona}</p>}
+                  <p className="text-[10px] text-gray-400">
+                    Foloseste zona ca alternativa daca nu ai adresa exacta.
+                  </p>
+                </div>
+              )}
 
               {/* Map pin selector */}
               <div className="space-y-1.5">
@@ -1071,8 +1200,7 @@ export default function EstimarePage() {
                   </TooltipContent>
                 </Tooltip>
                 <p className="text-[11px] text-gray-400 -mt-0.5">
-                  Pune pin pe harta pentru a folosi comparabile reale din zona si a obtine o
-                  estimare mult mai precisa.
+                  Pune pin pe harta sau introdu adresa mai sus. Poti muta pinul daca pozitia nu e exacta.
                 </p>
                 <LocationPicker
                   lat={pinLat}
@@ -1080,6 +1208,12 @@ export default function EstimarePage() {
                   onChange={handlePinChange}
                   onClear={handlePinClear}
                 />
+              </div>
+
+              {/* Photo upload */}
+              <div className="space-y-1.5">
+                <Label>Poze apartament (optional)</Label>
+                <PhotoUpload photos={photos} onChange={setPhotos} maxPhotos={5} />
               </div>
 
               {/* Suprafata + Camere */}
@@ -1140,7 +1274,7 @@ export default function EstimarePage() {
 
               {/* Advanced fields */}
               {showAdvanced && (
-                <div className="space-y-4 rounded-xl border border-gray-100 bg-gray-50/50 p-4 animate-fade-up">
+                <div className="space-y-4 rounded-xl border border-gray-100 bg-gray-50/50 p-4">
                   <p className="text-[11px] text-gray-400 -mt-1">
                     Aceste informatii ne ajuta sa calculam o estimare mai precisa.
                   </p>

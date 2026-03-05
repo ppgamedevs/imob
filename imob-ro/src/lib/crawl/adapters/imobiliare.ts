@@ -192,7 +192,20 @@ export const adapterImobiliare: SourceAdapter = {
     }
 
     // --- Address ---
-    const addressRaw =
+    function cleanAddress(raw: string | undefined): string | undefined {
+      if (!raw) return undefined;
+      let addr = raw
+        .replace(/\s*pre[tț]\s+[\d.,]+\s*€?.*/i, "")  // strip "preț 124.000 € + TVA..."
+        .replace(/\s*\|.*$/g, "")                        // strip "| Imobiliare.ro"
+        .replace(/\s*\+\s*TVA.*/i, "")                   // strip "+ TVA" leftovers
+        .replace(/\s*€.*/g, "")                           // strip "€ ..." leftovers
+        .replace(/\s{2,}/g, " ")
+        .trim();
+      if (addr.length < 3 || addr.length > 200) return undefined;
+      return addr;
+    }
+
+    const addressRaw = cleanAddress(
       $('[itemprop="address"]').text().trim() ||
       $('meta[property="og:street-address"]').attr("content")?.trim() ||
       (() => {
@@ -203,53 +216,66 @@ export const adapterImobiliare: SourceAdapter = {
         const locEl = $(".listing-page__location, [class*='location']").first().text().trim();
         if (locEl && locEl.length < 200 && !/descriere|detalii|galerie/i.test(locEl)) return locEl;
         // Regex fallback from raw HTML
-        const loc = rawHtml.match(/(?:Militari|Drumul Taberei|Crângași|Sector \d|București|Voluntari|Pipera|Floreasca|Dorobanți|Titan|Berceni|Colentina|Rahova|Pantelimon)[^<"]*/i);
+        const loc = rawHtml.match(/(?:Militari|Drumul Taberei|Crângași|Crangasi|Sector \d|București|Bucuresti|Voluntari|Pipera|Floreasca|Dorobanți|Dorobanti|Titan|Berceni|Colentina|Rahova|Pantelimon|Lujerului|Dristor|Obor|Tineretului|Iancului|Cotroceni|Giulesti|Baneasa|Herastrau|Greenfield|Pallady|Metalurgiei|Mihai Bravu|Decebal)[^<"]*/i);
         return loc ? loc[0].trim().slice(0, 150) : undefined;
-      })();
+      })(),
+    );
 
     // --- Photos ---
     const photos: string[] = [];
     const seenPhotos = new Set<string>();
-    const PHOTO_EXCLUDE = /logo|avatar|agent|banner|sprite|icon|favicon|placeholder|widget|\/similar\b|\/recomandate\b|1x1|pixel/i;
+    const PHOTO_EXCLUDE = /logo|avatar|agent|banner|sprite|icon|favicon|placeholder|widget|\/similar\b|\/recomandate\b|1x1|pixel|\.svg/i;
+    const SMALL_SIZE_RE = /\/(\d{2,3})x(\d{2,3})\//;
 
-    // Prefer gallery container images first
-    $('[class*="gallery"] img, [class*="carousel"] img, [class*="slider"] img, [data-gallery] img').each((_, el) => {
-      const src = $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src");
-      if (src && !PHOTO_EXCLUDE.test(src) && !seenPhotos.has(src)) {
-        seenPhotos.add(src);
-        photos.push(new URL(src, url).toString());
-      }
-    });
-
-    // Fallback: broader img search scoped to listing content
-    if (photos.length < 3) {
-      $('img[src*="imobiliare"], img[data-src*="imobiliare"], img[data-lazy-src*="imobiliare"]').each((_, el) => {
-        const src = $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src");
-        if (src && !PHOTO_EXCLUDE.test(src) && !seenPhotos.has(src)) {
-          seenPhotos.add(src);
-          photos.push(new URL(src, url).toString());
-        }
+    function upgradePhotoUrl(imgUrl: string): string {
+      // Imobiliare.ro CDN uses size segments like /300x200/ — upgrade to larger
+      let upgraded = imgUrl.replace(SMALL_SIZE_RE, (_, w, h) => {
+        const nw = parseInt(w, 10);
+        const nh = parseInt(h, 10);
+        if (nw < 800 || nh < 600) return "/1200x900/";
+        return `/${w}x${h}/`;
       });
+      // Also try replacing _thumb or _small suffixes
+      upgraded = upgraded.replace(/_thumb\b/i, "").replace(/_small\b/i, "");
+      return upgraded;
     }
 
-    if (!photos.length) {
-      const ogImage = $('meta[property="og:image"]').attr("content");
-      if (ogImage) photos.push(ogImage);
+    function addPhoto(src: string) {
+      if (!src || PHOTO_EXCLUDE.test(src)) return;
+      const full = upgradePhotoUrl(new URL(src, url).toString());
+      const key = full.replace(/\?.*$/, ""); // dedup ignoring query params
+      if (seenPhotos.has(key)) return;
+      seenPhotos.add(key);
+      photos.push(full);
     }
 
-    // Gallery images from JSON/script data — restrict to gallery-like structures
+    // Priority 1: Gallery images from JSON/script data (highest quality)
     const gallerySection = rawHtml.match(/"gallery":\s*\[([^\]]+)\]/i)
       ?? rawHtml.match(/"images":\s*\[([^\]]+)\]/i)
       ?? rawHtml.match(/"photos":\s*\[([^\]]+)\]/i);
     if (gallerySection) {
       const urls = gallerySection[1].matchAll(/https?:\/\/[^"'\s]+(?:\.jpg|\.jpeg|\.png|\.webp)/gi);
-      for (const m of urls) {
-        const imgUrl = m[0];
-        if (!PHOTO_EXCLUDE.test(imgUrl) && !seenPhotos.has(imgUrl)) {
-          seenPhotos.add(imgUrl);
-          photos.push(imgUrl);
-        }
-      }
+      for (const m of urls) addPhoto(m[0]);
+    }
+
+    // Priority 2: Gallery container images (prefer data-original > data-src > src)
+    $('[class*="gallery"] img, [class*="carousel"] img, [class*="slider"] img, [data-gallery] img').each((_, el) => {
+      const src = $(el).attr("data-original") || $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src");
+      if (src) addPhoto(src);
+    });
+
+    // Priority 3: broader img search scoped to listing content
+    if (photos.length < 3) {
+      $('img[src*="imobiliare"], img[data-src*="imobiliare"], img[data-lazy-src*="imobiliare"]').each((_, el) => {
+        const src = $(el).attr("data-original") || $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src");
+        if (src) addPhoto(src);
+      });
+    }
+
+    // Priority 4: OG image fallback
+    if (!photos.length) {
+      const ogImage = $('meta[property="og:image"]').attr("content");
+      if (ogImage) addPhoto(ogImage);
     }
 
     // --- Geocode ---
@@ -268,23 +294,48 @@ export const adapterImobiliare: SourceAdapter = {
 
     // --- Seller type ---
     let sellerType: string | undefined;
-    const sellerPatterns = [
-      { re: /\b(?:agentie|agentia|agenție|agenția|agent\b|intermediar)/i, type: "agentie" },
-      { re: /\b(?:proprietar|particular)/i, type: "proprietar" },
-      { re: /\b(?:dezvoltator|constructor|ansamblu\s*rezidential)/i, type: "dezvoltator" },
-    ];
-    const sellerHtml = rawHtml.toLowerCase();
-    for (const sp of sellerPatterns) {
-      if (sp.re.test(sellerHtml)) { sellerType = sp.type; break; }
+
+    // Priority 1: explicit spec field (most reliable)
+    const sellerSpec = findSpecText($, "Tip vânzător") || findSpecText($, "Tip vanzator") || findSpecText($, "Oferit de");
+    if (sellerSpec) {
+      const sl = sellerSpec.toLowerCase();
+      if (sl.includes("dezvoltator") || sl.includes("constructor")) sellerType = "dezvoltator";
+      else if (sl.includes("proprietar") || sl.includes("particular")) sellerType = "proprietar";
+      else if (sl.includes("agent") || sl.includes("agentie") || sl.includes("agenție")) sellerType = "agentie";
     }
+
+    // Priority 2: developer signals from title + description (not whole-page HTML)
     if (!sellerType) {
-      const sellerSpec = findSpecText($, "Tip vânzător") || findSpecText($, "Tip vanzator") || findSpecText($, "Oferit de");
-      if (sellerSpec) {
-        const sl = sellerSpec.toLowerCase();
-        if (sl.includes("agent") || sl.includes("agentie") || sl.includes("agenție")) sellerType = "agentie";
-        else if (sl.includes("proprietar") || sl.includes("particular")) sellerType = "proprietar";
-        else if (sl.includes("dezvoltator") || sl.includes("constructor")) sellerType = "dezvoltator";
+      const titleAndDesc = `${title ?? ""} ${description ?? ""}`.toLowerCase();
+      const developerSignals = [
+        /\b(?:dezvoltator|constructor)\b/i,
+        /\b(?:ansamblu\s*rezidential|ansamblu\s*rezidențial|complex\s*rezidential)\b/i,
+        /comision\s*0\s*%/i,
+        /\bin\s+constructie\b/i,
+        /\bin\s+construcție\b/i,
+        /nemobilat.*(?:predare|recept)/i,
+      ];
+      if (developerSignals.some((re) => re.test(titleAndDesc))) {
+        sellerType = "dezvoltator";
       }
+    }
+
+    // Priority 3: contact section / seller name hints
+    if (!sellerType) {
+      const contactSection = $('[class*="contact"], [class*="seller"], [class*="ofertant"]').text().toLowerCase();
+      if (/dezvoltator|constructor|residence|city|towers|park|plaza/i.test(contactSection)) {
+        sellerType = "dezvoltator";
+      } else if (/agentie|agenție|agent\s+imobiliar/i.test(contactSection)) {
+        sellerType = "agentie";
+      } else if (/proprietar|particular/i.test(contactSection)) {
+        sellerType = "proprietar";
+      }
+    }
+
+    // Priority 4: fallback - check page-level "comision 0%" badge
+    if (!sellerType) {
+      const comisionBadge = $('[class*="comision"], [class*="commission"]').text().toLowerCase();
+      if (/0\s*%/.test(comisionBadge)) sellerType = "dezvoltator";
     }
 
     return {

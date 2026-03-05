@@ -1,10 +1,10 @@
 [Unit]
-Description=ImobIntel crawl-seed (discover new listing URLs from sitemaps)
+Description=ImobIntel seed-discover (enqueue discover jobs for all listing sources)
 After=network-online.target docker.service
 Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/curl -sf -H "Authorization: Bearer ${CRON_SECRET}" http://localhost:3000/api/cron/crawl-seed
+ExecStart=/bin/sh -c 'curl -sf -H "Authorization: Bearer $CRON_SECRET" "${CRON_BASE_URL:-https://imobintel.ro}/api/cron/seed-discover"'
 EnvironmentFile=/home/admin/apps/imob/infra/.env
 TimeoutStartSec=120

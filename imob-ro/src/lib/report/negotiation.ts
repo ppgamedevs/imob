@@ -149,13 +149,12 @@ export function generateNegotiationPoints(
     });
   }
 
-  // 5 — Seismic risk on building
-  if (
+  // 5 — Seismic risk on building (only for confirmed RS1-RS3)
+  const _seis = input.seismicRiskClass?.toLowerCase() ?? "";
+  const isConfirmedSeismic =
     input.seismicRiskClass &&
-    input.seismicRiskClass !== "RsIV" &&
-    input.seismicRiskClass !== "UNKNOWN" &&
-    input.seismicRiskClass !== "None"
-  ) {
+    !["rsiv", "rs4", "unknown", "none", ""].includes(_seis);
+  if (isConfirmedSeismic) {
     const classLabel = input.seismicRiskClass.replace("Rs", "RS");
     pts.push({
       id: "seismic_direct",

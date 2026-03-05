@@ -106,3 +106,49 @@ export async function extractVisionWithLlm(
 
   return result?.data ?? null;
 }
+
+/**
+ * Analyze user-uploaded photos (base64 data URLs) without fetching from external URLs.
+ * Resizes server-side with sharp before sending to the vision model.
+ */
+export async function analyzeUserPhotos(
+  dataUrls: string[],
+): Promise<LlmVisionExtraction | null> {
+  const valid = dataUrls
+    .filter((u) => u.startsWith("data:image/"))
+    .slice(0, MAX_PHOTOS);
+
+  if (!valid.length) return null;
+
+  const images: { type: "image_url"; image_url: { url: string; detail: "low" } }[] = [];
+  for (const dataUrl of valid) {
+    try {
+      const base64Part = dataUrl.split(",")[1];
+      if (!base64Part) continue;
+      const buffer = Buffer.from(base64Part, "base64");
+      const resized = await sharp(buffer)
+        .resize(MAX_DIMENSION, MAX_DIMENSION, { fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 75 })
+        .toBuffer();
+      const b64 = `data:image/jpeg;base64,${resized.toString("base64")}`;
+      images.push({ type: "image_url", image_url: { url: b64, detail: "low" } });
+    } catch (err) {
+      logger.warn({ err }, "Failed to process user-uploaded photo for vision");
+    }
+  }
+
+  if (!images.length) return null;
+
+  const result = await callStructured<LlmVisionExtraction>({
+    systemPrompt: VISION_SYSTEM_PROMPT,
+    userContent: [
+      { type: "text", text: "Analizeaza aceste fotografii ale unui apartament:" },
+      ...images,
+    ],
+    jsonSchema: VISION_SCHEMA,
+    schemaName: "estimate_user_vision",
+    maxTokens: 800,
+  });
+
+  return result?.data ?? null;
+}

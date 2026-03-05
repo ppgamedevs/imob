@@ -2,15 +2,19 @@ import * as cheerio from "cheerio";
 
 import type { DiscoverResult, SourceAdapter } from "../types";
 
+function stripDiacritics(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 function findSpecValue($: cheerio.CheerioAPI, label: string): string | undefined {
-  const lf = label.toLowerCase();
+  const lf = stripDiacritics(label.toLowerCase());
   let result: string | undefined;
 
   // Strategy 1: label in one element, value in next sibling
   $("div, dt, td, span, li, th, strong, b").each((_, el) => {
     if (result) return;
     const node = $(el);
-    const text = node.text().trim().toLowerCase();
+    const text = stripDiacritics(node.text().trim().toLowerCase());
     if (!text.includes(lf) || text.length > 100) return;
 
     const sibling = node.next();
@@ -22,8 +26,8 @@ function findSpecValue($: cheerio.CheerioAPI, label: string): string | undefined
 
     // Strategy 2: value inline within parent (label and value in same container)
     const parent = node.parent();
-    const parentText = parent.text().trim();
-    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const parentText = stripDiacritics(parent.text().trim());
+    const escaped = stripDiacritics(label).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const re = new RegExp(escaped + "[:\\s]+(.+)", "i");
     const m = parentText.match(re);
     if (m) {
@@ -32,14 +36,14 @@ function findSpecValue($: cheerio.CheerioAPI, label: string): string | undefined
     }
   });
 
-  // Strategy 3: regex on raw HTML
+  // Strategy 3: regex on diacritic-stripped raw HTML
   if (!result) {
-    const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const escaped = stripDiacritics(label).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const re = new RegExp(
       escaped + `[^<]*<\\/[^>]+>\\s*(?:<[^>]+>\\s*)*([^<]{1,80})`,
       "i",
     );
-    const m = $.html().match(re);
+    const m = stripDiacritics($.html()).match(re);
     if (m?.[1]) result = m[1].trim();
   }
 

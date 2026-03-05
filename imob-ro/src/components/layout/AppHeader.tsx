@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 const navLinks = [
   { href: "/estimare", label: "Estimare" },
   { href: "/pricing", label: "Preturi" },
-  { href: "/how-we-estimate", label: "Metodologie" },
 ];
 
 export default function AppHeader() {

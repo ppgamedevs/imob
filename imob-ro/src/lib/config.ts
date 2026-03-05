@@ -11,12 +11,21 @@ export const getAnalyzeEndpoint = () => {
 
 export const ANALYZE_ENDPOINT = getAnalyzeEndpoint();
 
-// Server-side: read whitelist from SERVER_WHITELIST env (comma separated), fallback to a small default set.
+const SUPPORTED_DOMAINS = [
+  "imobiliare.ro",
+  "storia.ro",
+  "olx.ro",
+  "publi24.ro",
+  "lajumate.ro",
+  "homezz.ro",
+];
+
+// Server-side: read whitelist from SERVER_WHITELIST env (comma separated).
+// Always includes all supported adapter domains so they can never be accidentally excluded.
 export function getServerWhitelist(): Set<string> {
   const raw = (process.env.SERVER_WHITELIST || "").trim();
-  if (raw) {
-    return new Set(
-      raw
+  const extra = raw
+    ? raw
         .split(",")
         .map((s) =>
           s
@@ -24,16 +33,7 @@ export function getServerWhitelist(): Set<string> {
             .replace(/^www\./i, "")
             .toLowerCase(),
         )
-        .filter(Boolean),
-    );
-  }
-  return new Set([
-    "imobiliare.ro",
-    "storia.ro",
-    "olx.ro",
-    "publi24.ro",
-    "lajumate.ro",
-    "homezz.ro",
-    "example.com",
-  ]);
+        .filter(Boolean)
+    : [];
+  return new Set([...SUPPORTED_DOMAINS, ...extra]);
 }

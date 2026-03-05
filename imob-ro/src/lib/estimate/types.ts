@@ -29,6 +29,7 @@ export const EstimateInputSchema = z.object({
     .enum(["decomandat", "semidecomandat", "circular", "nedecomandat", "unknown"])
     .optional(),
   isThermoRehab: z.boolean().optional(),
+  photos: z.array(z.string()).max(5).optional(),
 });
 
 export type EstimateInput = z.infer<typeof EstimateInputSchema>;
@@ -85,6 +86,16 @@ export interface EstimateLimits {
   paywallActive: boolean;
 }
 
+export interface VisionAnalysis {
+  condition: string;
+  furnishing: string;
+  brightness: number;
+  layoutQuality: string | null;
+  visibleIssues: string[];
+  confidence: number;
+  evidence: string;
+}
+
 export interface EstimateMeta {
   compsCount: number;
   dispersion: number;
@@ -105,4 +116,5 @@ export interface EstimateOutput {
   risks: EstimateRisk[];
   tightenTips: EstimateTightenTip[];
   meta: EstimateMeta;
+  visionAnalysis?: VisionAnalysis;
 }

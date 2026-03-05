@@ -14,6 +14,7 @@ import {
   computeTightenTips,
   EstimateInputSchema,
   type EstimateOutput,
+  type VisionAnalysis,
   fetchCompsFromListings,
   inputCompleteness,
   RELAXED_RADIUS_M,
@@ -22,6 +23,7 @@ import {
   totalAdjustmentPct,
 } from "@/lib/estimate";
 import { flags } from "@/lib/feature-flags";
+import { analyzeUserPhotos } from "@/lib/llm/extract-vision";
 
 const QUERY_TIMEOUT_MS = 8_000;
 
@@ -80,8 +82,29 @@ export async function POST(req: Request) {
     yearBuilt: input.yearBuilt,
   });
 
+  // ----- Vision analysis (optional, when user uploads photos) -----
+  let visionAnalysis: VisionAnalysis | undefined;
+  if (input.photos?.length) {
+    try {
+      const visionResult = await analyzeUserPhotos(input.photos);
+      if (visionResult) {
+        visionAnalysis = {
+          condition: visionResult.condition,
+          furnishing: visionResult.furnishing,
+          brightness: visionResult.brightness,
+          layoutQuality: visionResult.layoutQuality,
+          visibleIssues: visionResult.visibleIssues,
+          confidence: visionResult.confidence,
+          evidence: visionResult.evidence,
+        };
+      }
+    } catch {
+      // Non-fatal — continue without vision
+    }
+  }
+
   // ----- Adjustments -----
-  const adjustments = computeAdjustments(input);
+  const adjustments = computeAdjustments(input, visionAnalysis);
   const adjTotal = totalAdjustmentPct(adjustments);
 
   // ----- EUR/m² stats -----
@@ -139,6 +162,17 @@ export async function POST(req: Request) {
 
   const profile = { ...input, rooms: input.rooms, usableAreaM2: input.usableAreaM2 };
 
+  const risks = computeRisks(profile);
+  if (visionAnalysis?.visibleIssues?.length) {
+    for (const issue of visionAnalysis.visibleIssues.slice(0, 3)) {
+      risks.push({
+        type: "vision_issue",
+        severity: "medium",
+        details: `Problema detectata in poze: ${issue}`,
+      });
+    }
+  }
+
   const responseBody: EstimateOutput = {
     fairLikely,
     range80,
@@ -149,7 +183,7 @@ export async function POST(req: Request) {
     adjustments,
     liquidity: computeLiquidity(input.rooms, input.usableAreaM2),
     recommendations: computeRecommendations(profile),
-    risks: computeRisks(profile),
+    risks,
     tightenTips: computeTightenTips(profile, stats.valuesUsed),
     meta: {
       compsCount: stats.valuesUsed,
@@ -162,6 +196,7 @@ export async function POST(req: Request) {
         paywallActive,
       },
     },
+    visionAnalysis,
   };
 
   // Fire-and-forget persist (gated by flag)

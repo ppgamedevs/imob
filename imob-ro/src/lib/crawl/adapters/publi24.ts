@@ -2,6 +2,10 @@ import * as cheerio from "cheerio";
 
 import type { DiscoverResult, SourceAdapter } from "../types";
 
+function stripDiacritics(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 export const adapterPubli24: SourceAdapter = {
   domain: "publi24.ro",
 
@@ -103,7 +107,7 @@ export const adapterPubli24: SourceAdapter = {
     // Publi24 has a "Specificatii" section with labels and values
     // e.g. "Suprafata utila" in one element, "30 m2" in next sibling or child
     function findSpec(label: string): string | undefined {
-      const lf = label.toLowerCase();
+      const lf = stripDiacritics(label.toLowerCase());
       let result: string | undefined;
 
       // Strategy 1: walk elements looking for label text
@@ -111,7 +115,7 @@ export const adapterPubli24: SourceAdapter = {
         if (result) return;
         const node = $(el);
         const nodeText = node.text().trim();
-        const text = nodeText.toLowerCase();
+        const text = stripDiacritics(nodeText.toLowerCase());
         if (!text.includes(lf) || text.length > 100) return;
 
         // Value in next sibling
@@ -124,8 +128,8 @@ export const adapterPubli24: SourceAdapter = {
 
         // Value inline after label (e.g. "Suprafata utila\n29 m2")
         const parent = node.parent();
-        const parentText = parent.text().trim();
-        const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const parentText = stripDiacritics(parent.text().trim());
+        const escaped = stripDiacritics(label).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const re = new RegExp(escaped + "[:\\s]+(.+)", "i");
         const m = parentText.match(re);
         if (m) {
@@ -142,14 +146,14 @@ export const adapterPubli24: SourceAdapter = {
         }
       });
 
-      // Strategy 2: regex on raw HTML
+      // Strategy 2: regex on diacritic-stripped raw HTML
       if (!result) {
-        const escaped = label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const escaped = stripDiacritics(label).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
         const re = new RegExp(
           escaped + `[^<]*<\\/[^>]+>\\s*(?:<[^>]+>\\s*)*([^<]{1,80})`,
           "i",
         );
-        const m = rawHtml.match(re);
+        const m = stripDiacritics(rawHtml).match(re);
         if (m?.[1]) result = m[1].trim();
       }
 

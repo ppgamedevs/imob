@@ -6,7 +6,6 @@ interface Props {
   priceRange: { low: number; high: number; mid: number } | null;
   askingPrice: number | null;
   currency: string;
-  analysisId?: string;
 }
 
 function enrichCommissionText(text: string, price: number | null): string {

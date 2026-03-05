@@ -3,11 +3,12 @@
 import "leaflet/dist/leaflet.css";
 
 import L from "leaflet";
-import { useCallback, useMemo, useState } from "react";
-import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { MapContainer, Marker, TileLayer, useMap, useMapEvents } from "react-leaflet";
 
 const BUCHAREST_CENTER: [number, number] = [44.4268, 26.1025];
 const DEFAULT_ZOOM = 12;
+const PIN_ZOOM = 16;
 
 const pinIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -35,6 +36,58 @@ function ClickHandler({ onPick }: ClickHandlerProps) {
   return null;
 }
 
+function FlyToHandler({ lat, lng }: { lat: number | null; lng: number | null }) {
+  const map = useMap();
+  const prevRef = useRef<string>("");
+
+  useEffect(() => {
+    if (lat == null || lng == null) return;
+    const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+    if (key === prevRef.current) return;
+    prevRef.current = key;
+    map.flyTo([lat, lng], Math.max(map.getZoom(), PIN_ZOOM), { duration: 0.8 });
+  }, [lat, lng, map]);
+
+  return null;
+}
+
+function DraggableMarker({
+  lat,
+  lng,
+  onChange,
+}: {
+  lat: number;
+  lng: number;
+  onChange: (lat: number, lng: number) => void;
+}) {
+  const markerRef = useRef<L.Marker | null>(null);
+
+  const eventHandlers = useMemo(
+    () => ({
+      dragend() {
+        const marker = markerRef.current;
+        if (!marker) return;
+        const pos = marker.getLatLng();
+        onChange(
+          Math.round(pos.lat * 1_000_000) / 1_000_000,
+          Math.round(pos.lng * 1_000_000) / 1_000_000,
+        );
+      },
+    }),
+    [onChange],
+  );
+
+  return (
+    <Marker
+      draggable
+      position={[lat, lng]}
+      icon={pinIcon}
+      ref={markerRef}
+      eventHandlers={eventHandlers}
+    />
+  );
+}
+
 interface LocationPickerProps {
   lat: number | null;
   lng: number | null;
@@ -54,7 +107,9 @@ export default function LocationPicker({ lat, lng, onChange, onClear }: Location
 
   const center = useMemo<[number, number]>(
     () => (lat != null && lng != null ? [lat, lng] : BUCHAREST_CENTER),
-    [lat, lng],
+    // Only use initial center, FlyToHandler handles subsequent moves
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
   );
 
   return (
@@ -70,7 +125,7 @@ export default function LocationPicker({ lat, lng, onChange, onClear }: Location
         )}
         <MapContainer
           center={center}
-          zoom={lat != null ? 15 : DEFAULT_ZOOM}
+          zoom={lat != null ? PIN_ZOOM : DEFAULT_ZOOM}
           scrollWheelZoom
           style={{ height: "100%", width: "100%" }}
           whenReady={() => setReady(true)}
@@ -80,7 +135,10 @@ export default function LocationPicker({ lat, lng, onChange, onClear }: Location
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <ClickHandler onPick={handlePick} />
-          {lat != null && lng != null && <Marker position={[lat, lng]} icon={pinIcon} />}
+          <FlyToHandler lat={lat} lng={lng} />
+          {lat != null && lng != null && (
+            <DraggableMarker lat={lat} lng={lng} onChange={handlePick} />
+          )}
         </MapContainer>
       </div>
 

@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db";
 import estimatePriceRange, { type AreaStats } from "@/lib/ml/avm";
 import estimateTTS from "@/lib/ml/tts";
 import { computeYield, estimateRent, type YieldResult } from "@/lib/ml/yield";
-import { nearestStationM } from "@/lib/geo";
+import { nearestStationM, inferLocationFromText } from "@/lib/geo";
 import { getTransportSummary } from "@/lib/geo/transport";
 import { computeVibeScores } from "@/lib/geo/vibe";
 import { matchSeismic } from "@/lib/risk/seismic";
@@ -23,6 +23,7 @@ import {
 import { findComparables, computeFairRange, type FairPriceResult } from "@/lib/report/pricing";
 import { computeExecutiveVerdict, type VerdictInput } from "@/lib/report/verdict";
 import { computeApartmentScore, type ApartmentScoreInput } from "@/lib/score/apartmentScore";
+import { detectDevelopmentStatus } from "@/lib/analysis/development-detect";
 
 import AnalysisLoading from "./AnalysisLoading";
 import CompsClientBlock from "./CompsClientBlock";
@@ -92,6 +93,12 @@ function looksLikeAddress(raw: string): boolean {
     /^afiseaza/,
     /^anunt/,
     /^oferta$/,
+    /pre[tț]\s+\d/,          // contains price like "preț 124.000"
+    /\bimobiliare\.ro\b/i,   // contains source name
+    /\bstoria\.ro\b/i,
+    /\bolx\.ro\b/i,
+    /\d+\s*€/,               // contains euro amounts
+    /\+\s*TVA/i,             // contains "+TVA"
   ];
   if (nonAddressPatterns.some((p) => p.test(lower))) return false;
   return true;
@@ -384,10 +391,28 @@ export default async function ReportPage({ params }: Props) {
   // Neighborhood Vibe Index + Transport summary (gated)
   let vibeResult: Awaited<ReturnType<typeof computeVibeScores>> | null = null;
   let transportResult: Awaited<ReturnType<typeof getTransportSummary>> | null = null;
-  if (f?.lat != null && f?.lng != null) {
+
+  // Use extracted lat/lng first, then try to infer from title/description
+  let geoLat = f?.lat ?? null;
+  let geoLng = f?.lng ?? null;
+  let locationInferred = false;
+  if (geoLat == null || geoLng == null) {
+    const hint = inferLocationFromText(
+      extracted?.title ?? null,
+      extracted?.description ?? null,
+      extracted?.addressRaw ?? null,
+    );
+    if (hint) {
+      geoLat = hint.lat;
+      geoLng = hint.lng;
+      locationInferred = true;
+    }
+  }
+
+  if (geoLat != null && geoLng != null) {
     const promises: [Promise<typeof vibeResult> | null, Promise<typeof transportResult> | null] = [
-      flags.poi ? computeVibeScores(f.lat, f.lng) : null,
-      flags.transport ? getTransportSummary(f.lat, f.lng) : null,
+      flags.poi ? computeVibeScores(geoLat, geoLng) : null,
+      flags.transport ? getTransportSummary(geoLat, geoLng) : null,
     ];
     const [vibe, transport] = await Promise.allSettled(
       promises.map((p) => p ?? Promise.reject("disabled")),
@@ -550,8 +575,18 @@ export default async function ReportPage({ params }: Props) {
     negotiationInput.currency,
   );
 
+  // Under-construction detection
+  const yearBuiltVal = (extracted?.yearBuilt ?? f?.yearBuilt ?? null) as number | null;
+  const sourceMeta = (extracted as Record<string, unknown> | null)?.sourceMeta as Record<string, unknown> | undefined;
+  const devSignals = detectDevelopmentStatus(
+    extracted?.title as string | null,
+    extracted?.description as string | null,
+    yearBuiltVal,
+    sourceMeta?.sellerType as string | null,
+    extracted?.addressRaw as string | null,
+  );
+
   // Apartment Score
-  const yearBuiltVal = extracted?.yearBuilt ?? f?.yearBuilt ?? null;
   const apartmentScoreInput: ApartmentScoreInput = {
     listingPriceEur: actualPrice ?? undefined,
     fairLikelyEur: compsFairRange?.fairMid ?? bestRange?.mid ?? 0,
@@ -563,7 +598,7 @@ export default async function ReportPage({ params }: Props) {
     range95: bestRange
       ? { min: Math.round(bestRange.low * 0.9), max: Math.round(bestRange.high * 1.1) }
       : { min: 0, max: 0 },
-    confidence: confidenceData?.score ?? 50,
+    confidence: confidenceData?.score ?? 30,
     yearBucket:
       yearBuiltVal != null
         ? yearBuiltVal < 1977
@@ -574,9 +609,17 @@ export default async function ReportPage({ params }: Props) {
               ? "1991-2005"
               : "2006+"
         : undefined,
+    yearBuilt: yearBuiltVal ?? undefined,
     condition: (llmText?.condition as ApartmentScoreInput["condition"]) ?? undefined,
     floor: (f?.level as number) ?? undefined,
+    totalFloors: (f?.totalFloors as number) ?? undefined,
     hasElevator: llmText?.hasElevator ?? undefined,
+    hasParking: llmText?.hasParking ?? undefined,
+    heatingType: llmText?.heatingType ?? undefined,
+    rooms: (extracted?.rooms as number) ?? undefined,
+    areaM2: (extracted?.areaM2 as number) ?? (f?.areaM2 as number) ?? undefined,
+    sellerType: sourceMeta?.sellerType as string | undefined,
+    isUnderConstruction: devSignals.isUnderConstruction,
     liquidity: {
       daysMin: ttsResult?.minMonths != null ? ttsResult.minMonths * 30 : undefined,
       daysMax: ttsResult?.maxMonths != null ? ttsResult.maxMonths * 30 : undefined,
@@ -616,14 +659,28 @@ export default async function ReportPage({ params }: Props) {
 
       {/* Non-Bucharest disclaimer */}
       {(() => {
+        // Coordinate-based check: Bucharest metro area bounding box
+        const inBucharestBbox =
+          geoLat != null &&
+          geoLng != null &&
+          geoLat >= 44.33 && geoLat <= 44.55 &&
+          geoLng >= 25.93 && geoLng <= 26.30;
+        if (inBucharestBbox) return null;
+
         const city = f?.city as string | undefined;
         const addr = extracted?.addressRaw as string | undefined;
-        const combinedText = `${city ?? ""} ${addr ?? ""} ${extracted?.title ?? ""}`.toLowerCase();
+        const combinedText = `${city ?? ""} ${addr ?? ""} ${extracted?.title ?? ""}`
+          .normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
         const isBucharest =
           combinedText.includes("bucuresti") ||
-          combinedText.includes("bucurești") ||
           combinedText.includes("ilfov") ||
-          combinedText.includes("sector");
+          combinedText.includes("sector") ||
+          /\bbulevardul?\b/.test(combinedText) ||
+          /\bstr\.?\s/.test(combinedText) ||
+          /\bcalea\b/.test(combinedText) ||
+          /\bsoseaua\b/.test(combinedText) ||
+          /\bsplaiul\b/.test(combinedText);
+
         const hasCity = city || addr;
         if (hasCity && !isBucharest) {
           return (
@@ -651,20 +708,12 @@ export default async function ReportPage({ params }: Props) {
 
       {/* Executive Summary — always visible at top */}
       <div className="mb-6 space-y-3">
-        <div className="flex items-start gap-4 flex-wrap">
-          <div className="flex-1 min-w-0">
-            <ExecutiveSummarySection
-              verdict={executiveVerdict}
-              priceRange={bestRange}
-              askingPrice={actualPrice}
-              currency={extracted?.currency ?? "EUR"}
-              analysisId={analysis?.id ?? ""}
-            />
-          </div>
-          <div className="shrink-0">
-            <ApartmentScoreSection score={apartmentScore} variant="compact" />
-          </div>
-        </div>
+        <ExecutiveSummarySection
+          verdict={executiveVerdict}
+          priceRange={bestRange}
+          askingPrice={actualPrice}
+          currency={extracted?.currency ?? "EUR"}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -676,7 +725,15 @@ export default async function ReportPage({ params }: Props) {
                 <CardTitle>{extracted.title ?? "Fara titlu"}</CardTitle>
                 <CardDescription>
                   {(() => {
-                    const raw = extracted.addressRaw;
+                    const raw = extracted.addressRaw
+                      ? extracted.addressRaw
+                          .replace(/\s*pre[tț]\s+[\d.,]+\s*€?.*/i, "")
+                          .replace(/\s*\|.*$/g, "")
+                          .replace(/\s*\+\s*TVA.*/i, "")
+                          .replace(/\s*€.*/g, "")
+                          .replace(/\s{2,}/g, " ")
+                          .trim() || null
+                      : null;
                     const hasGoodAddress = raw && looksLikeAddress(raw);
                     const isStreet = hasGoodAddress ? isStreetAddress(raw!) : false;
                     const sector = extractSectorDisplay(raw, areaSlug);
@@ -910,12 +967,12 @@ export default async function ReportPage({ params }: Props) {
           />
 
           {/* Nearby POI section */}
-          {f?.lat != null && f?.lng != null && (
+          {geoLat != null && geoLng != null && (
             <NearbySection
-              lat={f.lat}
-              lng={f.lng}
-              distMetroM={f.distMetroM}
-              nearestMetro={nearestStationM(f.lat, f.lng)?.name ?? null}
+              lat={geoLat}
+              lng={geoLng}
+              distMetroM={f?.distMetroM ?? null}
+              nearestMetro={nearestStationM(geoLat, geoLng)?.name ?? null}
               hasParking={llmText?.hasParking ?? null}
             />
           )}
@@ -924,7 +981,17 @@ export default async function ReportPage({ params }: Props) {
           <TransportSection
             transport={transportResult}
             legacyDistMetroM={f?.distMetroM}
-            legacyNearestMetro={nearestStationM(f?.lat ?? 0, f?.lng ?? 0)?.name ?? null}
+            legacyNearestMetro={
+              nearestStationM(geoLat ?? f?.lat ?? 0, geoLng ?? f?.lng ?? 0)?.name ?? null
+            }
+            locationInferred={locationInferred}
+            propertyType={
+              extracted?.rooms === 1
+                ? "garsoniera"
+                : extracted?.rooms
+                  ? "apartament"
+                  : "proprietate"
+            }
           />
 
           {/* Neighborhood Intelligence (Vibe Index) */}

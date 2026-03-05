@@ -1,6 +1,7 @@
 export {
   type Adjustment,
   type AdjustmentInput,
+  type VisionSignals,
   computeAdjustments,
   totalAdjustmentPct,
 } from "./adjustments";
@@ -59,4 +60,5 @@ export {
   type EstimateRecommendation,
   type EstimateRisk,
   type EstimateTightenTip,
+  type VisionAnalysis,
 } from "./types";

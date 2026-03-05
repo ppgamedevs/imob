@@ -13,6 +13,15 @@ export interface Adjustment {
   reason: string;
 }
 
+export interface VisionSignals {
+  condition?: string;
+  furnishing?: string;
+  brightness?: number;
+  layoutQuality?: string | null;
+  visibleIssues?: string[];
+  confidence?: number;
+}
+
 export interface AdjustmentInput {
   condition?: string | null;
   floor?: number | null;
@@ -30,7 +39,7 @@ export interface AdjustmentInput {
 // Adjustment engine
 // ---------------------------------------------------------------------------
 
-export function computeAdjustments(input: AdjustmentInput): Adjustment[] {
+export function computeAdjustments(input: AdjustmentInput, vision?: VisionSignals): Adjustment[] {
   const adj: Adjustment[] = [];
 
   // Condition
@@ -173,6 +182,77 @@ export function computeAdjustments(input: AdjustmentInput): Adjustment[] {
       deltaPct: 2,
       reason: `Balcon de ${input.balconyM2} mp — spatiu suplimentar`,
     });
+
+  // Vision-based adjustments (from user-uploaded photos)
+  if (vision && (vision.confidence ?? 0) >= 0.4) {
+    if (vision.furnishing === "complet_mobilat")
+      adj.push({
+        name: "Mobilat complet (AI poze)",
+        deltaPct: 2,
+        reason: "AI a detectat mobilier complet in fotografii",
+      });
+    else if (vision.furnishing === "gol")
+      adj.push({
+        name: "Nemobilat (AI poze)",
+        deltaPct: -1,
+        reason: "AI a detectat apartament gol, fara mobilier",
+      });
+
+    if (vision.brightness === 3)
+      adj.push({
+        name: "Foarte luminos (AI poze)",
+        deltaPct: 1,
+        reason: "AI a detectat lumina naturala abundenta in fotografii",
+      });
+    else if (vision.brightness != null && vision.brightness <= 1)
+      adj.push({
+        name: "Iluminare slaba (AI poze)",
+        deltaPct: -1,
+        reason: "AI a detectat iluminare naturala redusa in fotografii",
+      });
+
+    if (vision.layoutQuality === "bun")
+      adj.push({
+        name: "Layout bun (AI poze)",
+        deltaPct: 1,
+        reason: "AI a detectat un layout deschis si spatios",
+      });
+    else if (vision.layoutQuality === "slab")
+      adj.push({
+        name: "Layout inghesuit (AI poze)",
+        deltaPct: -1,
+        reason: "AI a detectat un layout inghesuit sau nefunctional",
+      });
+
+    if (vision.visibleIssues && vision.visibleIssues.length >= 2)
+      adj.push({
+        name: "Probleme vizibile (AI poze)",
+        deltaPct: -3,
+        reason: `AI a detectat ${vision.visibleIssues.length} probleme vizibile in fotografii`,
+      });
+
+    // Override condition if AI is more confident than user's generic selection
+    if (vision.condition && (vision.confidence ?? 0) >= 0.6) {
+      const userCond = input.condition;
+      const aiCond = vision.condition;
+      if (userCond === "locuibil" && (aiCond === "renovat" || aiCond === "nou")) {
+        adj.push({
+          name: "Stare mai buna detectata (AI poze)",
+          deltaPct: 2,
+          reason: `AI estimeaza starea ca "${aiCond}" bazat pe fotografii`,
+        });
+      } else if (
+        userCond === "locuibil" &&
+        (aiCond === "necesita_renovare" || aiCond === "de_renovat")
+      ) {
+        adj.push({
+          name: "Stare mai slaba detectata (AI poze)",
+          deltaPct: -3,
+          reason: `AI estimeaza starea ca "${aiCond}" bazat pe fotografii`,
+        });
+      }
+    }
+  }
 
   return adj;
 }
