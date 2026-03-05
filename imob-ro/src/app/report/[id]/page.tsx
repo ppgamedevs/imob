@@ -52,11 +52,7 @@ import SeismicSection from "./sections/SeismicSection";
 import SellerChecklist from "./sections/SellerChecklist";
 import TtsSection from "./sections/TtsSection";
 import NearbySection from "./sections/NearbySection";
-import nextDynamic from "next/dynamic";
-const NeighborhoodIntelV2 = nextDynamic(
-  () => import("@/components/geo/NeighborhoodIntelV2"),
-  { ssr: false },
-);
+import NeighborhoodIntelV2 from "./NeighborhoodIntelV2Lazy";
 import VerdictSection from "./sections/VerdictSection";
 import ReportChat from "./ReportChat";
 import { ViewTracker } from "./ViewTracker";
