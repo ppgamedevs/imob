@@ -35,10 +35,13 @@ export const POI_CATEGORIES: Record<PoiCategoryKey, PoiCategoryDef> = {
     overpassFilters: [
       'node["shop"="supermarket"]',
       'way["shop"="supermarket"]',
+      'relation["shop"="supermarket"]',
       'node["shop"="convenience"]',
+      'way["shop"="convenience"]',
       'node["amenity"="pharmacy"]',
+      'way["amenity"="pharmacy"]',
     ],
-    defaultLimit: 25,
+    defaultLimit: 30,
     color: "#10b981",
   },
   transport: {
@@ -61,12 +64,15 @@ export const POI_CATEGORIES: Record<PoiCategoryKey, PoiCategoryDef> = {
     overpassFilters: [
       'node["amenity"="school"]',
       'way["amenity"="school"]',
+      'relation["amenity"="school"]',
       'node["amenity"="kindergarten"]',
       'way["amenity"="kindergarten"]',
+      'relation["amenity"="kindergarten"]',
       'node["amenity"="university"]',
       'way["amenity"="university"]',
+      'relation["amenity"="university"]',
     ],
-    defaultLimit: 20,
+    defaultLimit: 30,
     color: "#8b5cf6",
   },
   medical: {
@@ -76,11 +82,14 @@ export const POI_CATEGORIES: Record<PoiCategoryKey, PoiCategoryDef> = {
     overpassFilters: [
       'node["amenity"="hospital"]',
       'way["amenity"="hospital"]',
+      'relation["amenity"="hospital"]',
       'node["amenity"="clinic"]',
+      'way["amenity"="clinic"]',
+      'relation["amenity"="clinic"]',
       'node["amenity"="doctors"]',
       'node["amenity"="dentist"]',
     ],
-    defaultLimit: 15,
+    defaultLimit: 20,
     color: "#ef4444",
   },
   restaurant: {

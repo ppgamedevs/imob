@@ -74,13 +74,15 @@ export function detectDevelopmentStatus(
   const combined = [title, description, priceText].filter(Boolean).join(" ");
   let score = 0;
 
-  // Signal 1: Year built is in the future
+  // Signal 1: Year built is in the future or current year
   if (yearBuilt != null && yearBuilt > CURRENT_YEAR) {
     score += 40;
     result.signals.push(`An constructie ${yearBuilt} (in viitor)`);
     result.estimatedDelivery = String(yearBuilt);
   } else if (yearBuilt != null && yearBuilt === CURRENT_YEAR) {
-    score += 15;
+    // Current year in Q1/Q2 is almost certainly not finished yet
+    const currentMonth = new Date().getMonth(); // 0-indexed
+    score += currentMonth < 6 ? 30 : 20;
     result.signals.push(`An constructie ${yearBuilt} (anul curent)`);
   }
 
@@ -137,13 +139,11 @@ export function detectDevelopmentStatus(
   result.confidence = Math.min(score, 100);
   result.isUnderConstruction = score >= 30;
 
-  // Photos are likely renders if under construction
-  // Future year: almost certain renders. Current year: very likely renders.
-  // High confidence under-construction with developer: also likely renders.
+  // Photos are likely renders if under construction and the building
+  // can't physically be finished yet (year >= current) or the listing
+  // shows strong developer signals.
   if (result.isUnderConstruction) {
-    if (yearBuilt != null && yearBuilt > CURRENT_YEAR) {
-      result.isRender = true;
-    } else if (yearBuilt != null && yearBuilt === CURRENT_YEAR && score >= 40) {
+    if (yearBuilt != null && yearBuilt >= CURRENT_YEAR) {
       result.isRender = true;
     } else if (score >= 50 && sellerType === "dezvoltator") {
       result.isRender = true;
