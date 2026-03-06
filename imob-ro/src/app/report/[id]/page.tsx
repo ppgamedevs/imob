@@ -161,6 +161,40 @@ function extractSectorDisplay(
   return null;
 }
 
+function formatAreaLabel(slug: string): string {
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
+function buildApproximateLocationLabel(
+  addressRaw: string | null | undefined,
+  title: string | null | undefined,
+  areaSlug: string | null | undefined,
+  description: string | null | undefined,
+): string | null {
+  if (addressRaw && !looksLikeStreetAddress(addressRaw)) {
+    return addressRaw.replace(/,\s*Bucuresti$/i, "").trim();
+  }
+
+  const inferred = inferLocationFromText(title, description, addressRaw);
+  if (inferred?.hint) {
+    return inferred.hint
+      .replace(/^zona\s+/i, "")
+      .replace(/^aproape de metrou\s+/i, "Metrou ")
+      .replace(/^complex\s+/i, "")
+      .trim();
+  }
+
+  if (areaSlug) {
+    return formatAreaLabel(areaSlug);
+  }
+
+  return null;
+}
+
 function buildGoogleMapsUrl(
   lat: number | null | undefined,
   lng: number | null | undefined,
@@ -427,6 +461,12 @@ export default async function ReportPage({ params }: Props) {
   // Neighborhood Vibe Index + Transport summary (gated)
   let vibeResult: Awaited<ReturnType<typeof computeVibeScores>> | null = null;
   let transportResult: Awaited<ReturnType<typeof getTransportSummary>> | null = null;
+  const approximateLocationLabel = buildApproximateLocationLabel(
+    extracted?.addressRaw ?? null,
+    extracted?.title ?? null,
+    areaSlug ?? null,
+    listingDescription,
+  );
 
   // Use extracted lat/lng first, then static inference, then Nominatim geocoding
   let geoLat = f?.lat ?? null;
@@ -1012,6 +1052,15 @@ export default async function ReportPage({ params }: Props) {
             vatRate={vatRate}
             priceWithVAT={vatComputed?.priceWithVAT ?? null}
             quickTake={quickTake}
+            suppressTopics={[
+              ...(devSignals.isUnderConstruction ? (["construction"] as const) : []),
+              ...(devSignals.isRender ||
+              (llmVision?.isRender === true && (llmVision?.renderConfidence ?? 0) >= 0.6)
+                ? (["renders"] as const)
+                : []),
+              ...(hasPlusTVA ? (["vat"] as const) : []),
+              ...(!bestRange?.mid || comps.length < 3 ? (["pricing-confidence"] as const) : []),
+            ]}
           />
         </div>
       )}
@@ -1507,20 +1556,23 @@ export default async function ReportPage({ params }: Props) {
             />
 
             <DataInsightsSection
-              hasPrice={!!extracted?.price}
-              hasArea={!!extracted?.areaM2}
+              hasPrice={actualPrice != null}
+              hasPriceEstimate={bestRange?.mid != null}
+              hasArea={(extracted?.areaM2 ?? (f?.areaM2 as number | undefined) ?? null) != null}
               hasRooms={saneRooms != null}
               hasFloor={extracted?.floor != null || extracted?.floorRaw != null || f?.level != null}
               hasYear={!!(extracted?.yearBuilt ?? f?.yearBuilt)}
               hasAddress={!!extracted?.addressRaw}
               isHouse={isHouse}
-              hasCoords={f?.lat != null && f?.lng != null}
+              hasCoords={geoLat != null && geoLng != null}
               hasPhotos={
                 Array.isArray(extracted?.photos) && (extracted.photos as unknown[]).length > 0
               }
               compsCount={comps.length}
+              estimateComparableCount={compsFairRange?.compsUsed ?? comps.length}
               confidenceLevel={confidenceData?.level}
               seismicLevel={seismic.level}
+              approximateLocationLabel={approximateLocationLabel}
             />
 
             <ListingHistorySection

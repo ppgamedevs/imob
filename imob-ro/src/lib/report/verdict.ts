@@ -502,6 +502,7 @@ function buildHiddenTruths(
   highlightedRisks: DealKiller[],
 ): string[] {
   const truths: string[] = [];
+  const hasInfoGap = !input.avmMid || input.compsCount < 3;
 
   if (overpricingPct != null && overpricingPct > 10) {
     pushUnique(
@@ -522,7 +523,11 @@ function buildHiddenTruths(
     );
   }
 
-  if (input.riskInsights && input.riskInsights.length > 0) {
+  if (
+    input.riskInsights &&
+    input.riskInsights.length > 0 &&
+    !/lipsesc date ferme|verdictul general ramane partial/i.test(input.riskInsights[0] ?? "")
+  ) {
     pushUnique(truths, trimSentence(input.riskInsights[0]));
   }
 
@@ -545,7 +550,7 @@ function buildHiddenTruths(
     );
   }
 
-  if (!input.avmMid || input.compsCount < 3) {
+  if (!hasInfoGap) {
     pushUnique(
       truths,
       "Pretul nu este suficient de bine sustinut de comparabile, deci negocierea trebuie purtata conservator.",

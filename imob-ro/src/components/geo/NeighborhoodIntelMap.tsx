@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import HorizontalDragScroll from "@/components/ui/horizontal-drag-scroll";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import IntelScoreCards from "./IntelScoreCards";
 import {
@@ -226,29 +227,31 @@ export default function NeighborhoodIntelMap({
             value={activeCategory}
             onValueChange={(v) => setActiveCategory(v as PoiCategoryKey | "intel")}
           >
-            <TabsList className="w-full min-w-max justify-start overflow-x-auto flex-nowrap h-auto p-0.5 gap-0.5 bg-muted/50">
-              <TabsTrigger value="intel" className="flex-none shrink-0 text-xs px-2.5 py-1.5 data-[state=active]:shadow-sm">
-                Scoruri
-              </TabsTrigger>
-              {POI_CATEGORY_KEYS.map((key) => {
-                const cat = POI_CATEGORIES[key];
-                const count = data?.poisByCategory?.[key]?.length ?? 0;
-                return (
-                  <TabsTrigger
-                    key={key}
-                    value={key}
-                    className="flex-none shrink-0 text-xs px-2.5 py-1.5 data-[state=active]:shadow-sm"
-                  >
-                    {getCategoryIcon(key)} {cat.labelRo}
-                    {count > 0 && (
-                      <span className="ml-1 text-[10px] text-muted-foreground">
-                        {count}
-                      </span>
-                    )}
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
+            <HorizontalDragScroll>
+              <TabsList className="w-max min-w-max justify-start flex-nowrap h-auto p-0.5 gap-0.5 bg-muted/50">
+                <TabsTrigger value="intel" className="flex-none shrink-0 text-xs px-2.5 py-1.5 data-[state=active]:shadow-sm">
+                  Scoruri
+                </TabsTrigger>
+                {POI_CATEGORY_KEYS.map((key) => {
+                  const cat = POI_CATEGORIES[key];
+                  const count = data?.poisByCategory?.[key]?.length ?? 0;
+                  return (
+                    <TabsTrigger
+                      key={key}
+                      value={key}
+                      className="flex-none shrink-0 text-xs px-2.5 py-1.5 data-[state=active]:shadow-sm"
+                    >
+                      {getCategoryIcon(key)} {cat.labelRo}
+                      {count > 0 && (
+                        <span className="ml-1 text-[10px] text-muted-foreground">
+                          {count}
+                        </span>
+                      )}
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+            </HorizontalDragScroll>
 
             <TabsContent value="intel" className="mt-3">
               <IntelScoreCards

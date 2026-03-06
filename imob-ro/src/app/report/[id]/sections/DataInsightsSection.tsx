@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Props {
   hasPrice: boolean;
+  hasPriceEstimate: boolean;
   hasArea: boolean;
   hasRooms: boolean;
   hasFloor: boolean;
@@ -10,121 +11,225 @@ interface Props {
   hasCoords: boolean;
   hasPhotos: boolean;
   compsCount: number;
+  estimateComparableCount?: number;
   confidenceLevel?: string | null;
   seismicLevel?: string | null;
   isHouse?: boolean;
+  approximateLocationLabel?: string | null;
 }
 
 const CHECK = "✓";
 const WARN = "!";
 
+function pushUnique(items: string[], value: string) {
+  if (!items.includes(value)) items.push(value);
+}
+
 export default function DataInsightsSection(props: Props) {
-  const known: string[] = [];
-  const missing: string[] = [];
-  const alerts: string[] = [];
+  const certain: string[] = [];
+  const unclear: string[] = [];
+  const moneyRisks: string[] = [];
+  const comparableCount = props.estimateComparableCount ?? props.compsCount;
 
-  if (props.hasPrice) known.push("Pret");
-  else missing.push("Pretul nu a fost detectat din anunt");
+  if (props.hasPrice) {
+    certain.push("Pretul cerut este vizibil in analiza.");
+  } else {
+    unclear.push("Pretul nu este disponibil in analiza.");
+    moneyRisks.push(
+      "Fara un pret clar, nu poti ancora corect negocierea sau costul total al achizitiei.",
+    );
+  }
 
-  if (props.hasArea) known.push("Suprafata");
-  else missing.push("Suprafata utila nu a fost detectata");
+  if (props.hasPriceEstimate) {
+    certain.push("Exista un reper de pret din analiza pietei.");
+  } else {
+    unclear.push("Nu am putut construi o estimare de pret suficient de robusta.");
+    moneyRisks.push(
+      "Fara o estimare robusta, oferta trebuie facuta mai conservator si confirmata din comparabile reale.",
+    );
+  }
 
-  if (props.hasRooms) known.push("Numar camere");
-  else missing.push("Numarul de camere nu a fost detectat");
+  if (props.hasArea) {
+    certain.push("Suprafata utila este disponibila, deci pretul/mp poate fi verificat.");
+  } else {
+    unclear.push("Suprafata utila nu este disponibila in analiza.");
+    moneyRisks.push(
+      "Fara suprafata utila, poti compara gresit oferta si poti subestima costul real pe mp.",
+    );
+  }
+
+  if (props.hasRooms) {
+    certain.push("Numarul de camere este clar in analiza.");
+  } else {
+    unclear.push("Numarul de camere nu este disponibil in analiza.");
+  }
 
   if (props.isHouse) {
     // Houses/villas don't need floor information
   } else if (props.hasFloor) {
-    known.push("Etaj");
+    certain.push("Etajul este disponibil si poate fi verificat.");
   } else {
-    missing.push("Etajul nu a fost detectat");
+    unclear.push("Etajul nu este disponibil in analiza.");
+    pushUnique(
+      moneyRisks,
+      "Etajul influenteaza lichiditatea, lumina, zgomotul si uneori finantarea, deci merita confirmat inainte de oferta.",
+    );
   }
 
-  if (props.hasYear) known.push("Anul constructiei");
-  else missing.push("Anul constructiei nu este specificat");
-
-  if (props.hasAddress) known.push("Adresa");
-  else missing.push("Adresa nu a fost detectata");
-
-  if (props.hasCoords) known.push("Localizare GPS");
-  else missing.push("Nu am putut localiza proprietatea pe harta");
-
-  if (props.hasPhotos) known.push("Fotografii");
-  else missing.push("Nu exista fotografii in anunt");
-
-  if (props.compsCount > 3) {
-    known.push(`${props.compsCount} comparabile gasite`);
-  } else if (props.compsCount > 0) {
-    alerts.push(`Doar ${props.compsCount} comparabile gasite - estimarea este orientativa`);
+  if (props.hasYear) {
+    certain.push("Anul constructiei este prezent in analiza.");
   } else {
-    alerts.push("Nu am gasit comparabile suficiente in zona. Estimarea este orientativa.");
+    unclear.push("Anul constructiei nu este disponibil in analiza.");
+    moneyRisks.push(
+      "Fara anul constructiei, poti subestima costurile de renovare, riscul structural sau limitarile la creditare.",
+    );
   }
 
-  if (props.confidenceLevel === "low") {
-    alerts.push("Nivelul de incredere al estimarii este scazut - datele disponibile sunt limitate");
+  if (props.hasAddress) {
+    certain.push("Adresa exacta este disponibila in analiza.");
+  } else {
+    unclear.push(
+      props.approximateLocationLabel
+        ? `Adresa exacta nu este disponibila, dar anuntul indica macar zona aproximativa: ${props.approximateLocationLabel}.`
+        : "Adresa exacta nu este disponibila.",
+    );
+  }
+
+  if (props.hasCoords) {
+    certain.push("Proprietatea a fost localizata pe harta, deci analiza de zona are baza geografica.");
+  } else {
+    unclear.push(
+      props.approximateLocationLabel
+        ? `Nu am putut localiza exact proprietatea pe harta, dar avem un reper de zona: ${props.approximateLocationLabel}.`
+        : "Nu am putut localiza precis proprietatea pe harta.",
+    );
+  }
+
+  if (props.hasPhotos) {
+    certain.push("Exista fotografii in anunt pentru o verificare vizuala initiala.");
+  } else {
+    unclear.push("Nu exista fotografii in anunt.");
+    moneyRisks.push(
+      "Fara fotografii, starea reala poate ascunde renovari, igrasie sau finisaje slabe care iti cresc bugetul dupa cumparare.",
+    );
+  }
+
+  if (props.hasAddress && props.hasCoords) {
+    certain.push("Micro-locatia poate fi verificata mai usor fata de un anunt doar cu zona generica.");
+  } else {
+    pushUnique(
+      moneyRisks,
+      props.approximateLocationLabel
+        ? `Avem doar un reper larg de zona (${props.approximateLocationLabel}), nu micro-locatia exacta, deci strada, traficul si vecinatatile reale pot schimba valoarea perceputa.`
+        : "Fara adresa exacta si localizare precisa, poti plati pentru o zona mai buna pe hartie decat in realitate.",
+    );
+  }
+
+  if (comparableCount >= 4) {
+    certain.push(`Estimarea este sustinuta de ${comparableCount} comparabile relevante.`);
+  } else if (props.hasPriceEstimate && comparableCount > 0) {
+    unclear.push(
+      `Estimarea exista, dar este sustinuta doar de ${comparableCount} comparabile relevante.`,
+    );
+    moneyRisks.push(
+      "Cand estimarea are putine comparabile, nu ancora negocierea doar in acel numar fara o verificare manuala.",
+    );
+  } else if (props.hasPriceEstimate && comparableCount === 0) {
+    unclear.push(
+      "Estimarea exista, dar se bazeaza mai mult pe statistica de zona decat pe comparabile apropiate.",
+    );
+    moneyRisks.push(
+      "O estimare bazata mai mult pe statistica de zona poate rata diferente importante de bloc, strada sau finisaje.",
+    );
+  }
+
+  if (props.confidenceLevel === "low" && props.hasPriceEstimate) {
+    unclear.push("Nivelul de incredere al estimarii este scazut, deci datele disponibile sunt limitate.");
+    pushUnique(
+      moneyRisks,
+      "Daca increderea estimarii este scazuta, oferta trebuie validata suplimentar cu comparabile si acte, nu doar cu raportul automat.",
+    );
   }
 
   const sl = props.seismicLevel;
   if (sl === "RS1" || sl === "RsI") {
-    alerts.push("Cladirea este in clasa de risc seismic RsI (bulina rosie) - se recomanda verificarea documentelor de consolidare");
+    moneyRisks.push(
+      "Cladirea este in clasa de risc seismic RsI (bulina rosie) - poate afecta finantarea, asigurarea si revanzarea.",
+    );
   } else if (sl === "RS2" || sl === "RsII") {
-    alerts.push("Cladirea este in clasa de risc seismic RsII - se recomanda verificarea starii structurale");
+    moneyRisks.push(
+      "Cladirea este in clasa de risc seismic RsII - starea structurala trebuie verificata inainte de orice pas financiar ferm.",
+    );
   } else if (sl === "RS3" || sl === "RsIII") {
-    alerts.push("Cladirea are degradari structurale identificate (RsIII) - monitorizare recomandata");
+    moneyRisks.push(
+      "Cladirea are degradari structurale identificate (RsIII) - pot aparea costuri suplimentare de mentenanta sau limitari la revanzare.",
+    );
   }
 
-  const completeness = Math.round((known.length / (known.length + missing.length)) * 100);
+  const completeness = Math.round((certain.length / (certain.length + unclear.length)) * 100);
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle>Radiografia anuntului</CardTitle>
-          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-            completeness >= 80 ? "bg-green-100 text-green-800" :
-            completeness >= 50 ? "bg-yellow-100 text-yellow-800" :
-            "bg-red-100 text-red-800"
-          }`}>
-            {completeness}% complet
+          <span
+            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+              completeness >= 80
+                ? "bg-green-100 text-green-800"
+                : completeness >= 50
+                  ? "bg-yellow-100 text-yellow-800"
+                  : "bg-red-100 text-red-800"
+            }`}
+          >
+            Claritate date {completeness}%
           </span>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
-        {known.length > 0 && (
-          <div>
-            <div className="text-xs font-medium text-muted-foreground mb-1">Ce stim</div>
-            <div className="flex flex-wrap gap-1.5">
-              {known.map((k) => (
-                <span key={k} className="inline-flex items-center gap-1 text-xs bg-green-50 text-green-700 px-2 py-0.5 rounded">
-                  <span>{CHECK}</span> {k}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Aici nu punctam cat de bine suna anuntul, ci cat de mult poti verifica
+          inainte sa pui bani pe masa.
+        </p>
 
-        {missing.length > 0 && (
-          <div>
-            <div className="text-xs font-medium text-muted-foreground mb-1">Ce lipseste</div>
-            <ul className="space-y-1">
-              {missing.map((m) => (
-                <li key={m} className="text-xs text-orange-700 flex items-start gap-1.5">
-                  <span className="text-orange-500 mt-0.5">{WARN}</span>
-                  <span>{m}</span>
+        {certain.length > 0 && (
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3">
+            <div className="text-sm font-semibold text-emerald-900 mb-2">Ce e sigur</div>
+            <ul className="space-y-1.5">
+              {certain.map((item) => (
+                <li key={item} className="text-sm text-emerald-900 flex items-start gap-2">
+                  <span className="text-emerald-600 mt-0.5">{CHECK}</span>
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
           </div>
         )}
 
-        {alerts.length > 0 && (
-          <div>
-            <div className="text-xs font-medium text-muted-foreground mb-1">De stiut</div>
-            <ul className="space-y-1">
-              {alerts.map((a) => (
-                <li key={a} className="text-xs text-amber-700 flex items-start gap-1.5 font-medium">
-                  <span className="text-amber-500 mt-0.5">&#9432;</span>
-                  <span>{a}</span>
+        {unclear.length > 0 && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3">
+            <div className="text-sm font-semibold text-amber-900 mb-2">Ce e neclar</div>
+            <ul className="space-y-1.5">
+              {unclear.map((item) => (
+                <li key={item} className="text-sm text-amber-900 flex items-start gap-2">
+                  <span className="text-amber-600 mt-0.5">{WARN}</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {moneyRisks.length > 0 && (
+          <div className="rounded-xl border border-rose-200 bg-rose-50/80 p-3">
+            <div className="text-sm font-semibold text-rose-900 mb-2">
+              Ce te poate costa bani daca nu verifici
+            </div>
+            <ul className="space-y-1.5">
+              {moneyRisks.map((item) => (
+                <li key={item} className="text-sm text-rose-900 flex items-start gap-2">
+                  <span className="text-rose-600 mt-0.5">&#9432;</span>
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>

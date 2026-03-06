@@ -12,6 +12,63 @@ interface Props {
   vatRate?: number | null;
   priceWithVAT?: number | null;
   quickTake?: string[];
+  suppressTopics?: Array<"construction" | "renders" | "vat" | "pricing-confidence">;
+}
+
+function normalizeText(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function topicMatches(
+  text: string,
+  topic: "construction" | "renders" | "vat" | "pricing-confidence",
+) {
+  const normalized = normalizeText(text);
+
+  if (topic === "construction") {
+    return /constructie|neterminat|predare|santier|dezvoltator|stadiul constructiei/.test(
+      normalized,
+    );
+  }
+  if (topic === "renders") {
+    return /randari|poze|imagini|vizionare|starea reala/.test(normalized);
+  }
+  if (topic === "vat") {
+    return /\btva\b|costul final|taxe de achizitie/.test(normalized);
+  }
+  return /date insuficiente|comparabile|pretul nu poate fi validat|negocierea trebuie purtata conservator/.test(
+    normalized,
+  );
+}
+
+function dedupeBuyerLines(
+  items: string[],
+  seenTexts: string[],
+  suppressTopics: Array<"construction" | "renders" | "vat" | "pricing-confidence">,
+) {
+  const result: string[] = [];
+
+  for (const item of items) {
+    const normalized = normalizeText(item);
+    if (!normalized) continue;
+    if (suppressTopics.some((topic) => topicMatches(item, topic))) continue;
+    if (
+      seenTexts.some(
+        (seen) => normalized === seen || normalized.includes(seen) || seen.includes(normalized),
+      )
+    ) {
+      continue;
+    }
+    result.push(item);
+    seenTexts.push(normalized);
+  }
+
+  return result;
 }
 
 function enrichCommissionText(text: string, price: number | null): string {
@@ -189,9 +246,21 @@ export default function ExecutiveSummarySection({
   vatRate,
   priceWithVAT,
   quickTake,
+  suppressTopics = [],
 }: Props) {
   const cfg = VERDICT_CONFIG[v.verdict];
-  const additionalSignals = Math.max(0, v.dealKillers.length - v.highlightedRisks.length);
+  const seenTexts = [v.mustKnow, ...v.hiddenTruths].map(normalizeText).filter(Boolean);
+  const visibleTruths = dedupeBuyerLines(v.hiddenTruths, [], suppressTopics);
+  const visibleChecks = dedupeBuyerLines(v.nextChecks, [...seenTexts], suppressTopics);
+  const visibleQuickTake = dedupeBuyerLines(
+    quickTake ?? [],
+    [...seenTexts, ...visibleChecks.map(normalizeText)],
+    suppressTopics,
+  ).slice(0, 4);
+  const visibleRisks = v.highlightedRisks.filter(
+    (risk) => !suppressTopics.some((topic) => topicMatches(risk.text, topic)),
+  );
+  const additionalSignals = Math.max(0, v.dealKillers.length - visibleRisks.length);
 
   return (
     <Card className="overflow-hidden">
@@ -226,13 +295,13 @@ export default function ExecutiveSummarySection({
         </div>
 
         <div className="px-5 py-4 space-y-4">
-          {v.hiddenTruths.length > 0 && (
+          {visibleTruths.length > 0 && (
             <div className="space-y-2">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Ce nu iti spune anuntul direct
               </div>
               <div className="grid gap-2">
-                {v.hiddenTruths.map((item, index) => (
+                {visibleTruths.map((item, index) => (
                   <div
                     key={index}
                     className="rounded-lg border bg-muted/20 px-3 py-2 text-sm text-slate-800"
@@ -244,13 +313,13 @@ export default function ExecutiveSummarySection({
             </div>
           )}
 
-          {v.nextChecks.length > 0 && (
+          {visibleChecks.length > 0 && (
             <div className="space-y-2">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Ce verifici inainte de orice oferta
               </div>
               <div className="grid gap-2">
-                {v.nextChecks.map((item, index) => (
+                {visibleChecks.map((item, index) => (
                   <div
                     key={index}
                     className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900"
@@ -280,13 +349,13 @@ export default function ExecutiveSummarySection({
             />
           )}
 
-          {v.highlightedRisks.length > 0 && (
+          {visibleRisks.length > 0 && (
             <div className="space-y-2">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Semnale prioritare pentru cumparator
               </div>
               <div className="grid gap-1.5">
-                {v.highlightedRisks.map((k, i) => (
+                {visibleRisks.map((k, i) => (
                   <DealKillerPill key={i} killer={k} price={askingPrice} />
                 ))}
               </div>
@@ -298,13 +367,13 @@ export default function ExecutiveSummarySection({
             </div>
           )}
 
-          {quickTake && quickTake.length > 0 && (
+          {visibleQuickTake.length > 0 && (
             <div className="space-y-2">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Repere rapide
               </div>
               <div className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2">
-                {quickTake.map((b, i) => (
+                {visibleQuickTake.map((b, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm text-gray-700">
                     <span
                       className={`h-1.5 w-1.5 shrink-0 rounded-full ${

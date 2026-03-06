@@ -107,6 +107,15 @@ function sourceModeTooltip(mode: "official" | "proxy"): string {
     : "Strat estimat din surse indirecte, precum OpenStreetMap sau infrastructura de transport, util pentru comparatie rapida.";
 }
 
+function normalizeForCompare(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function makeUnknownLayer(key: RiskLayerKey): RiskLayerResult {
   return {
     key,
@@ -116,7 +125,7 @@ function makeUnknownLayer(key: RiskLayerKey): RiskLayerResult {
     summary:
       "Date indisponibile momentan. Stratul este pregatit, dar dataset-ul nu este integrat inca.",
     details: ["Integrarea este in curs. Pana atunci, acest strat nu influenteaza verdictul final."],
-    sourceName: "Data not integrated yet",
+    sourceName: "Dataset neintegrat momentan",
     sourceUrl: null,
     updatedAt: null,
   };
@@ -211,7 +220,7 @@ function GenericLayerBody({ layer }: { layer: RiskLayerResult }) {
         </div>
         <div className="rounded-md border bg-muted/20 px-3 py-2">
           <div className="text-muted-foreground">Sursa</div>
-          <div className="font-medium">{layer.sourceName ?? "Data not integrated yet"}</div>
+          <div className="font-medium">{layer.sourceName ?? "Dataset neintegrat momentan"}</div>
         </div>
         <div className="rounded-md border bg-muted/20 px-3 py-2">
           <div className="text-muted-foreground">Actualizat</div>
@@ -273,6 +282,24 @@ export default function RiskStackSection({
   const recommendedNextStep = useMemo(
     () => buildRecommendedNextStep(resolved, insightBlock.dominantKey),
     [insightBlock.dominantKey, resolved],
+  );
+  const insightItems = useMemo(() => {
+    const noteTexts = resolved.notes.map(normalizeForCompare);
+    return insightBlock.items.filter((item) => {
+      const normalizedItem = normalizeForCompare(item);
+      if (/lipsesc date ferme|verdictul general ramane partial/.test(normalizedItem)) {
+        return !noteTexts.some(
+          (note) =>
+            note.includes("straturi indisponibile momentan") ||
+            note.includes("scorul general nu este calculat"),
+        );
+      }
+      return true;
+    });
+  }, [insightBlock.items, resolved.notes]);
+  const allLayersUnknown = useMemo(
+    () => orderedKeys.every((key) => resolved.layers[key].level === "unknown"),
+    [orderedKeys, resolved.layers],
   );
   const [openItem, setOpenItem] = useState<RiskLayerKey>(orderedKeys[0] ?? "seismic");
 
@@ -363,11 +390,11 @@ export default function RiskStackSection({
           </div>
         )}
 
-        {insightBlock.items.length > 0 && (
+        {!allLayersUnknown && insightItems.length > 0 && (
           <div className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-3">
-            <div className="text-sm font-medium text-violet-900">Overall insights</div>
+            <div className="text-sm font-medium text-violet-900">Concluzii rapide</div>
             <ul className="mt-2 space-y-1">
-              {insightBlock.items.map((item, index) => (
+              {insightItems.map((item, index) => (
                 <li key={index} className="flex items-start gap-2 text-xs text-violet-900">
                   <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
                   <span>{item}</span>
@@ -379,7 +406,7 @@ export default function RiskStackSection({
 
         {recommendedNextStep && (
           <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3">
-            <div className="text-sm font-medium text-emerald-900">Recommended next step</div>
+            <div className="text-sm font-medium text-emerald-900">Pas recomandat</div>
             <p className="mt-1 text-xs text-emerald-900">{recommendedNextStep}</p>
           </div>
         )}

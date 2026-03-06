@@ -63,7 +63,7 @@ function makeUnknownLayer(key: RiskLayerKey): RiskLayerResult {
     summary:
       "Date indisponibile momentan. Stratul este pregatit, dar dataset-ul nu este integrat inca.",
     details: ["Integrarea este in curs. Pana atunci, acest strat nu influenteaza verdictul final."],
-    sourceName: "Data not integrated yet",
+    sourceName: "Dataset neintegrat momentan",
     sourceUrl: null,
     updatedAt: null,
   };
