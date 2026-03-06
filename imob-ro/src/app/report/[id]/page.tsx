@@ -121,8 +121,8 @@ function looksLikeAddress(raw: string): boolean {
   return true;
 }
 
-function isStreetAddress(raw: string): boolean {
-  if (!raw) return false;
+function isStreetAddress(raw: unknown): boolean {
+  if (typeof raw !== "string" || !raw) return false;
   const lower = raw
     .toLowerCase()
     .normalize("NFD")
@@ -170,16 +170,17 @@ function formatAreaLabel(slug: string): string {
 }
 
 function buildApproximateLocationLabel(
-  addressRaw: string | null | undefined,
+  addressRaw: unknown,
   title: string | null | undefined,
   areaSlug: string | null | undefined,
   description: string | null | undefined,
 ): string | null {
-  if (addressRaw && !looksLikeStreetAddress(addressRaw)) {
+  if (typeof addressRaw === "string" && addressRaw && !isStreetAddress(addressRaw)) {
     return addressRaw.replace(/,\s*Bucuresti$/i, "").trim();
   }
 
-  const inferred = inferLocationFromText(title, description, addressRaw);
+  const normalizedAddress = typeof addressRaw === "string" ? addressRaw : null;
+  const inferred = inferLocationFromText(title, description, normalizedAddress);
   if (inferred?.hint) {
     return inferred.hint
       .replace(/^zona\s+/i, "")
