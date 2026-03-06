@@ -39,7 +39,14 @@ const s = StyleSheet.create({
   },
 
   // Header
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20, borderBottom: `1pt solid ${BORDER}`, paddingBottom: 12 },
+  header: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+    borderBottom: `1pt solid ${BORDER}`,
+    paddingBottom: 12,
+  },
   brandName: { fontSize: 16, fontFamily: "Helvetica-Bold", color: BLUE },
   dateText: { fontSize: 8, color: GRAY },
 
@@ -50,18 +57,37 @@ const s = StyleSheet.create({
 
   // Metrics row
   metricsRow: { flexDirection: "row", gap: 8, marginBottom: 16, flexWrap: "wrap" },
-  metricCard: { flex: 1, minWidth: 80, backgroundColor: LIGHT_BG, borderRadius: 6, padding: 10, border: `1pt solid ${BORDER}` },
+  metricCard: {
+    flex: 1,
+    minWidth: 80,
+    backgroundColor: LIGHT_BG,
+    borderRadius: 6,
+    padding: 10,
+    border: `1pt solid ${BORDER}`,
+  },
   metricLabel: { fontSize: 8, color: GRAY, marginBottom: 2 },
   metricValue: { fontSize: 13, fontFamily: "Helvetica-Bold" },
   metricSub: { fontSize: 7, color: GRAY, marginTop: 1 },
 
   // Section heading
-  sectionTitle: { fontSize: 13, fontFamily: "Helvetica-Bold", marginTop: 16, marginBottom: 8, color: "#0F172A" },
+  sectionTitle: {
+    fontSize: 13,
+    fontFamily: "Helvetica-Bold",
+    marginTop: 16,
+    marginBottom: 8,
+    color: "#0F172A",
+  },
   sectionSubtitle: { fontSize: 9, color: GRAY, marginBottom: 8 },
 
   // Price anchors
   anchorRow: { flexDirection: "row", gap: 8, marginBottom: 8, flexWrap: "wrap" },
-  anchorCard: { flex: 1, minWidth: 120, borderRadius: 6, padding: 10, border: `1pt solid ${BORDER}` },
+  anchorCard: {
+    flex: 1,
+    minWidth: 120,
+    borderRadius: 6,
+    padding: 10,
+    border: `1pt solid ${BORDER}`,
+  },
   anchorDot: { width: 8, height: 8, borderRadius: 4, marginBottom: 4 },
   anchorLabel: { fontSize: 8, color: GRAY },
   anchorValue: { fontSize: 12, fontFamily: "Helvetica-Bold" },
@@ -76,12 +102,25 @@ const s = StyleSheet.create({
   listText: { flex: 1, fontSize: 9, lineHeight: 1.5 },
 
   // Checklist
-  checkBox: { width: 10, height: 10, borderRadius: 2, border: `1pt solid ${BORDER}`, marginTop: 2, flexShrink: 0 },
+  checkBox: {
+    width: 10,
+    height: 10,
+    borderRadius: 2,
+    border: `1pt solid ${BORDER}`,
+    marginTop: 2,
+    flexShrink: 0,
+  },
   checkText: { fontSize: 9, lineHeight: 1.5 },
   tipText: { fontSize: 7.5, color: GRAY, marginTop: 2, lineHeight: 1.4 },
 
   // Info box
-  infoBox: { backgroundColor: LIGHT_BG, borderRadius: 6, padding: 10, border: `1pt solid ${BORDER}`, marginBottom: 8 },
+  infoBox: {
+    backgroundColor: LIGHT_BG,
+    borderRadius: 6,
+    padding: 10,
+    border: `1pt solid ${BORDER}`,
+    marginBottom: 8,
+  },
   infoText: { fontSize: 9, color: GRAY, lineHeight: 1.5 },
 
   // Disclaimer
@@ -95,17 +134,22 @@ function fmt(n?: number | null, digits = 0): string {
 
 function displayFloor(raw?: string | number | null, level?: number | null): string {
   if (raw == null && level == null) return "-";
-  const val = String(raw ?? level ?? "").trim().toLowerCase();
+  const val = String(raw ?? level ?? "")
+    .trim()
+    .toLowerCase();
   if (!val) return "-";
   if (["ground_floor", "ground", "parter", "p", "0", "floor_0"].includes(val)) return "Parter";
   if (["demisol", "-1"].includes(val)) return "Demisol";
   if (["mansarda", "99"].includes(val)) return "Mansarda";
   const floorUnderscore = val.match(/^floor[_\s]+(\d{1,2})$/i);
   if (floorUnderscore) return `Etaj ${floorUnderscore[1]}`;
-  const slash = val.match(/^(p|parter|ground_floor|ground|floor_?\d{0,2}|\d{1,2})\s*\/\s*(\d{1,2})$/i);
+  const slash = val.match(
+    /^(p|parter|ground_floor|ground|floor_?\d{0,2}|\d{1,2})\s*\/\s*(\d{1,2})$/i,
+  );
   if (slash) {
     const left = slash[1].toLowerCase();
-    if (["p", "parter", "ground_floor", "ground", "0", "floor_0"].includes(left)) return `Parter/${slash[2]}`;
+    if (["p", "parter", "ground_floor", "ground", "0", "floor_0"].includes(left))
+      return `Parter/${slash[2]}`;
     const leftNum = left.match(/\d+/);
     if (leftNum) return `Etaj ${leftNum[0]}/${slash[2]}`;
     return `Etaj ${left}/${slash[2]}`;
@@ -122,22 +166,50 @@ function sellerLabel(type?: string | null): string | null {
   return null;
 }
 
-function computeAcquisitionCosts(priceEur: number, commissionStatus: string, vatAmount?: number | null) {
+function riskLevelText(level?: string | null): string {
+  if (level === "high") return "Ridicat";
+  if (level === "medium") return "Mediu";
+  if (level === "low") return "Scazut";
+  return "Necunoscut";
+}
+
+function computeAcquisitionCosts(
+  priceEur: number,
+  commissionStatus: string,
+  vatAmount?: number | null,
+) {
   const priceRon = priceEur * 5;
   const notarLow = Math.max(250, Math.round(priceEur * 0.01));
   const notarHigh = Math.max(400, Math.round(priceEur * 0.02));
   let impozitEur = 0;
-  if (priceRon > 450_000) impozitEur = Math.round((priceRon - 450_000) * 0.03 / 5);
-  const intabulareLow = 50, intabulareHigh = 100;
-  const evaluatorLow = 60, evaluatorHigh = 100;
-  const specialistLow = 200, specialistHigh = 500;
-  let totalLow = notarLow + impozitEur + intabulareLow + evaluatorLow + specialistLow + (vatAmount ?? 0);
-  let totalHigh = notarHigh + impozitEur + intabulareHigh + evaluatorHigh + specialistHigh + (vatAmount ?? 0);
+  if (priceRon > 450_000) impozitEur = Math.round(((priceRon - 450_000) * 0.03) / 5);
+  const intabulareLow = 50,
+    intabulareHigh = 100;
+  const evaluatorLow = 60,
+    evaluatorHigh = 100;
+  const specialistLow = 200,
+    specialistHigh = 500;
+  let totalLow =
+    notarLow + impozitEur + intabulareLow + evaluatorLow + specialistLow + (vatAmount ?? 0);
+  let totalHigh =
+    notarHigh + impozitEur + intabulareHigh + evaluatorHigh + specialistHigh + (vatAmount ?? 0);
   if (commissionStatus === "standard") {
     totalLow += Math.round(priceEur * 0.01);
     totalHigh += Math.round(priceEur * 0.03);
   }
-  return { totalLow, totalHigh, notarLow, notarHigh, impozitEur, intabulareLow, intabulareHigh, evaluatorLow, evaluatorHigh, specialistLow, specialistHigh };
+  return {
+    totalLow,
+    totalHigh,
+    notarLow,
+    notarHigh,
+    impozitEur,
+    intabulareLow,
+    intabulareHigh,
+    evaluatorLow,
+    evaluatorHigh,
+    specialistLow,
+    specialistHigh,
+  };
 }
 
 export default function ReportPdf(props: {
@@ -147,11 +219,16 @@ export default function ReportPdf(props: {
 }) {
   const { data, brand, sections } = props;
   const cur = data.currency ?? "EUR";
-  const today = new Date().toLocaleDateString("ro-RO", { year: "numeric", month: "long", day: "numeric" });
+  const today = new Date().toLocaleDateString("ro-RO", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
-  const overpricing = data.priceEur && data.avmMid
-    ? Math.round(((data.priceEur - data.avmMid) / data.avmMid) * 100)
-    : null;
+  const overpricing =
+    data.priceEur && data.avmMid
+      ? Math.round(((data.priceEur - data.avmMid) / data.avmMid) * 100)
+      : null;
 
   const VERDICT_COLORS: Record<string, { bg: string; text: string }> = {
     RECOMANDAT: { bg: "#DCFCE7", text: "#166534" },
@@ -189,22 +266,41 @@ export default function ReportPdf(props: {
             <Text style={s.address}>{data.address}, Bucuresti</Text>
           )}
           {data.address && !data.addressIsExact && (
-            <Text style={s.address}>{data.address} (adresa aproximativa){data.sector ? ` - ${data.sector}` : ""}</Text>
+            <Text style={s.address}>
+              {data.address} (adresa aproximativa){data.sector ? ` - ${data.sector}` : ""}
+            </Text>
           )}
           {!data.address && data.sector && (
-            <Text style={s.address}>{data.sector}, Bucuresti - adresa exacta nu poate fi determinata</Text>
+            <Text style={s.address}>
+              {data.sector}, Bucuresti - adresa exacta nu poate fi determinata
+            </Text>
           )}
           {data.url && <Text style={{ ...s.address, marginTop: 2 }}>{data.url}</Text>}
         </View>
 
         {/* Executive Verdict */}
         {data.verdictLabel && (
-          <View style={{ backgroundColor: vCfg.bg, borderRadius: 8, padding: 12, marginBottom: 14 }}>
-            <Text style={{ fontSize: 14, fontFamily: "Helvetica-Bold", color: vCfg.text, marginBottom: 4 }}>
-              {data.verdictLabel === "RECOMANDAT" ? "Recomandam" : data.verdictLabel === "EVITA" ? "Nu recomandam" : "Recomandam cu rezerve"}
+          <View
+            style={{ backgroundColor: vCfg.bg, borderRadius: 8, padding: 12, marginBottom: 14 }}
+          >
+            <Text
+              style={{
+                fontSize: 14,
+                fontFamily: "Helvetica-Bold",
+                color: vCfg.text,
+                marginBottom: 4,
+              }}
+            >
+              {data.verdictLabel === "RECOMANDAT"
+                ? "Recomandam"
+                : data.verdictLabel === "EVITA"
+                  ? "Nu recomandam"
+                  : "Recomandam cu rezerve"}
             </Text>
             {data.verdictSummary && (
-              <Text style={{ fontSize: 9, color: vCfg.text, lineHeight: 1.5 }}>{data.verdictSummary}</Text>
+              <Text style={{ fontSize: 9, color: vCfg.text, lineHeight: 1.5 }}>
+                {data.verdictSummary}
+              </Text>
             )}
             {data.confidenceScore != null && (
               <Text style={{ fontSize: 8, color: GRAY, marginTop: 4 }}>
@@ -217,9 +313,23 @@ export default function ReportPdf(props: {
         {/* Deal killers */}
         {data.dealKillers && data.dealKillers.length > 0 && (
           <View style={{ marginBottom: 10 }}>
-            <Text style={{ fontSize: 9, fontFamily: "Helvetica-Bold", color: "#DC2626", marginBottom: 4 }}>Riscuri identificate:</Text>
+            <Text
+              style={{
+                fontSize: 9,
+                fontFamily: "Helvetica-Bold",
+                color: "#DC2626",
+                marginBottom: 4,
+              }}
+            >
+              Riscuri identificate:
+            </Text>
             {data.dealKillers.map((dk, i) => (
-              <Text key={i} style={{ fontSize: 8, color: "#DC2626", marginLeft: 8, marginBottom: 2 }}>{"\u2022"} {dk}</Text>
+              <Text
+                key={i}
+                style={{ fontSize: 8, color: "#DC2626", marginLeft: 8, marginBottom: 2 }}
+              >
+                {"\u2022"} {dk}
+              </Text>
             ))}
           </View>
         )}
@@ -229,22 +339,35 @@ export default function ReportPdf(props: {
           <View style={s.metricsRow}>
             <View style={s.metricCard}>
               <Text style={s.metricLabel}>Pret cerut</Text>
-              <Text style={s.metricValue}>{fmt(data.priceEur)} {cur}{data.hasPlusTVA ? " + TVA" : ""}</Text>
+              <Text style={s.metricValue}>
+                {fmt(data.priceEur)} {cur}
+                {data.hasPlusTVA ? " + TVA" : ""}
+              </Text>
               {data.hasPlusTVA && data.priceWithVAT && (
-                <Text style={s.metricSub}>Cu TVA {data.vatRate ?? 19}%: {fmt(data.priceWithVAT)} {cur}</Text>
+                <Text style={s.metricSub}>
+                  Cu TVA {data.vatRate ?? 19}%: {fmt(data.priceWithVAT)} {cur}
+                </Text>
               )}
             </View>
             {data.priceEur && data.areaM2 && data.areaM2 > 0 && (
               <View style={s.metricCard}>
                 <Text style={s.metricLabel}>Pret/mp</Text>
-                <Text style={s.metricValue}>{fmt(Math.round(data.priceEur / data.areaM2))} {cur}/mp</Text>
-                {data.avmMid && data.areaM2 > 0 && (() => {
-                  const actual = Math.round(data.priceEur! / data.areaM2!);
-                  const avg = Math.round(data.avmMid / data.areaM2!);
-                  const diff = Math.round(((actual - avg) / avg) * 100);
-                  if (Math.abs(diff) < 3) return <Text style={s.metricSub}>~media zonei</Text>;
-                  return <Text style={{ ...s.metricSub, color: diff > 0 ? "#DC2626" : "#16A34A" }}>{diff > 0 ? `+${diff}` : diff}% vs zona</Text>;
-                })()}
+                <Text style={s.metricValue}>
+                  {fmt(Math.round(data.priceEur / data.areaM2))} {cur}/mp
+                </Text>
+                {data.avmMid &&
+                  data.areaM2 > 0 &&
+                  (() => {
+                    const actual = Math.round(data.priceEur! / data.areaM2!);
+                    const avg = Math.round(data.avmMid / data.areaM2!);
+                    const diff = Math.round(((actual - avg) / avg) * 100);
+                    if (Math.abs(diff) < 3) return <Text style={s.metricSub}>~media zonei</Text>;
+                    return (
+                      <Text style={{ ...s.metricSub, color: diff > 0 ? "#DC2626" : "#16A34A" }}>
+                        {diff > 0 ? `+${diff}` : diff}% vs zona
+                      </Text>
+                    );
+                  })()}
               </View>
             )}
             <View style={s.metricCard}>
@@ -276,7 +399,9 @@ export default function ReportPdf(props: {
               </View>
             )}
             {data.hasParking != null && (
-              <View style={{ ...s.metricCard, borderColor: data.hasParking ? "#22C55E" : "#F59E0B" }}>
+              <View
+                style={{ ...s.metricCard, borderColor: data.hasParking ? "#22C55E" : "#F59E0B" }}
+              >
                 <Text style={s.metricLabel}>Parcare</Text>
                 <Text style={{ ...s.metricValue, color: data.hasParking ? "#16A34A" : "#D97706" }}>
                   {data.hasParking ? "Da" : "Nu"}
@@ -313,26 +438,41 @@ export default function ReportPdf(props: {
                 <View style={s.anchorCard}>
                   <View style={{ ...s.anchorDot, backgroundColor: "#94A3B8" }} />
                   <Text style={s.anchorLabel}>Valoare notariala</Text>
-                  <Text style={s.anchorValue}>{fmt(data.notarialTotal)} {cur}</Text>
-                  {data.notarialZone && <Text style={s.metricSub}>{data.notarialZone} ({data.notarialYear})</Text>}
+                  <Text style={s.anchorValue}>
+                    {fmt(data.notarialTotal)} {cur}
+                  </Text>
+                  {data.notarialZone && (
+                    <Text style={s.metricSub}>
+                      {data.notarialZone} ({data.notarialYear})
+                    </Text>
+                  )}
                 </View>
               )}
               {data.avmMid != null && (
                 <View style={s.anchorCard}>
                   <View style={{ ...s.anchorDot, backgroundColor: "#3B82F6" }} />
                   <Text style={s.anchorLabel}>Estimare piata</Text>
-                  <Text style={s.anchorValue}>{fmt(data.avmLow)}-{fmt(data.avmHigh)} {cur}</Text>
-                  <Text style={s.metricSub}>Medie: {fmt(data.avmMid)} {cur}</Text>
+                  <Text style={s.anchorValue}>
+                    {fmt(data.avmLow)}-{fmt(data.avmHigh)} {cur}
+                  </Text>
+                  <Text style={s.metricSub}>
+                    Medie: {fmt(data.avmMid)} {cur}
+                  </Text>
                 </View>
               )}
               {data.priceEur != null && (
                 <View style={s.anchorCard}>
                   <View style={{ ...s.anchorDot, backgroundColor: "#EF4444" }} />
                   <Text style={s.anchorLabel}>Pret cerut</Text>
-                  <Text style={s.anchorValue}>{fmt(data.priceEur)} {cur}</Text>
+                  <Text style={s.anchorValue}>
+                    {fmt(data.priceEur)} {cur}
+                  </Text>
                   {overpricing != null && (
-                    <Text style={{ ...s.metricSub, color: overpricing > 0 ? "#DC2626" : "#16A34A" }}>
-                      {overpricing > 0 ? "+" : ""}{overpricing}% fata de estimare
+                    <Text
+                      style={{ ...s.metricSub, color: overpricing > 0 ? "#DC2626" : "#16A34A" }}
+                    >
+                      {overpricing > 0 ? "+" : ""}
+                      {overpricing}% fata de estimare
                     </Text>
                   )}
                 </View>
@@ -372,14 +512,37 @@ export default function ReportPdf(props: {
           <>
             <Text style={s.sectionTitle}>Scor Apartament</Text>
             <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
-              <View style={{ width: 80, height: 80, borderRadius: 40, backgroundColor: LIGHT_BG, border: `3pt solid ${SCORE_COLORS[data.apartmentScoreLabel ?? ""] ?? BLUE}`, justifyContent: "center", alignItems: "center" }}>
-                <Text style={{ fontSize: 22, fontFamily: "Helvetica-Bold", color: SCORE_COLORS[data.apartmentScoreLabel ?? ""] ?? "#1E293B" }}>
+              <View
+                style={{
+                  width: 80,
+                  height: 80,
+                  borderRadius: 40,
+                  backgroundColor: LIGHT_BG,
+                  border: `3pt solid ${SCORE_COLORS[data.apartmentScoreLabel ?? ""] ?? BLUE}`,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 22,
+                    fontFamily: "Helvetica-Bold",
+                    color: SCORE_COLORS[data.apartmentScoreLabel ?? ""] ?? "#1E293B",
+                  }}
+                >
                   {data.apartmentScore}
                 </Text>
                 <Text style={{ fontSize: 7, color: GRAY }}>/100</Text>
               </View>
               <View style={{ flex: 1, justifyContent: "center" }}>
-                <Text style={{ fontSize: 12, fontFamily: "Helvetica-Bold", color: SCORE_COLORS[data.apartmentScoreLabel ?? ""] ?? "#1E293B", marginBottom: 4 }}>
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontFamily: "Helvetica-Bold",
+                    color: SCORE_COLORS[data.apartmentScoreLabel ?? ""] ?? "#1E293B",
+                    marginBottom: 4,
+                  }}
+                >
                   {data.apartmentScoreLabel}
                 </Text>
                 <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
@@ -391,7 +554,9 @@ export default function ReportPdf(props: {
                   ].map((item) => (
                     <View key={item.label} style={{ minWidth: 70 }}>
                       <Text style={{ fontSize: 7, color: GRAY }}>{item.label}</Text>
-                      <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold" }}>{item.val ?? "-"}/100</Text>
+                      <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold" }}>
+                        {item.val ?? "-"}/100
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -401,17 +566,39 @@ export default function ReportPdf(props: {
             <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
               {data.scorePros && data.scorePros.length > 0 && (
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: "#16A34A", marginBottom: 3 }}>Puncte forte</Text>
+                  <Text
+                    style={{
+                      fontSize: 8,
+                      fontFamily: "Helvetica-Bold",
+                      color: "#16A34A",
+                      marginBottom: 3,
+                    }}
+                  >
+                    Puncte forte
+                  </Text>
                   {data.scorePros.map((p, i) => (
-                    <Text key={i} style={{ fontSize: 8, color: "#1E293B", marginBottom: 2 }}>{"\u2022"} {p}</Text>
+                    <Text key={i} style={{ fontSize: 8, color: "#1E293B", marginBottom: 2 }}>
+                      {"\u2022"} {p}
+                    </Text>
                   ))}
                 </View>
               )}
               {data.scoreCons && data.scoreCons.length > 0 && (
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 8, fontFamily: "Helvetica-Bold", color: "#DC2626", marginBottom: 3 }}>Puncte slabe</Text>
+                  <Text
+                    style={{
+                      fontSize: 8,
+                      fontFamily: "Helvetica-Bold",
+                      color: "#DC2626",
+                      marginBottom: 3,
+                    }}
+                  >
+                    Puncte slabe
+                  </Text>
                   {data.scoreCons.map((c, i) => (
-                    <Text key={i} style={{ fontSize: 8, color: "#1E293B", marginBottom: 2 }}>{"\u2022"} {c}</Text>
+                    <Text key={i} style={{ fontSize: 8, color: "#1E293B", marginBottom: 2 }}>
+                      {"\u2022"} {c}
+                    </Text>
                   ))}
                 </View>
               )}
@@ -426,11 +613,15 @@ export default function ReportPdf(props: {
             <View style={s.metricsRow}>
               <View style={s.metricCard}>
                 <Text style={s.metricLabel}>Interval estimat</Text>
-                <Text style={s.metricValue}>{fmt(data.avmLow)} - {fmt(data.avmHigh)} {cur}</Text>
+                <Text style={s.metricValue}>
+                  {fmt(data.avmLow)} - {fmt(data.avmHigh)} {cur}
+                </Text>
               </View>
               <View style={s.metricCard}>
                 <Text style={s.metricLabel}>Estimare centrala</Text>
-                <Text style={s.metricValue}>{fmt(data.avmMid)} {cur}</Text>
+                <Text style={s.metricValue}>
+                  {fmt(data.avmMid)} {cur}
+                </Text>
               </View>
               {data.avmConf != null && (
                 <View style={s.metricCard}>
@@ -443,38 +634,55 @@ export default function ReportPdf(props: {
         )}
 
         {/* Zona si vecinatati */}
-        {sections.overview && (data.hasParking != null || data.distMetroM != null || data.nearestMetroMinutes != null) && (
-          <>
-            <Text style={s.sectionTitle}>Transport si vecinatati</Text>
-            <View style={s.metricsRow}>
-              {data.nearestMetro && (
-                <View style={{ ...s.metricCard, borderColor: (data.nearestMetroMinutes ?? 99) <= 10 ? "#22C55E" : BORDER }}>
-                  <Text style={s.metricLabel}>Cel mai apropiat metrou</Text>
-                  <Text style={s.metricValue}>{data.nearestMetro}</Text>
-                  {data.nearestMetroMinutes != null && (
-                    <Text style={s.metricSub}>{data.nearestMetroMinutes} min pe jos</Text>
-                  )}
-                </View>
-              )}
-              {data.hasParking != null && (
-                <View style={{ ...s.metricCard, borderColor: data.hasParking ? "#22C55E" : "#F59E0B" }}>
-                  <Text style={s.metricLabel}>Loc de parcare</Text>
-                  <Text style={{ ...s.metricValue, color: data.hasParking ? "#16A34A" : "#D97706" }}>
-                    {data.hasParking ? "Da" : "Nementionat"}
-                  </Text>
-                </View>
-              )}
-              {data.distMetroM != null && !data.nearestMetro && (
-                <View style={s.metricCard}>
-                  <Text style={s.metricLabel}>Distanta metrou</Text>
-                  <Text style={s.metricValue}>
-                    {data.distMetroM < 1000 ? `${Math.round(data.distMetroM)} m` : `${(data.distMetroM / 1000).toFixed(1)} km`}
-                  </Text>
-                </View>
-              )}
-            </View>
-          </>
-        )}
+        {sections.overview &&
+          (data.hasParking != null ||
+            data.distMetroM != null ||
+            data.nearestMetroMinutes != null) && (
+            <>
+              <Text style={s.sectionTitle}>Transport si vecinatati</Text>
+              <View style={s.metricsRow}>
+                {data.nearestMetro && (
+                  <View
+                    style={{
+                      ...s.metricCard,
+                      borderColor: (data.nearestMetroMinutes ?? 99) <= 10 ? "#22C55E" : BORDER,
+                    }}
+                  >
+                    <Text style={s.metricLabel}>Cel mai apropiat metrou</Text>
+                    <Text style={s.metricValue}>{data.nearestMetro}</Text>
+                    {data.nearestMetroMinutes != null && (
+                      <Text style={s.metricSub}>{data.nearestMetroMinutes} min pe jos</Text>
+                    )}
+                  </View>
+                )}
+                {data.hasParking != null && (
+                  <View
+                    style={{
+                      ...s.metricCard,
+                      borderColor: data.hasParking ? "#22C55E" : "#F59E0B",
+                    }}
+                  >
+                    <Text style={s.metricLabel}>Loc de parcare</Text>
+                    <Text
+                      style={{ ...s.metricValue, color: data.hasParking ? "#16A34A" : "#D97706" }}
+                    >
+                      {data.hasParking ? "Da" : "Nementionat"}
+                    </Text>
+                  </View>
+                )}
+                {data.distMetroM != null && !data.nearestMetro && (
+                  <View style={s.metricCard}>
+                    <Text style={s.metricLabel}>Distanta metrou</Text>
+                    <Text style={s.metricValue}>
+                      {data.distMetroM < 1000
+                        ? `${Math.round(data.distMetroM)} m`
+                        : `${(data.distMetroM / 1000).toFixed(1)} km`}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </>
+          )}
 
         {/* Yield & TTS */}
         {sections.yield && (data.yieldGross != null || data.estRent != null) && (
@@ -484,7 +692,9 @@ export default function ReportPdf(props: {
               {data.estRent != null && (
                 <View style={s.metricCard}>
                   <Text style={s.metricLabel}>Chirie estimata</Text>
-                  <Text style={s.metricValue}>{fmt(data.estRent)} {cur}/luna</Text>
+                  <Text style={s.metricValue}>
+                    {fmt(data.estRent)} {cur}/luna
+                  </Text>
                 </View>
               )}
               {data.yieldGross != null && (
@@ -527,17 +737,39 @@ export default function ReportPdf(props: {
             </View>
             {data.llmRedFlags && data.llmRedFlags.length > 0 && (
               <View style={{ marginTop: 4, marginBottom: 4 }}>
-                <Text style={{ fontSize: 9, color: "#DC2626", fontFamily: "Helvetica-Bold", marginBottom: 2 }}>Semnale de alarma:</Text>
+                <Text
+                  style={{
+                    fontSize: 9,
+                    color: "#DC2626",
+                    fontFamily: "Helvetica-Bold",
+                    marginBottom: 2,
+                  }}
+                >
+                  Semnale de alarma:
+                </Text>
                 {data.llmRedFlags.map((flag, i) => (
-                  <Text key={i} style={{ fontSize: 8, color: "#DC2626", marginLeft: 8 }}>{"\u2022"} {flag}</Text>
+                  <Text key={i} style={{ fontSize: 8, color: "#DC2626", marginLeft: 8 }}>
+                    {"\u2022"} {flag}
+                  </Text>
                 ))}
               </View>
             )}
             {data.llmPositives && data.llmPositives.length > 0 && (
               <View style={{ marginTop: 4, marginBottom: 4 }}>
-                <Text style={{ fontSize: 9, color: "#16A34A", fontFamily: "Helvetica-Bold", marginBottom: 2 }}>Puncte forte:</Text>
+                <Text
+                  style={{
+                    fontSize: 9,
+                    color: "#16A34A",
+                    fontFamily: "Helvetica-Bold",
+                    marginBottom: 2,
+                  }}
+                >
+                  Puncte forte:
+                </Text>
                 {data.llmPositives.map((pos, i) => (
-                  <Text key={i} style={{ fontSize: 8, color: "#16A34A", marginLeft: 8 }}>{"\u2022"} {pos}</Text>
+                  <Text key={i} style={{ fontSize: 8, color: "#16A34A", marginLeft: 8 }}>
+                    {"\u2022"} {pos}
+                  </Text>
                 ))}
               </View>
             )}
@@ -564,7 +796,9 @@ export default function ReportPdf(props: {
             <View style={s.infoBox}>
               <Text style={s.infoText}>
                 {data.compsCount} proprietati similare identificate in zona.
-                {data.zoneMedianEurM2 ? ` Mediana zonei: ${fmt(Math.round(data.zoneMedianEurM2))} EUR/mp.` : ""}
+                {data.zoneMedianEurM2
+                  ? ` Mediana zonei: ${fmt(Math.round(data.zoneMedianEurM2))} EUR/mp.`
+                  : ""}
               </Text>
             </View>
           </>
@@ -574,12 +808,15 @@ export default function ReportPdf(props: {
         <Text style={s.sectionTitle}>Argumente pentru negociere</Text>
         {(() => {
           const args: string[] = [];
-          if (overpricing != null && overpricing > 3) args.push(`Pretul cerut este cu ${overpricing}% peste mediana zonei.`);
-          if (data.yearBuilt && data.yearBuilt < 1990) args.push(`Cladire din ${data.yearBuilt} - poate necesita investitii in renovare.`);
+          if (overpricing != null && overpricing > 3)
+            args.push(`Pretul cerut este cu ${overpricing}% peste mediana zonei.`);
+          if (data.yearBuilt && data.yearBuilt < 1990)
+            args.push(`Cladire din ${data.yearBuilt} - poate necesita investitii in renovare.`);
           if (data.priceEur && data.areaM2 && data.avmMid) {
             const eurM2 = Math.round(data.priceEur / data.areaM2);
             const avgM2 = Math.round(data.avmMid / data.areaM2);
-            if (eurM2 > avgM2 * 1.05) args.push(`Pret/mp (${eurM2} EUR) peste media zonei (${avgM2} EUR/mp).`);
+            if (eurM2 > avgM2 * 1.05)
+              args.push(`Pret/mp (${eurM2} EUR) peste media zonei (${avgM2} EUR/mp).`);
           }
           if (args.length === 0) args.push("Pretul este la nivelul pietei - oferta competitiva.");
           const tips = [
@@ -605,34 +842,70 @@ export default function ReportPdf(props: {
               const costs = computeAcquisitionCosts(data.priceEur!, cs, data.vatAmount);
               const rows: { label: string; low: number; high: number }[] = [];
               if (data.hasPlusTVA && data.vatAmount) {
-                rows.push({ label: `TVA ${data.vatRate ?? 19}%`, low: data.vatAmount, high: data.vatAmount });
+                rows.push({
+                  label: `TVA ${data.vatRate ?? 19}%`,
+                  low: data.vatAmount,
+                  high: data.vatAmount,
+                });
               }
               rows.push(
                 { label: "Taxe notariale", low: costs.notarLow, high: costs.notarHigh },
                 { label: "Impozit transfer", low: costs.impozitEur, high: costs.impozitEur },
                 { label: "Intabulare / CF", low: costs.intabulareLow, high: costs.intabulareHigh },
                 { label: "Evaluator bancar", low: costs.evaluatorLow, high: costs.evaluatorHigh },
-                { label: "Verificare specialist", low: costs.specialistLow, high: costs.specialistHigh },
+                {
+                  label: "Verificare specialist",
+                  low: costs.specialistLow,
+                  high: costs.specialistHigh,
+                },
               );
               if (cs === "zero") {
                 rows.push({ label: "Comision agentie (0% cumparator)", low: 0, high: 0 });
               } else if (cs === "standard") {
-                rows.push({ label: "Comision agentie (1-3%)", low: Math.round(data.priceEur! * 0.01), high: Math.round(data.priceEur! * 0.03) });
+                rows.push({
+                  label: "Comision agentie (1-3%)",
+                  low: Math.round(data.priceEur! * 0.01),
+                  high: Math.round(data.priceEur! * 0.03),
+                });
               } else {
-                rows.push({ label: "Comision agentie (neclar)", low: Math.round(data.priceEur! * 0.01), high: Math.round(data.priceEur! * 0.03) });
+                rows.push({
+                  label: "Comision agentie (neclar)",
+                  low: Math.round(data.priceEur! * 0.01),
+                  high: Math.round(data.priceEur! * 0.03),
+                });
               }
               return (
                 <View>
                   {rows.map((r, i) => (
-                    <View key={i} style={{ flexDirection: "row", justifyContent: "space-between", paddingVertical: 3, borderBottom: i < rows.length - 1 ? `0.5pt solid ${BORDER}` : "none" }}>
+                    <View
+                      key={i}
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "space-between",
+                        paddingVertical: 3,
+                        borderBottom: i < rows.length - 1 ? `0.5pt solid ${BORDER}` : "none",
+                      }}
+                    >
                       <Text style={{ fontSize: 9, color: "#1E293B" }}>{r.label}</Text>
                       <Text style={{ fontSize: 9, fontFamily: "Helvetica-Bold" }}>
-                        {r.low === r.high ? `${fmt(r.low)} EUR` : `${fmt(r.low)} - ${fmt(r.high)} EUR`}
+                        {r.low === r.high
+                          ? `${fmt(r.low)} EUR`
+                          : `${fmt(r.low)} - ${fmt(r.high)} EUR`}
                       </Text>
                     </View>
                   ))}
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", paddingTop: 6, marginTop: 4, borderTop: `1pt solid ${BORDER}` }}>
-                    <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold" }}>Total estimat</Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      paddingTop: 6,
+                      marginTop: 4,
+                      borderTop: `1pt solid ${BORDER}`,
+                    }}
+                  >
+                    <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold" }}>
+                      Total estimat
+                    </Text>
                     <Text style={{ fontSize: 10, fontFamily: "Helvetica-Bold", color: BLUE }}>
                       {fmt(costs.totalLow)} - {fmt(costs.totalHigh)} EUR
                     </Text>
@@ -647,11 +920,22 @@ export default function ReportPdf(props: {
         <Text style={s.sectionTitle}>Intrebari pentru vanzator</Text>
         {(() => {
           const q: Array<{ text: string; tip?: string }> = [];
-          if (!data.areaM2) q.push({ text: "Care este suprafata utila exacta (conform cadastru)?" });
-          if (data.yearBuilt && data.yearBuilt < 1980) q.push({ text: "Expertiza tehnica a cladirii este disponibila?", tip: "Cladirile construite inainte de 1977 au trecut prin cutremurul din '77." });
+          if (!data.areaM2)
+            q.push({ text: "Care este suprafata utila exacta (conform cadastru)?" });
+          if (data.yearBuilt && data.yearBuilt < 1980)
+            q.push({
+              text: "Expertiza tehnica a cladirii este disponibila?",
+              tip: "Cladirile construite inainte de 1977 au trecut prin cutremurul din '77.",
+            });
           q.push({ text: "Cum sunt vecinii? Exista probleme cu zgomotul?" });
-          q.push({ text: "Exista datorii la asociatia de proprietari?", tip: "Cereti extras de la asociatie cu situatia platilor." });
-          q.push({ text: "Extras CF actualizat disponibil?", tip: "CF trebuie sa fie emisa in ultimele 30 de zile." });
+          q.push({
+            text: "Exista datorii la asociatia de proprietari?",
+            tip: "Cereti extras de la asociatie cu situatia platilor.",
+          });
+          q.push({
+            text: "Extras CF actualizat disponibil?",
+            tip: "CF trebuie sa fie emisa in ultimele 30 de zile.",
+          });
           q.push({ text: "Cat este intretinerea lunara si ce include?" });
           return q.slice(0, 6).map((item, i) => (
             <View key={i} style={{ flexDirection: "row", gap: 8, marginBottom: 8 }} wrap={false}>
@@ -675,17 +959,59 @@ export default function ReportPdf(props: {
                 </Text>
               ) : (
                 <Text style={s.infoText}>
-                  Imobilul nu a fost identificat in lista publica AMCCRS. Lipsa din lista nu garanteaza absenta riscului seismic.
+                  Imobilul nu a fost identificat in lista publica AMCCRS. Lipsa din lista nu
+                  garanteaza absenta riscului seismic.
                 </Text>
               )}
               {data.yearBuilt && data.yearBuilt < 1978 && !data.riskClass && (
                 <Text style={{ ...s.infoText, marginTop: 4 }}>
-                  Constructie din {data.yearBuilt} (anterioara cutremurului din 1977) - se recomanda verificarea starii structurale.
+                  Constructie din {data.yearBuilt} (anterioara cutremurului din 1977) - se recomanda
+                  verificarea starii structurale.
                 </Text>
               )}
             </View>
           </>
         )}
+
+        {sections.risk &&
+          (data.riskStackOverallScore != null ||
+            data.riskStackTopRisk ||
+            data.riskStackInsights?.length) && (
+            <>
+              <Text style={s.sectionTitle}>Risk stack</Text>
+              <View style={s.infoBox}>
+                <Text style={s.infoText}>
+                  Nivel general: {riskLevelText(data.riskStackOverallLevel)}
+                  {data.riskStackOverallScore != null ? ` (${data.riskStackOverallScore}/100)` : ""}
+                </Text>
+                {data.riskStackTopRisk && (
+                  <Text style={{ ...s.infoText, marginTop: 4 }}>
+                    Top risk: {data.riskStackTopRisk}
+                    {data.riskStackTopSummary ? ` - ${data.riskStackTopSummary}` : ""}
+                  </Text>
+                )}
+                {data.riskStackInsights && data.riskStackInsights.length > 0 && (
+                  <View style={{ marginTop: 6 }}>
+                    {data.riskStackInsights.slice(0, 3).map((item, index) => (
+                      <View key={index} style={{ flexDirection: "row", gap: 6, marginBottom: 4 }}>
+                        <Text style={{ fontSize: 9, color: BLUE }}>{"\u2022"}</Text>
+                        <Text style={{ ...s.infoText, flex: 1 }}>{item}</Text>
+                      </View>
+                    ))}
+                  </View>
+                )}
+                {data.riskStackRecommendedNextStep && (
+                  <Text style={{ ...s.infoText, marginTop: 6, color: "#065F46" }}>
+                    Recommended next step: {data.riskStackRecommendedNextStep}
+                  </Text>
+                )}
+                <Text style={{ ...s.tipText, marginTop: 6 }}>
+                  Straturile non-seismice sunt estimate din proxy-uri contextuale si trebuie
+                  confirmate din surse oficiale atunci cand decizia depinde de ele.
+                </Text>
+              </View>
+            </>
+          )}
 
         <View style={s.pageFooter}>
           <Text>{brand.name} - Raport analiza imobiliara</Text>
@@ -703,19 +1029,25 @@ export default function ReportPdf(props: {
         <Text style={s.sectionTitle}>Metodologie</Text>
         <View style={s.infoBox}>
           <Text style={s.infoText}>
-            Estimarea de pret se bazeaza pe compararea cu proprietati similare din zona (suprafata, numar camere, etaj, an constructie) listate in ultimele 60 de zile. Se aplica ajustari pentru: etaj (parter -5%, etaj inalt +2%), an constructie (pre-1980 -3%, post-2000 +2%), si suprafata.
+            Estimarea de pret se bazeaza pe compararea cu proprietati similare din zona (suprafata,
+            numar camere, etaj, an constructie) listate in ultimele 60 de zile. Se aplica ajustari
+            pentru: etaj (parter -5%, etaj inalt +2%), an constructie (pre-1980 -3%, post-2000 +2%),
+            si suprafata.
           </Text>
           <Text style={{ ...s.infoText, marginTop: 4 }}>
-            Valoarea notariala provine din grila publica a notarilor si reprezinta valoarea minima fiscala, nu pretul de piata. Datele de risc seismic provin din listele publice AMCCRS.
+            Valoarea notariala provine din grila publica a notarilor si reprezinta valoarea minima
+            fiscala, nu pretul de piata. Datele de risc seismic provin din listele publice AMCCRS.
           </Text>
         </View>
 
         <Text style={s.sectionTitle}>Sfaturi utile</Text>
         <View style={s.infoBox}>
           <Text style={s.infoText}>
-            {"\u2022"} Verificati intotdeauna actele de proprietate cu un specialist (avocat sau notar).{"\n"}
+            {"\u2022"} Verificati intotdeauna actele de proprietate cu un specialist (avocat sau
+            notar).{"\n"}
             {"\u2022"} Cereti certificat fiscal, CF actualizat, si certificat energetic.{"\n"}
-            {"\u2022"} Vizitati apartamentul la ore diferite ale zilei pentru a verifica lumina si zgomotul.{"\n"}
+            {"\u2022"} Vizitati apartamentul la ore diferite ale zilei pentru a verifica lumina si
+            zgomotul.{"\n"}
             {"\u2022"} Comparati pretul pe metru patrat cu media zonei, nu doar pretul total.
           </Text>
         </View>
@@ -727,7 +1059,9 @@ export default function ReportPdf(props: {
             <View style={s.metricsRow}>
               <View style={s.metricCard}>
                 <Text style={s.metricLabel}>Trust Score</Text>
-                <Text style={s.metricValue}>{data.trustBadge} - {data.trustScore}/100</Text>
+                <Text style={s.metricValue}>
+                  {data.trustBadge} - {data.trustScore}/100
+                </Text>
               </View>
             </View>
             {data.trustReasons?.minus && data.trustReasons.minus.length > 0 && (
@@ -740,10 +1074,16 @@ export default function ReportPdf(props: {
 
         <Text style={s.sectionTitle}>Disclaimer</Text>
         <Text style={s.disclaimer}>
-          Acest raport are caracter informativ si orientativ. Estimarile de pret sunt bazate pe date publice disponibile si nu constituie o evaluare oficiala conform standardelor ANEVAR. Nu ne asumam responsabilitatea pentru decizii luate exclusiv pe baza acestui raport. Pentru o evaluare oficiala, consultati un evaluator autorizat ANEVAR. Datele de risc seismic provin din surse publice (AMCCRS - PMB). Lipsa din lista publica nu garanteaza absenta riscului seismic.
+          Acest raport are caracter informativ si orientativ. Estimarile de pret sunt bazate pe date
+          publice disponibile si nu constituie o evaluare oficiala conform standardelor ANEVAR. Nu
+          ne asumam responsabilitatea pentru decizii luate exclusiv pe baza acestui raport. Pentru o
+          evaluare oficiala, consultati un evaluator autorizat ANEVAR. Datele de risc seismic provin
+          din surse publice (AMCCRS - PMB). Lipsa din lista publica nu garanteaza absenta riscului
+          seismic.
         </Text>
         <Text style={{ ...s.disclaimer, marginTop: 8 }}>
-          Copyright 2026 OnlyTips SRL (CUI: 43414871). Toate drepturile rezervate. Raport generat de {brand.name} ({data.url ?? ""}).
+          Copyright 2026 OnlyTips SRL (CUI: 43414871). Toate drepturile rezervate. Raport generat de{" "}
+          {brand.name} ({data.url ?? ""}).
         </Text>
 
         <View style={s.pageFooter}>

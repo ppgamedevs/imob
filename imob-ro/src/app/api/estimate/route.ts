@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
@@ -218,8 +219,8 @@ export async function POST(req: Request) {
     prisma.userEstimate
       .create({
         data: {
-          inputs: input as Record<string, unknown>,
-          result: responseBody as unknown as Record<string, unknown>,
+          inputs: input as unknown as Prisma.InputJsonValue,
+          result: responseBody as unknown as Prisma.InputJsonValue,
           lat: input.lat ?? null,
           lng: input.lng ?? null,
           confidence,

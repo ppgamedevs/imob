@@ -15,6 +15,7 @@ import { computeIntelScores, type IntelResult } from "@/lib/geo/intelScoring";
 import { querySignals, type DemandSignals } from "@/lib/geo/signals/querySignals";
 import { classifyZone, type ZoneTypeResult } from "@/lib/geo/zoneType";
 import { computeCommuterRings, type CommuterResult } from "@/lib/geo/commuterRings";
+import { getTransportSummary } from "@/lib/geo/transport";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,56 @@ export interface IntelV2Response {
   radius: number;
   center: { lat: number; lng: number };
   cachedAt: string | null;
+}
+
+type FallbackMetroData = { name: string; distanceM: number } | null;
+
+async function getFallbackMetroData(
+  lat: number,
+  lng: number,
+): Promise<FallbackMetroData> {
+  const transportSummary = await getTransportSummary(lat, lng).catch(() => null);
+  return transportSummary?.nearestMetro
+    ? {
+        name: transportSummary.nearestMetro.name,
+        distanceM: transportSummary.nearestMetro.distanceM,
+      }
+    : null;
+}
+
+function reconcileTransitFallback(
+  payload: IntelV2Response,
+  fallbackMetro: FallbackMetroData,
+): IntelV2Response {
+  const hasNearbyTransitFallback = fallbackMetro != null && fallbackMetro.distanceM <= 800;
+  const redFlags = hasNearbyTransitFallback
+    ? payload.redFlags.filter((flag) => flag !== "0 statii de transport in 800m")
+    : payload.redFlags;
+  const commuter = payload.commuter?.nearestMetro || !fallbackMetro
+    ? payload.commuter
+    : {
+        ...payload.commuter,
+        nearestMetro: {
+          stationName: fallbackMetro.name,
+          distanceM: fallbackMetro.distanceM,
+          walkMinutes: Math.round(fallbackMetro.distanceM / 80),
+        },
+      };
+
+  if (redFlags === payload.redFlags && commuter === payload.commuter) {
+    return payload;
+  }
+
+  return {
+    ...payload,
+    redFlags,
+    commuter,
+    zoneType: classifyZone(
+      { scores: payload.scores, evidence: payload.evidence, redFlags },
+      payload.poisByCategory,
+      payload.signals,
+    ),
+  };
 }
 
 async function fetchCategoryWithCache(
@@ -80,12 +131,21 @@ async function computeFullIntel(
 
   // 2. Compute base scores
   const intel = computeIntelScores(poisByCategory);
+  const fallbackMetro = await getFallbackMetroData(lat, lng);
+  const hasNearbyTransitFallback = fallbackMetro != null && fallbackMetro.distanceM <= 800;
+  const resolvedRedFlags = hasNearbyTransitFallback
+    ? intel.redFlags.filter((flag) => flag !== "0 statii de transport in 800m")
+    : intel.redFlags;
+  const resolvedIntel: IntelResult = {
+    ...intel,
+    redFlags: resolvedRedFlags,
+  };
 
   // 3. Load signals
   const signals = await querySignals(lat, lng, radius);
 
   // 4. Classify zone
-  const zoneType = classifyZone(intel, poisByCategory, signals);
+  const zoneType = classifyZone(resolvedIntel, poisByCategory, signals);
 
   // 5. Commuter rings
   const metroStops = poisByCategory.transport?.filter(
@@ -93,13 +153,13 @@ async function computeFullIntel(
   ) ?? [];
   const nearestMetroData = metroStops.length > 0
     ? { name: metroStops[0].name ?? "Metrou", distanceM: metroStops[0].distanceM }
-    : null;
+    : fallbackMetro;
   const commuter = await computeCommuterRings(lat, lng, nearestMetroData);
 
   return {
-    scores: intel.scores,
-    evidence: intel.evidence,
-    redFlags: intel.redFlags,
+    scores: resolvedIntel.scores,
+    evidence: resolvedIntel.evidence,
+    redFlags: resolvedIntel.redFlags,
     poisByCategory,
     zoneType,
     signals,
@@ -147,7 +207,9 @@ export async function GET(req: Request) {
     });
     if (snapshot && snapshot.expiresAt > new Date()) {
       const payload = snapshot.payload as unknown as IntelV2Response;
-      return NextResponse.json({ ...payload, cachedAt: snapshot.computedAt.toISOString() });
+      const fallbackMetro = await getFallbackMetroData(lat, lng);
+      const resolvedPayload = reconcileTransitFallback(payload, fallbackMetro);
+      return NextResponse.json({ ...resolvedPayload, cachedAt: snapshot.computedAt.toISOString() });
     }
   } catch { /* continue to fresh compute */ }
 

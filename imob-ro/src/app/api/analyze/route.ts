@@ -55,24 +55,32 @@ function checkListingUrl(urlStr: string): UrlCheckResult {
     }
 
     if (host === "imobiliare.ro") {
+      if (/\/inchirieri?[/-]/.test(path)) {
+        return { ok: false, error: "ImobIntel analizeaza doar anunturi de vanzare. Suportul pentru chirii este in constructie." };
+      }
+      const NON_RESIDENTIAL_PATH_RE = /\/(vanzare-)?(spatii?-comercial|terenuri|birouri|hale|afaceri|spatii?-industriale)/;
+      const NON_RESIDENTIAL_OFERTA_RE = /\/oferta\/(spatiu-comercial|teren|birou|hala|afacere|spatiu-industrial)-de-vanzare/;
+      if (NON_RESIDENTIAL_PATH_RE.test(path) || NON_RESIDENTIAL_OFERTA_RE.test(path)) {
+        return { ok: false, error: "ImobIntel analizeaza doar proprietati rezidentiale (apartamente, case, vile, garsoniere). Spatiile comerciale, terenurile si birourile nu sunt suportate." };
+      }
       if (path.startsWith("/oferta/")) return { ok: true };
       if (/\/[a-z0-9-]+-\d{4,}$/.test(path)) return { ok: true };
       if (/^\/vanzare-[^/]+\/[^/]+(\/[^/]+)?$/.test(path) && !/-\d{4,}$/.test(path)) {
         return { ok: false, error: "Acest link pare sa fie o pagina de cautare, nu un anunt individual. Lipeste linkul unui anunt specific (ex: imobiliare.ro/oferta/garsoniera-de-vanzare-...)." };
       }
-      if (/\/inchirieri?[/-]/.test(path)) {
-        return { ok: false, error: "ImobIntel analizeaza doar anunturi de vanzare. Suportul pentru chirii este in constructie." };
-      }
       return { ok: true };
     }
 
     if (host === "storia.ro") {
+      if (/\/inchirieri?[/-]/.test(path) || /\/de-inchiriat\b/.test(path)) {
+        return { ok: false, error: "ImobIntel analizeaza doar anunturi de vanzare. Suportul pentru chirii este in constructie." };
+      }
+      if (/\/(spatii?-comercial|terenuri|birouri|hale|afaceri)/.test(path)) {
+        return { ok: false, error: "ImobIntel analizeaza doar proprietati rezidentiale (apartamente, case, vile, garsoniere). Spatiile comerciale, terenurile si birourile nu sunt suportate." };
+      }
       if (path.includes("/oferta/")) return { ok: true };
       if (path.includes("/rezultate/")) {
         return { ok: false, error: "Acest link pare sa fie o pagina de cautare, nu un anunt individual." };
-      }
-      if (/\/inchirieri?[/-]/.test(path) || /\/de-inchiriat\b/.test(path)) {
-        return { ok: false, error: "ImobIntel analizeaza doar anunturi de vanzare. Suportul pentru chirii este in constructie." };
       }
       return { ok: true };
     }
@@ -98,13 +106,17 @@ function checkListingUrl(urlStr: string): UrlCheckResult {
     }
 
     if (host === "publi24.ro") {
+      if (/\/de-inchiriat\b|\/inchirieri?\b/.test(path)) {
+        return { ok: false, error: "ImobIntel analizeaza doar anunturi de vanzare. Suportul pentru chirii este in constructie." };
+      }
+      const PUBLI24_NON_RES = /\/(?:terenuri|spatii-comerciale|birouri|hale|afaceri|spatii-industriale)\//;
+      if (PUBLI24_NON_RES.test(path)) {
+        return { ok: false, error: "ImobIntel analizeaza doar proprietati rezidentiale (apartamente, case, vile, garsoniere). Spatiile comerciale, terenurile si birourile nu sunt suportate." };
+      }
       if (path.includes("/anunt/")) return { ok: true };
       if (/\/\d+$/.test(path)) return { ok: true };
       if (path.includes("/anunturi/") && !path.includes("/anunt/")) {
         return { ok: false, error: "Acest link pare sa fie o pagina de cautare, nu un anunt individual." };
-      }
-      if (/\/de-inchiriat\b|\/inchirieri?\b/.test(path)) {
-        return { ok: false, error: "ImobIntel analizeaza doar anunturi de vanzare. Suportul pentru chirii este in constructie." };
       }
       return { ok: true };
     }
@@ -170,7 +182,11 @@ export async function POST(req: Request) {
 
   const dedupCutoff = new Date(Date.now() - ANALYSIS_DEDUP_WINDOW_MS);
   const existing = await prisma.analysis.findFirst({
-    where: { sourceUrl: rawUrl, createdAt: { gte: dedupCutoff } },
+    where: {
+      sourceUrl: rawUrl,
+      createdAt: { gte: dedupCutoff },
+      status: { notIn: ["error", "failed"] },
+    },
     orderBy: { createdAt: "desc" },
   });
 

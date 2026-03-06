@@ -20,7 +20,13 @@ Reguli stricte:
 - "balconyM2" si "usableAreaM2" doar daca sunt explicit mentionate in text.
 - "heatingType": "centrala_proprie", "RADET", "AC", "pardoseala" sau null.
 - "buildingType": "bloc_vechi", "bloc_nou", "vila", "casa" sau null.
-- "condition": "nou" (constructie noua), "renovat" (renovat recent), "locuibil" (stare buna fara renovare), "necesita_renovare" (are nevoie de lucrari), "de_renovat" (stare proasta).`;
+- "condition": clasificarea starii apartamentului:
+  * "nou" = constructie noua, niciodata locuit
+  * "renovat" = renovat recent. INCLUDE si apartamente goale/nemobilate dar cu finisaje noi (pereti zugraviti, gresie/parchet nou, baie moderna). Gol/nemobilat NU inseamna ca necesita renovare!
+  * "locuibil" = stare buna, locuibil fara lucrari, dar fara renovare recenta
+  * "necesita_renovare" = are nevoie reala de lucrari: instalatii vechi, gresie sparta, pereti deteriorati, baie veche cu probleme
+  * "de_renovat" = stare proasta: igrasie, mucegai, tavan cazut, instalatii periculoase
+  ATENTIE: Un apartament gol dar cu finisaje noi/proaspete este "renovat", NU "necesita_renovare". Cuvinte ca "potential", "ideal investitie" nu inseamna ca apartamentul e de renovat - verifica descrierea efectiva a starii.`;
 
 const TEXT_SCHEMA = {
   type: "object" as const,

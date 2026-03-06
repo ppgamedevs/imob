@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/db";
@@ -123,7 +124,7 @@ async function computeFieldCompleteness() {
     }),
     prisma.extractedListing.count({ where: { yearBuilt: { not: null } } }),
     prisma.extractedListing.count({ where: { addressRaw: { not: null } } }),
-    prisma.extractedListing.count({ where: { NOT: { photos: { equals: null } } } }),
+    prisma.extractedListing.count({ where: { photos: { not: Prisma.AnyNull } } }),
     prisma.extractedListing.count({
       where: { lat: { not: null }, lng: { not: null } },
     }),

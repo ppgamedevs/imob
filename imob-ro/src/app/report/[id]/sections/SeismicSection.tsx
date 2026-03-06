@@ -23,6 +23,7 @@ interface Props {
     buildings: NearbyBuilding[];
   } | null;
   titleMentionsRisk?: boolean;
+  embedded?: boolean;
 }
 
 const RISK_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string; description: string }> = {
@@ -80,167 +81,178 @@ export default function SeismicSection({
   intervention,
   nearby,
   titleMentionsRisk,
+  embedded = false,
 }: Props) {
   const config = riskClass ? RISK_CONFIG[riskClass] : null;
   const isInList = config != null;
   const conf = confidence ?? 0;
   const confBadge = confidenceBadge(conf);
+  const confidenceChip = isInList && conf > 0 ? (
+    <Badge variant={confBadge.variant} className="text-xs">
+      Incredere: {confBadge.label}
+    </Badge>
+  ) : null;
+  const content = (
+    <div className="space-y-4">
+      {embedded && confidenceChip && <div className="flex justify-end">{confidenceChip}</div>}
+
+      {/* Main status */}
+      {isInList && config ? (
+        <div className={`rounded-lg border p-3 ${config.bg}`}>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-lg">{config.icon}</span>
+            <span className={`font-semibold text-sm ${config.color}`}>{config.label}</span>
+          </div>
+          <p className="text-xs text-muted-foreground">{config.description}</p>
+          {intervention && (
+            <div className="mt-2 text-xs">
+              <span className="font-medium">Status interventie: </span>
+              <Badge variant="outline" className="text-xs">
+                {intervention === "consolidat" ? "Consolidat" :
+                 intervention === "in lucru" ? "Lucrari in curs" :
+                 intervention === "proiect" ? "Proiect consolidare" :
+                 intervention}
+              </Badge>
+            </div>
+          )}
+        </div>
+      ) : titleMentionsRisk ? (
+        <div className="space-y-2">
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">&#9888;</span>
+              <span className="font-semibold text-sm text-red-800">
+                Risc seismic mentionat in anunt
+              </span>
+            </div>
+            <p className="text-xs text-red-700">
+              Titlul sau descrierea anuntului mentioneaza risc seismic. Nu am putut confirma automat din baza de date AMCCRS (adresa poate lipsi sau diferi), dar va recomandam sa verificati personal cu un expert tehnic atestat.
+            </p>
+          </div>
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">&#8505;</span>
+              <span className="font-semibold text-sm text-amber-800">
+                Nu apare in lista publica AMCCRS
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Imobilul nu a fost identificat in baza de date publica. Lipsa din lista nu inseamna absenta riscului - verificati expertiza tehnica a cladirii.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-green-200 bg-green-50 p-3">
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-lg">&#10004;</span>
+            <span className="font-semibold text-sm text-green-800">
+              Nu apare in lista publica AMCCRS
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Imobilul nu a fost identificat in lista cladirilor expertizate tehnic publicata de AMCCRS.
+          </p>
+        </div>
+      )}
+
+      {/* Match details */}
+      {method && method !== "heuristic" && (
+        <div className="text-xs space-y-1">
+          {matchedAddress && (
+            <div>
+              <span className="text-muted-foreground">Adresa potrivita: </span>
+              <span className="font-medium">{matchedAddress}</span>
+            </div>
+          )}
+          <div className="text-muted-foreground">
+            {confidenceLabel(conf)}
+          </div>
+          {sourceUrl && (
+            <a
+              href={sourceUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary underline inline-block"
+            >
+              Sursa: AMCCRS
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* Heuristic note - only show if it adds info beyond the status banner */}
+      {method === "heuristic" && note && isInList && (
+        <div className="text-xs text-muted-foreground bg-muted/40 rounded p-2">
+          {note}
+        </div>
+      )}
+
+      {/* Nearby risk buildings */}
+      {nearby && nearby.total > 0 && (
+        <div className="border-t pt-3">
+          <div className="text-xs font-medium mb-2">
+            Risc seismic in zona (raza 200m)
+          </div>
+          <div className="flex gap-3 mb-2">
+            {nearby.rsI > 0 && (
+              <div className="text-xs">
+                <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1" />
+                {nearby.rsI} {nearby.rsI === 1 ? "imobil" : "imobile"} RsI
+              </div>
+            )}
+            {nearby.rsII > 0 && (
+              <div className="text-xs">
+                <span className="inline-block w-2 h-2 rounded-full bg-orange-500 mr-1" />
+                {nearby.rsII} {nearby.rsII === 1 ? "imobil" : "imobile"} RsII
+              </div>
+            )}
+            {nearby.total - nearby.rsI - nearby.rsII > 0 && (
+              <div className="text-xs">
+                <span className="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-1" />
+                {nearby.total - nearby.rsI - nearby.rsII} alte imobile
+              </div>
+            )}
+          </div>
+          {nearby.buildings.length > 0 && (
+            <ul className="space-y-1">
+              {nearby.buildings.map((b, i) => (
+                <li key={i} className="text-xs flex items-start gap-2">
+                  <span className={`mt-0.5 w-1.5 h-1.5 rounded-full shrink-0 ${
+                    b.riskClass === "RsI" ? "bg-red-500" :
+                    b.riskClass === "RsII" ? "bg-orange-500" :
+                    "bg-yellow-500"
+                  }`} />
+                  <span className="text-muted-foreground">
+                    {b.address} ({b.riskClass}) - {b.distanceM}m
+                    {b.intervention ? ` [${b.intervention}]` : ""}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {/* Legal disclaimer */}
+      <p className="text-[10px] text-muted-foreground border-t pt-2">
+        Datele provin din liste publice oficiale (AMCCRS - PMB). Lipsa din lista nu garanteaza absenta riscului seismic. Pentru o evaluare completa, consultati un expert tehnic atestat.
+      </p>
+    </div>
+  );
+
+  if (embedded) {
+    return content;
+  }
 
   return (
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="text-base">Status risc seismic</CardTitle>
-          {isInList && conf > 0 && (
-            <Badge variant={confBadge.variant} className="text-xs">
-              Incredere: {confBadge.label}
-            </Badge>
-          )}
+          {confidenceChip}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Main status */}
-        {isInList && config ? (
-          <div className={`rounded-lg border p-3 ${config.bg}`}>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">{config.icon}</span>
-              <span className={`font-semibold text-sm ${config.color}`}>{config.label}</span>
-            </div>
-            <p className="text-xs text-muted-foreground">{config.description}</p>
-            {intervention && (
-              <div className="mt-2 text-xs">
-                <span className="font-medium">Status interventie: </span>
-                <Badge variant="outline" className="text-xs">
-                  {intervention === "consolidat" ? "Consolidat" :
-                   intervention === "in lucru" ? "Lucrari in curs" :
-                   intervention === "proiect" ? "Proiect consolidare" :
-                   intervention}
-                </Badge>
-              </div>
-            )}
-          </div>
-        ) : titleMentionsRisk ? (
-          <div className="space-y-2">
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-lg">&#9888;</span>
-                <span className="font-semibold text-sm text-red-800">
-                  Risc seismic mentionat in anunt
-                </span>
-              </div>
-              <p className="text-xs text-red-700">
-                Titlul sau descrierea anuntului mentioneaza risc seismic. Nu am putut confirma automat din baza de date AMCCRS (adresa poate lipsi sau diferi), dar va recomandam sa verificati personal cu un expert tehnic atestat.
-              </p>
-            </div>
-            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-lg">&#8505;</span>
-                <span className="font-semibold text-sm text-amber-800">
-                  Nu apare in lista publica AMCCRS
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Imobilul nu a fost identificat in baza de date publica. Lipsa din lista nu inseamna absenta riscului - verificati expertiza tehnica a cladirii.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">&#10004;</span>
-              <span className="font-semibold text-sm text-green-800">
-                Nu apare in lista publica AMCCRS
-              </span>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Imobilul nu a fost identificat in lista cladirilor expertizate tehnic publicata de AMCCRS.
-            </p>
-          </div>
-        )}
-
-        {/* Match details */}
-        {method && method !== "heuristic" && (
-          <div className="text-xs space-y-1">
-            {matchedAddress && (
-              <div>
-                <span className="text-muted-foreground">Adresa potrivita: </span>
-                <span className="font-medium">{matchedAddress}</span>
-              </div>
-            )}
-            <div className="text-muted-foreground">
-              {confidenceLabel(conf)}
-            </div>
-            {sourceUrl && (
-              <a
-                href={sourceUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="text-primary underline inline-block"
-              >
-                Sursa: AMCCRS
-              </a>
-            )}
-          </div>
-        )}
-
-        {/* Heuristic note - only show if it adds info beyond the status banner */}
-        {method === "heuristic" && note && isInList && (
-          <div className="text-xs text-muted-foreground bg-muted/40 rounded p-2">
-            {note}
-          </div>
-        )}
-
-        {/* Nearby risk buildings */}
-        {nearby && nearby.total > 0 && (
-          <div className="border-t pt-3">
-            <div className="text-xs font-medium mb-2">
-              Risc seismic in zona (raza 200m)
-            </div>
-            <div className="flex gap-3 mb-2">
-              {nearby.rsI > 0 && (
-                <div className="text-xs">
-                  <span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1" />
-                  {nearby.rsI} {nearby.rsI === 1 ? "imobil" : "imobile"} RsI
-                </div>
-              )}
-              {nearby.rsII > 0 && (
-                <div className="text-xs">
-                  <span className="inline-block w-2 h-2 rounded-full bg-orange-500 mr-1" />
-                  {nearby.rsII} {nearby.rsII === 1 ? "imobil" : "imobile"} RsII
-                </div>
-              )}
-              {nearby.total - nearby.rsI - nearby.rsII > 0 && (
-                <div className="text-xs">
-                  <span className="inline-block w-2 h-2 rounded-full bg-yellow-500 mr-1" />
-                  {nearby.total - nearby.rsI - nearby.rsII} alte imobile
-                </div>
-              )}
-            </div>
-            {nearby.buildings.length > 0 && (
-              <ul className="space-y-1">
-                {nearby.buildings.map((b, i) => (
-                  <li key={i} className="text-xs flex items-start gap-2">
-                    <span className={`mt-0.5 w-1.5 h-1.5 rounded-full shrink-0 ${
-                      b.riskClass === "RsI" ? "bg-red-500" :
-                      b.riskClass === "RsII" ? "bg-orange-500" :
-                      "bg-yellow-500"
-                    }`} />
-                    <span className="text-muted-foreground">
-                      {b.address} ({b.riskClass}) - {b.distanceM}m
-                      {b.intervention ? ` [${b.intervention}]` : ""}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {/* Legal disclaimer */}
-        <p className="text-[10px] text-muted-foreground border-t pt-2">
-          Datele provin din liste publice oficiale (AMCCRS - PMB). Lipsa din lista nu garanteaza absenta riscului seismic. Pentru o evaluare completa, consultati un expert tehnic atestat.
-        </p>
-      </CardContent>
+      <CardContent>{content}</CardContent>
     </Card>
   );
 }

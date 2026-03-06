@@ -81,12 +81,17 @@ export const adapterOlx: SourceAdapter = {
       } catch { /* ignore */ }
     }
 
-    const ad = nextData?.props?.pageProps?.ad ?? nextData?.ad ?? null;
+    const ad = (nextData?.props?.pageProps?.ad ?? nextData?.ad ?? null) as Record<string, any> | null;
+    const adData = (ad ?? {}) as Record<string, any>;
+    const ldData = (ld ?? {}) as Record<string, any>;
+    const ldOffers = (ldData.offers ?? {}) as Record<string, any>;
+    const ldGeo = (ldData.geo ?? {}) as Record<string, any>;
+    const ldContentLocation = (ldData.contentLocation ?? {}) as Record<string, any>;
 
     // ---- Title ----
     const title =
-      ad?.title ??
-      ld?.name ??
+      adData.title ??
+      ldData.name ??
       ($('h1[data-cy="ad_title"]').text().trim() ||
         $("h1").first().text().trim() ||
         $("title").text().split("|")[0]?.trim());
@@ -95,12 +100,12 @@ export const adapterOlx: SourceAdapter = {
     let price: number | undefined;
     let currency = "RON";
 
-    if (ad?.price?.regularPrice?.value) {
-      price = Math.round(ad.price.regularPrice.value);
-      currency = ad.price.regularPrice.currencyCode === "EUR" ? "EUR" : "RON";
-    } else if (ld?.offers?.price) {
-      price = parseInt(String(ld.offers.price).replace(/\D/g, ""));
-      currency = ld.offers?.priceCurrency === "EUR" ? "EUR" : "RON";
+    if (adData.price?.regularPrice?.value) {
+      price = Math.round(adData.price.regularPrice.value);
+      currency = adData.price.regularPrice.currencyCode === "EUR" ? "EUR" : "RON";
+    } else if (ldOffers.price) {
+      price = parseInt(String(ldOffers.price).replace(/\D/g, ""));
+      currency = ldOffers.priceCurrency === "EUR" ? "EUR" : "RON";
     }
 
     if (!price) {
@@ -120,8 +125,8 @@ export const adapterOlx: SourceAdapter = {
     // ---- Parameters (from ad JSON or DOM) ----
     const params = new Map<string, string>();
 
-    if (ad?.params && Array.isArray(ad.params)) {
-      for (const p of ad.params) {
+    if (adData.params && Array.isArray(adData.params)) {
+      for (const p of adData.params) {
         const key = (p.key || p.name || "").toLowerCase();
         const val = p.normalizedValue ?? p.value?.label ?? p.value?.key ?? String(p.value ?? "");
         if (key && val) params.set(key, val);
@@ -168,16 +173,16 @@ export const adapterOlx: SourceAdapter = {
 
     // ---- Address ----
     const addressRaw =
-      ad?.location?.cityName && ad?.location?.districtName
-        ? `${ad.location.districtName}, ${ad.location.cityName}`
-        : $('[data-cy="ad_location"]').text().trim() || ld?.contentLocation?.name || undefined;
+      adData.location?.cityName && adData.location?.districtName
+        ? `${adData.location.districtName}, ${adData.location.cityName}`
+        : $('[data-cy="ad_location"]').text().trim() || ldContentLocation.name || undefined;
 
     // ---- Photos ----
     const photos: string[] = [];
     const seenPhotos = new Set<string>();
 
-    if (ad?.photos && Array.isArray(ad.photos)) {
-      for (const p of ad.photos) {
+    if (adData.photos && Array.isArray(adData.photos)) {
+      for (const p of adData.photos) {
         const src = p.link ?? p.url ?? p;
         if (typeof src === "string" && !seenPhotos.has(src)) {
           seenPhotos.add(src);
@@ -185,8 +190,8 @@ export const adapterOlx: SourceAdapter = {
         }
       }
     }
-    if (ld?.image && Array.isArray(ld.image)) {
-      for (const src of ld.image) {
+    if (ldData.image && Array.isArray(ldData.image)) {
+      for (const src of ldData.image) {
         if (typeof src === "string" && !seenPhotos.has(src)) {
           seenPhotos.add(src);
           photos.push(src);
@@ -207,12 +212,12 @@ export const adapterOlx: SourceAdapter = {
     let lat: number | undefined;
     let lng: number | undefined;
 
-    if (ad?.map?.lat && ad?.map?.lon) {
-      lat = parseFloat(ad.map.lat);
-      lng = parseFloat(ad.map.lon);
-    } else if (ld?.geo?.latitude && ld?.geo?.longitude) {
-      lat = parseFloat(ld.geo.latitude);
-      lng = parseFloat(ld.geo.longitude);
+    if (adData.map?.lat && adData.map?.lon) {
+      lat = parseFloat(adData.map.lat);
+      lng = parseFloat(adData.map.lon);
+    } else if (ldGeo.latitude && ldGeo.longitude) {
+      lat = parseFloat(ldGeo.latitude);
+      lng = parseFloat(ldGeo.longitude);
     }
 
     if (!lat || !lng) {
@@ -230,7 +235,7 @@ export const adapterOlx: SourceAdapter = {
 
     // ---- Description ----
     const description =
-      ad?.description ??
+      adData.description ??
       ($('[data-cy="ad_description"] div').first().text().trim().slice(0, 2000) ||
         $('[data-testid="ad-description"]').first().text().trim().slice(0, 2000) ||
         undefined);

@@ -1,60 +1,68 @@
+import { notFound } from "next/navigation";
 import React from "react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { auth } from "@/lib/auth";
+import {
+  checkReducedVATEligibility,
+  computePriceWithVAT,
+  detectDevelopmentStatus,
+} from "@/lib/analysis/development-detect";
 import { prisma } from "@/lib/db";
-import estimatePriceRange, { type AreaStats } from "@/lib/ml/avm";
-import estimateTTS from "@/lib/ml/tts";
-import { computeYield, estimateRent, type YieldResult } from "@/lib/ml/yield";
-import { nearestStationM, inferLocationFromText, geocodeWithNominatim } from "@/lib/geo";
+import { flags } from "@/lib/feature-flags";
+import { geocodeWithNominatim, inferLocationFromText, nearestStationM } from "@/lib/geo";
 import { getTransportSummary } from "@/lib/geo/transport";
 import { computeVibeScores } from "@/lib/geo/vibe";
-import { matchSeismic } from "@/lib/risk/seismic";
-import type { NormalizedFeatures } from "@/lib/types/pipeline";
-
-import { flags } from "@/lib/feature-flags";
 import type { LlmTextExtraction, LlmVisionExtraction } from "@/lib/llm/types";
-import {
-  generateNegotiationPoints,
-  buildWhatsAppDraft,
-  type NegotiationInput,
-} from "@/lib/report/negotiation";
-import { findComparables, computeFairRange, type FairPriceResult } from "@/lib/report/pricing";
-import { computeExecutiveVerdict, buildQuickTake, type VerdictInput } from "@/lib/report/verdict";
-import { computeApartmentScore, type ApartmentScoreInput } from "@/lib/score/apartmentScore";
-import { detectDevelopmentStatus, computePriceWithVAT, checkReducedVATEligibility } from "@/lib/analysis/development-detect";
+import estimatePriceRange, { type AreaStats } from "@/lib/ml/avm";
+import estimateTTS from "@/lib/ml/tts";
 import {
   detectPropertyType,
   isHouseType,
   isNonResidential,
-  propertyTypeLabel,
   propertyScoreLabel,
+  propertyTypeLabel,
   sanitizeRooms,
 } from "@/lib/property-type";
+import {
+  buildWhatsAppDraft,
+  generateNegotiationPoints,
+  type NegotiationInput,
+} from "@/lib/report/negotiation";
+import { computeFairRange, type FairPriceResult, findComparables } from "@/lib/report/pricing";
+import { buildQuickTake, computeExecutiveVerdict, type VerdictInput } from "@/lib/report/verdict";
+import {
+  buildRecommendedNextStep,
+  buildRiskInsights,
+  normalizeRiskStack,
+  orderRiskLayerKeys,
+  RISK_LAYER_LABELS,
+} from "@/lib/risk/executive";
+import { matchSeismic } from "@/lib/risk/seismic";
+import { type ApartmentScoreInput, computeApartmentScore } from "@/lib/score/apartmentScore";
+import type { NormalizedFeatures } from "@/lib/types/pipeline";
 
 import AnalysisLoading from "./AnalysisLoading";
 import CompsClientBlock from "./CompsClientBlock";
 import { LlmEnrichTrigger } from "./LlmEnrichTrigger";
+import NeighborhoodIntelV2 from "./NeighborhoodIntelV2Lazy";
 import { PdfActions } from "./PdfActions";
+import ReportChat from "./ReportChat";
+import RetryAnalysisButton from "./RetryAnalysisButton";
 import AcquisitionCostsSection from "./sections/AcquisitionCostsSection";
-import DataInsightsSection from "./sections/DataInsightsSection";
 import ApartmentScoreSection from "./sections/ApartmentScoreSection";
+import DataInsightsSection from "./sections/DataInsightsSection";
 import ExecutiveSummarySection from "./sections/ExecutiveSummarySection";
 import ListingHistorySection from "./sections/ListingHistorySection";
 import ListingInsightsSection from "./sections/ListingInsightsSection";
 import MethodologySection from "./sections/MethodologySection";
-import NeighborhoodIntelSection from "./sections/NeighborhoodIntelSection";
 import NegotiationPointsSection from "./sections/NegotiationPointsSection";
-import TransportSection from "./sections/TransportSection";
 import PriceAnchorsSection from "./sections/PriceAnchorsSection";
-import SeismicSection from "./sections/SeismicSection";
+import RiskStackSection from "./sections/RiskStackSection";
 import SellerChecklist from "./sections/SellerChecklist";
+import TransportSection from "./sections/TransportSection";
 import TtsSection from "./sections/TtsSection";
-import NearbySection from "./sections/NearbySection";
-import NeighborhoodIntelV2 from "./NeighborhoodIntelV2Lazy";
 import VerdictSection from "./sections/VerdictSection";
-import ReportChat from "./ReportChat";
 import { ViewTracker } from "./ViewTracker";
 
 export const dynamic = "force-dynamic";
@@ -102,12 +110,12 @@ function looksLikeAddress(raw: string): boolean {
     /^afiseaza/,
     /^anunt/,
     /^oferta$/,
-    /pre[tț]\s+\d/,          // contains price like "preț 124.000"
-    /\bimobiliare\.ro\b/i,   // contains source name
+    /pre[tț]\s+\d/, // contains price like "preț 124.000"
+    /\bimobiliare\.ro\b/i, // contains source name
     /\bstoria\.ro\b/i,
     /\bolx\.ro\b/i,
-    /\d+\s*€/,               // contains euro amounts
-    /\+\s*TVA/i,             // contains "+TVA"
+    /\d+\s*€/, // contains euro amounts
+    /\+\s*TVA/i, // contains "+TVA"
   ];
   if (nonAddressPatterns.some((p) => p.test(lower))) return false;
   return true;
@@ -235,12 +243,32 @@ export default async function ReportPage({ params }: Props) {
   const analysis = await loadAnalysis(id);
 
   if (!analysis) {
-    const { notFound } = await import("next/navigation");
     notFound();
   }
 
-  // Show loading page until the analysis is fully done
-  if (analysis.status !== "done" && analysis.status !== "error") {
+  const extracted = analysis.extractedListing ?? null;
+  const f = (analysis.featureSnapshot?.features ?? null) as NormalizedFeatures | null;
+  const sourceMeta = (extracted as Record<string, unknown> | null)?.sourceMeta as
+    | Record<string, unknown>
+    | undefined;
+  const listingDescription =
+    typeof sourceMeta?.description === "string" ? sourceMeta.description : null;
+  const rawRooms = (extracted?.rooms ?? f?.rooms ?? null) as number | null;
+  const saneRooms = sanitizeRooms(rawRooms, extracted?.title as string | null);
+  const propType = detectPropertyType(extracted?.title as string | null, saneRooms);
+  const propLabel = propertyTypeLabel(propType);
+  const propScoreLabel = propertyScoreLabel(propType);
+  const isHouse = isHouseType(propType);
+  const isUnsupportedType = isNonResidential(propType);
+
+  const TERMINAL_STATUSES = [
+    "done",
+    "error",
+    "failed",
+    "rejected_rental",
+    "rejected_not_realestate",
+  ];
+  if (!TERMINAL_STATUSES.includes(analysis.status ?? "")) {
     return (
       <AnalysisLoading
         status={analysis.status ?? "processing"}
@@ -264,7 +292,7 @@ export default async function ReportPage({ params }: Props) {
       null;
     if (subjectArea && subjectArea > 0) {
       try {
-        const feat = (analysis?.featureSnapshot?.features ?? {}) as NormalizedFeatures;
+        const feat = (analysis.featureSnapshot?.features ?? {}) as NormalizedFeatures;
         const tightComps = await findComparables({
           analysisId: id,
           lat: feat.lat ?? null,
@@ -323,20 +351,8 @@ export default async function ReportPage({ params }: Props) {
     };
   });
 
-  const extracted = analysis?.extractedListing ?? null;
-  const f = (analysis?.featureSnapshot?.features ?? null) as NormalizedFeatures | null;
-
-  // Property type detection and rooms sanitization
-  const rawRooms = (extracted?.rooms ?? f?.rooms ?? null) as number | null;
-  const saneRooms = sanitizeRooms(rawRooms, extracted?.title as string | null);
-  const propType = detectPropertyType(extracted?.title as string | null, saneRooms);
-  const propLabel = propertyTypeLabel(propType);
-  const propScoreLabel = propertyScoreLabel(propType);
-  const isHouse = isHouseType(propType);
-  const isUnsupportedType = isNonResidential(propType);
-
   // Score explain data
-  const scoreExplain = analysis?.scoreSnapshot?.explain as Record<string, unknown> | null;
+  const scoreExplain = analysis.scoreSnapshot?.explain as Record<string, unknown> | null;
   const compsExplain = scoreExplain?.comps as Record<string, unknown> | undefined;
   const compsStats = compsExplain?.eurM2 as
     | { median?: number; q1?: number; q3?: number }
@@ -347,22 +363,23 @@ export default async function ReportPage({ params }: Props) {
   // Compute AVM
   let priceRange: { low: number; high: number; mid: number; conf: number } | null = null;
   let ttsResult: Awaited<ReturnType<typeof estimateTTS>> | null = null;
-  let yieldRes: YieldResult | null = null;
   let seismic: { level: "RS1" | "RS2" | "RS3" | "RS4" | "None"; sourceUrl?: string | null } = {
     level: "None",
   };
 
   const areaSlug = f?.areaSlug ?? ((f as Record<string, unknown>)?.area_slug as string | undefined);
   const isRon = String(extracted?.currency ?? "").toUpperCase() === "RON";
-  const ronToEurRate = Number(process.env.EURRON_RATE ?? process.env.EXCHANGE_RATE_EUR_TO_RON ?? 4.95);
-  const priceEurConverted = isRon && extracted?.price
-    ? Math.round((extracted.price as number) / ronToEurRate)
-    : null;
-  const actualPrice =
+  const ronToEurRate = Number(
+    process.env.EURRON_RATE ?? process.env.EXCHANGE_RATE_EUR_TO_RON ?? 4.95,
+  );
+  const priceEurConverted =
+    isRon && extracted?.price ? Math.round((extracted.price as number) / ronToEurRate) : null;
+  const actualPrice: number | null =
     f?.priceEur ??
     ((f as Record<string, unknown>)?.price_eur as number | undefined) ??
     priceEurConverted ??
-    (extracted?.price as number | undefined);
+    (extracted?.price as number | undefined) ??
+    null;
 
   if (areaSlug) {
     const ad = await prisma.areaDaily.findFirst({
@@ -374,7 +391,15 @@ export default async function ReportPage({ params }: Props) {
       medianEurPerM2: ad?.medianEurM2 ?? 1500,
       count: ad?.supply ?? 1,
     };
-    priceRange = estimatePriceRange(f as NormalizedFeatures, areaStats);
+    const estimatedRange = estimatePriceRange(f as NormalizedFeatures, areaStats);
+    if (estimatedRange.low != null && estimatedRange.high != null && estimatedRange.mid != null) {
+      priceRange = {
+        low: estimatedRange.low,
+        high: estimatedRange.high,
+        mid: estimatedRange.mid,
+        conf: estimatedRange.conf,
+      };
+    }
 
     if (priceRange) {
       try {
@@ -387,19 +412,6 @@ export default async function ReportPage({ params }: Props) {
           areaM2: f?.areaM2 ?? (extracted?.areaM2 as number) ?? undefined,
           conditionScore: f?.conditionScore ?? undefined,
         });
-
-        const rentM2 = estimateRent(f, null);
-        const areaM2 = f?.areaM2 ?? (extracted?.areaM2 as number) ?? null;
-        const rentPerMonth = rentM2 && areaM2 ? rentM2 * areaM2 : null;
-
-        let capex = 0;
-        if (typeof f?.conditionScore === "number") {
-          capex = Math.round((1 - f.conditionScore) * 10000);
-        }
-
-        yieldRes = rentPerMonth
-          ? computeYield((actualPrice as number) ?? 0, rentPerMonth, capex)
-          : null;
 
         seismic = await matchSeismic(
           extracted?.lat ?? f?.lat,
@@ -423,7 +435,7 @@ export default async function ReportPage({ params }: Props) {
   if (geoLat == null || geoLng == null) {
     const hint = inferLocationFromText(
       extracted?.title ?? null,
-      extracted?.description ?? null,
+      listingDescription,
       extracted?.addressRaw ?? null,
     );
     if (hint) {
@@ -433,8 +445,7 @@ export default async function ReportPage({ params }: Props) {
     } else {
       // Nominatim fallback: try address first, then title keywords
       const geoQuery =
-        (extracted?.addressRaw as string | null) ??
-        (extracted?.title as string | null);
+        (extracted?.addressRaw as string | null) ?? (extracted?.title as string | null);
       if (geoQuery) {
         const geo = await geocodeWithNominatim(geoQuery).catch(() => null);
         if (geo) {
@@ -447,36 +458,32 @@ export default async function ReportPage({ params }: Props) {
   }
 
   if (geoLat != null && geoLng != null) {
-    const promises: [Promise<typeof vibeResult> | null, Promise<typeof transportResult> | null] = [
-      flags.poi ? computeVibeScores(geoLat, geoLng) : null,
-      flags.transport ? getTransportSummary(geoLat, geoLng) : null,
-    ];
-    const [vibe, transport] = await Promise.allSettled(
-      promises.map((p) => p ?? Promise.reject("disabled")),
-    );
-    if (vibe.status === "fulfilled") vibeResult = vibe.value;
-    if (transport.status === "fulfilled") transportResult = transport.value;
+    const [vibe, transport] = await Promise.all([
+      flags.poi ? computeVibeScores(geoLat, geoLng).catch(() => null) : Promise.resolve(null),
+      flags.transport
+        ? getTransportSummary(geoLat, geoLng).catch(() => null)
+        : Promise.resolve(null),
+    ]);
+    vibeResult = vibe;
+    transportResult = transport;
   }
-
-  const session = await auth();
-  const isAdmin = session?.user?.role === "admin";
 
   // Tier check for notarial data visibility
   // TODO: re-enable paywall before going live
-  let showNotarial = true;
-  // if (session?.user?.id) {
+  const showNotarial = true;
+  // if (userId) {
   //   try {
   //     const { canAccess } = await import("@/lib/billing/entitlements");
-  //     const access = await canAccess(session.user.id, "detailedScore");
+  //     const access = await canAccess(userId, "detailedScore");
   //     showNotarial = access.allowed;
   //   } catch { /* free tier by default */ }
   // }
   // if (isAdmin) showNotarial = true;
 
   // Notarial grid data from ScoreSnapshot
-  const notarialTotal = analysis?.scoreSnapshot?.notarialTotal ?? null;
-  const notarialZone = analysis?.scoreSnapshot?.notarialZone ?? null;
-  const notarialYear = analysis?.scoreSnapshot?.notarialYear ?? null;
+  const notarialTotal = analysis.scoreSnapshot?.notarialTotal ?? null;
+  const notarialZone = analysis.scoreSnapshot?.notarialZone ?? null;
+  const notarialYear = analysis.scoreSnapshot?.notarialYear ?? null;
 
   // LLM enrichment data (read from DB, never call LLM here)
   const llmText = extracted?.llmTextExtract as unknown as LlmTextExtraction | null;
@@ -492,6 +499,24 @@ export default async function ReportPage({ params }: Props) {
       : null;
 
   const seismicExplain = scoreExplain?.seismic as Record<string, unknown> | undefined;
+  const riskStackExplain = scoreExplain?.riskStack as Record<string, unknown> | undefined;
+  const titleMentionsRisk =
+    /risc\s*seismic|bulina\s*rosie|clasa\s*de\s*risc|expertiza\s*tehnic/.test(
+      `${extracted?.title ?? ""} ${((extracted?.sourceMeta as Record<string, unknown>)?.description as string) ?? ""}`.toLowerCase(),
+    );
+  const normalizedRiskStack = normalizeRiskStack(riskStackExplain ?? null, seismicExplain ?? null);
+  const orderedRiskKeys = orderRiskLayerKeys(normalizedRiskStack.layers);
+  const riskInsightBlock = buildRiskInsights(normalizedRiskStack, orderedRiskKeys);
+  const riskRecommendedNextStep = buildRecommendedNextStep(
+    normalizedRiskStack,
+    riskInsightBlock.dominantKey,
+  );
+  const dominantRiskLabel = riskInsightBlock.dominantKey
+    ? RISK_LAYER_LABELS[riskInsightBlock.dominantKey]
+    : null;
+  const dominantRiskSummary = riskInsightBlock.dominantKey
+    ? normalizedRiskStack.layers[riskInsightBlock.dominantKey].summary
+    : null;
 
   // Override seismic from pipeline data if available
   if (seismicExplain?.riskClass) {
@@ -582,25 +607,24 @@ export default async function ReportPage({ params }: Props) {
 
   // Under-construction detection
   const yearBuiltVal = (extracted?.yearBuilt ?? f?.yearBuilt ?? null) as number | null;
-  const sourceMeta = (extracted as Record<string, unknown> | null)?.sourceMeta as Record<string, unknown> | undefined;
   const devPriceText = sourceMeta?.plusTVA ? "+ TVA" : null;
   const devSignals = detectDevelopmentStatus(
     extracted?.title as string | null,
-    (sourceMeta?.description as string | null) ?? (extracted?.description as string | null),
+    listingDescription,
     yearBuiltVal,
     sourceMeta?.sellerType as string | null,
     devPriceText as string | null,
   );
 
   // VAT computation
-  const hasPlusTVA = devSignals.hasVAT || (sourceMeta?.plusTVA === true);
+  const hasPlusTVA = devSignals.hasVAT || sourceMeta?.plusTVA === true;
   const vatRate = devSignals.vatRate ?? (hasPlusTVA ? 19 : null);
-  const vatComputed = hasPlusTVA && actualPrice && vatRate
-    ? computePriceWithVAT(actualPrice, vatRate)
-    : null;
-  const reducedVATCheck = hasPlusTVA && actualPrice && (extracted?.areaM2 as number | undefined)
-    ? checkReducedVATEligibility(actualPrice, extracted?.areaM2 as number)
-    : null;
+  const vatComputed =
+    hasPlusTVA && actualPrice && vatRate ? computePriceWithVAT(actualPrice, vatRate) : null;
+  const reducedVATCheck =
+    hasPlusTVA && actualPrice && (extracted?.areaM2 as number | undefined)
+      ? checkReducedVATEligibility(actualPrice, extracted?.areaM2 as number)
+      : null;
 
   // Executive verdict (depends on devSignals, hasPlusTVA, sourceMeta)
   const verdictInput: VerdictInput = {
@@ -616,6 +640,13 @@ export default async function ReportPage({ params }: Props) {
       (seismicExplain?.riskClass as string) ?? (seismic.level !== "None" ? seismic.level : null),
     seismicConfidence: (seismicExplain?.confidence as number) ?? null,
     seismicMethod: (seismicExplain?.method as string) ?? null,
+    riskOverallLevel: normalizedRiskStack.overallLevel,
+    riskOverallScore: normalizedRiskStack.overallScore,
+    riskDominantKey: riskInsightBlock.dominantKey,
+    riskDominantLabel: dominantRiskLabel,
+    riskDominantSummary: dominantRiskSummary,
+    riskRecommendedNextStep,
+    riskInsights: riskInsightBlock.items,
     llmRedFlags: llmText?.redFlags ?? null,
     llmCondition: llmText?.condition ?? null,
     sellerMotivation: llmText?.sellerMotivation ?? null,
@@ -627,18 +658,20 @@ export default async function ReportPage({ params }: Props) {
     rooms: saneRooms,
     areaM2: extracted?.areaM2 ?? f?.areaM2 ?? null,
     floor: isHouse ? null : (f?.level ?? null),
-    totalFloors: f?.totalFloors ?? null,
+    totalFloors: (f?.totalFloors as number | null | undefined) ?? null,
     address: extracted?.addressRaw ?? null,
     title: extracted?.title ?? null,
     hasParking: llmText?.hasParking ?? null,
-    hasElevator: f?.hasLift ?? null,
+    hasElevator: (f?.hasLift as boolean | null | undefined) ?? null,
     heatingType: llmText?.heatingType ?? null,
-    sellerType: sourceMeta?.sellerType as string | null ?? null,
+    sellerType: (sourceMeta?.sellerType as string | null) ?? null,
     isUnderConstruction: devSignals.isUnderConstruction,
     isNeverLivedIn: sourceMeta?.neverLivedIn === true,
     hasPlusTVA,
     isRender: devSignals.isRender,
-    photosAreRenders: devSignals.isRender || (llmVision?.isRender === true && (llmVision?.renderConfidence ?? 0) >= 0.6),
+    photosAreRenders:
+      devSignals.isRender ||
+      (llmVision?.isRender === true && (llmVision?.renderConfidence ?? 0) >= 0.6),
     estimatedDelivery: devSignals.estimatedDelivery,
   };
   const executiveVerdict = computeExecutiveVerdict(verdictInput);
@@ -709,11 +742,9 @@ export default async function ReportPage({ params }: Props) {
         "@context": "https://schema.org",
         "@type": "RealEstateListing",
         name: extracted.title || "Apartament Bucuresti",
-        description: extracted.description
-          ? String(extracted.description).slice(0, 300)
-          : undefined,
-        url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://imobintel.ro"}/report/${analysis?.id}`,
-        datePosted: analysis?.createdAt?.toISOString(),
+        description: listingDescription ? String(listingDescription).slice(0, 300) : undefined,
+        url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://imobintel.ro"}/report/${analysis.id}`,
+        datePosted: analysis.createdAt?.toISOString(),
         ...(extracted.price
           ? {
               offers: {
@@ -752,9 +783,7 @@ export default async function ReportPage({ params }: Props) {
               },
             }
           : {}),
-        ...(extracted.rooms
-          ? { numberOfRooms: extracted.rooms }
-          : {}),
+        ...(extracted.rooms ? { numberOfRooms: extracted.rooms } : {}),
       }
     : null;
 
@@ -782,14 +811,18 @@ export default async function ReportPage({ params }: Props) {
         const inBucharestBbox =
           geoLat != null &&
           geoLng != null &&
-          geoLat >= 44.33 && geoLat <= 44.55 &&
-          geoLng >= 25.93 && geoLng <= 26.30;
+          geoLat >= 44.33 &&
+          geoLat <= 44.55 &&
+          geoLng >= 25.93 &&
+          geoLng <= 26.3;
         if (inBucharestBbox) return null;
 
         const city = f?.city as string | undefined;
         const addr = extracted?.addressRaw as string | undefined;
         const combinedText = `${city ?? ""} ${addr ?? ""} ${extracted?.title ?? ""}`
-          .normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase();
         const isBucharest =
           combinedText.includes("bucuresti") ||
           combinedText.includes("ilfov") ||
@@ -820,38 +853,50 @@ export default async function ReportPage({ params }: Props) {
         <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
           <div className="font-medium text-blue-800">Anunt de inchiriere detectat</div>
           <div className="mt-1 text-blue-700">
-            ImobIntel analizeaza momentan doar anunturi de vanzare. Suportul pentru chirii si regim hotelier
-            este in constructie si va fi disponibil in curand.
+            ImobIntel analizeaza momentan doar anunturi de vanzare. Suportul pentru chirii si regim
+            hotelier este in constructie si va fi disponibil in curand.
           </div>
         </div>
       )}
 
       {String(analysis?.status ?? "") === "rejected_not_realestate" && (
         <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm">
-          <div className="font-medium text-red-800">Anunt non-imobiliar detectat</div>
+          <div className="font-medium text-red-800">Proprietate nerezidentiala detectata</div>
           <div className="mt-1 text-red-700">
-            Acest link nu pare sa fie un anunt imobiliar. ImobIntel analizeaza doar apartamente, case, vile
-            si alte proprietati imobiliare de vanzare.
+            ImobIntel analizeaza doar proprietati rezidentiale: apartamente, garsoniere, case, vile,
+            studiouri, mansarde, penthouse-uri si duplex-uri. Spatiile comerciale, afacerile,
+            terenurile, birourile si halele industriale nu sunt suportate.
           </div>
         </div>
       )}
 
-      {!extracted && !["rejected_rental", "rejected_not_realestate"].includes(String(analysis?.status ?? "")) && (
-        <div className="mb-6 rounded-lg border border-destructive/40 bg-destructive/5 p-4 text-sm">
-          <div className="font-medium">Nu avem inca date extrase pentru acest raport.</div>
-          <div className="mt-1 text-muted-foreground">
-            Status analiza: <b>{analysis?.status ?? "-"}</b>
+      {!extracted &&
+        !["rejected_rental", "rejected_not_realestate"].includes(
+          String(analysis?.status ?? ""),
+        ) && (
+          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm">
+            <div className="font-medium text-red-800">
+              {analysis?.status === "error" || analysis?.status === "failed"
+                ? "Analiza nu a putut fi finalizata"
+                : "Nu avem inca date extrase pentru acest raport"}
+            </div>
+            <div className="mt-1 text-red-700">
+              {analysis?.status === "error" || analysis?.status === "failed"
+                ? "Nu am reusit sa extragem datele din anunt. Acest lucru se poate intampla cand site-ul sursa blocheaza accesul automat. Incearca din nou - de obicei functioneaza la a doua incercare."
+                : `Status analiza: ${analysis?.status ?? "-"}`}
+            </div>
+            {(analysis?.status === "error" || analysis?.status === "failed") &&
+              analysis?.sourceUrl && <RetryAnalysisButton url={analysis.sourceUrl} />}
           </div>
-        </div>
-      )}
+        )}
 
       {isUnsupportedType && extracted && (
         <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm">
           <div className="font-medium text-amber-800">Tip de proprietate nesustinut</div>
           <div className="mt-1 text-amber-700">
             ImobIntel nu ofera inca suport complet pentru analiza de {propLabel}. Lucram la
-            extinderea platformei pentru a include si acest tip de proprietate.
-            Datele prezentate mai jos sunt orientative.
+            extinderea platformei pentru a include si acest tip de proprietate. Datele prezentate
+            mai jos sunt orientative.
           </div>
         </div>
       )}
@@ -863,8 +908,16 @@ export default async function ReportPage({ params }: Props) {
           <div>
             <div className="font-medium text-amber-900">Pretul afisat nu include TVA</div>
             <div className="mt-1 text-amber-800">
-              Pretul din anunt este <strong>{(actualPrice ?? 0).toLocaleString("ro-RO")} {extracted.currency ?? "EUR"} + TVA ({vatRate}%)</strong>.
-              Costul real al proprietatii este <strong>{vatComputed.priceWithVAT.toLocaleString("ro-RO")} {extracted.currency ?? "EUR"}</strong> (TVA: {vatComputed.vatAmount.toLocaleString("ro-RO")} {extracted.currency ?? "EUR"}).
+              Pretul din anunt este{" "}
+              <strong>
+                {(actualPrice ?? 0).toLocaleString("ro-RO")} {extracted.currency ?? "EUR"} + TVA (
+                {vatRate}%)
+              </strong>
+              . Costul real al proprietatii este{" "}
+              <strong>
+                {vatComputed.priceWithVAT.toLocaleString("ro-RO")} {extracted.currency ?? "EUR"}
+              </strong>{" "}
+              (TVA: {vatComputed.vatAmount.toLocaleString("ro-RO")} {extracted.currency ?? "EUR"}).
               {reducedVATCheck?.eligible && (
                 <span className="block mt-1 text-emerald-700 font-medium">
                   Posibil eligibil pentru TVA redus 5% - verificati cu dezvoltatorul.
@@ -884,24 +937,40 @@ export default async function ReportPage({ params }: Props) {
             <div className="mt-1 text-orange-800 space-y-1">
               <p>
                 Acest apartament <strong>nu este finalizat</strong>.
-                {devSignals.estimatedDelivery && <> Predare estimata: <strong>{devSignals.estimatedDelivery}</strong>.</>}
-                {devSignals.projectName && <> Proiect: <strong>{devSignals.projectName}</strong>.</>}
+                {devSignals.estimatedDelivery && (
+                  <>
+                    {" "}
+                    Predare estimata: <strong>{devSignals.estimatedDelivery}</strong>.
+                  </>
+                )}
+                {devSignals.projectName && (
+                  <>
+                    {" "}
+                    Proiect: <strong>{devSignals.projectName}</strong>.
+                  </>
+                )}
               </p>
               {(devSignals.isRender || llmVision?.isRender) && (
                 <p className="flex items-start gap-1.5 mt-1">
                   <span className="shrink-0 text-orange-600">⚠</span>
                   <span>
-                    <strong>Fotografiile din anunt sunt randari 3D</strong>, nu poze reale ale apartamentului.
-                    Starea actuala a constructiei poate fi diferita de ce vedeti in imagini.
-                    Este recomandat sa vizitati santierul pentru a vedea stadiul real inainte de a lua o decizie.
+                    <strong>Fotografiile din anunt sunt randari 3D</strong>, nu poze reale ale
+                    apartamentului. Starea actuala a constructiei poate fi diferita de ce vedeti in
+                    imagini. Este recomandat sa vizitati santierul pentru a vedea stadiul real
+                    inainte de a lua o decizie.
                   </span>
                 </p>
               )}
               <p className="text-xs text-orange-700 mt-2">
-                Verificati: stadiul constructiei, termenul de predare, garantiile oferite de dezvoltator, si clauzele contractuale pentru intarzieri.
+                Verificati: stadiul constructiei, termenul de predare, garantiile oferite de
+                dezvoltator, si clauzele contractuale pentru intarzieri.
                 {devSignals.signals.length > 0 && (
                   <span className="block mt-0.5 text-orange-600">
-                    Semnale detectate: {devSignals.signals.map(s => s.replace(/Text detectat: .*/, "text specific constructie")).join(", ")}.
+                    Semnale detectate:{" "}
+                    {devSignals.signals
+                      .map((s) => s.replace(/Text detectat: .*/, "text specific constructie"))
+                      .join(", ")}
+                    .
                   </span>
                 )}
               </p>
@@ -911,157 +980,162 @@ export default async function ReportPage({ params }: Props) {
       )}
 
       {/* Render-only warning (when not under construction but photos look like renders) */}
-      {extracted && !devSignals.isUnderConstruction && llmVision?.isRender && (llmVision?.renderConfidence ?? 0) >= 0.6 && (
-        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm flex items-start gap-3">
-          <span className="text-amber-600 text-lg leading-none mt-0.5">⚠</span>
-          <div>
-            <div className="font-medium text-amber-900">Fotografii posibil nerealiste</div>
-            <div className="mt-1 text-amber-800">
-              Fotografiile din acest anunt par a fi <strong>randari 3D sau vizualizari digitale</strong>, nu fotografii reale ale proprietatii.
-              Vizitati apartamentul inainte de a lua o decizie pentru a vedea starea reala.
+      {extracted &&
+        !devSignals.isUnderConstruction &&
+        llmVision?.isRender &&
+        (llmVision?.renderConfidence ?? 0) >= 0.6 && (
+          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm flex items-start gap-3">
+            <span className="text-amber-600 text-lg leading-none mt-0.5">⚠</span>
+            <div>
+              <div className="font-medium text-amber-900">Fotografii posibil nerealiste</div>
+              <div className="mt-1 text-amber-800">
+                Fotografiile din acest anunt par a fi{" "}
+                <strong>randari 3D sau vizualizari digitale</strong>, nu fotografii reale ale
+                proprietatii. Vizitati apartamentul inainte de a lua o decizie pentru a vedea starea
+                reala.
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Executive Summary - only when extraction succeeded */}
       {extracted && (
-      <div className="mb-6 space-y-3">
-        <ExecutiveSummarySection
-          verdict={executiveVerdict}
-          priceRange={bestRange}
-          askingPrice={actualPrice ?? null}
-          currency="EUR"
-          originalPrice={isRon && extracted?.price ? (extracted.price as number) : undefined}
-          originalCurrency={isRon ? "RON" : undefined}
-          hasPlusTVA={hasPlusTVA}
-          vatRate={vatRate}
-          priceWithVAT={vatComputed?.priceWithVAT ?? null}
-          quickTake={quickTake}
-        />
-      </div>
+        <div className="mb-6 space-y-3">
+          <ExecutiveSummarySection
+            verdict={executiveVerdict}
+            priceRange={bestRange}
+            askingPrice={actualPrice ?? null}
+            currency="EUR"
+            originalPrice={isRon && extracted?.price ? (extracted.price as number) : undefined}
+            originalCurrency={isRon ? "RON" : undefined}
+            hasPlusTVA={hasPlusTVA}
+            vatRate={vatRate}
+            priceWithVAT={vatComputed?.priceWithVAT ?? null}
+            quickTake={quickTake}
+          />
+        </div>
       )}
 
       {extracted && (
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: listing details */}
-        <div className="lg:col-span-7 space-y-4">
-          {extracted && (
-            <Card>
-              <CardHeader>
-                <CardTitle>{extracted.title ?? "Fara titlu"}</CardTitle>
-                <CardDescription>
-                  {(() => {
-                    const raw = extracted.addressRaw
-                      ? extracted.addressRaw
-                          .replace(/\s*pre[tț]\s+[\d.,]+\s*€?.*/i, "")
-                          .replace(/\s*\|.*$/g, "")
-                          .replace(/\s*\+\s*TVA.*/i, "")
-                          .replace(/\s*€.*/g, "")
-                          .replace(/\s{2,}/g, " ")
-                          .trim() || null
-                      : null;
-                    const hasGoodAddress = raw && looksLikeAddress(raw);
-                    const isStreet = hasGoodAddress ? isStreetAddress(raw!) : false;
-                    const sector = extractSectorDisplay(raw, areaSlug);
-                    const mapUrl = buildGoogleMapsUrl(f?.lat, f?.lng, raw, isStreet);
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left: listing details */}
+          <div className="lg:col-span-7 space-y-4">
+            {extracted && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{extracted.title ?? "Fara titlu"}</CardTitle>
+                  <CardDescription>
+                    {(() => {
+                      const raw = extracted.addressRaw
+                        ? extracted.addressRaw
+                            .replace(/\s*pre[tț]\s+[\d.,]+\s*€?.*/i, "")
+                            .replace(/\s*\|.*$/g, "")
+                            .replace(/\s*\+\s*TVA.*/i, "")
+                            .replace(/\s*€.*/g, "")
+                            .replace(/\s{2,}/g, " ")
+                            .trim() || null
+                        : null;
+                      const hasGoodAddress = raw && looksLikeAddress(raw);
+                      const isStreet = hasGoodAddress ? isStreetAddress(raw!) : false;
+                      const sector = extractSectorDisplay(raw, areaSlug);
+                      const mapUrl = buildGoogleMapsUrl(f?.lat, f?.lng, raw, isStreet);
 
-                    if (hasGoodAddress && isStreet) {
-                      return (
-                        <span className="flex items-center gap-2 flex-wrap">
-                          {mapUrl ? (
-                            <a
-                              href={mapUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
-                            >
-                              {raw}
-                            </a>
-                          ) : (
-                            <span>{raw}</span>
-                          )}
-                          {sector && (
-                            <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
-                              {sector}
+                      if (hasGoodAddress && isStreet) {
+                        return (
+                          <span className="flex items-center gap-2 flex-wrap">
+                            {mapUrl ? (
+                              <a
+                                href={mapUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline"
+                              >
+                                {raw}
+                              </a>
+                            ) : (
+                              <span>{raw}</span>
+                            )}
+                            {sector && (
+                              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                                {sector}
+                              </span>
+                            )}
+                            <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700">
+                              Adresa exacta
                             </span>
-                          )}
-                          <span className="inline-flex items-center rounded-full bg-green-50 px-2 py-0.5 text-[11px] font-medium text-green-700">
-                            Adresa exacta
                           </span>
+                        );
+                      }
+
+                      if (hasGoodAddress && !isStreet) {
+                        return (
+                          <span className="flex items-center gap-2 flex-wrap">
+                            {mapUrl ? (
+                              <a
+                                href={mapUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline"
+                              >
+                                {raw}
+                              </a>
+                            ) : (
+                              <span>{raw}</span>
+                            )}
+                            {sector && (
+                              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                                {sector}
+                              </span>
+                            )}
+                            <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                              Adresa aproximativa
+                            </span>
+                          </span>
+                        );
+                      }
+
+                      if (sector || (f?.lat && f?.lng)) {
+                        return (
+                          <span className="flex items-center gap-2 flex-wrap">
+                            <span className="text-muted-foreground">
+                              Adresa exacta nu poate fi determinata
+                            </span>
+                            {sector && (
+                              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                                {sector}
+                              </span>
+                            )}
+                            {mapUrl && (
+                              <a
+                                href={mapUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:underline text-[11px]"
+                              >
+                                Vezi pe harta
+                              </a>
+                            )}
+                          </span>
+                        );
+                      }
+
+                      return (
+                        <span className="text-muted-foreground">
+                          Adresa exacta sau aproximativa nu poate fi determinata
                         </span>
                       );
-                    }
-
-                    if (hasGoodAddress && !isStreet) {
-                      return (
-                        <span className="flex items-center gap-2 flex-wrap">
-                          {mapUrl ? (
-                            <a
-                              href={mapUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline"
-                            >
-                              {raw}
-                            </a>
-                          ) : (
-                            <span>{raw}</span>
-                          )}
-                          {sector && (
-                            <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
-                              {sector}
-                            </span>
-                          )}
-                          <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
-                            Adresa aproximativa
-                          </span>
-                        </span>
-                      );
-                    }
-
-                    if (sector || (f?.lat && f?.lng)) {
-                      return (
-                        <span className="flex items-center gap-2 flex-wrap">
-                          <span className="text-muted-foreground">
-                            Adresa exacta nu poate fi determinata
-                          </span>
-                          {sector && (
-                            <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
-                              {sector}
-                            </span>
-                          )}
-                          {mapUrl && (
-                            <a
-                              href={mapUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline text-[11px]"
-                            >
-                              Vezi pe harta
-                            </a>
-                          )}
-                        </span>
-                      );
-                    }
-
-                    return (
-                      <span className="text-muted-foreground">
-                        Adresa exacta sau aproximativa nu poate fi determinata
-                      </span>
-                    );
-                  })()}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-                  <div>
-                    <div className="text-muted-foreground">Pret</div>
-                    <div className="font-semibold">
-                      {extracted.price
-                        ? (
+                    })()}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <div className="text-muted-foreground">Pret</div>
+                      <div className="font-semibold">
+                        {extracted.price ? (
                           <>
-                            {(extracted.price as number).toLocaleString("ro-RO")} {extracted.currency ?? "EUR"}
+                            {(extracted.price as number).toLocaleString("ro-RO")}{" "}
+                            {extracted.currency ?? "EUR"}
                             {hasPlusTVA && (
                               <span className="text-xs font-medium text-amber-600"> + TVA</span>
                             )}
@@ -1072,426 +1146,424 @@ export default async function ReportPage({ params }: Props) {
                             )}
                             {hasPlusTVA && vatComputed && (
                               <span className="block text-xs text-muted-foreground font-normal">
-                                Cu TVA {vatRate}%: <span className="font-semibold text-foreground">{vatComputed.priceWithVAT.toLocaleString("ro-RO")} {extracted.currency ?? "EUR"}</span>
+                                Cu TVA {vatRate}%:{" "}
+                                <span className="font-semibold text-foreground">
+                                  {vatComputed.priceWithVAT.toLocaleString("ro-RO")}{" "}
+                                  {extracted.currency ?? "EUR"}
+                                </span>
                               </span>
                             )}
                           </>
-                        )
-                        : "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Pret/mp</div>
-                    <div className="font-semibold">
-                      {(() => {
-                        const price = extracted.price as number | null;
-                        const area = extracted.areaM2 as number | null;
-                        if (!price || !area || area <= 0) return "-";
-                        const pricePerM2 = Math.round(price / area);
-                        const eurPerM2 = isRon ? Math.round(pricePerM2 / ronToEurRate) : null;
-                        const pricePerM2WithVAT = hasPlusTVA && vatComputed
-                          ? Math.round(vatComputed.priceWithVAT / area)
-                          : null;
-                        const medianM2 = compsStats?.median;
-                        const compareM2 = pricePerM2WithVAT ?? pricePerM2;
-                        return (
-                          <span className="flex flex-col">
-                            <span className="flex items-center gap-1.5">
-                            {pricePerM2.toLocaleString("ro-RO")} {extracted.currency ?? "EUR"}/mp
-                            {hasPlusTVA && (
-                              <span className="text-xs font-medium text-amber-600">+ TVA</span>
-                            )}
-                            {medianM2 && medianM2 > 0 && (
-                              <span
-                                className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
-                                  compareM2 < medianM2 * 0.95
-                                    ? "bg-emerald-50 text-emerald-700"
-                                    : compareM2 > medianM2 * 1.05
-                                      ? "bg-red-50 text-red-700"
-                                      : "bg-gray-50 text-gray-600"
-                                }`}
-                              >
-                                {compareM2 < medianM2
-                                  ? `${Math.round(((medianM2 - compareM2) / medianM2) * 100)}% sub zona`
-                                  : compareM2 > medianM2
-                                    ? `${Math.round(((compareM2 - medianM2) / medianM2) * 100)}% peste zona`
-                                    : "~media zonei"}
-                              </span>
-                            )}
-                            </span>
-                            {isRon && eurPerM2 && (
-                              <span className="text-xs text-muted-foreground font-normal">
-                                ~{eurPerM2.toLocaleString("ro-RO")} EUR/mp
-                              </span>
-                            )}
-                            {pricePerM2WithVAT && (
-                              <span className="text-xs text-muted-foreground font-normal">
-                                Cu TVA: {pricePerM2WithVAT.toLocaleString("ro-RO")} {extracted.currency ?? "EUR"}/mp
-                              </span>
-                            )}
-                          </span>
-                        );
-                      })()}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Suprafata</div>
-                    <div className="font-semibold">
-                      {extracted.areaM2 ? `${extracted.areaM2} mp` : "-"}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Camere</div>
-                    <div className="font-semibold">{saneRooms ?? "-"}</div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">Etaj</div>
-                    <div className="font-semibold">
-                      {displayFloor(extracted.floor ?? extracted.floorRaw ?? f?.floorRaw)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-muted-foreground">An</div>
-                    <div className="font-semibold">{extracted.yearBuilt ?? "-"}</div>
-                  </div>
-                  {(() => {
-                    const st = (extracted.sourceMeta as Record<string, unknown>)?.sellerType as
-                      | string
-                      | undefined;
-                    const label =
-                      st === "agentie"
-                        ? "Agentie"
-                        : st === "proprietar"
-                          ? "Proprietar"
-                          : st === "dezvoltator"
-                            ? "Dezvoltator"
-                            : null;
-                    return label ? (
-                      <div>
-                        <div className="text-muted-foreground">Tip vanzator</div>
-                        <div className="font-semibold">{label}</div>
+                        ) : (
+                          "-"
+                        )}
                       </div>
-                    ) : null;
-                  })()}
-                  {llmText?.hasParking != null && (
+                    </div>
                     <div>
-                      <div className="text-muted-foreground">Parcare</div>
-                      <div
-                        className={`font-semibold ${llmText.hasParking ? "text-emerald-600" : "text-amber-600"}`}
-                      >
-                        {llmText.hasParking ? "Da" : "Nu"}
+                      <div className="text-muted-foreground">Pret/mp</div>
+                      <div className="font-semibold">
+                        {(() => {
+                          const price = extracted.price as number | null;
+                          const area = extracted.areaM2 as number | null;
+                          if (!price || !area || area <= 0) return "-";
+                          const pricePerM2 = Math.round(price / area);
+                          const eurPerM2 = isRon ? Math.round(pricePerM2 / ronToEurRate) : null;
+                          const pricePerM2WithVAT =
+                            hasPlusTVA && vatComputed
+                              ? Math.round(vatComputed.priceWithVAT / area)
+                              : null;
+                          const medianM2 = compsStats?.median;
+                          const compareM2 = pricePerM2WithVAT ?? pricePerM2;
+                          return (
+                            <span className="flex flex-col">
+                              <span className="flex items-center gap-1.5">
+                                {pricePerM2.toLocaleString("ro-RO")} {extracted.currency ?? "EUR"}
+                                /mp
+                                {hasPlusTVA && (
+                                  <span className="text-xs font-medium text-amber-600">+ TVA</span>
+                                )}
+                                {medianM2 && medianM2 > 0 && (
+                                  <span
+                                    className={`text-xs font-medium px-1.5 py-0.5 rounded-full ${
+                                      compareM2 < medianM2 * 0.95
+                                        ? "bg-emerald-50 text-emerald-700"
+                                        : compareM2 > medianM2 * 1.05
+                                          ? "bg-red-50 text-red-700"
+                                          : "bg-gray-50 text-gray-600"
+                                    }`}
+                                  >
+                                    {compareM2 < medianM2
+                                      ? `${Math.round(((medianM2 - compareM2) / medianM2) * 100)}% sub zona`
+                                      : compareM2 > medianM2
+                                        ? `${Math.round(((compareM2 - medianM2) / medianM2) * 100)}% peste zona`
+                                        : "~media zonei"}
+                                  </span>
+                                )}
+                              </span>
+                              {isRon && eurPerM2 && (
+                                <span className="text-xs text-muted-foreground font-normal">
+                                  ~{eurPerM2.toLocaleString("ro-RO")} EUR/mp
+                                </span>
+                              )}
+                              {pricePerM2WithVAT && (
+                                <span className="text-xs text-muted-foreground font-normal">
+                                  Cu TVA: {pricePerM2WithVAT.toLocaleString("ro-RO")}{" "}
+                                  {extracted.currency ?? "EUR"}/mp
+                                </span>
+                              )}
+                            </span>
+                          );
+                        })()}
                       </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Suprafata</div>
+                      <div className="font-semibold">
+                        {extracted.areaM2 ? `${extracted.areaM2} mp` : "-"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Camere</div>
+                      <div className="font-semibold">{saneRooms ?? "-"}</div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">Etaj</div>
+                      <div className="font-semibold">
+                        {displayFloor(extracted.floor ?? extracted.floorRaw ?? f?.floorRaw)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-muted-foreground">An</div>
+                      <div className="font-semibold">{extracted.yearBuilt ?? "-"}</div>
+                    </div>
+                    {(() => {
+                      const st = (extracted.sourceMeta as Record<string, unknown>)?.sellerType as
+                        | string
+                        | undefined;
+                      const label =
+                        st === "agentie"
+                          ? "Agentie"
+                          : st === "proprietar"
+                            ? "Proprietar"
+                            : st === "dezvoltator"
+                              ? "Dezvoltator"
+                              : null;
+                      return label ? (
+                        <div>
+                          <div className="text-muted-foreground">Tip vanzator</div>
+                          <div className="font-semibold">{label}</div>
+                        </div>
+                      ) : null;
+                    })()}
+                    {llmText?.hasParking != null && (
+                      <div>
+                        <div className="text-muted-foreground">Parcare</div>
+                        <div
+                          className={`font-semibold ${llmText.hasParking ? "text-emerald-600" : "text-amber-600"}`}
+                        >
+                          {llmText.hasParking ? "Da" : "Nu"}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {/* Commission, exclusivity & property badges */}
+                  {(() => {
+                    const sm = extracted.sourceMeta as Record<string, unknown> | null;
+                    const zeroCom = sm?.zeroCommission === true;
+                    const excl = sm?.exclusivitate === true;
+                    const neverLived = sm?.neverLivedIn === true;
+                    if (!zeroCom && !excl && !neverLived) return null;
+                    return (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {zeroCom && (
+                          <span
+                            className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600 cursor-help"
+                            title="Comision 0% pentru cumparator inseamna ca vanzatorul plateste tot comisionul agentiei. Agentul poate fi incentivat sa prioritizeze interesele vanzatorului."
+                          >
+                            <span>ℹ</span> Comision 0% cumparator
+                          </span>
+                        )}
+                        {excl && (
+                          <span
+                            className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600 cursor-help"
+                            title="Proprietatea este listata in exclusivitate de o singura agentie. Pretul poate fi mai putin negociabil."
+                          >
+                            <span>★</span> Exclusivitate
+                          </span>
+                        )}
+                        {neverLived && (
+                          <span
+                            className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700"
+                            title="Proprietatea nu a fost locuita anterior. Finisajele si instalatiile sunt in stare originala de fabrica."
+                          >
+                            <span>✓</span> Proprietate nelocuita
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Photo gallery */}
+            {(() => {
+              const allPhotos =
+                extracted && Array.isArray(extracted.photos)
+                  ? (extracted.photos as string[]).filter(isPropertyPhoto)
+                  : [];
+              const photosLikelyRenders =
+                devSignals.isRender ||
+                (llmVision?.isRender === true && (llmVision?.renderConfidence ?? 0) >= 0.6);
+              return allPhotos.length > 0 ? (
+                <div className="relative">
+                  {photosLikelyRenders && (
+                    <div className="mb-2 flex items-center gap-1.5 px-1">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 border border-orange-200 px-2.5 py-0.5 text-xs font-medium text-orange-800">
+                        Randari 3D - nu sunt fotografii reale
+                      </span>
                     </div>
                   )}
-                </div>
-                {/* Commission, exclusivity & property badges */}
-                {(() => {
-                  const sm = extracted.sourceMeta as Record<string, unknown> | null;
-                  const zeroCom = sm?.zeroCommission === true;
-                  const excl = sm?.exclusivitate === true;
-                  const neverLived = sm?.neverLivedIn === true;
-                  if (!zeroCom && !excl && !neverLived) return null;
-                  return (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {zeroCom && (
-                        <span
-                          className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600 cursor-help"
-                          title="Comision 0% pentru cumparator inseamna ca vanzatorul plateste tot comisionul agentiei. Agentul poate fi incentivat sa prioritizeze interesele vanzatorului."
-                        >
-                          <span>ℹ</span> Comision 0% cumparator
-                        </span>
-                      )}
-                      {excl && (
-                        <span
-                          className="inline-flex items-center gap-1 rounded-full bg-gray-50 border border-gray-200 px-3 py-1 text-xs font-medium text-gray-600 cursor-help"
-                          title="Proprietatea este listata in exclusivitate de o singura agentie. Pretul poate fi mai putin negociabil."
-                        >
-                          <span>★</span> Exclusivitate
-                        </span>
-                      )}
-                      {neverLived && (
-                        <span
-                          className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-medium text-emerald-700"
-                          title="Proprietatea nu a fost locuita anterior. Finisajele si instalatiile sunt in stare originala de fabrica."
-                        >
-                          <span>✓</span> Proprietate nelocuita
-                        </span>
-                      )}
-                    </div>
-                  );
-                })()}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Photo gallery */}
-          {(() => {
-            const allPhotos =
-              extracted && Array.isArray(extracted.photos)
-                ? (extracted.photos as string[]).filter(isPropertyPhoto)
-                : [];
-            const photosLikelyRenders = devSignals.isRender || (llmVision?.isRender === true && (llmVision?.renderConfidence ?? 0) >= 0.6);
-            return allPhotos.length > 0 ? (
-              <div className="relative">
-                {photosLikelyRenders && (
-                  <div className="mb-2 flex items-center gap-1.5 px-1">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-orange-100 border border-orange-200 px-2.5 py-0.5 text-xs font-medium text-orange-800">
-                      Randari 3D - nu sunt fotografii reale
-                    </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 rounded-xl overflow-hidden">
+                    {allPhotos.slice(0, 6).map((src, i) => (
+                      <div
+                        key={i}
+                        className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={src}
+                          alt={`Foto ${i + 1}`}
+                          className="absolute inset-0 w-full h-full object-cover"
+                          loading={i < 2 ? "eager" : "lazy"}
+                        />
+                        {photosLikelyRenders && i === 0 && (
+                          <div className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white font-medium">
+                            Randare 3D
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                )}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 rounded-xl overflow-hidden">
-                  {allPhotos.slice(0, 6).map((src, i) => (
-                    <div
-                      key={i}
-                      className="relative aspect-[4/3] bg-muted rounded-lg overflow-hidden"
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={src}
-                        alt={`Foto ${i + 1}`}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        loading={i < 2 ? "eager" : "lazy"}
-                      />
-                      {photosLikelyRenders && i === 0 && (
-                        <div className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white font-medium">
-                          Randare 3D
-                        </div>
-                      )}
-                    </div>
-                  ))}
                 </div>
-              </div>
-            ) : null;
-          })()}
+              ) : null;
+            })()}
 
-          {/* LLM Analysis - detailed listing insights */}
-          <ListingInsightsSection
-            llmText={llmText}
-            llmVision={llmVision}
-            isEnriching={isLlmEnriching}
-            showVision={showVision}
-            llmFailed={llmFailed}
-            priceEur={actualPrice ?? null}
-            areaM2={extracted?.areaM2 ?? (f?.areaM2 as number) ?? null}
-            rooms={saneRooms}
-            yearBuilt={extracted?.yearBuilt ?? f?.yearBuilt ?? null}
-            zoneMedianEurM2={compsStats?.median ?? null}
-            avmMid={priceRange?.mid ?? null}
-            floor={extracted?.floorRaw ?? null}
-          />
-
-          {/* Neighborhood Intel V2 (Location Intelligence Engine) */}
-          {geoLat != null && geoLng != null && (
-            <NeighborhoodIntelV2
-              lat={geoLat}
-              lng={geoLng}
-              initialRadiusM={1000}
-              mode="report"
+            {/* LLM Analysis - detailed listing insights */}
+            <ListingInsightsSection
+              llmText={llmText}
+              llmVision={llmVision}
+              isEnriching={isLlmEnriching}
+              showVision={showVision}
+              llmFailed={llmFailed}
+              priceEur={actualPrice ?? null}
+              areaM2={extracted?.areaM2 ?? (f?.areaM2 as number) ?? null}
+              rooms={saneRooms}
+              yearBuilt={extracted?.yearBuilt ?? f?.yearBuilt ?? null}
+              zoneMedianEurM2={compsStats?.median ?? null}
+              avmMid={priceRange?.mid ?? null}
+              floor={extracted?.floorRaw ?? null}
             />
-          )}
 
-          {/* Transport section */}
-          {(() => {
-            const effectiveLat = geoLat ?? f?.lat ?? 0;
-            const effectiveLng = geoLng ?? f?.lng ?? 0;
-            const staticMetro = (effectiveLat !== 0 && effectiveLng !== 0)
-              ? nearestStationM(effectiveLat, effectiveLng)
-              : null;
-            return (
-              <TransportSection
-                transport={transportResult}
-                legacyDistMetroM={f?.distMetroM ?? staticMetro?.distM ?? null}
-                legacyNearestMetro={staticMetro?.name ?? null}
-                locationInferred={locationInferred}
-                propertyType={propLabel}
-              />
-            );
-          })()}
+            {/* Neighborhood Intel V2 (Location Intelligence Engine) */}
+            {geoLat != null && geoLng != null && (
+              <NeighborhoodIntelV2 lat={geoLat} lng={geoLng} initialRadiusM={1000} mode="report" />
+            )}
 
-          {/* Comparables */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Comparabile</CardTitle>
-              <CardDescription>
-                {comps.length ? `${comps.length} rezultate` : "-"}
-                {compsStats?.median ? ` - med: ${Math.round(compsStats.median)} EUR/mp` : ""}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {comps.length ? (
-                <CompsClientBlock
-                  comps={comps.map((c) => ({
-                    id: c.id,
-                    title: c.title,
-                    photo: c.photo,
-                    sourceUrl: c.sourceUrl,
-                    priceEur: c.priceEur,
-                    areaM2: c.areaM2,
-                    eurM2: c.eurM2,
-                    distanceM: c.distanceM,
-                    score: c.score,
-                    lat: c.lat,
-                    lng: c.lng,
-                  }))}
-                  center={{
-                    lat: f?.lat ?? null,
-                    lng: f?.lng ?? null,
-                  }}
+            {/* Transport section */}
+            {(() => {
+              const effectiveLat = geoLat ?? f?.lat ?? 0;
+              const effectiveLng = geoLng ?? f?.lng ?? 0;
+              const staticMetro =
+                effectiveLat !== 0 && effectiveLng !== 0
+                  ? nearestStationM(effectiveLat, effectiveLng)
+                  : null;
+              return (
+                <TransportSection
+                  transport={transportResult}
+                  legacyDistMetroM={f?.distMetroM ?? staticMetro?.distM ?? null}
+                  legacyNearestMetro={staticMetro?.name ?? null}
+                  locationInferred={locationInferred}
+                  propertyType={propLabel}
                 />
-              ) : (
-                <Skeleton className="h-20 w-full" />
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right: analysis cards */}
-        <div className="lg:col-span-5 space-y-4">
-          <ApartmentScoreSection score={apartmentScore} variant="full" showActions={false} scoreLabel={propScoreLabel} />
-
-          <VerdictSection
-            priceRange={priceRange}
-            actualPrice={actualPrice}
-            confidence={confidenceData ?? null}
-            compsFair={compsFairRange}
-            currency={extracted?.currency ?? "EUR"}
-          />
-
-          <PriceAnchorsSection
-            askingPrice={actualPrice ?? null}
-            avmLow={priceRange?.low ?? null}
-            avmMid={priceRange?.mid ?? null}
-            avmHigh={priceRange?.high ?? null}
-            notarialTotal={notarialTotal}
-            notarialZone={notarialZone}
-            notarialYear={notarialYear}
-            showNotarial={showNotarial}
-            currency={extracted?.currency ?? "EUR"}
-          />
-
-          <TtsSection
-            ttsBucket={ttsResult?.bucket ?? analysis?.scoreSnapshot?.ttsBucket}
-            scoreDays={ttsResult?.scoreDays}
-            minMonths={ttsResult?.minMonths}
-            maxMonths={ttsResult?.maxMonths}
-            estimateMonths={ttsResult?.estimateMonths}
-          />
-
-          <SeismicSection
-            riskClass={
-              (seismicExplain?.riskClass as string) ??
-              (seismic.level !== "None" ? seismic.level : null)
-            }
-            confidence={(seismicExplain?.confidence as number) ?? null}
-            method={(seismicExplain?.method as string) ?? null}
-            note={(seismicExplain?.note as string) ?? null}
-            sourceUrl={(seismicExplain?.sourceUrl as string) ?? seismic.sourceUrl}
-            matchedAddress={(seismicExplain?.matchedAddress as string) ?? null}
-            intervention={(seismicExplain?.intervention as string) ?? null}
-            nearby={
-              (seismicExplain?.nearby as {
-                total: number;
-                rsI: number;
-                rsII: number;
-                buildings: {
-                  address: string;
-                  riskClass: string;
-                  distanceM: number;
-                  intervention: string | null;
-                }[];
-              }) ?? null
-            }
-            titleMentionsRisk={(() => {
-              const text =
-                `${extracted?.title ?? ""} ${((extracted?.sourceMeta as Record<string, unknown>)?.description as string) ?? ""}`.toLowerCase();
-              return /risc\s*seismic|bulina\s*rosie|clasa\s*de\s*risc|expertiza\s*tehnic/.test(
-                text,
               );
             })()}
-          />
 
-          <NegotiationPointsSection
-            points={negotiationPoints}
-            whatsAppDraft={whatsAppDraft}
-            suggestedLow={compsStats?.q1 && f?.areaM2 ? Math.round(compsStats.q1 * f.areaM2) : null}
-            suggestedHigh={compsStats?.median && f?.areaM2 ? Math.round(compsStats.median * f.areaM2) : null}
-            currency={extracted?.currency ?? "EUR"}
-          />
+            {/* Comparables */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Comparabile</CardTitle>
+                <CardDescription>
+                  {comps.length ? `${comps.length} rezultate` : "-"}
+                  {compsStats?.median ? ` - med: ${Math.round(compsStats.median)} EUR/mp` : ""}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {comps.length ? (
+                  <CompsClientBlock
+                    comps={comps.map((c) => ({
+                      id: c.id,
+                      title: c.title,
+                      photo: c.photo,
+                      sourceUrl: c.sourceUrl,
+                      priceEur: c.priceEur,
+                      areaM2: c.areaM2,
+                      eurM2: c.eurM2,
+                      distanceM: c.distanceM,
+                      score: c.score,
+                      lat: c.lat,
+                      lng: c.lng,
+                    }))}
+                    center={{
+                      lat: f?.lat ?? null,
+                      lng: f?.lng ?? null,
+                    }}
+                  />
+                ) : (
+                  <Skeleton className="h-20 w-full" />
+                )}
+              </CardContent>
+            </Card>
+          </div>
 
-          <AcquisitionCostsSection
-            priceEur={actualPrice}
-            commissionStatus={
-              sourceMeta?.zeroCommission === true
-                ? "zero"
-                : llmText?.redFlags?.some((rf) => /comision/i.test(rf))
-                  ? "standard"
-                  : "unknown"
-            }
-            hasPlusTVA={hasPlusTVA}
-            vatRate={vatRate}
-            vatAmount={vatComputed?.vatAmount ?? null}
-            priceWithVAT={vatComputed?.priceWithVAT ?? null}
-            reducedVATEligible={reducedVATCheck?.eligible}
-            reducedVATReason={reducedVATCheck?.reason}
-          />
+          {/* Right: analysis cards */}
+          <div className="lg:col-span-5 space-y-4">
+            <ApartmentScoreSection
+              score={apartmentScore}
+              variant="full"
+              showActions={false}
+              scoreLabel={propScoreLabel}
+            />
 
-          <DataInsightsSection
-            hasPrice={!!extracted?.price}
-            hasArea={!!extracted?.areaM2}
-            hasRooms={saneRooms != null}
-            hasFloor={extracted?.floor != null || extracted?.floorRaw != null || f?.level != null}
-            hasYear={!!(extracted?.yearBuilt ?? f?.yearBuilt)}
-            hasAddress={!!extracted?.addressRaw}
-            isHouse={isHouse}
-            hasCoords={f?.lat != null && f?.lng != null}
-            hasPhotos={
-              Array.isArray(extracted?.photos) && (extracted.photos as unknown[]).length > 0
-            }
-            compsCount={comps.length}
-            confidenceLevel={confidenceData?.level}
-            seismicLevel={seismic.level}
-          />
+            <VerdictSection
+              priceRange={priceRange}
+              actualPrice={actualPrice}
+              confidence={confidenceData ?? null}
+              compsFair={compsFairRange}
+              currency={extracted?.currency ?? "EUR"}
+            />
 
-          <ListingHistorySection
-            snapshots={historySnapshots}
-            duplicates={historyDuplicates}
-            currency={extracted?.currency ?? "EUR"}
-          />
+            <PriceAnchorsSection
+              askingPrice={actualPrice ?? null}
+              avmLow={priceRange?.low ?? null}
+              avmMid={priceRange?.mid ?? null}
+              avmHigh={priceRange?.high ?? null}
+              notarialTotal={notarialTotal}
+              notarialZone={notarialZone}
+              notarialYear={notarialYear}
+              showNotarial={showNotarial}
+              currency={extracted?.currency ?? "EUR"}
+            />
 
-          <SellerChecklist
-            yearBuilt={extracted?.yearBuilt ?? f?.yearBuilt}
-            hasFloor={extracted?.floor != null || extracted?.floorRaw != null || f?.level != null}
-            hasAddress={!!extracted?.addressRaw}
-            hasCoords={f?.lat != null && f?.lng != null}
-            hasArea={!!extracted?.areaM2}
-            hasPhotos={
-              Array.isArray(extracted?.photos) && (extracted.photos as unknown[]).length > 0
-            }
-            seismicAttention={["RS1", "RS2", "RS3", "RsI", "RsII", "RsIII"].includes(seismic.level)}
-            overpricingPct={overpricingPct}
-            compsCount={comps.length}
-            confidenceLevel={confidenceData?.level}
-            areaM2={extracted?.areaM2 ?? (f?.areaM2 as number) ?? null}
-            titleAreaM2={((extracted as Record<string, unknown>)?.titleAreaM2 as number) ?? null}
-            rooms={saneRooms}
-            title={extracted?.title ?? null}
-            llmRedFlags={llmText?.redFlags ?? null}
-            llmCondition={llmText?.condition ?? null}
-            llmBalconyM2={llmText?.balconyM2 ?? null}
-            description={
-              ((extracted?.sourceMeta as Record<string, unknown>)?.description as string) ?? null
-            }
-          />
+            <TtsSection
+              ttsBucket={ttsResult?.bucket ?? analysis?.scoreSnapshot?.ttsBucket}
+              scoreDays={ttsResult?.scoreDays}
+              minMonths={ttsResult?.minMonths}
+              maxMonths={ttsResult?.maxMonths}
+              estimateMonths={ttsResult?.estimateMonths}
+            />
 
-          <MethodologySection
-            baselineEurM2={(avmExplain?.baselineEurM2 as number) ?? null}
-            adjustments={(avmExplain?.adjustments as Record<string, number>) ?? null}
-            compsCount={comps.length}
-            outlierCount={(compsExplain?.outlierCount as number) ?? null}
-          />
+            <RiskStackSection
+              riskStack={riskStackExplain ?? null}
+              storageKey={analysis.id}
+              seismicExplain={
+                seismicExplain
+                  ? seismicExplain
+                  : {
+                      riskClass: seismic.level !== "None" ? seismic.level : null,
+                      sourceUrl: seismic.sourceUrl,
+                    }
+              }
+              titleMentionsRisk={titleMentionsRisk}
+            />
+
+            <NegotiationPointsSection
+              points={negotiationPoints}
+              whatsAppDraft={whatsAppDraft}
+              suggestedLow={
+                compsStats?.q1 && f?.areaM2 ? Math.round(compsStats.q1 * f.areaM2) : null
+              }
+              suggestedHigh={
+                compsStats?.median && f?.areaM2 ? Math.round(compsStats.median * f.areaM2) : null
+              }
+              currency={extracted?.currency ?? "EUR"}
+            />
+
+            <AcquisitionCostsSection
+              priceEur={actualPrice}
+              commissionStatus={
+                sourceMeta?.zeroCommission === true
+                  ? "zero"
+                  : llmText?.redFlags?.some((rf) => /comision/i.test(rf))
+                    ? "standard"
+                    : "unknown"
+              }
+              hasPlusTVA={hasPlusTVA}
+              vatRate={vatRate}
+              vatAmount={vatComputed?.vatAmount ?? null}
+              priceWithVAT={vatComputed?.priceWithVAT ?? null}
+              reducedVATEligible={reducedVATCheck?.eligible}
+              reducedVATReason={reducedVATCheck?.reason}
+            />
+
+            <DataInsightsSection
+              hasPrice={!!extracted?.price}
+              hasArea={!!extracted?.areaM2}
+              hasRooms={saneRooms != null}
+              hasFloor={extracted?.floor != null || extracted?.floorRaw != null || f?.level != null}
+              hasYear={!!(extracted?.yearBuilt ?? f?.yearBuilt)}
+              hasAddress={!!extracted?.addressRaw}
+              isHouse={isHouse}
+              hasCoords={f?.lat != null && f?.lng != null}
+              hasPhotos={
+                Array.isArray(extracted?.photos) && (extracted.photos as unknown[]).length > 0
+              }
+              compsCount={comps.length}
+              confidenceLevel={confidenceData?.level}
+              seismicLevel={seismic.level}
+            />
+
+            <ListingHistorySection
+              snapshots={historySnapshots}
+              duplicates={historyDuplicates}
+              currency={extracted?.currency ?? "EUR"}
+            />
+
+            <SellerChecklist
+              yearBuilt={extracted?.yearBuilt ?? f?.yearBuilt}
+              hasFloor={extracted?.floor != null || extracted?.floorRaw != null || f?.level != null}
+              hasAddress={!!extracted?.addressRaw}
+              hasCoords={f?.lat != null && f?.lng != null}
+              hasArea={!!extracted?.areaM2}
+              hasPhotos={
+                Array.isArray(extracted?.photos) && (extracted.photos as unknown[]).length > 0
+              }
+              seismicAttention={["RS1", "RS2", "RS3", "RsI", "RsII", "RsIII"].includes(
+                seismic.level,
+              )}
+              overpricingPct={overpricingPct}
+              compsCount={comps.length}
+              confidenceLevel={confidenceData?.level}
+              areaM2={extracted?.areaM2 ?? (f?.areaM2 as number) ?? null}
+              titleAreaM2={((extracted as Record<string, unknown>)?.titleAreaM2 as number) ?? null}
+              rooms={saneRooms}
+              title={extracted?.title ?? null}
+              llmRedFlags={llmText?.redFlags ?? null}
+              llmCondition={llmText?.condition ?? null}
+              llmBalconyM2={llmText?.balconyM2 ?? null}
+              description={
+                ((extracted?.sourceMeta as Record<string, unknown>)?.description as string) ?? null
+              }
+            />
+
+            <MethodologySection
+              baselineEurM2={(avmExplain?.baselineEurM2 as number) ?? null}
+              adjustments={(avmExplain?.adjustments as Record<string, number>) ?? null}
+              compsCount={comps.length}
+              outlierCount={(compsExplain?.outlierCount as number) ?? null}
+            />
+          </div>
         </div>
-      </div>
       )}
 
       {/* PDF Download */}

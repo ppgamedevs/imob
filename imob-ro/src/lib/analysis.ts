@@ -3,6 +3,7 @@ import { prisma } from "./db";
 import type { Extracted } from "./extractors";
 import { maybeFetchServer } from "./extractors";
 import { logger } from "./obs/logger";
+import { detectPropertyType, isNonResidential } from "./property-type";
 
 /**
  * Post-extraction check: detects rentals, non-real-estate, etc.
@@ -34,6 +35,16 @@ function checkExtractedContentType(
     ];
     const hasRealEstateSignal = REALESTATE_SIGNALS.some((p) => p.test(text));
     if (!hasRealEstateSignal) return "not_realestate";
+  }
+
+  // Non-residential property type detection (commercial, terrain, office, etc.)
+  const NON_RESIDENTIAL_RE =
+    /\b(afacere|business|spatiu\s+comercial|magazin|hala|depozit|birou|office|teren|lot\s+de\s+casa|spatiu\s+industrial|pensiune|hotel|restaurant|bar|pub|fast\s*food|cafenea|ferma|livada|padure)\b/i;
+  if (NON_RESIDENTIAL_RE.test(text)) {
+    const propType = detectPropertyType(title, null);
+    if (isNonResidential(propType) || propType === "unknown") {
+      return "not_realestate";
+    }
   }
 
   return null;
@@ -91,9 +102,9 @@ async function stepYield(analysisId: string, features: Record<string, unknown>):
   await applyYieldToAnalysis(analysisId, features);
 }
 
-async function stepSeismic(analysisId: string, features: Record<string, unknown>): Promise<void> {
-  const { applySeismicToAnalysis } = await import("./risk/apply-seismic");
-  await applySeismicToAnalysis(analysisId, features);
+async function stepRiskStack(analysisId: string, features: Record<string, unknown>): Promise<void> {
+  const { applyRiskStackToAnalysis } = await import("./risk/apply-risk-stack");
+  await applyRiskStackToAnalysis(analysisId, features);
 }
 
 async function stepComps(analysisId: string): Promise<void> {
@@ -144,7 +155,7 @@ const SCORING_STEPS: PipelineStep[] = [
   { name: "avm", run: stepAvm, critical: true },
   { name: "tts", run: stepTts },
   { name: "yield", run: stepYield },
-  { name: "seismic", run: stepSeismic },
+  { name: "risk-stack", run: stepRiskStack },
   { name: "notarial", run: stepNotarial },
   { name: "comps", run: (id) => stepComps(id) },
   { name: "quality", run: (id) => stepQuality(id) },

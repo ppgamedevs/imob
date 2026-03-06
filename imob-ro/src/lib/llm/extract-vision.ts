@@ -12,9 +12,15 @@ const VISION_SYSTEM_PROMPT = `Esti un inspector imobiliar expert. Analizezi foto
 Reguli:
 - Nu folosi NICIODATA em dash (—). Foloseste doar cratima normala (-).
 - Evalueaza DOAR ce vezi in poze. Nu inventa.
-- "condition": starea generala a apartamentului din poze.
-- "visibleIssues": probleme vizibile (igrasie, crapaturi, mucegai, instalatii vechi, pete de apa).
-- "furnishing": "gol" (nemodelat), "partial_mobilat", "complet_mobilat".
+- "condition": starea finisajelor din poze:
+  * "nou" = constructie noua evident, totul nou
+  * "renovat" = finisaje recente/proaspete: pereti zugraviti uniform, parchet/gresie in stare buna, baie moderna. Un apartament GOL dar cu finisaje noi este "renovat", NU "necesita_renovare"!
+  * "locuibil" = stare decenta, nu e renovat recent dar e functional
+  * "necesita_renovare" = probleme vizibile reale: gresie sparta, pereti deteriorati, instalatii vechi/uzate, baie degradata
+  * "de_renovat" = stare proasta: igrasie, mucegai, tavan cazut, pereti exfoliati
+  IMPORTANT: Nu confunda "gol/nemobilat" cu "de renovat". Daca peretii sunt curati, podeaua e in stare buna si baia e moderna, e "renovat" chiar daca nu are mobila.
+- "visibleIssues": probleme vizibile REALE (igrasie, crapaturi, mucegai, instalatii vechi, pete de apa). Nu include "nemobilat" sau "gol" ca problema.
+- "furnishing": "gol" (nemobilat), "partial_mobilat", "complet_mobilat".
 - "brightness": 0=foarte intuneric, 1=intuneric, 2=luminos, 3=foarte luminos.
 - "layoutQuality": calitatea layout-ului (deschis vs inghesuit, spatios vs mic).
 - "isRender": true daca pozele sunt randari 3D / CGI / vizualizari digitale, NU fotografii reale. Indicii: iluminare perfecta si uniforma, texturi prea netede, lipsa imperfectiunilor naturale, reflexii nerealiste, mobilier identic cu cataloage 3D, plante artificiale stilizate, persoane lipsa, imagine prea "curata".

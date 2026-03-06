@@ -24,6 +24,9 @@ export default async function AccountPage() {
   const subscription = await getSubscription(session.user.id);
   const limits = await getPlanFeatures(subscription.planCode);
   const usage = await getUsage(session.user.id);
+  const analyzeLimit = Number(limits.analyze ?? 0);
+  const pdfLimit = Number(limits.pdf ?? 0);
+  const shareLimit = Number(limits.share ?? 0);
 
   const isPaid = subscription.planCode === "pro" || subscription.planCode === "standard" || subscription.planCode === "enterprise";
 
@@ -73,15 +76,15 @@ export default async function AccountPage() {
             <div className="flex justify-between mb-2">
               <span className="text-sm font-medium">Analize proprietăți</span>
               <span className="text-sm text-muted-foreground">
-                {usage.analyze}/{limits.analyze}
+                {usage.analyze}/{analyzeLimit}
               </span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all ${
-                  usage.analyze >= limits.analyze ? "bg-destructive" : "bg-primary"
+                  usage.analyze >= analyzeLimit ? "bg-destructive" : "bg-primary"
                 }`}
-                style={{ width: `${Math.min((usage.analyze / limits.analyze) * 100, 100)}%` }}
+                style={{ width: `${analyzeLimit > 0 ? Math.min((usage.analyze / analyzeLimit) * 100, 100) : 0}%` }}
               />
             </div>
           </div>
@@ -91,15 +94,15 @@ export default async function AccountPage() {
             <div className="flex justify-between mb-2">
               <span className="text-sm font-medium">Rapoarte PDF</span>
               <span className="text-sm text-muted-foreground">
-                {usage.pdf}/{limits.pdf}
+                {usage.pdf}/{pdfLimit}
               </span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all ${
-                  usage.pdf >= limits.pdf ? "bg-destructive" : "bg-primary"
+                  usage.pdf >= pdfLimit ? "bg-destructive" : "bg-primary"
                 }`}
-                style={{ width: `${Math.min((usage.pdf / limits.pdf) * 100, 100)}%` }}
+                style={{ width: `${pdfLimit > 0 ? Math.min((usage.pdf / pdfLimit) * 100, 100) : 0}%` }}
               />
             </div>
           </div>
@@ -109,15 +112,15 @@ export default async function AccountPage() {
             <div className="flex justify-between mb-2">
               <span className="text-sm font-medium">Link-uri share</span>
               <span className="text-sm text-muted-foreground">
-                {usage.share}/{limits.share}
+                {usage.share}/{shareLimit}
               </span>
             </div>
             <div className="w-full bg-muted rounded-full h-2">
               <div
                 className={`h-2 rounded-full transition-all ${
-                  usage.share >= limits.share ? "bg-destructive" : "bg-primary"
+                  usage.share >= shareLimit ? "bg-destructive" : "bg-primary"
                 }`}
-                style={{ width: `${Math.min((usage.share / limits.share) * 100, 100)}%` }}
+                style={{ width: `${shareLimit > 0 ? Math.min((usage.share / shareLimit) * 100, 100) : 0}%` }}
               />
             </div>
           </div>

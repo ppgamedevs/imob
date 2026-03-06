@@ -38,8 +38,8 @@ export function detectPropertyType(
   const t = (title ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
   if (/\bteren\b/.test(t) || /\blocuri?\s+de\s+casa\b/.test(t)) return "teren";
-  if (/\bhala\b|\bspatiu\s+(?:industrial|depozitare)\b/.test(t)) return "hala";
-  if (/\bspatiu\s+comercial\b|\bmagazin\b/.test(t)) return "spatiu_comercial";
+  if (/\bhala\b|\bspatiu\s+(?:industrial|depozitare)\b|\bdepozit\b/.test(t)) return "hala";
+  if (/\bspatiu\s+comercial\b|\bmagazin\b|\bafacere\b|\bpensiune\b|\bhotel\b/.test(t)) return "spatiu_comercial";
   if (/\bbirou\b|\boffice\b/.test(t)) return "birou";
 
   if (/\bvila\b|\bvile\b/.test(t)) return "vila";

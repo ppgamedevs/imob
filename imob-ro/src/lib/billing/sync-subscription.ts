@@ -12,6 +12,9 @@ export async function syncSubscription(
   stripeSub: Stripe.Subscription,
 ): Promise<void> {
   const status = stripeSub.status;
+  const stripeSubWithPeriod = stripeSub as Stripe.Subscription & {
+    current_period_end?: number;
+  };
 
   // Determine plan from Stripe price ID
   let planCode = "free";
@@ -26,8 +29,8 @@ export async function syncSubscription(
     }
   }
 
-  const renewsAt = stripeSub.current_period_end
-    ? new Date(stripeSub.current_period_end * 1000)
+  const renewsAt = stripeSubWithPeriod.current_period_end
+    ? new Date(stripeSubWithPeriod.current_period_end * 1000)
     : null;
   const cancelAt = stripeSub.cancel_at
     ? new Date(stripeSub.cancel_at * 1000)

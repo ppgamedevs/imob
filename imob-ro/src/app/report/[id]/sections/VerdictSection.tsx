@@ -135,7 +135,7 @@ function TopCompsMini({
   comps,
   currency,
 }: {
-  comps: { title: string | null; eurM2: number; distanceM: number; matchType: string }[];
+  comps: { title?: string | null; eurM2: number; distanceM: number; matchType: string }[];
   currency: string;
 }) {
   if (comps.length === 0) return null;

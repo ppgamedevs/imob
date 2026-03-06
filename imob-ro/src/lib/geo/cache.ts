@@ -5,7 +5,7 @@
  * TTL defaults to 7 days.
  */
 import { prisma } from "@/lib/db";
-import type { OverpassPoi } from "./overpass";
+import type { OverpassFeature, OverpassPoi } from "./overpass";
 
 const DEFAULT_TTL_DAYS = 7;
 const COORD_PRECISION = 3; // ~111m grid cells
@@ -41,13 +41,20 @@ export async function getCachedPois(
   }
 }
 
+export async function getCachedPoisTyped<T extends OverpassFeature>(
+  key: string,
+): Promise<T[] | null> {
+  const cached = await getCachedPois(key);
+  return cached as T[] | null;
+}
+
 export async function setCachedPois(
   key: string,
   lat: number,
   lng: number,
   radiusM: number,
   category: string,
-  payload: OverpassPoi[],
+  payload: OverpassFeature[],
   ttlDays = DEFAULT_TTL_DAYS,
 ): Promise<void> {
   const expiresAt = new Date(Date.now() + ttlDays * 24 * 60 * 60 * 1000);

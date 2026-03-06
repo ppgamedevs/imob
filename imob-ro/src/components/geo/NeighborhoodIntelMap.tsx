@@ -226,8 +226,8 @@ export default function NeighborhoodIntelMap({
             value={activeCategory}
             onValueChange={(v) => setActiveCategory(v as PoiCategoryKey | "intel")}
           >
-            <TabsList className="w-full justify-start overflow-x-auto flex-nowrap h-auto p-0.5 gap-0.5 bg-muted/50">
-              <TabsTrigger value="intel" className="text-xs px-2.5 py-1.5 data-[state=active]:shadow-sm">
+            <TabsList className="w-full min-w-max justify-start overflow-x-auto flex-nowrap h-auto p-0.5 gap-0.5 bg-muted/50">
+              <TabsTrigger value="intel" className="flex-none shrink-0 text-xs px-2.5 py-1.5 data-[state=active]:shadow-sm">
                 Scoruri
               </TabsTrigger>
               {POI_CATEGORY_KEYS.map((key) => {
@@ -237,7 +237,7 @@ export default function NeighborhoodIntelMap({
                   <TabsTrigger
                     key={key}
                     value={key}
-                    className="text-xs px-2.5 py-1.5 data-[state=active]:shadow-sm"
+                    className="flex-none shrink-0 text-xs px-2.5 py-1.5 data-[state=active]:shadow-sm"
                   >
                     {getCategoryIcon(key)} {cat.labelRo}
                     {count > 0 && (

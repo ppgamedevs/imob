@@ -36,6 +36,13 @@ function bucketize(days: number): TtsResult["bucket"] {
   return "90+";
 }
 
+export function humanizeBucket(bucket: TtsResult["bucket"]): string {
+  if (bucket === "<30") return "Sub 30 zile";
+  if (bucket === "30-60") return "30-60 zile";
+  if (bucket === "60-90") return "60-90 zile";
+  return "90+ zile";
+}
+
 async function getDemandScore(areaSlug?: string | null): Promise<number> {
   if (!areaSlug) return 1.0;
   const row = await prisma.areaDaily.findFirst({

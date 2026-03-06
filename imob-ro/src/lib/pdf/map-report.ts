@@ -1,11 +1,24 @@
 import type { ScoreSnapshot } from "@prisma/client";
 
+import {
+  checkReducedVATEligibility,
+  computePriceWithVAT,
+  detectDevelopmentStatus,
+} from "@/lib/analysis/development-detect";
 import { prisma } from "@/lib/db";
-import { nearestStationM, inferLocationFromText } from "@/lib/geo";
-import { computeApartmentScore } from "@/lib/score/apartmentScore";
-import { computeExecutiveVerdict, type VerdictInput } from "@/lib/report/verdict";
-import { detectDevelopmentStatus, computePriceWithVAT, checkReducedVATEligibility } from "@/lib/analysis/development-detect";
+import { inferLocationFromText, nearestStationM } from "@/lib/geo";
 import type { LlmTextExtraction } from "@/lib/llm/types";
+import { computeExecutiveVerdict, type VerdictInput } from "@/lib/report/verdict";
+import {
+  buildRecommendedNextStep,
+  buildRiskInsights,
+  orderRiskLayerKeys,
+  RISK_LAYER_LABELS,
+} from "@/lib/risk/executive";
+import { buildSeismicRiskLayerFromExplain } from "@/lib/risk/seismic-layer";
+import { computeOverall } from "@/lib/risk/stack";
+import type { RiskLayerKey, RiskLayerResult, RiskStackResult } from "@/lib/risk/types";
+import { computeApartmentScore } from "@/lib/score/apartmentScore";
 import type { NormalizedFeatures } from "@/types/analysis";
 
 export type PdfReportData = {
@@ -89,7 +102,107 @@ export type PdfReportData = {
   priceWithVAT?: number | null;
   reducedVATEligible?: boolean;
   reducedVATReason?: string | null;
+  riskStackOverallScore?: number | null;
+  riskStackOverallLevel?: string | null;
+  riskStackTopRisk?: string | null;
+  riskStackTopSummary?: string | null;
+  riskStackInsights?: string[] | null;
+  riskStackRecommendedNextStep?: string | null;
 };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function makeUnknownLayer(key: RiskLayerKey): RiskLayerResult {
+  return {
+    key,
+    level: "unknown",
+    score: null,
+    confidence: null,
+    summary:
+      "Date indisponibile momentan. Stratul este pregatit, dar dataset-ul nu este integrat inca.",
+    details: ["Integrarea este in curs. Pana atunci, acest strat nu influenteaza verdictul final."],
+    sourceName: "Data not integrated yet",
+    sourceUrl: null,
+    updatedAt: null,
+  };
+}
+
+function normalizeLayer(
+  key: RiskLayerKey,
+  raw: unknown,
+  fallback?: RiskLayerResult,
+): RiskLayerResult {
+  if (!isRecord(raw)) return fallback ?? makeUnknownLayer(key);
+
+  return {
+    key,
+    level:
+      raw.level === "low" ||
+      raw.level === "medium" ||
+      raw.level === "high" ||
+      raw.level === "unknown"
+        ? raw.level
+        : (fallback?.level ?? "unknown"),
+    score: typeof raw.score === "number" ? raw.score : (fallback?.score ?? null),
+    confidence:
+      typeof raw.confidence === "number" ? raw.confidence : (fallback?.confidence ?? null),
+    summary:
+      typeof raw.summary === "string" && raw.summary.trim().length > 0
+        ? raw.summary
+        : (fallback?.summary ?? makeUnknownLayer(key).summary),
+    details: Array.isArray(raw.details)
+      ? raw.details.filter((item): item is string => typeof item === "string")
+      : (fallback?.details ?? makeUnknownLayer(key).details),
+    sourceName:
+      typeof raw.sourceName === "string" || raw.sourceName === null
+        ? raw.sourceName
+        : (fallback?.sourceName ?? null),
+    sourceUrl:
+      typeof raw.sourceUrl === "string" || raw.sourceUrl === null
+        ? raw.sourceUrl
+        : (fallback?.sourceUrl ?? null),
+    updatedAt:
+      typeof raw.updatedAt === "string" || raw.updatedAt === null
+        ? raw.updatedAt
+        : (fallback?.updatedAt ?? null),
+  };
+}
+
+function normalizeRiskStack(
+  raw: unknown,
+  seismicExplain: Record<string, unknown> | null | undefined,
+): RiskStackResult {
+  const rawRecord = isRecord(raw) ? raw : null;
+  const rawLayers = isRecord(rawRecord?.layers) ? rawRecord.layers : null;
+  const fallbackSeismic = buildSeismicRiskLayerFromExplain(seismicExplain ?? null, null);
+  const layers: Record<RiskLayerKey, RiskLayerResult> = {
+    seismic: normalizeLayer("seismic", rawLayers?.seismic, fallbackSeismic),
+    flood: normalizeLayer("flood", rawLayers?.flood),
+    pollution: normalizeLayer("pollution", rawLayers?.pollution),
+    traffic: normalizeLayer("traffic", rawLayers?.traffic),
+  };
+  const computedOverall = computeOverall(layers);
+
+  return {
+    overallScore:
+      typeof rawRecord?.overallScore === "number"
+        ? rawRecord.overallScore
+        : computedOverall.overallScore,
+    overallLevel:
+      rawRecord?.overallLevel === "low" ||
+      rawRecord?.overallLevel === "medium" ||
+      rawRecord?.overallLevel === "high" ||
+      rawRecord?.overallLevel === "unknown"
+        ? rawRecord.overallLevel
+        : computedOverall.overallLevel,
+    notes: Array.isArray(rawRecord?.notes)
+      ? rawRecord.notes.filter((item): item is string => typeof item === "string")
+      : computedOverall.notes,
+    layers,
+  };
+}
 
 export async function loadPdfReportData(analysisId: string): Promise<PdfReportData | null> {
   const a = await prisma.analysis.findUnique({
@@ -150,10 +263,16 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
   const llmText = a.extractedListing?.llmTextExtract as unknown as LlmTextExtraction | null;
   const lat = typeof f?.lat === "number" ? f.lat : null;
   const lng = typeof f?.lng === "number" ? f.lng : null;
-  const metro = lat != null && lng != null ? nearestStationM(lat, lng) : null;
 
   const addressRaw = a.extractedListing?.addressRaw ?? null;
-  const streetPatterns = [/\bstr\.?\s/i, /\bstrada\s/i, /\bbld\.?\s/i, /\bcalea\s/i, /\bsoseaua\s/i, /\bnr\.?\s?\d/i];
+  const streetPatterns = [
+    /\bstr\.?\s/i,
+    /\bstrada\s/i,
+    /\bbld\.?\s/i,
+    /\bcalea\s/i,
+    /\bsoseaua\s/i,
+    /\bnr\.?\s?\d/i,
+  ];
   const addressIsExact = addressRaw ? streetPatterns.some((p) => p.test(addressRaw)) : false;
 
   let sector: string | null = null;
@@ -169,23 +288,47 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     }
   }
 
-  const compsExplain = (ssRecord?.explain as Record<string, unknown> | null)?.comps as Record<string, unknown> | undefined;
+  const compsExplain = (ssRecord?.explain as Record<string, unknown> | null)?.comps as
+    | Record<string, unknown>
+    | undefined;
   const compsStats = compsExplain?.eurM2 as { median?: number } | undefined;
+  const explainRecord = isRecord(ssRecord?.explain) ? ssRecord.explain : null;
+  const seismicExplain = isRecord(explainRecord?.seismic) ? explainRecord.seismic : null;
+  const normalizedRiskStack = normalizeRiskStack(explainRecord?.riskStack, seismicExplain);
+  const orderedRiskKeys = orderRiskLayerKeys(normalizedRiskStack.layers);
+  const riskInsights = buildRiskInsights(normalizedRiskStack, orderedRiskKeys);
+  const riskRecommendation = buildRecommendedNextStep(
+    normalizedRiskStack,
+    riskInsights.dominantKey,
+  );
 
   const comps = await prisma.compMatch.count({ where: { analysisId } });
 
-  const priceEur = typeof f?.priceEur === "number" ? f.priceEur : (a.extractedListing?.price as number | null) ?? null;
-  const areaM2 = typeof f?.areaM2 === "number" ? f.areaM2 : (a.extractedListing?.areaM2 as number | null) ?? null;
-  const rooms = typeof f?.rooms === "number" ? f.rooms : (a.extractedListing?.rooms as number | null) ?? null;
-  const yearBuilt = typeof f?.yearBuilt === "number" ? f.yearBuilt : (a.extractedListing?.yearBuilt as number | null) ?? null;
+  const priceEur =
+    typeof f?.priceEur === "number"
+      ? f.priceEur
+      : ((a.extractedListing?.price as number | null) ?? null);
+  const areaM2 =
+    typeof f?.areaM2 === "number"
+      ? f.areaM2
+      : ((a.extractedListing?.areaM2 as number | null) ?? null);
+  const rooms =
+    typeof f?.rooms === "number" ? f.rooms : ((a.extractedListing?.rooms as number | null) ?? null);
+  const yearBuilt =
+    typeof f?.yearBuilt === "number"
+      ? f.yearBuilt
+      : ((a.extractedListing?.yearBuilt as number | null) ?? null);
   const level = typeof f?.level === "number" ? f.level : null;
   const totalFloors = typeof f?.totalFloors === "number" ? f.totalFloors : null;
   const hasElevator = typeof f?.hasLift === "boolean" ? f.hasLift : null;
   const distMetroM = typeof f?.distMetroM === "number" ? f.distMetroM : null;
   const sm = a.extractedListing?.sourceMeta as Record<string, unknown> | null | undefined;
-  const commissionStatus: "zero" | "standard" | "unknown" = sm?.zeroCommission === true
-    ? "zero"
-    : (llmText?.redFlags?.some((r: string) => /comision/i.test(r)) ? "standard" : "unknown");
+  const commissionStatus: "zero" | "standard" | "unknown" =
+    sm?.zeroCommission === true
+      ? "zero"
+      : llmText?.redFlags?.some((r: string) => /comision/i.test(r))
+        ? "standard"
+        : "unknown";
 
   // Infer location if needed for metro
   let effectiveLat = lat;
@@ -196,32 +339,35 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
       (a.extractedListing as unknown as Record<string, unknown>)?.description as string | null,
       addressRaw,
     );
-    if (hint) { effectiveLat = hint.lat; effectiveLng = hint.lng; }
+    if (hint) {
+      effectiveLat = hint.lat;
+      effectiveLng = hint.lng;
+    }
   }
-  const metroData = effectiveLat != null && effectiveLng != null
-    ? nearestStationM(effectiveLat, effectiveLng)
-    : null;
+  const metroData =
+    effectiveLat != null && effectiveLng != null
+      ? nearestStationM(effectiveLat, effectiveLng)
+      : null;
   const nearestMetroMinutes = metroData ? Math.round(metroData.distM / 80) : null;
 
   // Under-construction detection
   const devPriceText = sm?.plusTVA ? "+ TVA" : null;
   const pdfDevSignals = detectDevelopmentStatus(
     a.extractedListing?.title ?? null,
-    (sourceMeta?.description as string | null) ?? (a.extractedListing as unknown as Record<string, unknown>)?.description as string | null,
+    (sourceMeta?.description as string | null) ??
+      ((a.extractedListing as unknown as Record<string, unknown>)?.description as string | null),
     yearBuilt,
-    typeof sourceMeta?.sellerType === "string" ? sourceMeta.sellerType as string : null,
+    typeof sourceMeta?.sellerType === "string" ? (sourceMeta.sellerType as string) : null,
     devPriceText,
   );
 
   // VAT computation
-  const hasPlusTVA = pdfDevSignals.hasVAT || (sm?.plusTVA === true);
+  const hasPlusTVA = pdfDevSignals.hasVAT || sm?.plusTVA === true;
   const vatRate = pdfDevSignals.vatRate ?? (hasPlusTVA ? 19 : null);
-  const vatComputed = hasPlusTVA && priceEur && vatRate
-    ? computePriceWithVAT(priceEur, vatRate)
-    : null;
-  const reducedVATCheck = hasPlusTVA && priceEur
-    ? checkReducedVATEligibility(priceEur, areaM2)
-    : null;
+  const vatComputed =
+    hasPlusTVA && priceEur && vatRate ? computePriceWithVAT(priceEur, vatRate) : null;
+  const reducedVATCheck =
+    hasPlusTVA && priceEur ? checkReducedVATEligibility(priceEur, areaM2) : null;
 
   // Compute executive verdict for PDF
   const verdictInput: VerdictInput = {
@@ -252,7 +398,8 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     hasParking: llmText?.hasParking ?? null,
     hasElevator,
     heatingType: llmText?.heatingType ?? null,
-    sellerType: typeof sourceMeta?.sellerType === "string" ? sourceMeta.sellerType as string : null,
+    sellerType:
+      typeof sourceMeta?.sellerType === "string" ? (sourceMeta.sellerType as string) : null,
     isUnderConstruction: pdfDevSignals.isUnderConstruction,
     isNeverLivedIn: sm?.neverLivedIn === true,
     hasPlusTVA,
@@ -264,10 +411,13 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
 
   // Compute apartment score for PDF
   const yearBucket = yearBuilt
-    ? yearBuilt < 1978 ? "<1977" as const
-    : yearBuilt <= 1990 ? "1978-1990" as const
-    : yearBuilt <= 2005 ? "1991-2005" as const
-    : "2006+" as const
+    ? yearBuilt < 1978
+      ? ("<1977" as const)
+      : yearBuilt <= 1990
+        ? ("1978-1990" as const)
+        : yearBuilt <= 2005
+          ? ("1991-2005" as const)
+          : ("2006+" as const)
     : undefined;
   const apartmentScoreResult = computeApartmentScore({
     listingPriceEur: priceEur ?? undefined,
@@ -277,7 +427,13 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     confidence: avmConf != null ? Math.round(avmConf * 100) : 30,
     yearBucket,
     yearBuilt: yearBuilt ?? undefined,
-    condition: llmText?.condition as "nou" | "renovat" | "locuibil" | "necesita_renovare" | "de_renovat" | undefined,
+    condition: llmText?.condition as
+      | "nou"
+      | "renovat"
+      | "locuibil"
+      | "necesita_renovare"
+      | "de_renovat"
+      | undefined,
     floor: level ?? undefined,
     totalFloors: totalFloors ?? undefined,
     hasElevator: hasElevator ?? undefined,
@@ -285,7 +441,8 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     heatingType: llmText?.heatingType ?? undefined,
     rooms: rooms ?? undefined,
     areaM2: areaM2 ?? undefined,
-    sellerType: typeof sourceMeta?.sellerType === "string" ? sourceMeta.sellerType as string : undefined,
+    sellerType:
+      typeof sourceMeta?.sellerType === "string" ? (sourceMeta.sellerType as string) : undefined,
     isUnderConstruction: pdfDevSignals.isUnderConstruction,
     isNeverLivedIn: sm?.neverLivedIn === true,
   });
@@ -304,7 +461,8 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     level,
     floorRaw: (a.extractedListing?.floorRaw as string) ?? null,
     yearBuilt,
-    sellerType: typeof sourceMeta?.sellerType === "string" ? (sourceMeta.sellerType as string) : null,
+    sellerType:
+      typeof sourceMeta?.sellerType === "string" ? (sourceMeta.sellerType as string) : null,
     currency: (a.extractedListing?.currency as string) ?? "EUR",
     city: typeof f?.city === "string" ? f.city : null,
     areaSlug: typeof f?.areaSlug === "string" ? f.areaSlug : null,
@@ -315,8 +473,10 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     avmConf,
     priceBadge,
     ttsBucket,
-    ttsMinMonths: typeof ssRecord?.ttsMinMonths === "number" ? (ssRecord.ttsMinMonths as number) : null,
-    ttsMaxMonths: typeof ssRecord?.ttsMaxMonths === "number" ? (ssRecord.ttsMaxMonths as number) : null,
+    ttsMinMonths:
+      typeof ssRecord?.ttsMinMonths === "number" ? (ssRecord.ttsMinMonths as number) : null,
+    ttsMaxMonths:
+      typeof ssRecord?.ttsMaxMonths === "number" ? (ssRecord.ttsMaxMonths as number) : null,
     estRent,
     yieldGross,
     yieldNet,
@@ -361,5 +521,13 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     priceWithVAT: vatComputed?.priceWithVAT ?? null,
     reducedVATEligible: reducedVATCheck?.eligible,
     reducedVATReason: reducedVATCheck?.reason ?? null,
+    riskStackOverallScore: normalizedRiskStack.overallScore,
+    riskStackOverallLevel: normalizedRiskStack.overallLevel,
+    riskStackTopRisk: riskInsights.dominantKey ? RISK_LAYER_LABELS[riskInsights.dominantKey] : null,
+    riskStackTopSummary: riskInsights.dominantKey
+      ? normalizedRiskStack.layers[riskInsights.dominantKey].summary
+      : null,
+    riskStackInsights: riskInsights.items,
+    riskStackRecommendedNextStep: riskRecommendation,
   };
 }

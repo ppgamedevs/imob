@@ -8,6 +8,7 @@
  * - Returns sorted by distance, capped to limit
  */
 import { haversineM } from "@/lib/geo";
+import { getCachedPoisTyped, makeCacheKey, setCachedPois } from "./cache";
 import { POI_CATEGORIES, type PoiCategoryKey } from "./poiCategories";
 
 const OVERPASS_ENDPOINT =
@@ -17,15 +18,19 @@ const OVERPASS_TIMEOUT_S = 10;
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 1500;
 
-export interface OverpassPoi {
+export interface OverpassFeature {
   id: string;
   name: string | null;
   lat: number;
   lng: number;
-  category: PoiCategoryKey;
+  category: string;
   subType: string | null;
   tags: Record<string, string>;
   distanceM: number;
+}
+
+export interface OverpassPoi extends OverpassFeature {
+  category: PoiCategoryKey;
 }
 
 export function buildOverpassQuery(
@@ -44,6 +49,23 @@ export function buildOverpassQuery(
   return `[out:json][timeout:${OVERPASS_TIMEOUT_S}];
 (
   ${filters}
+);
+out center tags;`;
+}
+
+export function buildCustomOverpassQuery(
+  lat: number,
+  lng: number,
+  radiusM: number,
+  filters: string[],
+): string {
+  const compiledFilters = filters
+    .map((filter) => `${filter}(around:${radiusM},${lat},${lng});`)
+    .join("\n  ");
+
+  return `[out:json][timeout:${OVERPASS_TIMEOUT_S}];
+(
+  ${compiledFilters}
 );
 out center tags;`;
 }
@@ -116,7 +138,18 @@ export async function fetchOverpassPois(
   const cat = POI_CATEGORIES[category];
   const maxResults = limit ?? cat.defaultLimit;
   const query = buildOverpassQuery(lat, lng, radiusM, category);
+  const results = await fetchOverpassFeatures(query, lat, lng, radiusM, category, maxResults);
+  return results as OverpassPoi[];
+}
 
+async function fetchOverpassFeatures(
+  query: string,
+  lat: number,
+  lng: number,
+  radiusM: number,
+  category: string,
+  limit: number,
+): Promise<OverpassFeature[]> {
   const json = (await fetchWithRetry(query)) as {
     elements?: {
       type: string;
@@ -130,7 +163,7 @@ export async function fetchOverpassPois(
 
   if (!json?.elements) return [];
 
-  const results: OverpassPoi[] = [];
+  const results: OverpassFeature[] = [];
 
   for (const el of json.elements) {
     const elLat = el.lat ?? el.center?.lat;
@@ -155,5 +188,31 @@ export async function fetchOverpassPois(
   }
 
   results.sort((a, b) => a.distanceM - b.distanceM);
-  return results.slice(0, maxResults);
+  return results.slice(0, limit);
+}
+
+export async function fetchCustomOverpassFeatures(params: {
+  lat: number;
+  lng: number;
+  radiusM: number;
+  filters: string[];
+  cacheCategory: string;
+  limit?: number;
+}): Promise<OverpassFeature[]> {
+  const {
+    lat,
+    lng,
+    radiusM,
+    filters,
+    cacheCategory,
+    limit = 50,
+  } = params;
+  const cacheKey = makeCacheKey(lat, lng, radiusM, cacheCategory);
+  const cached = await getCachedPoisTyped<OverpassFeature>(cacheKey);
+  if (cached) return cached.slice(0, limit);
+
+  const query = buildCustomOverpassQuery(lat, lng, radiusM, filters);
+  const results = await fetchOverpassFeatures(query, lat, lng, radiusM, cacheCategory, limit);
+  void setCachedPois(cacheKey, lat, lng, radiusM, cacheCategory, results);
+  return results;
 }

@@ -34,11 +34,11 @@ export const authConfig = {
       : []),
   ],
   callbacks: {
-    async session({ session, user }: { session: Record<string, unknown>; user: { id: string; role?: string } }) {
-      const s = session as { user?: { id?: string; role?: string } };
-      if (s?.user) {
-        s.user.id = user.id;
-        s.user.role = user.role || "user";
+    async session({ session, user }) {
+      if (session.user) {
+        (session.user as { id?: string; role?: string }).id = user.id;
+        (session.user as { id?: string; role?: string }).role =
+          (user as { role?: string }).role || "user";
       }
       return session;
     },

@@ -11,7 +11,7 @@ export default function NeighborhoodIntelV2Lazy(props: {
   lat: number;
   lng: number;
   initialRadiusM?: number;
-  mode?: "report" | "standalone";
+  mode?: "report" | "estimate";
 }) {
-  return <NeighborhoodIntelV2 {...props} />;
+  return <NeighborhoodIntelV2 {...props} mode={props.mode ?? "report"} />;
 }

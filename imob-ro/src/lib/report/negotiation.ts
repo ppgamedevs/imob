@@ -155,7 +155,7 @@ export function generateNegotiationPoints(
     input.seismicRiskClass &&
     !["rsiv", "rs4", "unknown", "none", ""].includes(_seis);
   if (isConfirmedSeismic) {
-    const classLabel = input.seismicRiskClass.replace("Rs", "RS");
+    const classLabel = (input.seismicRiskClass ?? "").replace("Rs", "RS");
     pts.push({
       id: "seismic_direct",
       title: "Risc seismic pe cladire",

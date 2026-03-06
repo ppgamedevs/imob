@@ -8,7 +8,7 @@ import { POI_CATEGORIES, type PoiCategoryKey } from "@/lib/geo/poiCategories";
 import type { OverpassPoi } from "@/lib/geo/overpass";
 
 // Fix Leaflet default icon path detection (breaks in bundled environments)
-delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",

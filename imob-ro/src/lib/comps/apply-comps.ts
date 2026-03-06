@@ -155,14 +155,14 @@ export async function applyCompsToAnalysis(analysisId: string) {
         ...existingExplain,
         comps: { count: top.length, eurM2: { median: medianVal, q1, q3 }, outlierCount: excluded.length },
         confidence,
-      } as Prisma.JsonObject,
+      } as unknown as Prisma.JsonObject,
     },
     create: {
       analysisId,
       explain: {
         comps: { count: top.length, eurM2: { median: medianVal, q1, q3 }, outlierCount: excluded.length },
         confidence,
-      } as Prisma.JsonObject,
+      } as unknown as Prisma.JsonObject,
     },
   });
 

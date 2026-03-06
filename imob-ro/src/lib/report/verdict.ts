@@ -22,8 +22,14 @@ export interface ExecutiveVerdict {
   reasons: string[];
   summary: string;
   dealKillers: DealKiller[];
+  highlightedRisks: DealKiller[];
   confidenceScore: number; // 0-100
   confidenceLabel: string;
+  headline: string;
+  mustKnow: string;
+  hiddenTruths: string[];
+  nextChecks: string[];
+  confidenceTone: string;
 }
 
 export interface VerdictInput {
@@ -43,6 +49,13 @@ export interface VerdictInput {
   seismicRiskClass: string | null;
   seismicConfidence: number | null;
   seismicMethod: string | null;
+  riskOverallLevel?: "low" | "medium" | "high" | "unknown" | null;
+  riskOverallScore?: number | null;
+  riskDominantKey?: "seismic" | "flood" | "pollution" | "traffic" | null;
+  riskDominantLabel?: string | null;
+  riskDominantSummary?: string | null;
+  riskRecommendedNextStep?: string | null;
+  riskInsights?: string[] | null;
 
   // LLM red flags
   llmRedFlags: string[] | null;
@@ -94,12 +107,68 @@ function normalizeSeismic(raw: string | null): string | null {
   return raw;
 }
 
+function pushUnique(items: string[], value: string | null | undefined) {
+  if (!value) return;
+  if (!items.includes(value)) items.push(value);
+}
+
+function trimSentence(value: string | null | undefined): string | null {
+  if (!value) return null;
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function riskLabel(key: VerdictInput["riskDominantKey"], fallback?: string | null): string | null {
+  if (fallback) return fallback;
+  if (key === "seismic") return "Seismic";
+  if (key === "flood") return "Inundatii";
+  if (key === "pollution") return "Poluare";
+  if (key === "traffic") return "Trafic";
+  return null;
+}
+
+function killerPriority(killer: DealKiller): number {
+  const severityBase =
+    killer.severity === "critical" ? 300 : killer.severity === "warning" ? 200 : 100;
+  const typeBonus =
+    killer.type === "seismic"
+      ? 90
+      : killer.type === "price"
+        ? 80
+        : killer.type.startsWith("risk:")
+          ? 70
+          : killer.type === "data"
+            ? 60
+            : killer.type === "condition"
+              ? 55
+              : killer.type === "age"
+                ? 50
+                : killer.type === "redFlag"
+                  ? 40
+                  : 10;
+
+  return severityBase + typeBonus;
+}
+
+function sortAndDedupeKillers(killers: DealKiller[]): DealKiller[] {
+  const seen = new Set<string>();
+
+  return [...killers]
+    .sort((a, b) => killerPriority(b) - killerPriority(a))
+    .filter((killer) => {
+      const key = `${killer.type}:${killer.text}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
 export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
   const killers: DealKiller[] = [];
   const reasons: string[] = [];
   let score = 50; // start neutral
 
   const seismic = normalizeSeismic(input.seismicRiskClass);
+  const dominantRiskLabel = riskLabel(input.riskDominantKey, input.riskDominantLabel);
 
   // ---- Deal killers ----
 
@@ -125,6 +194,24 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
       severity: "info",
     });
     score -= 8;
+  }
+
+  if (
+    input.riskDominantKey &&
+    input.riskDominantKey !== "seismic" &&
+    dominantRiskLabel &&
+    input.riskOverallLevel &&
+    input.riskOverallLevel !== "unknown"
+  ) {
+    killers.push({
+      type: `risk:${input.riskDominantKey}`,
+      text:
+        input.riskOverallLevel === "high"
+          ? `${dominantRiskLabel}: semnal de risc contextual ridicat`
+          : `${dominantRiskLabel}: semnal contextual care merita verificat`,
+      severity: input.riskOverallLevel === "high" ? "warning" : "info",
+    });
+    score -= input.riskOverallLevel === "high" ? 10 : 4;
   }
 
   // Overpricing - more aggressive thresholds
@@ -164,7 +251,7 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
 
   // LLM red flags
   if (input.llmRedFlags && input.llmRedFlags.length > 0) {
-    for (const flag of input.llmRedFlags.slice(0, 3)) {
+    for (const flag of input.llmRedFlags.slice(0, 2)) {
       killers.push({ type: "redFlag", text: flag, severity: "warning" });
       score -= 5;
     }
@@ -174,9 +261,10 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
   if (input.llmCondition === "de_renovat" || input.llmCondition === "necesita_renovare") {
     killers.push({
       type: "condition",
-      text: input.llmCondition === "de_renovat"
-        ? "Necesita renovare completa"
-        : "Necesita lucrari de renovare",
+      text:
+        input.llmCondition === "de_renovat"
+          ? "Necesita renovare completa"
+          : "Necesita lucrari de renovare",
       severity: input.llmCondition === "de_renovat" ? "warning" : "info",
     });
     score -= input.llmCondition === "de_renovat" ? 12 : 5;
@@ -266,9 +354,7 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
   confidenceScore = Math.max(10, Math.min(100, confidenceScore));
 
   const confidenceLabel =
-    confidenceScore >= 75 ? "Ridicata"
-    : confidenceScore >= 50 ? "Medie"
-    : "Scazuta";
+    confidenceScore >= 75 ? "Ridicata" : confidenceScore >= 50 ? "Medie" : "Scazuta";
 
   // ---- Final verdict ----
 
@@ -292,16 +378,47 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
     else if (verdict === "ATENTIE") reasons.push("Necesita verificari suplimentare");
     else reasons.push("Nu au fost identificate probleme majore");
   }
-
-  const summary = buildSummary(input, verdict, overpricingPct, killers);
+  const sortedKillers = sortAndDedupeKillers(killers);
+  const highlightedRisks = sortedKillers.slice(0, 3);
+  const headline = buildHeadline(input, verdict, overpricingPct);
+  const mustKnow = buildMustKnow(
+    input,
+    verdict,
+    overpricingPct,
+    seismic,
+    dominantRiskLabel,
+    confidenceScore,
+  );
+  const hiddenTruths = buildHiddenTruths(
+    input,
+    overpricingPct,
+    seismic,
+    dominantRiskLabel,
+    highlightedRisks,
+  );
+  const nextChecks = buildNextChecks(
+    input,
+    overpricingPct,
+    seismic,
+    dominantRiskLabel,
+    confidenceScore,
+  );
+  const confidenceTone = buildConfidenceTone(confidenceScore);
+  const summary = buildSummary(headline, mustKnow, hiddenTruths, confidenceTone);
 
   return {
     verdict,
     reasons: reasons.slice(0, 3),
     summary,
-    dealKillers: killers,
+    dealKillers: sortedKillers,
+    highlightedRisks,
     confidenceScore,
     confidenceLabel,
+    headline,
+    mustKnow,
+    hiddenTruths,
+    nextChecks,
+    confidenceTone,
   };
 }
 
@@ -309,8 +426,225 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
 // Rich narrative summary - written like a human property review
 // ---------------------------------------------------------------------------
 
+function buildHeadline(
+  input: VerdictInput,
+  verdict: Verdict,
+  overpricingPct: number | null,
+): string {
+  const propType = inferPropType(input);
+  const location = inferLocation(input);
+  const areaStr = input.areaM2 ? `${input.areaM2} mp` : null;
+  const subject = [propType, areaStr].filter(Boolean).join(" de ");
+  const locationStr = location ? ` din ${location}` : "";
+
+  if (verdict === "EVITA") {
+    if (overpricingPct != null && overpricingPct > 20) {
+      return `Pentru aceasta ${subject}${locationStr}, riscul principal este sa platesti prea mult pentru un pachet care are deja semnale de atentie.`;
+    }
+    return `Pentru aceasta ${subject}${locationStr}, concluzia noastra este sa nu mergi mai departe pana nu clarifici riscurile majore identificate.`;
+  }
+
+  if (verdict === "ATENTIE") {
+    return `Aceasta ${subject}${locationStr} merita analizata doar daca verifici punctual lucrurile care te pot costa bani, confort sau flexibilitate dupa achizitie.`;
+  }
+
+  return `Aceasta ${subject}${locationStr} merita sa ramana pe short-list, dar avantajul real pentru cumparator apare doar daca datele se confirma in teren si in acte.`;
+}
+
+function buildMustKnow(
+  input: VerdictInput,
+  verdict: Verdict,
+  overpricingPct: number | null,
+  seismic: string | null,
+  dominantRiskLabel: string | null,
+  confidenceScore: number,
+): string {
+  if (seismic === "RsI" || seismic === "RsII") {
+    return "Principalul lucru pe care trebuie sa-l clarifici este riscul structural: fara validarea documentelor tehnice, recomandarea nu se poate imbunatati.";
+  }
+
+  if (
+    dominantRiskLabel &&
+    input.riskDominantKey &&
+    input.riskDominantKey !== "seismic" &&
+    input.riskDominantSummary &&
+    (input.riskOverallLevel === "high" || input.riskOverallLevel === "medium")
+  ) {
+    return `Principalul lucru pe care trebuie sa-l clarifici este ${dominantRiskLabel.toLowerCase()}: ${trimSentence(input.riskDominantSummary)}.`;
+  }
+
+  if (overpricingPct != null && overpricingPct > 10) {
+    return `Principalul risc pentru cumparator este de pret: exista sanse reale sa intri prea sus in negociere, la aproximativ ${overpricingPct}% peste reperul nostru de piata.`;
+  }
+
+  if (!input.avmMid || input.compsCount < 3) {
+    return "Principalul risc este de informatie: pretul nu poate fi validat ferm din suficiente comparabile, deci orice oferta trebuie ancorata foarte prudent.";
+  }
+
+  if (input.photosAreRenders || !input.hasPhotos) {
+    return "Principalul lucru de clarificat este starea reala a proprietatii: anuntul nu o demonstreaza suficient prin imagini credibile.";
+  }
+
+  if (verdict === "RECOMANDAT") {
+    return confidenceScore >= 70
+      ? "Principalul avantaj pentru cumparator este ca nu vedem un semnal major ascuns peste ceea ce sugereaza pretul si datele disponibile."
+      : "Concluzia este favorabila, dar merita sa tratezi recomandarea ca pe un short-list cu verificari, nu ca pe un verdict orb.";
+  }
+
+  return "Principalul lucru pe care trebuie sa-l faci este sa validezi motivele de mai jos inainte de orice oferta sau rezervare.";
+}
+
+function buildHiddenTruths(
+  input: VerdictInput,
+  overpricingPct: number | null,
+  seismic: string | null,
+  dominantRiskLabel: string | null,
+  highlightedRisks: DealKiller[],
+): string[] {
+  const truths: string[] = [];
+
+  if (overpricingPct != null && overpricingPct > 10) {
+    pushUnique(
+      truths,
+      `Exista risc real sa platesti peste piata: pretul cerut este cu aproximativ ${overpricingPct}% peste reperul nostru curent.`,
+    );
+  }
+
+  if (
+    dominantRiskLabel &&
+    input.riskDominantKey &&
+    input.riskDominantKey !== "seismic" &&
+    input.riskDominantSummary
+  ) {
+    pushUnique(
+      truths,
+      `Anuntul nu scoate asta in fata, dar semnalul contextual dominant este ${dominantRiskLabel.toLowerCase()}: ${trimSentence(input.riskDominantSummary)}.`,
+    );
+  }
+
+  if (input.riskInsights && input.riskInsights.length > 0) {
+    pushUnique(truths, trimSentence(input.riskInsights[0]));
+  }
+
+  if (input.hasPlusTVA) {
+    pushUnique(
+      truths,
+      "Pretul din anunt nu este costul final. Daca se aplica TVA, suma reala platita este mai mare decat prima impresie din listare.",
+    );
+  }
+
+  if (input.photosAreRenders) {
+    pushUnique(
+      truths,
+      "Imaginile nu confirma starea reala a proprietatii. Pot arata mai bine decat ce vei gasi la vizionare.",
+    );
+  } else if (!input.hasPhotos) {
+    pushUnique(
+      truths,
+      "Lipsa fotografiilor te lasa fara una dintre cele mai importante validari initiale ale starii reale.",
+    );
+  }
+
+  if (!input.avmMid || input.compsCount < 3) {
+    pushUnique(
+      truths,
+      "Pretul nu este suficient de bine sustinut de comparabile, deci negocierea trebuie purtata conservator.",
+    );
+  }
+
+  if (input.yearBuilt && input.yearBuilt < 1978 && !seismic) {
+    pushUnique(
+      truths,
+      `Vechimea cladirii (${input.yearBuilt}) cere verificare structurala chiar daca anuntul nu semnaleaza explicit asta.`,
+    );
+  }
+
+  for (const killer of highlightedRisks) {
+    if (truths.length >= 3) break;
+    if (killer.type === "redFlag") {
+      pushUnique(truths, `Semnal din descriere care merita luat literal: ${killer.text}.`);
+    }
+  }
+
+  if (truths.length === 0) {
+    pushUnique(
+      truths,
+      "Avantajul aici nu este doar in listing, ci in faptul ca datele disponibile nu indica momentan un cost ascuns peste medie.",
+    );
+  }
+
+  return truths.slice(0, 3);
+}
+
+function buildNextChecks(
+  input: VerdictInput,
+  overpricingPct: number | null,
+  seismic: string | null,
+  dominantRiskLabel: string | null,
+  confidenceScore: number,
+): string[] {
+  const checks: string[] = [];
+
+  pushUnique(checks, input.riskRecommendedNextStep);
+
+  if (seismic === "RsI" || seismic === "RsII") {
+    pushUnique(
+      checks,
+      "Cere expertiza tehnica, documentele de consolidare si confirmarea exacta a adresei in registrele oficiale.",
+    );
+  } else if (input.yearBuilt && input.yearBuilt < 1978 && !input.isUnderConstruction) {
+    pushUnique(
+      checks,
+      `Verifica istoricul structural al cladirii, mai ales pentru anul ${input.yearBuilt}, inainte de orice avans.`,
+    );
+  }
+
+  if (overpricingPct != null && overpricingPct > 5) {
+    pushUnique(
+      checks,
+      `Intra la negociere cu reperele de pret din raport; diferenta actuala este de aproximativ ${overpricingPct}% fata de referinta noastra.`,
+    );
+  }
+
+  if (input.photosAreRenders || !input.hasPhotos) {
+    pushUnique(
+      checks,
+      "Nu lua o decizie fara vizionare fizica si confirmare foto/video a starii reale a proprietatii.",
+    );
+  }
+
+  if (input.hasPlusTVA) {
+    pushUnique(
+      checks,
+      "Calculeaza costul final cu TVA si verifica daca bugetul tau ramane valid dupa taxele de achizitie.",
+    );
+  }
+
+  if ((!input.avmMid || input.compsCount < 3) && confidenceScore < 70) {
+    pushUnique(
+      checks,
+      "Compara cel putin 2-3 oferte similare din zona inainte sa folosesti pretul listat ca reper final.",
+    );
+  }
+
+  return checks.slice(0, 3);
+}
+
+function buildConfidenceTone(confidenceScore: number): string {
+  if (confidenceScore >= 75) {
+    return "Concluzia de mai sus este bine sustinuta de datele disponibile, dar merita confirmata punctual in acte si la vizionare.";
+  }
+  if (confidenceScore >= 50) {
+    return "Concluzia este utila pentru filtrare, dar exista suficiente necunoscute cat sa justifici verificari ferme inainte de orice oferta.";
+  }
+  return "Foloseste verdictul ca filtru de risc, nu ca verdict final. In acest caz, valoarea reala vine din verificarile pe care le faci dupa ce ai citit raportul.";
+}
+
 function inferPropType(input: VerdictInput): string {
-  const t = (input.title ?? "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const t = (input.title ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
   if (/\bvila\b|\bvile\b/.test(t)) return input.rooms ? `vila cu ${input.rooms} camere` : "vila";
   if (/\bcasa\b|\bcase\b/.test(t)) return input.rooms ? `casa cu ${input.rooms} camere` : "casa";
   if (/\bpenthouse\b/.test(t)) return "penthouse";
@@ -324,134 +658,21 @@ function inferPropType(input: VerdictInput): string {
 function inferLocation(input: VerdictInput): string | null {
   if (input.address) return input.address;
   if (!input.title) return null;
-  const t = input.title.replace(/\|.*/g, "").replace(/^(proprietar|vand|vanzare|inchiriez)\s+/gi, "").trim();
+  const t = input.title
+    .replace(/\|.*/g, "")
+    .replace(/^(proprietar|vand|vanzare|inchiriez)\s+/gi, "")
+    .trim();
   const m = t.match(/(?:zona|in|langa|aproape\s+de)\s+(.{3,40}?)(?:\s*[,.\-|]|$)/i);
   return m ? m[1].trim() : null;
 }
 
 function buildSummary(
-  input: VerdictInput,
-  verdict: Verdict,
-  overpricingPct: number | null,
-  killers: DealKiller[],
+  headline: string,
+  mustKnow: string,
+  hiddenTruths: string[],
+  confidenceTone: string,
 ): string {
-  const fmt = (n: number) => n.toLocaleString("ro-RO");
-  const cur = input.currency || "EUR";
-  const propType = inferPropType(input);
-  const location = inferLocation(input);
-  const areaStr = input.areaM2 ? `${input.areaM2} mp` : null;
-  const isHouse = /casa|vila|duplex/.test(propType);
-
-  // Gather all the things we know
-  const positives: string[] = [];
-  const negatives: string[] = [];
-  const caveats: string[] = [];
-
-  // Price assessment
-  if (overpricingPct != null) {
-    if (overpricingPct < -10) positives.push(`pretul este cu ${Math.abs(overpricingPct)}% sub media zonei - oportunitate de pret`);
-    else if (overpricingPct <= 5) positives.push("pretul este aliniat cu piata din zona");
-    else if (overpricingPct <= 15) negatives.push(`pretul este cu ${overpricingPct}% peste media zonei - exista loc de negociere`);
-    else negatives.push(`pretul este cu ${overpricingPct}% peste piata - semnificativ supraevaluat`);
-  } else if (input.askingPrice && !input.avmMid) {
-    caveats.push("nu avem suficiente date in zona pentru a valida pretul");
-  }
-
-  // Construction & condition
-  if (input.isUnderConstruction) {
-    positives.push("constructie noua, la normativele actuale");
-    if (input.yearBuilt && input.yearBuilt >= new Date().getFullYear())
-      caveats.push("imobilul nu este inca finalizat - exista riscul intarzierilor");
-    if (input.estimatedDelivery)
-      caveats.push(`predare estimata: ${input.estimatedDelivery}`);
-    if (input.isRender || input.photosAreRenders)
-      negatives.push("fotografiile din anunt sunt randari 3D, nu poze reale - vizitati proprietatea pentru a vedea stadiul real al constructiei");
-  } else if (input.llmCondition === "nou") {
-    positives.push("constructie noua");
-  } else if (input.llmCondition === "renovat") {
-    positives.push("recent renovat");
-  } else if (input.llmCondition === "de_renovat") {
-    negatives.push("necesita renovare completa - bugetati suplimentar");
-  } else if (input.llmCondition === "necesita_renovare") {
-    negatives.push("necesita lucrari de renovare");
-  }
-
-  // Render warning for non-construction listings too
-  if (!input.isUnderConstruction && input.photosAreRenders) {
-    caveats.push("fotografiile par a fi randari 3D, nu poze reale - verificati starea reala la vizionare");
-  }
-
-  if (input.isNeverLivedIn) positives.push("proprietate nelocuita - finisaje in stare originala");
-  if (input.hasParking) positives.push("loc de parcare inclus");
-  if (input.heatingType && /central[aă]/i.test(input.heatingType)) positives.push("centrala termica proprie");
-  if (input.hasElevator) positives.push("bloc cu lift");
-  if (input.sellerType === "dezvoltator") positives.push("achizitie directa de la dezvoltator");
-  if (input.transitScore != null && input.transitScore >= 70) positives.push("acces foarte bun la transport public");
-
-  // Negatives
-  if (input.yearBuilt && input.yearBuilt < 1978 && !input.isUnderConstruction)
-    negatives.push("cladire veche (inainte de 1977) - verificati expertiza tehnica");
-  if (!isHouse && input.floor != null && input.floor >= 4 && !input.hasElevator)
-    negatives.push("etaj inalt fara lift");
-  if (!input.hasPhotos) negatives.push("fara fotografii in anunt - nu se poate verifica starea reala");
-  if (input.hasPlusTVA) caveats.push("pretul nu include TVA - costul real este mai mare");
-
-  // Seismic
-  const seismic = normalizeSeismic(input.seismicRiskClass);
-  if (seismic === "RsI") negatives.push("risc seismic major (bulina rosie)");
-  else if (seismic === "RsII") negatives.push("risc seismic semnificativ");
-
-  // Build the review
-  const parts: string[] = [];
-
-  // Opening - state what it is and our recommendation
-  const propDesc = [propType, areaStr].filter(Boolean).join(" de ");
-  const locationStr = location ? ` din ${location}` : "";
-
-  if (verdict === "RECOMANDAT") {
-    if (positives.length >= 3)
-      parts.push(`Recomandam aceasta ${propDesc}${locationStr}. Este o proprietate cu mai multe puncte forte si fara riscuri majore.`);
-    else
-      parts.push(`Aceasta ${propDesc}${locationStr} este o optiune buna, fara probleme semnificative identificate.`);
-  } else if (verdict === "ATENTIE") {
-    if (negatives.length > 0)
-      parts.push(`Aceasta ${propDesc}${locationStr} are potential, dar exista aspecte care necesita atentie inainte de decizie.`);
-    else
-      parts.push(`Aceasta ${propDesc}${locationStr} pare in regula, dar nu avem suficiente informatii pentru o recomandare ferma.`);
-  } else {
-    parts.push(`Nu recomandam aceasta ${propDesc}${locationStr} in forma actuala. Am identificat riscuri importante care trebuie clarificate.`);
-  }
-
-  // Price sentence
-  if (input.askingPrice) {
-    const priceStr = `${fmt(input.askingPrice)} ${cur}`;
-    if (overpricingPct != null && overpricingPct < -5)
-      parts.push(`La pretul de ${priceStr}, proprietatea este sub valoarea de piata - un avantaj clar pentru cumparator.`);
-    else if (overpricingPct != null && overpricingPct <= 5)
-      parts.push(`Pretul de ${priceStr} este corect raportat la zona si caracteristici.`);
-    else if (overpricingPct != null && overpricingPct > 5)
-      parts.push(`Pretul de ${priceStr} este peste media zonei. Negociati sau comparati cu alte oferte similare.`);
-    else if (!input.avmMid)
-      parts.push(`Pretul cerut este ${priceStr}, dar nu avem suficiente comparabile in zona pentru a confirma daca este corect.`);
-  }
-
-  // Top 2-3 positives woven naturally
-  if (positives.length > 0) {
-    const topPos = positives.slice(0, 3);
-    if (topPos.length === 1) parts.push(`Punct forte: ${topPos[0]}.`);
-    else parts.push(`Puncte forte: ${topPos.join(", ")}.`);
-  }
-
-  // Negatives & caveats
-  const concerns = [...negatives.slice(0, 2), ...caveats.slice(0, 2)];
-  if (concerns.length > 0) {
-    if (verdict === "EVITA")
-      parts.push(`Probleme: ${concerns.join("; ")}.`);
-    else
-      parts.push(`De verificat: ${concerns.join("; ")}.`);
-  }
-
-  return parts.join(" ");
+  return [headline, mustKnow, hiddenTruths[0], confidenceTone].filter(Boolean).join(" ");
 }
 
 /**
@@ -460,18 +681,19 @@ function buildSummary(
  */
 export function buildQuickTake(input: VerdictInput, verdict: Verdict): string[] {
   const bullets: string[] = [];
-  const fmt = (n: number) => n.toLocaleString("ro-RO");
-  const cur = input.currency || "EUR";
 
-  const overpricingPct = input.askingPrice && input.avmMid
-    ? Math.round(((input.askingPrice - input.avmMid) / input.avmMid) * 100)
-    : null;
+  const overpricingPct =
+    input.askingPrice && input.avmMid
+      ? Math.round(((input.askingPrice - input.avmMid) / input.avmMid) * 100)
+      : null;
 
   // Price bullet
   if (overpricingPct != null) {
-    if (overpricingPct < -5) bullets.push(`Pret bun - ${Math.abs(overpricingPct)}% sub media zonei`);
+    if (overpricingPct < -5)
+      bullets.push(`Pret bun - ${Math.abs(overpricingPct)}% sub media zonei`);
     else if (overpricingPct <= 5) bullets.push("Pret corect pentru zona");
-    else if (overpricingPct <= 15) bullets.push(`Pret cu ${overpricingPct}% peste zona - negociabil`);
+    else if (overpricingPct <= 15)
+      bullets.push(`Pret cu ${overpricingPct}% peste zona - negociabil`);
     else bullets.push(`Supraevaluat cu ${overpricingPct}% fata de piata`);
   } else if (input.askingPrice && !input.avmMid) {
     bullets.push("Pretul nu poate fi validat - date insuficiente");
@@ -484,8 +706,7 @@ export function buildQuickTake(input: VerdictInput, verdict: Verdict): string[] 
       bullets.push("Apartament neterminat - verificati stadiul constructiei");
     if (input.isRender || input.photosAreRenders)
       bullets.push("Pozele sunt randari 3D - vizitati pentru stadiul real");
-    if (input.estimatedDelivery)
-      bullets.push(`Predare estimata: ${input.estimatedDelivery}`);
+    if (input.estimatedDelivery) bullets.push(`Predare estimata: ${input.estimatedDelivery}`);
   } else if (input.llmCondition === "nou") bullets.push("Constructie noua");
   else if (input.llmCondition === "renovat") bullets.push("Recent renovat");
   else if (input.llmCondition === "de_renovat") bullets.push("Necesita renovare completa");
@@ -498,13 +719,23 @@ export function buildQuickTake(input: VerdictInput, verdict: Verdict): string[] 
 
   // Amenities
   if (input.hasParking) bullets.push("Loc de parcare inclus");
-  if (input.heatingType && /central[aă]/i.test(input.heatingType)) bullets.push("Centrala termica proprie");
-  if (input.transitScore != null && input.transitScore >= 70) bullets.push("Transport public la indemana");
+  if (input.heatingType && /central[aă]/i.test(input.heatingType))
+    bullets.push("Centrala termica proprie");
+  if (input.transitScore != null && input.transitScore >= 70)
+    bullets.push("Transport public la indemana");
 
   // Risks
   const seismic = normalizeSeismic(input.seismicRiskClass);
   if (seismic === "RsI") bullets.push("Risc seismic major (bulina rosie)");
   else if (seismic === "RsII") bullets.push("Risc seismic semnificativ");
+  else if (
+    input.riskDominantLabel &&
+    input.riskDominantKey &&
+    input.riskDominantKey !== "seismic" &&
+    (input.riskOverallLevel === "high" || input.riskOverallLevel === "medium")
+  ) {
+    bullets.push(`${input.riskDominantLabel} - semnal contextual de verificat`);
+  }
 
   if (input.yearBuilt && input.yearBuilt < 1978 && !input.isUnderConstruction)
     bullets.push(`Cladire din ${input.yearBuilt} - verificati structura`);
@@ -513,6 +744,10 @@ export function buildQuickTake(input: VerdictInput, verdict: Verdict): string[] 
   if (input.hasPlusTVA) bullets.push("Pret + TVA - costul real e mai mare");
 
   if (input.sellerType === "dezvoltator") bullets.push("Direct de la dezvoltator");
+  if (verdict === "EVITA" && bullets.length < 6)
+    bullets.push("Raportul cere prudenta maxima inainte de oferta");
+  if (verdict === "RECOMANDAT" && bullets.length < 6)
+    bullets.push("Merita pastrat pe short-list cu verificari standard");
 
-  return bullets.slice(0, 6);
+  return bullets.slice(0, 4);
 }

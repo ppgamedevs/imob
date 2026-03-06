@@ -33,7 +33,8 @@ export default function AnalysisLoading({ status, title }: { status: string; tit
   }, []);
 
   useEffect(() => {
-    if (status === "done" || status === "error") return;
+    const terminal = ["done", "error", "failed", "rejected_rental", "rejected_not_realestate"];
+    if (terminal.includes(status)) return;
     const interval = setInterval(() => router.refresh(), 3000);
     return () => clearInterval(interval);
   }, [status, router]);

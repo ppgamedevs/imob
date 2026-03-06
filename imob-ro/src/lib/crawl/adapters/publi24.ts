@@ -50,14 +50,16 @@ export const adapterPubli24: SourceAdapter = {
       if (ld) return;
       try {
         const obj = JSON.parse($(el).html() ?? "");
-        const node = Array.isArray(obj) ? obj[0] : obj;
+        const node = (Array.isArray(obj) ? obj[0] : obj) as Record<string, unknown>;
         if (node?.["@type"] || node?.name) ld = node;
       } catch { /* ignore */ }
     });
+    const ldData = (ld ?? {}) as Record<string, unknown>;
+    const ldOffers = ((ldData.offers as Record<string, unknown> | undefined) ?? {});
 
     // --- Title ---
     const title =
-      (ld?.name as string) ??
+      (ldData.name as string) ??
       ($("h1").first().text().trim() ||
         $("title").text().split("|")[0]?.trim() ||
         $("title").text().split("•")[0]?.trim());
@@ -71,14 +73,14 @@ export const adapterPubli24: SourceAdapter = {
     const ronRegex = /([\d][.\d\s]*\d)\s*(?:RON|lei)/i;
 
     // Try from JSON-LD first
-    const ldPrice = ld?.offers
-      ? (ld.offers as Record<string, unknown>)?.price
-      : ld?.price;
+    const ldPrice = Object.keys(ldOffers).length > 0
+      ? ldOffers.price
+      : ldData.price;
     if (ldPrice) {
       price = parseInt(String(ldPrice).replace(/[\s,.]/g, ""));
-      const ldCurrency = ld?.offers
-        ? (ld.offers as Record<string, unknown>)?.priceCurrency
-        : ld?.priceCurrency;
+      const ldCurrency = Object.keys(ldOffers).length > 0
+        ? ldOffers.priceCurrency
+        : ldData.priceCurrency;
       if (ldCurrency) currency = String(ldCurrency).toUpperCase();
     }
 

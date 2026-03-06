@@ -30,7 +30,8 @@ export interface EnrichmentResult {
   explain: {
     rentEstimate?: number;
     ttsEstimate?: number;
-    seismicScore?: number;
+    seismicRiskClass?: string;
+    seismicConfidence?: number;
     features: UnitFeatures;
   };
 }
@@ -97,14 +98,15 @@ export async function computeUnitMetrics(
   let riskClass: string | undefined;
   if (features.lat && features.lng) {
     try {
-      const seismicScore = await estimateSeismic({
+      const seismicResult = await estimateSeismic({
         lat: features.lat,
         lng: features.lng,
         yearBuilt: features.yearBuilt,
       });
-      if (seismicScore !== undefined) {
-        riskClass = classifySeismicRisk(seismicScore);
-        explain.seismicScore = seismicScore;
+      if (seismicResult) {
+        riskClass = classifySeismicRisk(seismicResult.riskClass);
+        explain.seismicRiskClass = seismicResult.riskClass;
+        explain.seismicConfidence = seismicResult.confidence;
       }
     } catch (err) {
       console.warn(`[enrich] Failed to estimate seismic for unit ${unit.id}:`, err);
@@ -216,11 +218,11 @@ function parseRoomsFromTypology(typology: string): number {
   return 2; // default
 }
 
-function classifySeismicRisk(score: number): string {
-  // Lower score = better (less risk)
-  if (score <= 0.2) return "A"; // Very low risk
-  if (score <= 0.4) return "B"; // Low risk
-  if (score <= 0.6) return "C"; // Medium risk
-  if (score <= 0.8) return "Dw"; // High risk (requires strengthening)
-  return "D"; // Very high risk
+function classifySeismicRisk(riskClass: string): string {
+  const normalized = riskClass.toUpperCase();
+  if (normalized === "RS1" || normalized === "RSI") return "RS1";
+  if (normalized === "RS2" || normalized === "RSII") return "RS2";
+  if (normalized === "RS3" || normalized === "RSIII") return "RS3";
+  if (normalized === "RS4" || normalized === "RSIV") return "RS4";
+  return "None";
 }
