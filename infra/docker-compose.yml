@@ -74,6 +74,10 @@ services:
     image: caddy:2-alpine
     restart: unless-stopped
     env_file: .env
+    # Ubuntu + systemd-resolved: without this, resolv.conf can point at 127.0.0.53
+    # (unreachable inside the container) → can't resolve imobintel-api or Let's Encrypt.
+    dns:
+      - 127.0.0.11
     ports:
       - "80:80"
       - "443:443"

@@ -275,7 +275,28 @@ docker compose exec postgres psql -U imobintel_admin -d postgres -c "
 
 ---
 
-## 9. Security Checklist
+## 9. Troubleshooting
+
+### `ERR_SSL_PROTOCOL_ERROR` or site down, but `docker compose ps` looks fine
+
+1. **Only one thing can listen on host `80` and `443`.** If another stack (e.g. another project’s Caddy) already publishes those ports, either stop it or use **one** reverse proxy that routes all domains. Check:
+
+   ```bash
+   docker ps --format 'table {{.Names}}\t{{.Ports}}' | grep -E '80|443'
+   sudo ss -tlnp | grep -E ':80|:443'
+   ```
+
+2. **Caddy can’t resolve `imobintel-api` (logs: `lookup imobintel-api on 127.0.0.53`)** — the container was using the host’s systemd-resolved stub, which does not work inside Docker. `docker-compose.yml` sets `dns: [127.0.0.11]` on **caddy** so Docker’s embedded DNS resolves service names and forwards public lookups. After changing compose:
+
+   ```bash
+   docker compose up -d --force-recreate caddy
+   ```
+
+3. **Let’s Encrypt also needs working DNS from the container** — same `127.0.0.53` issue breaks `acme-v02.api.letsencrypt.org` lookups. Fixing DNS on Caddy fixes renewals too.
+
+---
+
+## 10. Security Checklist
 
 - [x] Postgres has no public port
 - [x] Redis has no public port
