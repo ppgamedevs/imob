@@ -16,7 +16,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY imob-ro/ .
 
 RUN pnpm prisma generate
-RUN pnpm next build
+# Standalone image is the real API server — do not bake Vercel /api proxy rewrites
+# (next.config rewrites ALL /api/* when NEXT_PUBLIC_API_BASE_URL is set → 404 for local-only routes)
+RUN env NEXT_PUBLIC_API_BASE_URL= pnpm next build
 
 # ─── Runner ──────────────────────────────────────────────────
 FROM base AS runner

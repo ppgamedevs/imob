@@ -1,0 +1,12 @@
+# Build context is repo root (infra/docker-compose: context: ..)
+.git
+**/.git
+
+imob-ro/node_modules
+imob-ro/.next
+
+# Never bake host/CI secrets or Vercel proxy URL into the image
+**/.env
+**/.env.*
+**/.env.local
+**/.env.production

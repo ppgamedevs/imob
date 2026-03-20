@@ -20,6 +20,10 @@ const nextConfig: NextConfig = {
     // requests are proxied to the VPS. This includes NextAuth - the VPS
     // has NEXTAUTH_URL set to the Vercel domain so cookies and OAuth
     // callbacks work correctly through the transparent proxy.
+    //
+    // Docker/VPS image: build with NEXT_PUBLIC_API_BASE_URL unset (see infra/Dockerfile)
+    // so routes run locally. If this var leaks into a Docker build, /api/* would proxy
+    // off-box and e.g. /api/health/live returns 404.
     if (!apiBaseUrl) return [];
     return [
       {
