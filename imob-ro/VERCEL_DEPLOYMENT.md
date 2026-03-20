@@ -1,5 +1,7 @@
 # Vercel Deployment Guide - Backend Stability Features
 
+> **Deprecated:** ImobIntel production is **VPS-only** (`infra/README.md`). This file is kept for historical reference; `vercel.json` has been removed.
+
 ## Why You're Not Seeing the Enhancements
 
 The backend stability improvements are **code-level enhancements** that work automatically once deployed. Here's what to check:

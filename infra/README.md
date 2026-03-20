@@ -2,8 +2,8 @@
 
 Production infrastructure for ImobIntel and future projects.
 
-- **Frontend** runs on **Vercel** (`imobintel.ro`) — SSR, CDN, zero-ops
-- **API + DB + Redis + Workers** run on **Hetzner VPS** (`api.imobintel.ro`) — private, secure
+- **Full stack on the VPS** — Next.js (pages + `/api/*`), Postgres, Redis, Caddy (TLS)
+- **Single origin** — `https://imobintel.ro` serves UI and API; optional `api.imobintel.ro` is the same app for direct API access / CORS
 
 ## Architecture
 
@@ -11,53 +11,51 @@ Production infrastructure for ImobIntel and future projects.
   Browser
     │
     ▼
-┌──────────────────────────┐           ┌──────────────────────────────────┐
-│   Vercel                  │   HTTPS    │   Hetzner VPS                    │
-│                           │           │                                  │
-│   imobintel.ro            │           │   api.imobintel.ro               │
-│   (Next.js pages/SSR)     │           │                                  │
-│                           │           │   ┌─────────┐                   │
-│   /api/* ─── rewrite ─────┼──────────►│   │  Caddy   │ :443 auto-TLS   │
-│   (transparent proxy)     │           │   └────┬────┘                   │
-│                           │           │        │                         │
-│   /api/auth/* also ───────┼──────────►│   ┌────▼──────────┐            │
-│   proxied (needs DB)      │           │   │ imobintel-api  │            │
-│                           │           │   │ (Next.js :3000)│            │
-└──────────────────────────┘           │   └──┬──────────┬─┘            │
-                                        │      │          │               │
-                                        │   ┌──▼────┐ ┌──▼────┐         │
-                                        │   │Postgres│ │ Redis  │ private │
-                                        │   │ :5432  │ │ :6379  │ network │
-                                        │   └───────┘ └───────┘         │
-                                        └──────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│   Hetzner VPS — DNS: imobintel.ro, www, api → same machine    │
+│                                                               │
+│   ┌─────────┐                                                 │
+│   │  Caddy  │ :443 auto-TLS                                   │
+│   └────┬────┘                                                 │
+│        │                                                      │
+│   ┌────▼──────────────┐                                       │
+│   │  imobintel-api    │  Next.js standalone :3000             │
+│   │  (pages + /api/*) │                                       │
+│   └────┬──────────┬───┘                                       │
+│        │          │                                           │
+│   ┌────▼────┐ ┌───▼────┐                                      │
+│   │Postgres │ │ Redis  │  private Docker network only        │
+│   │ :5432   │ │ :6379  │                                      │
+│   └─────────┘ └────────┘                                      │
+└──────────────────────────────────────────────────────────────┘
 
   Postgres and Redis have NO public ports.
   Only Caddy exposes 80/443 to the internet.
-  Vercel never touches the database directly.
 ```
 
 ## Domain Routing
 
 | Domain | Points to | Purpose |
 |--------|-----------|---------|
-| `imobintel.ro` | **Vercel** | Web frontend (pages, SSR, static assets) |
-| `www.imobintel.ro` | **Vercel** (redirect) | Redirect to apex |
-| `api.imobintel.ro` | **VPS IP** (Caddy) | API backend (Next.js + DB) |
+| `imobintel.ro` | **VPS IP** (Caddy) | Canonical site — Next.js UI + `/api/*` |
+| `www.imobintel.ro` | **VPS IP** (Caddy) | Redirect to apex |
+| `api.imobintel.ro` | **VPS IP** (Caddy) | Same Next.js app (optional; widgets / programmatic clients, CORS) |
 | `status.imobintel.ro` | **VPS IP** (Caddy) | Uptime Kuma (optional) |
 
-### How API Calls Work
+### DNS migration (if you used Vercel before)
 
-1. Browser requests `imobintel.ro/api/analyze`
-2. Vercel's `next.config.ts` has a rewrite rule for `/api/*`
-3. Vercel proxies the request to `api.imobintel.ro/api/analyze`
-4. The VPS API handles it (has DB access) and returns the response
-5. Browser sees `imobintel.ro` throughout — the VPS is invisible
+Point **apex** and **`www`** A/AAAA records at your **VPS IP** (not Vercel). Remove or disable the Vercel project so it does not compete for the domain.
+
+### Same-origin API
+
+1. Browser requests `https://imobintel.ro/api/...`
+2. Caddy → `imobintel-api:3000` → Next.js handles the route (no proxy to another host).
 
 This means:
-- **Cookies work** — the browser sees `imobintel.ro`, cookies are set for that domain
-- **NextAuth works** — VPS has `NEXTAUTH_URL=https://imobintel.ro`
-- **OAuth callbacks work** — Google Console callback is `https://imobintel.ro/api/auth/callback/google`
-- **Stripe webhooks work** — Stripe sends to `https://imobintel.ro/api/webhook` (proxied to VPS)
+
+- **Cookies / NextAuth** — set `NEXTAUTH_URL=https://imobintel.ro` (and matching `NEXT_PUBLIC_*_URL` in `.env`).
+- **OAuth** — redirect URI: `https://imobintel.ro/api/auth/callback/google`
+- **Stripe webhooks** — `https://imobintel.ro/api/webhook` (or your chosen public hostname)
 
 ---
 
@@ -165,26 +163,20 @@ Visit `https://status.imobintel.ro` to set up Uptime Kuma.
 
 ---
 
-## 3. Configure Vercel
+## 3. OAuth, Stripe, and third parties
 
-In your Vercel project settings → **Environment Variables**:
-
-| Variable | Value | Notes |
-|----------|-------|-------|
-| `NEXT_PUBLIC_API_BASE_URL` | `https://api.imobintel.ro` | Enables `/api/*` rewrite to VPS |
-| `NEXTAUTH_SECRET` | Same as VPS `.env` | Must match for cookie verification |
-| `NEXTAUTH_URL` | `https://imobintel.ro` | Frontend domain |
-
-**Do NOT set `DATABASE_URL` on Vercel.** Vercel has no direct DB access.
+All secrets live in **`infra/.env`** (loaded by Docker). There is no separate “edge” host.
 
 ### Google OAuth
 
 In Google Cloud Console → Credentials → OAuth 2.0 Client:
+
 - Authorized redirect URI: `https://imobintel.ro/api/auth/callback/google`
 
 ### Stripe Webhook
 
 In Stripe Dashboard → Webhooks:
+
 - Endpoint URL: `https://imobintel.ro/api/webhook`
 - Events: `checkout.session.completed`, `customer.subscription.*`
 
