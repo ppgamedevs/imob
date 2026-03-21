@@ -89,10 +89,9 @@ const PHOTO_BLACKLIST_PATTERNS = [
   /\/agent\//i,
   /\/similar\//i,
   /\/recomandate\//i,
-  /\/thumbnail\//i,
+  // omit /thumbnail/ and /ads/ — real listing CDNs often use these path segments
   /1x1\./i,
   /pixel\./i,
-  /\/ad[sv]?\//i,
   /profile[-_]?pic/i,
 ];
 

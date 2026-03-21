@@ -8,6 +8,21 @@ import { allowRequest, createRateLimitResponse, getClientIp } from "@/lib/rate-l
 import { sanitizeListing } from "@/lib/sanitize";
 import { normalizeUrl } from "@/lib/url";
 
+/** Photo URLs from extensions often use scheme-relative //cdn... — Zod .url() rejects those before we can normalize. */
+const loosePhotoUrl = z
+  .string()
+  .max(2048)
+  .refine((s) => {
+    const t = s.trim();
+    if (!t || t.includes("<") || /\s/.test(t)) return false;
+    return (
+      t.startsWith("http://") ||
+      t.startsWith("https://") ||
+      t.startsWith("//") ||
+      t.startsWith("/")
+    );
+  }, "Invalid photo URL shape");
+
 // Validation schema for incoming request
 const analyzeRequestSchema = z.object({
   originUrl: z.string().url("Invalid origin URL").max(2048),
@@ -21,17 +36,19 @@ const analyzeRequestSchema = z.object({
       addressRaw: z.string().max(500).optional(),
       sourceUrl: z.string().url().max(2048).optional(),
       photos: z
-        .array(
-          z.union([
-            z.string().url().max(2048),
-            z.object({ url: z.string().url().max(2048) }),
-          ]),
-        )
+        .array(z.union([loosePhotoUrl, z.object({ url: loosePhotoUrl })]))
         .max(50)
         .optional(),
     })
     .passthrough(),
 });
+
+/** Normalize scheme-relative URLs before isSafeUrl (new URL("//host") is invalid). */
+function normalizePhotoForSsrf(raw: string): string {
+  const t = raw.trim();
+  if (t.startsWith("//")) return `https:${t}`;
+  return t;
+}
 
 function isDisallowedDomain(urlStr: string) {
   try {
@@ -152,8 +169,13 @@ export async function POST(req: Request) {
   }
 
   const rawPhotos = Array.isArray(sanitizedExtracted.photos) ? sanitizedExtracted.photos : [];
-  // sanitizeListing normalizes photo entries to plain URL strings
-  const photos = (rawPhotos as string[]).filter((u) => typeof u === "string" && isSafeUrl(u).safe);
+  const photos = (rawPhotos as string[])
+    .map((u) => {
+      if (typeof u !== "string") return null;
+      const normalized = normalizePhotoForSsrf(u);
+      return isSafeUrl(normalized).safe ? normalized : null;
+    })
+    .filter((u): u is string => u != null);
 
   // Merge description into sourceMeta so the LLM worker can use it
   const sourceMeta = {
