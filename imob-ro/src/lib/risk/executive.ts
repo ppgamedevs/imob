@@ -1,6 +1,9 @@
 import { buildSeismicRiskLayerFromExplain } from "./seismic-layer";
+import { filterRiskLayersForReport, RISK_LAYERS_HIDDEN_IN_REPORT } from "./report-risk-visibility";
 import { computeOverall } from "./stack";
 import type { RiskLayerKey, RiskLayerResult, RiskLevel, RiskStackResult } from "./types";
+
+export { filterRiskLayersForReport, RISK_LAYERS_HIDDEN_IN_REPORT } from "./report-risk-visibility";
 
 export const RISK_LAYER_LABELS: Record<RiskLayerKey, string> = {
   seismic: "Seismic",
@@ -209,4 +212,23 @@ export function buildRecommendedNextStep(
     default:
       return null;
   }
+}
+
+/** Recompute overall score/notes for report/PDF, excluding layers hidden per city (e.g. flood in Bucharest). */
+export function applyReportRiskVisibility(stack: RiskStackResult): RiskStackResult {
+  const computedOverall = computeOverall(stack.layers, {
+    excludeKeys: RISK_LAYERS_HIDDEN_IN_REPORT,
+  });
+  return {
+    ...stack,
+    overallScore: computedOverall.overallScore,
+    overallLevel: computedOverall.overallLevel,
+    notes: computedOverall.notes,
+  };
+}
+
+export function orderRiskLayerKeysForReport(
+  layers: Record<RiskLayerKey, RiskLayerResult>,
+): RiskLayerKey[] {
+  return filterRiskLayersForReport(orderRiskLayerKeys(layers));
 }

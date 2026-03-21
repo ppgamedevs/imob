@@ -18,11 +18,20 @@ function scoreToLevel(score: number): RiskLevel {
   return "low";
 }
 
+export type ComputeOverallOptions = {
+  /** Omit these keys from aggregation and from "unavailable layers" notes (e.g. report UI). */
+  excludeKeys?: ReadonlySet<RiskLayerKey>;
+};
+
 export function computeOverall(
   layers: Record<RiskLayerKey, RiskLayerResult>,
+  options?: ComputeOverallOptions,
 ): Pick<RiskStackResult, "overallScore" | "overallLevel" | "notes"> {
   const notes: string[] = [];
-  const entries = Object.entries(layers) as [RiskLayerKey, RiskLayerResult][];
+  const exclude = options?.excludeKeys;
+  const entries = (Object.entries(layers) as [RiskLayerKey, RiskLayerResult][]).filter(
+    ([key]) => !exclude?.has(key),
+  );
   const unknownLayers = entries.filter(([, layer]) => layer.level === "unknown" || layer.score == null);
 
   if (unknownLayers.length > 0) {

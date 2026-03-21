@@ -13,14 +13,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
+  applyReportRiskVisibility,
   buildRecommendedNextStep,
   buildRiskInsights,
-  orderRiskLayerKeys,
+  normalizeRiskStack,
+  orderRiskLayerKeysForReport,
   RISK_LAYER_LABELS,
   sourceModeForLayer,
 } from "@/lib/risk/executive";
-import { buildSeismicRiskLayerFromExplain } from "@/lib/risk/seismic-layer";
-import { computeOverall } from "@/lib/risk/stack";
 import type { RiskLayerKey, RiskLayerResult, RiskLevel, RiskStackResult } from "@/lib/risk/types";
 import { riskNextStep, riskWhatThisMeans } from "@/lib/report/trust-copy";
 import { cn } from "@/lib/utils";
@@ -66,10 +66,6 @@ const LAYER_META: Record<
     chipClass: "bg-purple-50 border-purple-200",
   },
 };
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
 
 function levelLabel(level: RiskLevel): string {
   if (level === "high") return "Ridicat";
@@ -127,96 +123,6 @@ function normalizeForCompare(value: string): string {
     .toLowerCase()
     .replace(/\s+/g, " ")
     .trim();
-}
-
-function makeUnknownLayer(key: RiskLayerKey): RiskLayerResult {
-  return {
-    key,
-    level: "unknown",
-    score: null,
-    confidence: null,
-    summary:
-      "Date indisponibile momentan. Stratul este pregatit, dar dataset-ul nu este integrat inca.",
-    details: ["Integrarea este in curs. Pana atunci, acest strat nu influenteaza verdictul final."],
-    sourceName: "Dataset neintegrat momentan",
-    sourceUrl: null,
-    updatedAt: null,
-  };
-}
-
-function normalizeLayer(
-  key: RiskLayerKey,
-  raw: unknown,
-  fallback?: RiskLayerResult,
-): RiskLayerResult {
-  if (!isRecord(raw)) {
-    return fallback ?? makeUnknownLayer(key);
-  }
-
-  return {
-    key,
-    level:
-      raw.level === "low" ||
-      raw.level === "medium" ||
-      raw.level === "high" ||
-      raw.level === "unknown"
-        ? raw.level
-        : (fallback?.level ?? "unknown"),
-    score: typeof raw.score === "number" ? raw.score : (fallback?.score ?? null),
-    confidence:
-      typeof raw.confidence === "number" ? raw.confidence : (fallback?.confidence ?? null),
-    summary:
-      typeof raw.summary === "string" && raw.summary.trim().length > 0
-        ? raw.summary
-        : (fallback?.summary ?? makeUnknownLayer(key).summary),
-    details: Array.isArray(raw.details)
-      ? raw.details.filter((item): item is string => typeof item === "string")
-      : (fallback?.details ?? makeUnknownLayer(key).details),
-    sourceName:
-      typeof raw.sourceName === "string" || raw.sourceName === null
-        ? raw.sourceName
-        : (fallback?.sourceName ?? null),
-    sourceUrl:
-      typeof raw.sourceUrl === "string" || raw.sourceUrl === null
-        ? raw.sourceUrl
-        : (fallback?.sourceUrl ?? null),
-    updatedAt:
-      typeof raw.updatedAt === "string" || raw.updatedAt === null
-        ? raw.updatedAt
-        : (fallback?.updatedAt ?? null),
-  };
-}
-
-function normalizeRiskStack(
-  raw: RiskStackResult | Record<string, unknown> | null | undefined,
-  seismicExplain: Record<string, unknown> | null | undefined,
-): RiskStackResult {
-  const rawLayers = isRecord(raw?.layers) ? raw.layers : null;
-  const fallbackSeismic = buildSeismicRiskLayerFromExplain(seismicExplain ?? null, null);
-  const layers: Record<RiskLayerKey, RiskLayerResult> = {
-    seismic: normalizeLayer("seismic", rawLayers?.seismic, fallbackSeismic),
-    flood: normalizeLayer("flood", rawLayers?.flood),
-    pollution: normalizeLayer("pollution", rawLayers?.pollution),
-    traffic: normalizeLayer("traffic", rawLayers?.traffic),
-  };
-  const computedOverall = computeOverall(layers);
-  const notes = Array.isArray(raw?.notes)
-    ? raw.notes.filter((item): item is string => typeof item === "string")
-    : computedOverall.notes;
-
-  return {
-    overallScore:
-      typeof raw?.overallScore === "number" ? raw.overallScore : computedOverall.overallScore,
-    overallLevel:
-      raw?.overallLevel === "low" ||
-      raw?.overallLevel === "medium" ||
-      raw?.overallLevel === "high" ||
-      raw?.overallLevel === "unknown"
-        ? raw.overallLevel
-        : computedOverall.overallLevel,
-    layers,
-    notes,
-  };
 }
 
 function GenericLayerBody({ layer }: { layer: RiskLayerResult }) {
@@ -284,10 +190,8 @@ export default function RiskStackSection({
   seismicExplain,
   titleMentionsRisk = false,
 }: Props) {
-  const resolved = normalizeRiskStack(riskStack, seismicExplain);
-  const orderedKeys = useMemo(() => {
-    return orderRiskLayerKeys(resolved.layers);
-  }, [resolved.layers]);
+  const resolved = applyReportRiskVisibility(normalizeRiskStack(riskStack, seismicExplain));
+  const orderedKeys = useMemo(() => orderRiskLayerKeysForReport(resolved.layers), [resolved.layers]);
   const insightBlock = useMemo(
     () => buildRiskInsights(resolved, orderedKeys),
     [orderedKeys, resolved],

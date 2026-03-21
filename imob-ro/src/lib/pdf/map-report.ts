@@ -10,14 +10,13 @@ import { inferLocationFromText, nearestStationM } from "@/lib/geo";
 import type { LlmTextExtraction } from "@/lib/llm/types";
 import { computeExecutiveVerdict, type VerdictInput } from "@/lib/report/verdict";
 import {
+  applyReportRiskVisibility,
   buildRecommendedNextStep,
   buildRiskInsights,
-  orderRiskLayerKeys,
+  normalizeRiskStack,
+  orderRiskLayerKeysForReport,
   RISK_LAYER_LABELS,
 } from "@/lib/risk/executive";
-import { buildSeismicRiskLayerFromExplain } from "@/lib/risk/seismic-layer";
-import { computeOverall } from "@/lib/risk/stack";
-import type { RiskLayerKey, RiskLayerResult, RiskStackResult } from "@/lib/risk/types";
 import { computeApartmentScore } from "@/lib/score/apartmentScore";
 import type { NormalizedFeatures } from "@/types/analysis";
 
@@ -114,96 +113,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function makeUnknownLayer(key: RiskLayerKey): RiskLayerResult {
-  return {
-    key,
-    level: "unknown",
-    score: null,
-    confidence: null,
-    summary:
-      "Date indisponibile momentan. Stratul este pregatit, dar dataset-ul nu este integrat inca.",
-    details: ["Integrarea este in curs. Pana atunci, acest strat nu influenteaza verdictul final."],
-    sourceName: "Data not integrated yet",
-    sourceUrl: null,
-    updatedAt: null,
-  };
-}
-
-function normalizeLayer(
-  key: RiskLayerKey,
-  raw: unknown,
-  fallback?: RiskLayerResult,
-): RiskLayerResult {
-  if (!isRecord(raw)) return fallback ?? makeUnknownLayer(key);
-
-  return {
-    key,
-    level:
-      raw.level === "low" ||
-      raw.level === "medium" ||
-      raw.level === "high" ||
-      raw.level === "unknown"
-        ? raw.level
-        : (fallback?.level ?? "unknown"),
-    score: typeof raw.score === "number" ? raw.score : (fallback?.score ?? null),
-    confidence:
-      typeof raw.confidence === "number" ? raw.confidence : (fallback?.confidence ?? null),
-    summary:
-      typeof raw.summary === "string" && raw.summary.trim().length > 0
-        ? raw.summary
-        : (fallback?.summary ?? makeUnknownLayer(key).summary),
-    details: Array.isArray(raw.details)
-      ? raw.details.filter((item): item is string => typeof item === "string")
-      : (fallback?.details ?? makeUnknownLayer(key).details),
-    sourceName:
-      typeof raw.sourceName === "string" || raw.sourceName === null
-        ? raw.sourceName
-        : (fallback?.sourceName ?? null),
-    sourceUrl:
-      typeof raw.sourceUrl === "string" || raw.sourceUrl === null
-        ? raw.sourceUrl
-        : (fallback?.sourceUrl ?? null),
-    updatedAt:
-      typeof raw.updatedAt === "string" || raw.updatedAt === null
-        ? raw.updatedAt
-        : (fallback?.updatedAt ?? null),
-  };
-}
-
-function normalizeRiskStack(
-  raw: unknown,
-  seismicExplain: Record<string, unknown> | null | undefined,
-): RiskStackResult {
-  const rawRecord = isRecord(raw) ? raw : null;
-  const rawLayers = isRecord(rawRecord?.layers) ? rawRecord.layers : null;
-  const fallbackSeismic = buildSeismicRiskLayerFromExplain(seismicExplain ?? null, null);
-  const layers: Record<RiskLayerKey, RiskLayerResult> = {
-    seismic: normalizeLayer("seismic", rawLayers?.seismic, fallbackSeismic),
-    flood: normalizeLayer("flood", rawLayers?.flood),
-    pollution: normalizeLayer("pollution", rawLayers?.pollution),
-    traffic: normalizeLayer("traffic", rawLayers?.traffic),
-  };
-  const computedOverall = computeOverall(layers);
-
-  return {
-    overallScore:
-      typeof rawRecord?.overallScore === "number"
-        ? rawRecord.overallScore
-        : computedOverall.overallScore,
-    overallLevel:
-      rawRecord?.overallLevel === "low" ||
-      rawRecord?.overallLevel === "medium" ||
-      rawRecord?.overallLevel === "high" ||
-      rawRecord?.overallLevel === "unknown"
-        ? rawRecord.overallLevel
-        : computedOverall.overallLevel,
-    notes: Array.isArray(rawRecord?.notes)
-      ? rawRecord.notes.filter((item): item is string => typeof item === "string")
-      : computedOverall.notes,
-    layers,
-  };
-}
-
 export async function loadPdfReportData(analysisId: string): Promise<PdfReportData | null> {
   const a = await prisma.analysis.findUnique({
     where: { id: analysisId },
@@ -294,8 +203,13 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
   const compsStats = compsExplain?.eurM2 as { median?: number } | undefined;
   const explainRecord = isRecord(ssRecord?.explain) ? ssRecord.explain : null;
   const seismicExplain = isRecord(explainRecord?.seismic) ? explainRecord.seismic : null;
-  const normalizedRiskStack = normalizeRiskStack(explainRecord?.riskStack, seismicExplain);
-  const orderedRiskKeys = orderRiskLayerKeys(normalizedRiskStack.layers);
+  const normalizedRiskStack = applyReportRiskVisibility(
+    normalizeRiskStack(
+      (explainRecord?.riskStack ?? null) as Parameters<typeof normalizeRiskStack>[0],
+      seismicExplain,
+    ),
+  );
+  const orderedRiskKeys = orderRiskLayerKeysForReport(normalizedRiskStack.layers);
   const riskInsights = buildRiskInsights(normalizedRiskStack, orderedRiskKeys);
   const riskRecommendation = buildRecommendedNextStep(
     normalizedRiskStack,

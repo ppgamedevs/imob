@@ -33,10 +33,11 @@ import { computeFairRange, type FairPriceResult, findComparables } from "@/lib/r
 import { buildConfidenceNarrative } from "@/lib/report/trust-copy";
 import { buildQuickTake, computeExecutiveVerdict, type VerdictInput } from "@/lib/report/verdict";
 import {
+  applyReportRiskVisibility,
   buildRecommendedNextStep,
   buildRiskInsights,
   normalizeRiskStack,
-  orderRiskLayerKeys,
+  orderRiskLayerKeysForReport,
   RISK_LAYER_LABELS,
 } from "@/lib/risk/executive";
 import { matchSeismic } from "@/lib/risk/seismic";
@@ -589,8 +590,10 @@ export default async function ReportPage({ params }: Props) {
     /risc\s*seismic|bulina\s*rosie|clasa\s*de\s*risc|expertiza\s*tehnic/.test(
       `${extracted?.title ?? ""} ${((extracted?.sourceMeta as Record<string, unknown>)?.description as string) ?? ""}`.toLowerCase(),
     );
-  const normalizedRiskStack = normalizeRiskStack(riskStackExplain ?? null, seismicExplain ?? null);
-  const orderedRiskKeys = orderRiskLayerKeys(normalizedRiskStack.layers);
+  const normalizedRiskStack = applyReportRiskVisibility(
+    normalizeRiskStack(riskStackExplain ?? null, seismicExplain ?? null),
+  );
+  const orderedRiskKeys = orderRiskLayerKeysForReport(normalizedRiskStack.layers);
   const riskInsightBlock = buildRiskInsights(normalizedRiskStack, orderedRiskKeys);
   const riskRecommendedNextStep = buildRecommendedNextStep(
     normalizedRiskStack,
