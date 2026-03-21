@@ -11,7 +11,7 @@ export default function ReportProsConsSection({ pros, cons, maxEach = 5 }: Props
 
   return (
     <section className="grid gap-4 md:grid-cols-2 md:gap-6" aria-label="Argumente pro si contra">
-      <div className="rounded-xl border border-emerald-200/80 bg-emerald-50/50 p-4 shadow-sm md:p-5">
+      <div className="rounded-xl bg-emerald-50/40 p-4 md:p-5 ring-1 ring-emerald-100/80">
         <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-900">De ce merita</h3>
         <ul className="mt-3 space-y-2.5">
           {p.length === 0 ? (
@@ -29,7 +29,7 @@ export default function ReportProsConsSection({ pros, cons, maxEach = 5 }: Props
           )}
         </ul>
       </div>
-      <div className="rounded-xl border border-amber-200/80 bg-amber-50/50 p-4 shadow-sm md:p-5">
+      <div className="rounded-xl bg-amber-50/40 p-4 md:p-5 ring-1 ring-amber-100/80">
         <h3 className="text-xs font-bold uppercase tracking-[0.12em] text-amber-950">De ce trebuie atentie</h3>
         <ul className="mt-3 space-y-2.5">
           {c.length === 0 ? (

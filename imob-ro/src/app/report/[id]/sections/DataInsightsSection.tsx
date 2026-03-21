@@ -1,4 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { SectionTrustFooter } from "./ReportClarityBadge";
 
 interface Props {
   hasPrice: boolean;
@@ -18,223 +20,190 @@ interface Props {
   approximateLocationLabel?: string | null;
 }
 
-const CHECK = "✓";
-const WARN = "!";
+const MAX_EACH = 6;
 
 function pushUnique(items: string[], value: string) {
   if (!items.includes(value)) items.push(value);
 }
 
+function truncateLine(raw: string, max = 95): string {
+  const t = raw.replace(/\s+/g, " ").trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max);
+  const sp = cut.lastIndexOf(" ");
+  return (sp > 50 ? cut.slice(0, sp) : cut).trim() + "…";
+}
+
 export default function DataInsightsSection(props: Props) {
   const certain: string[] = [];
   const unclear: string[] = [];
-  const moneyRisks: string[] = [];
+  const moneyHints: string[] = [];
   const comparableCount = props.estimateComparableCount ?? props.compsCount;
 
   if (props.hasPrice) {
-    certain.push("Pretul cerut este vizibil in analiza.");
+    certain.push("Pret cerut extras din anunt.");
   } else {
-    unclear.push("Pretul nu este disponibil in analiza.");
-    moneyRisks.push(
-      "Fara un pret clar, nu poti ancora corect negocierea sau costul total al achizitiei.",
-    );
+    unclear.push("Pret lipsa din datele analizate.");
+    moneyHints.push("Fara pret nu poti calcula bugetul real.");
   }
 
   if (props.hasPriceEstimate) {
-    certain.push("Exista un reper de pret din analiza pietei.");
+    certain.push("Exista reper de pret din model (~ estimat).");
   } else {
-    unclear.push("Nu am putut construi o estimare de pret suficient de robusta.");
-    moneyRisks.push(
-      "Fara o estimare robusta, oferta trebuie facuta mai conservator si confirmata din comparabile reale.",
-    );
+    unclear.push("Fara interval estimat automat.");
+    moneyHints.push("Negociaza conservator pana ai comparabile.");
   }
 
   if (props.hasArea) {
-    certain.push("Suprafata utila este disponibila, deci pretul/mp poate fi verificat.");
+    certain.push("Suprafata disponibila pentru EUR/mp.");
   } else {
-    unclear.push("Suprafata utila nu este disponibila in analiza.");
-    moneyRisks.push(
-      "Fara suprafata utila, poti compara gresit oferta si poti subestima costul real pe mp.",
-    );
+    unclear.push("Suprafata neclara in analiza.");
+    moneyHints.push("Confirma mp util la vizionare.");
   }
 
   if (props.hasRooms) {
-    certain.push("Numarul de camere este clar in analiza.");
+    certain.push("Numar camere in date.");
   } else {
-    unclear.push("Numarul de camere nu este disponibil in analiza.");
+    unclear.push("Camere neclare.");
   }
 
-  if (props.isHouse) {
-    // Houses/villas don't need floor information
-  } else if (props.hasFloor) {
-    certain.push("Etajul este disponibil si poate fi verificat.");
-  } else {
-    unclear.push("Etajul nu este disponibil in analiza.");
-    pushUnique(
-      moneyRisks,
-      "Etajul influenteaza lichiditatea, lumina, zgomotul si uneori finantarea, deci merita confirmat inainte de oferta.",
-    );
+  if (!props.isHouse) {
+    if (props.hasFloor) {
+      certain.push("Etaj in date.");
+    } else {
+      unclear.push("Etaj lipsa.");
+      pushUnique(moneyHints, "Etajul influenteaza confortul si lichiditatea.");
+    }
   }
 
   if (props.hasYear) {
-    certain.push("Anul constructiei este prezent in analiza.");
+    certain.push("An constructie in date.");
   } else {
-    unclear.push("Anul constructiei nu este disponibil in analiza.");
-    moneyRisks.push(
-      "Fara anul constructiei, poti subestima costurile de renovare, riscul structural sau limitarile la creditare.",
-    );
+    unclear.push("An constructie lipsa.");
+    pushUnique(moneyHints, "Anul afecteaza risc si cost renovare.");
   }
 
   if (props.hasAddress) {
-    certain.push("Adresa exacta este disponibila in analiza.");
+    certain.push("Adresa (text) din anunt.");
   } else {
     unclear.push(
       props.approximateLocationLabel
-        ? `Adresa exacta nu este disponibila, dar anuntul indica macar zona aproximativa: ${props.approximateLocationLabel}.`
-        : "Adresa exacta nu este disponibila.",
+        ? `Zona aproximativa: ${props.approximateLocationLabel}.`
+        : "Adresa exacta lipsa.",
     );
   }
 
   if (props.hasCoords) {
-    certain.push("Proprietatea a fost localizata pe harta, deci analiza de zona are baza geografica.");
+    certain.push("Localizare pe harta pentru zona (~).");
   } else {
-    unclear.push(
-      props.approximateLocationLabel
-        ? `Nu am putut localiza exact proprietatea pe harta, dar avem un reper de zona: ${props.approximateLocationLabel}.`
-        : "Nu am putut localiza precis proprietatea pe harta.",
-    );
+    unclear.push("Fara coordonate precise.");
   }
 
   if (props.hasPhotos) {
-    certain.push("Exista fotografii in anunt pentru o verificare vizuala initiala.");
+    certain.push("Fotografii in anunt.");
   } else {
-    unclear.push("Nu exista fotografii in anunt.");
-    moneyRisks.push(
-      "Fara fotografii, starea reala poate ascunde renovari, igrasie sau finisaje slabe care iti cresc bugetul dupa cumparare.",
-    );
-  }
-
-  if (props.hasAddress && props.hasCoords) {
-    certain.push("Micro-locatia poate fi verificata mai usor fata de un anunt doar cu zona generica.");
-  } else {
-    pushUnique(
-      moneyRisks,
-      props.approximateLocationLabel
-        ? `Avem doar un reper larg de zona (${props.approximateLocationLabel}), nu micro-locatia exacta, deci strada, traficul si vecinatatile reale pot schimba valoarea perceputa.`
-        : "Fara adresa exacta si localizare precisa, poti plati pentru o zona mai buna pe hartie decat in realitate.",
-    );
+    unclear.push("Fara fotografii.");
+    pushUnique(moneyHints, "Starea reala poate diferi mult.");
   }
 
   if (comparableCount >= 4) {
-    certain.push(`Estimarea este sustinuta de ${comparableCount} comparabile relevante.`);
+    certain.push(`${comparableCount} comparabile folosite in model.`);
   } else if (props.hasPriceEstimate && comparableCount > 0) {
-    unclear.push(
-      `Estimarea exista, dar este sustinuta doar de ${comparableCount} comparabile relevante.`,
-    );
-    moneyRisks.push(
-      "Cand estimarea are putine comparabile, nu ancora negocierea doar in acel numar fara o verificare manuala.",
-    );
-  } else if (props.hasPriceEstimate && comparableCount === 0) {
-    unclear.push(
-      "Estimarea exista, dar se bazeaza mai mult pe statistica de zona decat pe comparabile apropiate.",
-    );
-    moneyRisks.push(
-      "O estimare bazata mai mult pe statistica de zona poate rata diferente importante de bloc, strada sau finisaje.",
-    );
+    unclear.push(`Doar ${comparableCount} comparabile apropiate — estimare fragila.`);
+    pushUnique(moneyHints, "Valideaza pretul manual in zona.");
+  } else if (props.hasPriceEstimate) {
+    unclear.push("Estimare bazata mai mult pe statistica de zona.");
+    pushUnique(moneyHints, "Cauta 3–4 anunturi echivalente pe strazi apropiate.");
   }
 
   if (props.confidenceLevel === "low" && props.hasPriceEstimate) {
-    unclear.push("Nivelul de incredere al estimarii este scazut, deci datele disponibile sunt limitate.");
-    pushUnique(
-      moneyRisks,
-      "Daca increderea estimarii este scazuta, oferta trebuie validata suplimentar cu comparabile si acte, nu doar cu raportul automat.",
-    );
+    unclear.push("Incredere scazuta la estimare.");
   }
 
   const sl = props.seismicLevel;
   if (sl === "RS1" || sl === "RsI") {
-    moneyRisks.push(
-      "Cladirea este in clasa de risc seismic RsI (bulina rosie) - poate afecta finantarea, asigurarea si revanzarea.",
-    );
+    pushUnique(moneyHints, "Clasa RsI — verifica finantare si expertiza.");
   } else if (sl === "RS2" || sl === "RsII") {
-    moneyRisks.push(
-      "Cladirea este in clasa de risc seismic RsII - starea structurala trebuie verificata inainte de orice pas financiar ferm.",
-    );
+    pushUnique(moneyHints, "Clasa RsII — confirma structura inainte de oferta.");
   } else if (sl === "RS3" || sl === "RsIII") {
-    moneyRisks.push(
-      "Cladirea are degradari structurale identificate (RsIII) - pot aparea costuri suplimentare de mentenanta sau limitari la revanzare.",
-    );
+    pushUnique(moneyHints, "RsIII — posibile costuri suplimentare.");
   }
 
-  const completeness = Math.round((certain.length / (certain.length + unclear.length)) * 100);
+  const completeness = Math.round((certain.length / Math.max(1, certain.length + unclear.length)) * 100);
+
+  const certainShow = certain.slice(0, MAX_EACH).map(truncateLine);
+  const unclearShow = unclear.slice(0, MAX_EACH).map(truncateLine);
+  const topMoney = moneyHints[0]
+    ? truncateLine(moneyHints[0], 120)
+    : "Nu am detectat o „capcana” unica, dar verifica tot ce e neclar mai sus.";
+
+  const whatMeans =
+    completeness >= 70
+      ? "Majoritatea reperelor esentiale sunt prezente — totusi confirma la fata locului ce e ~ estimat."
+      : completeness >= 45
+        ? "Lista de neclaritati e lunga: nu te baza doar pe raport pentru oferta fermă."
+        : "Date incomplete — trateaza raportul ca ghid, nu ca verdict final.";
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Radiografia anuntului</CardTitle>
+    <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
+      <CardHeader className="pb-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <CardTitle className="text-base">Ce stim sigur si ce nu din acest anunt</CardTitle>
+            <CardDescription className="mt-1">
+              ✔ = reiese clar din datele extrase. ? = gol sau neclar — merita verificat.
+            </CardDescription>
+          </div>
           <span
-            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
-              completeness >= 80
-                ? "bg-green-100 text-green-800"
-                : completeness >= 50
-                  ? "bg-yellow-100 text-yellow-800"
-                  : "bg-red-100 text-red-800"
+            className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+              completeness >= 70
+                ? "bg-emerald-100 text-emerald-900"
+                : completeness >= 45
+                  ? "bg-amber-100 text-amber-950"
+                  : "bg-rose-100 text-rose-900"
             }`}
           >
-            Claritate date {completeness}%
+            Claritate {completeness}%
           </span>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-          Aici nu punctam cat de bine suna anuntul, ci cat de mult poti verifica
-          inainte sa pui bani pe masa.
-        </p>
-
-        {certain.length > 0 && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-3">
-            <div className="text-sm font-semibold text-emerald-900 mb-2">Ce e sigur</div>
-            <ul className="space-y-1.5">
-              {certain.map((item) => (
-                <li key={item} className="text-sm text-emerald-900 flex items-start gap-2">
-                  <span className="text-emerald-600 mt-0.5">{CHECK}</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {unclear.length > 0 && (
-          <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3">
-            <div className="text-sm font-semibold text-amber-900 mb-2">Ce e neclar</div>
-            <ul className="space-y-1.5">
-              {unclear.map((item) => (
-                <li key={item} className="text-sm text-amber-900 flex items-start gap-2">
-                  <span className="text-amber-600 mt-0.5">{WARN}</span>
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {moneyRisks.length > 0 && (
-          <div className="rounded-xl border border-rose-200 bg-rose-50/80 p-3">
-            <div className="text-sm font-semibold text-rose-900 mb-2">
-              Ce te poate costa bani daca nu verifici
+        {certainShow.length > 0 && (
+          <div className="rounded-lg bg-emerald-50/50 px-3 py-3 ring-1 ring-emerald-100/80">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-emerald-900 mb-2">
+              A. Ce este sigur
             </div>
             <ul className="space-y-1.5">
-              {moneyRisks.map((item) => (
-                <li key={item} className="text-sm text-rose-900 flex items-start gap-2">
-                  <span className="text-rose-600 mt-0.5">&#9432;</span>
+              {certainShow.map((item) => (
+                <li key={item} className="text-[13px] leading-snug text-emerald-950 flex gap-2">
+                  <span className="text-emerald-600 shrink-0">✔</span>
                   <span>{item}</span>
                 </li>
               ))}
             </ul>
           </div>
         )}
+
+        {unclearShow.length > 0 && (
+          <div className="rounded-lg bg-amber-50/50 px-3 py-3 ring-1 ring-amber-100/80">
+            <div className="text-[11px] font-bold uppercase tracking-wide text-amber-950 mb-2">
+              B. Ce nu este clar
+            </div>
+            <ul className="space-y-1.5">
+              {unclearShow.map((item) => (
+                <li key={item} className="text-[13px] leading-snug text-amber-950 flex gap-2">
+                  <span className="text-amber-700 shrink-0">?</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <SectionTrustFooter
+          whatThisMeans={`${whatMeans} ${topMoney}`}
+          nextStep="La vizionare: confirma punctele din lista B si noteaza raspunsurile in scris daca e posibil."
+        />
       </CardContent>
     </Card>
   );

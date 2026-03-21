@@ -1,10 +1,8 @@
-import ApartmentScoreCard from "@/components/score/ApartmentScoreCard";
-import type { ApartmentScore } from "@/lib/score/apartmentScore";
 import type { ExecutiveVerdict } from "@/lib/report/verdict";
 
 import ReportDecisionBlock from "./ReportDecisionBlock";
 import ReportProsConsSection from "./ReportProsConsSection";
-import ReportTldrStrip from "./ReportTldrStrip";
+import ReportTldrStrip, { type TldrItem } from "./ReportTldrStrip";
 
 export interface ReportAboveFoldHeaderProps {
   verdict: ExecutiveVerdict;
@@ -15,15 +13,15 @@ export interface ReportAboveFoldHeaderProps {
   hasPlusTVA?: boolean;
   priceTrustLine: string;
   riskImpactLine: string;
-  apartmentScore: ApartmentScore;
-  scoreLabel: string;
-  tldrLines: string[];
+  confidenceNarrative: string;
+  tldrItems: TldrItem[];
   pros: string[];
   cons: string[];
 }
 
 /**
- * Above-the-fold decision layer: verdict (dominant) + score, then TLDR + pro/contra full width.
+ * Layer 1–3: decision header (full width) → Pe scurt → pro / contra.
+ * Price blocks + score sit below this band (page).
  */
 export default function ReportAboveFoldHeader({
   verdict,
@@ -34,40 +32,25 @@ export default function ReportAboveFoldHeader({
   hasPlusTVA,
   priceTrustLine,
   riskImpactLine,
-  apartmentScore,
-  scoreLabel,
-  tldrLines,
+  confidenceNarrative,
+  tldrItems,
   pros,
   cons,
 }: ReportAboveFoldHeaderProps) {
   return (
-    <div className="space-y-5 md:space-y-6">
-      <div className="grid gap-5 lg:grid-cols-12 lg:gap-8 lg:items-stretch">
-        <div className="lg:col-span-7 min-w-0">
-          <ReportDecisionBlock
-            verdict={verdict}
-            propertyTitle={propertyTitle}
-            askingPrice={askingPrice}
-            currency={currency}
-            priceSecondaryLine={priceSecondaryLine}
-            hasPlusTVA={hasPlusTVA}
-            priceTrustLine={priceTrustLine}
-            riskImpactLine={riskImpactLine}
-          />
-        </div>
-        <div className="lg:col-span-5 min-w-0 flex">
-          <div className="w-full min-h-[min(100%,320px)]">
-            <ApartmentScoreCard
-              score={apartmentScore}
-              variant="reportHeader"
-              showActions={false}
-              scoreLabel={scoreLabel}
-            />
-          </div>
-        </div>
-      </div>
-
-      <ReportTldrStrip lines={tldrLines} maxLines={4} />
+    <div className="space-y-6 md:space-y-7">
+      <ReportDecisionBlock
+        verdict={verdict}
+        propertyTitle={propertyTitle}
+        askingPrice={askingPrice}
+        currency={currency}
+        priceSecondaryLine={priceSecondaryLine}
+        hasPlusTVA={hasPlusTVA}
+        priceTrustLine={priceTrustLine}
+        riskImpactLine={riskImpactLine}
+        confidenceNarrative={confidenceNarrative}
+      />
+      <ReportTldrStrip items={tldrItems} maxItems={4} />
       <ReportProsConsSection pros={pros} cons={cons} maxEach={5} />
     </div>
   );

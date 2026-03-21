@@ -1,6 +1,9 @@
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FairPriceResult } from "@/lib/report/pricing";
+import { priceNextStep, priceWhatThisMeans } from "@/lib/report/trust-copy";
+
+import ReportClarityBadge, { SectionTrustFooter } from "./ReportClarityBadge";
 
 interface Props {
   priceRange: { low: number; high: number; mid: number; conf: number } | null;
@@ -8,6 +11,8 @@ interface Props {
   confidence?: { level: string; score: number } | null;
   compsFair?: FairPriceResult | null;
   currency?: string;
+  /** For trust copy (comparables count in analysis). */
+  compsCount?: number;
 }
 
 function fmt(n: number, currency = "EUR") {
@@ -174,18 +179,33 @@ export default function VerdictSection({
   confidence,
   compsFair,
   currency = "EUR",
+  compsCount = 0,
 }: Props) {
   const fair = compsFair && compsFair.compsUsed > 0 ? compsFair : null;
   const range = fair
     ? { low: fair.fairMin, high: fair.fairMax, mid: fair.fairMid }
     : priceRange;
 
+  const confLevel = fair?.confidence?.level ?? confidence?.level ?? null;
+
   if (!range) {
     return (
-      <Card>
-        <CardHeader><CardTitle>Verdict pret</CardTitle></CardHeader>
-        <CardContent className="text-sm text-muted-foreground">
-          Date insuficiente pentru estimare.
+      <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Putem avea incredere in pret?</CardTitle>
+          <CardDescription>
+            Nu avem inca un interval estimat robust pentru acest anunt.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <ReportClarityBadge kind="unknown" />
+            <span className="text-muted-foreground">Estimare pret indisponibila.</span>
+          </div>
+          <SectionTrustFooter
+            whatThisMeans="Fara interval estimat, nu poti compara automat cu piata."
+            nextStep={priceNextStep(compsCount)}
+          />
         </CardContent>
       </Card>
     );
@@ -210,25 +230,37 @@ export default function VerdictSection({
     }
   }
 
-  const confLevel = fair?.confidence?.level ?? confidence?.level ?? null;
-  const confScore = fair?.confidence?.score ?? confidence?.score ?? null;
   const askingEurM2 =
     actualPrice && compsFair?.comps?.[0]
       ? actualPrice / (compsFair.comps[0].areaM2 || 50)
       : null;
 
+  const hasRobust = !!(fair && fair.compsUsed >= 3 && range.mid > 0);
+  const eurM2Display =
+    actualPrice && fair?.comps?.[0]?.areaM2
+      ? Math.round(actualPrice / fair.comps[0].areaM2)
+      : askingEurM2
+        ? Math.round(askingEurM2)
+        : null;
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Verdict pret</CardTitle>
-          <div className="flex items-center gap-2">
+    <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
+      <CardHeader className="pb-2">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <CardTitle className="text-base">Putem avea incredere in pret?</CardTitle>
+            <CardDescription className="mt-1">
+              Intervalul de mai jos este un <strong>model</strong>, nu o garantie.
+            </CardDescription>
+          </div>
+          <div className="flex flex-wrap items-center justify-end gap-2">
             {fair && (
-              <Badge variant="outline" className="text-[10px] text-blue-600 border-blue-200 bg-blue-50">
-                Bazat pe {fair.compsUsed} comparabile
+              <Badge variant="outline" className="text-[10px] text-blue-700 border-blue-200 bg-blue-50/80">
+                {fair.compsUsed} comparabile
               </Badge>
             )}
             {confLevel && <ConfidenceDot level={confLevel} />}
+            <ReportClarityBadge kind="estimated" />
           </div>
         </div>
       </CardHeader>
@@ -272,9 +304,18 @@ export default function VerdictSection({
 
         {/* Asking price */}
         {actualPrice != null && (
-          <div className="pt-3 border-t text-sm">
-            <span className="text-muted-foreground">Pret cerut: </span>
-            <span className="font-semibold">{fmt(actualPrice, currency)}</span>
+          <div className="pt-3 border-t border-slate-100 text-sm space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <ReportClarityBadge kind="confirmed" />
+              <span className="text-muted-foreground">Pret cerut (din anunt): </span>
+              <span className="font-semibold">{fmt(actualPrice, currency)}</span>
+            </div>
+            {eurM2Display != null && (
+              <p className="text-xs text-muted-foreground pl-1">
+                ≈ {eurM2Display.toLocaleString("ro-RO")} {currency}/mp{" "}
+                <span className="italic">(~ estimat din pret si suprafata din anunt)</span>
+              </p>
+            )}
           </div>
         )}
 
@@ -321,6 +362,11 @@ export default function VerdictSection({
             Estimarea pe baza de comparabile difera cu {Math.abs(Math.round(((fair.fairMid - priceRange.mid) / priceRange.mid) * 100))}% fata de estimarea statistica de zona.
           </div>
         )}
+
+        <SectionTrustFooter
+          whatThisMeans={priceWhatThisMeans(hasRobust, compsCount, confLevel)}
+          nextStep={priceNextStep(compsCount)}
+        />
       </CardContent>
     </Card>
   );

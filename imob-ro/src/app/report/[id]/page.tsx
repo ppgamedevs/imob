@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import React from "react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   checkReducedVATEligibility,
   computePriceWithVAT,
@@ -31,6 +30,7 @@ import {
   type NegotiationInput,
 } from "@/lib/report/negotiation";
 import { computeFairRange, type FairPriceResult, findComparables } from "@/lib/report/pricing";
+import { buildConfidenceNarrative } from "@/lib/report/trust-copy";
 import { buildQuickTake, computeExecutiveVerdict, type VerdictInput } from "@/lib/report/verdict";
 import {
   buildRecommendedNextStep,
@@ -56,6 +56,7 @@ import DataInsightsSection from "./sections/DataInsightsSection";
 import ExecutiveSummarySection from "./sections/ExecutiveSummarySection";
 import ReportAboveFoldHeader from "./sections/ReportAboveFoldHeader";
 import ReportCollapsible from "./sections/ReportCollapsible";
+import type { TldrItem } from "./sections/ReportTldrStrip";
 import ListingHistorySection from "./sections/ListingHistorySection";
 import ListingInsightsSection from "./sections/ListingInsightsSection";
 import MethodologySection from "./sections/MethodologySection";
@@ -835,17 +836,22 @@ export default async function ReportPage({ params }: Props) {
     return out.slice(0, 5);
   })();
 
-  const reportTldrLines = (() => {
+  const reportTldrItems: TldrItem[] = (() => {
+    const out: TldrItem[] = [];
     const seen = new Set<string>();
-    const out: string[] = [];
-    const push = (raw: string) => {
+    const add = (raw: string, kind: TldrItem["kind"]) => {
       const t = raw.trim();
       if (!t || seen.has(t)) return;
       seen.add(t);
-      out.push(t);
+      out.push({ text: t, kind });
     };
-    for (const s of quickTake) push(s);
-    for (const b of decisionBullets) push(b.text);
+    for (const s of quickTake) add(s, "caution");
+    for (const b of decisionBullets) {
+      add(
+        b.text,
+        b.kind === "plus" ? "positive" : b.kind === "minus" ? "warning" : "caution",
+      );
+    }
     return out.slice(0, 4);
   })();
 
@@ -856,6 +862,8 @@ export default async function ReportPage({ params }: Props) {
     isRon && priceEurConverted != null
       ? `≈ ${priceEurConverted.toLocaleString("ro-RO")} EUR echivalent`
       : null;
+
+  const confidenceNarrative = buildConfidenceNarrative(confidenceData?.level, comps.length);
 
   const reportJsonLd = extracted
     ? {
@@ -1118,54 +1126,107 @@ export default async function ReportPage({ params }: Props) {
           </div>
         )}
 
-      {/* Decision layer: verdict + score row → Pe scurt → pro/contra → extended summary (collapsed) */}
+      {/* 1–3 Decision → TLDR → pro/contra; 4 Pret+scor; then risk, harta, costuri, detalii */}
       {extracted && (
-        <div className="mb-8 space-y-5">
-          <ReportAboveFoldHeader
-            verdict={executiveVerdict}
-            propertyTitle={(extracted.title as string) ?? null}
-            askingPrice={listingPriceForHeader}
-            currency={listingCurrencyForHeader}
-            priceSecondaryLine={headerPriceSecondaryLine}
-            hasPlusTVA={hasPlusTVA}
-            priceTrustLine={priceTrustLine}
-            riskImpactLine={riskImpactLine}
-            apartmentScore={apartmentScore}
-            scoreLabel={propScoreLabel}
-            tldrLines={reportTldrLines}
-            pros={apartmentScore.pros}
-            cons={apartmentScore.cons}
-          />
-          <ReportCollapsible title="Rezumat extins (motor analiza)" defaultOpen={false}>
-            <ExecutiveSummarySection
+        <>
+          <div className="mb-12 space-y-8 md:space-y-10">
+            <ReportAboveFoldHeader
               verdict={executiveVerdict}
-              priceRange={bestRange}
-              askingPrice={actualPrice ?? null}
-              currency="EUR"
-              originalPrice={isRon && extracted?.price ? (extracted.price as number) : undefined}
-              originalCurrency={isRon ? "RON" : undefined}
+              propertyTitle={(extracted.title as string) ?? null}
+              askingPrice={listingPriceForHeader}
+              currency={listingCurrencyForHeader}
+              priceSecondaryLine={headerPriceSecondaryLine}
               hasPlusTVA={hasPlusTVA}
-              vatRate={vatRate}
-              priceWithVAT={vatComputed?.priceWithVAT ?? null}
-              quickTake={quickTake}
-              suppressTopics={[
-                ...(devSignals.isUnderConstruction ? (["construction"] as const) : []),
-                ...(devSignals.isRender ||
-                (llmVision?.isRender === true && (llmVision?.renderConfidence ?? 0) >= 0.6)
-                  ? (["renders"] as const)
-                  : []),
-                ...(hasPlusTVA ? (["vat"] as const) : []),
-                ...(!bestRange?.mid || comps.length < 3 ? (["pricing-confidence"] as const) : []),
-              ]}
+              priceTrustLine={priceTrustLine}
+              riskImpactLine={riskImpactLine}
+              confidenceNarrative={confidenceNarrative}
+              tldrItems={reportTldrItems}
+              pros={apartmentScore.pros}
+              cons={apartmentScore.cons}
             />
-          </ReportCollapsible>
-        </div>
-      )}
 
-      {extracted && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left: map & transport first, then listing details (collapsible) */}
-          <div className="lg:col-span-7 space-y-6">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
+              <div className="lg:col-span-7 space-y-5">
+                <VerdictSection
+                  priceRange={priceRange}
+                  actualPrice={actualPrice}
+                  confidence={confidenceData ?? null}
+                  compsFair={compsFairRange}
+                  currency={extracted?.currency ?? "EUR"}
+                  compsCount={comps.length}
+                />
+                <PriceAnchorsSection
+                  askingPrice={actualPrice ?? null}
+                  avmLow={priceRange?.low ?? null}
+                  avmMid={priceRange?.mid ?? null}
+                  avmHigh={priceRange?.high ?? null}
+                  notarialTotal={notarialTotal}
+                  notarialZone={notarialZone}
+                  notarialYear={notarialYear}
+                  showNotarial={showNotarial}
+                  currency={extracted?.currency ?? "EUR"}
+                />
+              </div>
+              <div className="lg:col-span-5 min-w-0">
+                <ApartmentScoreSection
+                  score={apartmentScore}
+                  variant="reportHeader"
+                  showActions={false}
+                  scoreLabel={propScoreLabel}
+                />
+              </div>
+            </div>
+
+            <ReportCollapsible title="Detalii motor analiza (optional)" defaultOpen={false}>
+              <ExecutiveSummarySection
+                verdict={executiveVerdict}
+                priceRange={bestRange}
+                askingPrice={actualPrice ?? null}
+                currency="EUR"
+                originalPrice={isRon && extracted?.price ? (extracted.price as number) : undefined}
+                originalCurrency={isRon ? "RON" : undefined}
+                hasPlusTVA={hasPlusTVA}
+                vatRate={vatRate}
+                priceWithVAT={vatComputed?.priceWithVAT ?? null}
+                quickTake={quickTake}
+                compact
+                hideQuickTake
+                suppressTopics={[
+                  ...(devSignals.isUnderConstruction ? (["construction"] as const) : []),
+                  ...(devSignals.isRender ||
+                  (llmVision?.isRender === true && (llmVision?.renderConfidence ?? 0) >= 0.6)
+                    ? (["renders"] as const)
+                    : []),
+                  ...(hasPlusTVA ? (["vat"] as const) : []),
+                  ...(!bestRange?.mid || comps.length < 3 ? (["pricing-confidence"] as const) : []),
+                ]}
+              />
+            </ReportCollapsible>
+          </div>
+
+          <div className="space-y-10 mb-10">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
+              <RiskStackSection
+                riskStack={riskStackExplain ?? null}
+                seismicExplain={
+                  seismicExplain
+                    ? seismicExplain
+                    : {
+                        riskClass: seismic.level !== "None" ? seismic.level : null,
+                        sourceUrl: seismic.sourceUrl,
+                      }
+                }
+                titleMentionsRisk={titleMentionsRisk}
+              />
+              <TtsSection
+                ttsBucket={ttsResult?.bucket ?? analysis?.scoreSnapshot?.ttsBucket}
+                scoreDays={ttsResult?.scoreDays}
+                minMonths={ttsResult?.minMonths}
+                maxMonths={ttsResult?.maxMonths}
+                estimateMonths={ttsResult?.estimateMonths}
+              />
+            </div>
+
             {geoLat != null && geoLng != null && (
               <NeighborhoodIntelV2 lat={geoLat} lng={geoLng} initialRadiusM={1000} mode="report" />
             )}
@@ -1186,12 +1247,14 @@ export default async function ReportPage({ params }: Props) {
                 />
               );
             })()}
-            <Card>
-              <CardHeader>
-                <CardTitle>Comparabile</CardTitle>
+
+            <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base">Comparabile gasite automat in zona</CardTitle>
                 <CardDescription>
-                  {comps.length ? `${comps.length} rezultate` : "-"}
-                  {compsStats?.median ? ` - med: ${Math.round(compsStats.median)} EUR/mp` : ""}
+                  {comps.length
+                    ? `${comps.length} rezultate · mediana zonei ~ ${compsStats?.median ? `${Math.round(compsStats.median)} EUR/mp` : "—"} (~ estimat)`
+                    : "Lista goala — nu am putut extrage comparabile utile pentru acest punct."}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1216,12 +1279,43 @@ export default async function ReportPage({ params }: Props) {
                     }}
                   />
                 ) : (
-                  <Skeleton className="h-20 w-full" />
+                  <div className="rounded-lg bg-amber-50/60 p-4 ring-1 ring-amber-100/90 space-y-2">
+                    <p className="text-sm font-semibold text-amber-950">
+                      Nu avem suficiente comparabile in zona pentru o lista automata.
+                    </p>
+                    <p className="text-[13px] text-slate-800">
+                      <span className="font-semibold">Ce inseamna pentru tine: </span>
+                      Estimarea de pret din raport are mai putina ancora obiectiva — nu trata intervalul
+                      ca „pret corect”.
+                    </p>
+                    <p className="text-[13px] text-slate-800">
+                      <span className="font-semibold">Pas urmator: </span>
+                      Recomandare: foloseste o evaluare independenta sau cauta manual 3–4 anunturi similare
+                      (aceeasi zona, mp, finisaj).
+                    </p>
+                  </div>
                 )}
               </CardContent>
             </Card>
 
-            <ReportCollapsible title="Anunt: fisa, foto, analiza text" defaultOpen={false}>
+            <AcquisitionCostsSection
+              priceEur={actualPrice}
+              commissionStatus={
+                sourceMeta?.zeroCommission === true
+                  ? "zero"
+                  : llmText?.redFlags?.some((rf) => /comision/i.test(rf))
+                    ? "standard"
+                    : "unknown"
+              }
+              hasPlusTVA={hasPlusTVA}
+              vatRate={vatRate}
+              vatAmount={vatComputed?.vatAmount ?? null}
+              priceWithVAT={vatComputed?.priceWithVAT ?? null}
+              reducedVATEligible={reducedVATCheck?.eligible}
+              reducedVATReason={reducedVATCheck?.reason}
+            />
+
+            <ReportCollapsible title="Anunt: fisa, foto, ce mai spun datele" defaultOpen={false}>
               <div className="space-y-4">
                 {extracted && (
                   <Card>
@@ -1572,77 +1666,8 @@ export default async function ReportPage({ params }: Props) {
             />
               </div>
             </ReportCollapsible>
-          </div>
 
-          {/* Right: pret + scor, apoi risc + TTS, costuri, detalii */}
-          <div className="lg:col-span-5 space-y-5">
-            <VerdictSection
-              priceRange={priceRange}
-              actualPrice={actualPrice}
-              confidence={confidenceData ?? null}
-              compsFair={compsFairRange}
-              currency={extracted?.currency ?? "EUR"}
-            />
-
-            <PriceAnchorsSection
-              askingPrice={actualPrice ?? null}
-              avmLow={priceRange?.low ?? null}
-              avmMid={priceRange?.mid ?? null}
-              avmHigh={priceRange?.high ?? null}
-              notarialTotal={notarialTotal}
-              notarialZone={notarialZone}
-              notarialYear={notarialYear}
-              showNotarial={showNotarial}
-              currency={extracted?.currency ?? "EUR"}
-            />
-
-            <ApartmentScoreSection
-              score={apartmentScore}
-              variant="compact"
-              showActions={false}
-              scoreLabel={propScoreLabel}
-            />
-
-            <RiskStackSection
-              riskStack={riskStackExplain ?? null}
-              storageKey={analysis.id}
-              seismicExplain={
-                seismicExplain
-                  ? seismicExplain
-                  : {
-                      riskClass: seismic.level !== "None" ? seismic.level : null,
-                      sourceUrl: seismic.sourceUrl,
-                    }
-              }
-              titleMentionsRisk={titleMentionsRisk}
-            />
-
-            <TtsSection
-              ttsBucket={ttsResult?.bucket ?? analysis?.scoreSnapshot?.ttsBucket}
-              scoreDays={ttsResult?.scoreDays}
-              minMonths={ttsResult?.minMonths}
-              maxMonths={ttsResult?.maxMonths}
-              estimateMonths={ttsResult?.estimateMonths}
-            />
-
-            <AcquisitionCostsSection
-              priceEur={actualPrice}
-              commissionStatus={
-                sourceMeta?.zeroCommission === true
-                  ? "zero"
-                  : llmText?.redFlags?.some((rf) => /comision/i.test(rf))
-                    ? "standard"
-                    : "unknown"
-              }
-              hasPlusTVA={hasPlusTVA}
-              vatRate={vatRate}
-              vatAmount={vatComputed?.vatAmount ?? null}
-              priceWithVAT={vatComputed?.priceWithVAT ?? null}
-              reducedVATEligible={reducedVATCheck?.eligible}
-              reducedVATReason={reducedVATCheck?.reason}
-            />
-
-            <ReportCollapsible title="Negociere, istoric, checklist, metodologie" defaultOpen={false}>
+            <ReportCollapsible title="Negociere, istoric, checklist" defaultOpen={false}>
               <div className="space-y-4">
                 <NegotiationPointsSection
                   points={negotiationPoints}
@@ -1719,17 +1744,19 @@ export default async function ReportPage({ params }: Props) {
                     null
                   }
                 />
-
-                <MethodologySection
-                  baselineEurM2={(avmExplain?.baselineEurM2 as number) ?? null}
-                  adjustments={(avmExplain?.adjustments as Record<string, number>) ?? null}
-                  compsCount={comps.length}
-                  outlierCount={(compsExplain?.outlierCount as number) ?? null}
-                />
               </div>
             </ReportCollapsible>
+
+            <ReportCollapsible title="Metodologie estimare" defaultOpen={false}>
+              <MethodologySection
+                baselineEurM2={(avmExplain?.baselineEurM2 as number) ?? null}
+                adjustments={(avmExplain?.adjustments as Record<string, number>) ?? null}
+                compsCount={comps.length}
+                outlierCount={(compsExplain?.outlierCount as number) ?? null}
+              />
+            </ReportCollapsible>
           </div>
-        </div>
+        </>
       )}
 
       {/* PDF Download */}

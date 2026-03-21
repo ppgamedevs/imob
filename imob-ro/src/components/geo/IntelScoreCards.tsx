@@ -76,6 +76,87 @@ function EvidenceList({ items }: { items: string[] }) {
   );
 }
 
+type GapSeverity = "redus" | "mediu" | "ridicat";
+
+function zoneGapSeverity(familyScore: number, flagCount: number): GapSeverity {
+  if (flagCount >= 4 || familyScore < 35) return "ridicat";
+  if (flagCount >= 2 || familyScore < 55) return "mediu";
+  return "redus";
+}
+
+function zoneGapSummaryLine(flags: string[]): string {
+  const blob = flags.join(" ").toLowerCase();
+  if (/scoal|gradinit|copil|famili/i.test(blob)) {
+    return "Impact: poate conta pentru familii cu copii sau rutina zilnica.";
+  }
+  if (/transport|metrou|statie|parcare/i.test(blob)) {
+    return "Impact: relevant pentru mobilitate si timp in trafic.";
+  }
+  if (/parc|verde|linist/i.test(blob)) {
+    return "Impact: confort locuire si agrement in zona.";
+  }
+  return "Context despre ce lipseste in proximitate — nu inseamna automat „zona rea”.";
+}
+
+const SEVERITY_BADGE: Record<
+  GapSeverity,
+  { label: string; className: string }
+> = {
+  redus: {
+    label: "Impact redus",
+    className: "bg-slate-100 text-slate-700 ring-slate-200/80",
+  },
+  mediu: {
+    label: "Impact mediu",
+    className: "bg-sky-50 text-sky-900 ring-sky-200/70",
+  },
+  ridicat: {
+    label: "Impact ridicat",
+    className: "bg-amber-50 text-amber-950 ring-amber-200/80",
+  },
+};
+
+function ZoneGapsPanel({
+  redFlags,
+  familyScore,
+}: {
+  redFlags: string[];
+  familyScore: number;
+}) {
+  const severity = zoneGapSeverity(familyScore, redFlags.length);
+  const badge = SEVERITY_BADGE[severity];
+  const summary = zoneGapSummaryLine(redFlags);
+
+  return (
+    <div className="rounded-xl border border-slate-200/90 bg-slate-50/60 p-4 ring-1 ring-slate-100">
+      <div className="flex flex-wrap items-center justify-between gap-2 gap-y-1">
+        <h3 className="text-sm font-semibold text-slate-800">Lipsuri zona</h3>
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${badge.className}`}
+        >
+          {badge.label}
+        </span>
+      </div>
+      <p className="mt-2 text-xs leading-snug text-slate-600">{summary}</p>
+      <ul className="mt-3 space-y-1.5">
+        {redFlags.map((flag, i) => (
+          <li
+            key={i}
+            className="flex items-start gap-2 text-[13px] leading-snug text-slate-700"
+          >
+            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-400" aria-hidden />
+            <span>{flag}</span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-[12px] text-slate-700">
+        <span className="font-semibold">Pas urmator: </span>
+        Plimba-te 10–15 min in jur ca sa simti lipsurile in viata reala (nu doar pe harta).
+      </p>
+    </div>
+  );
+}
+
 export default function IntelScoreCards({ intel, loading }: Props) {
   if (loading) {
     return (
@@ -103,16 +184,19 @@ export default function IntelScoreCards({ intel, loading }: Props) {
           return (
             <div
               key={cfg.key}
-              className={`rounded-lg border p-3 ${cfg.colorBg}`}
+              className={`rounded-lg p-3 ring-1 ring-black/5 ${cfg.colorBg}`}
             >
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-sm font-medium flex items-center gap-1.5">
                   <span>{cfg.icon}</span>
                   <span>{score.labelRo}</span>
                 </span>
-                <span className={`text-sm font-bold ${cfg.colorText}`}>
+                <span className={`text-sm font-bold ${cfg.colorText} inline-flex items-baseline gap-1`}>
                   {score.value}
                   <span className="font-normal text-xs text-muted-foreground">/100</span>
+                  <span className="text-[9px] font-medium uppercase tracking-wide text-slate-500">
+                    ~ estimat
+                  </span>
                 </span>
               </div>
 
@@ -133,21 +217,9 @@ export default function IntelScoreCards({ intel, loading }: Props) {
         })}
       </div>
 
-      {/* Red flags */}
+      {/* Zone gaps — informative, not error-state */}
       {intel.redFlags.length > 0 && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-          <div className="text-xs font-medium text-red-800 mb-1.5 flex items-center gap-1.5">
-            <span>⚠</span> Lipsuri zona
-          </div>
-          <ul className="space-y-0.5">
-            {intel.redFlags.map((flag, i) => (
-              <li key={i} className="text-xs text-red-700 flex items-start gap-1.5">
-                <span className="shrink-0 mt-0.5">-</span>
-                {flag}
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ZoneGapsPanel redFlags={intel.redFlags} familyScore={intel.scores.family.value} />
       )}
     </div>
   );

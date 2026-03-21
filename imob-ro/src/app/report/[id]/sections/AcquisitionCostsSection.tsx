@@ -1,4 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+import { SectionTrustFooter } from "./ReportClarityBadge";
 
 const EUR_TO_RON = 5;
 
@@ -158,12 +160,13 @@ export default function AcquisitionCostsSection({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Costuri estimative achizitie</CardTitle>
-        <p className="text-xs text-muted-foreground">
-          Estimare a costurilor suplimentare la pretul de {fmt(priceEur)} EUR{hasPlusTVA ? " + TVA" : ""}.
-        </p>
+    <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">Ce costuri sa iei in calcul?</CardTitle>
+        <CardDescription>
+          Simulare ~ estimativa la {fmt(priceEur)} EUR{hasPlusTVA ? " + TVA" : ""} — notarul stabileste
+          sumele finale.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="divide-y">
@@ -276,15 +279,22 @@ export default function AcquisitionCostsSection({
           </div>
         </div>
 
-        <div className="rounded-lg border border-blue-200 bg-blue-50/60 p-3 space-y-1">
-          <div className="text-sm font-medium text-blue-900">
-            Verificati actele de proprietate cu un specialist
-          </div>
-          <p className="text-[11px] text-blue-700">
-            Recomandam consultarea unui avocat sau notar inainte de semnarea contractului.
-            Cost estimativ: {fmt(costs.specialistLow)} - {fmt(costs.specialistHigh)} EUR.
+        <div className="rounded-lg bg-blue-50/50 p-3 ring-1 ring-blue-100/80 space-y-1">
+          <div className="text-sm font-medium text-blue-900">Acte si notar</div>
+          <p className="text-[11px] text-blue-800">
+            Avocat / notar inainte de semnare — buget orientativ {fmt(costs.specialistLow)}–
+            {fmt(costs.specialistHigh)} EUR.
           </p>
         </div>
+
+        <SectionTrustFooter
+          whatThisMeans="Totalul de mai sus nu include comisionul daca e neclar — nu trata suma ca factura finala."
+          nextStep={
+            commissionStatus === "unknown"
+              ? "Confirma explicit cu agentul: procent comision, cine plateste, si daca e inclus TVA."
+              : "Cere notarului un deviz de taxe inainte de avans."
+          }
+        />
 
         <p className="text-[10px] text-muted-foreground">
           Sumele sunt estimative si pot varia. Consultati un notar pentru costuri exacte.

@@ -1,6 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 import type { TransportSummary } from "@/lib/geo/transport";
+
+import { SectionTrustFooter } from "./ReportClarityBadge";
 
 type Mode = "METRO" | "TRAM" | "BUS" | "TROLLEY";
 
@@ -58,16 +60,22 @@ export default function TransportSection({
 
   if (!metroName && !hasData) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Transport public</CardTitle>
+      <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Cum arata accesul si transportul?</CardTitle>
+          <CardDescription>
+            Date lipsa — nu am putut ancora punctul pe harta pentru statii reale.
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Nu am putut localiza aceasta {propertyType} pe harta - informatiile despre
-            transportul public din zona nu sunt disponibile. Daca adresa sau zona devine
-            disponibila, sectiunea se va actualiza automat.
-          </p>
+        <CardContent className="space-y-3 text-sm">
+          <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
+            <li>Nu stim inca distanta pana la metrou sau statii din zona.</li>
+            <li>Daca completezi adresa, sectiunea se poate actualiza la urmatoarea analiza.</li>
+          </ul>
+          <SectionTrustFooter
+            whatThisMeans="Fara transport pe harta, nu poti evalua confortul zilnic doar din raport."
+            nextStep="Verifica pe harta (Google/Apple) sau la fata locului cat dureaza pana la metrou."
+          />
         </CardContent>
       </Card>
     );
@@ -78,14 +86,26 @@ export default function TransportSection({
   const transitScore = transport?.transitScore ?? 0;
   const stops5min = (transport?.stops ?? []).filter((s) => s.walkMinutes <= 5);
 
+  const accessMeans =
+    transitScore >= 60
+      ? "Acces relativ bun la statii — util pentru naveta fara masina."
+      : transitScore >= 35
+        ? "Acces moderat — unele rute pot necesita mai mult timp sau schimbari."
+        : "Acces slab la transport in comun in raza analizata — verifica nevoia de masina.";
+
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Transport public</CardTitle>
+    <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
+      <CardHeader className="pb-2">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <CardTitle className="text-base">Cum arata accesul si transportul?</CardTitle>
+            <CardDescription className="mt-1">
+              Scor ~ estimat din OpenStreetMap / GTFS; distantele sunt in linie dreapta.
+            </CardDescription>
+          </div>
           {hasData && (
             <span
-              className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+              className={`text-xs font-semibold px-2 py-0.5 rounded-full shrink-0 ${
                 transitScore >= 60
                   ? "bg-emerald-100 text-emerald-800"
                   : transitScore >= 35
@@ -93,7 +113,7 @@ export default function TransportSection({
                     : "bg-red-100 text-red-800"
               }`}
             >
-              {transitScore}/100 - {scoreLabel(transitScore)}
+              {transitScore}/100 · {scoreLabel(transitScore)} (~)
             </span>
           )}
         </div>
@@ -191,13 +211,13 @@ export default function TransportSection({
           </div>
         )}
 
-        <p className="text-[10px] text-muted-foreground border-t pt-2">
-          Distantele sunt in linie dreapta. Timpul de mers pe jos este estimat la o viteza medie de ~5 km/h. Datele provin din GTFS si OpenStreetMap.
-          {locationInferred && (
-            <span className="block mt-1 text-amber-600">
-              Locatia a fost estimata din titlul anuntului - distantele pot varia fata de adresa reala.
-            </span>
-          )}
+        <SectionTrustFooter
+          whatThisMeans={accessMeans}
+          nextStep="Viziteaza zona la ore diferite (dimineata / seara) si verifica traficul real pe jos."
+        />
+
+        <p className="text-[10px] text-muted-foreground border-t border-slate-100 pt-2">
+          ~5 km/h presupus pentru mers pe jos. {locationInferred ? "Locatie inferata din titlu — distantele pot varia." : ""}
         </p>
       </CardContent>
     </Card>

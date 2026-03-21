@@ -13,6 +13,10 @@ interface Props {
   priceWithVAT?: number | null;
   quickTake?: string[];
   suppressTopics?: Array<"construction" | "renders" | "vat" | "pricing-confidence">;
+  /** Hides duplicate verdict banner + long “ce trebuie sa stii” (header + TLDR cover this). */
+  compact?: boolean;
+  /** Omit “Repere rapide” when same bullets appear in Pe scurt above. */
+  hideQuickTake?: boolean;
 }
 
 function normalizeText(value: string): string {
@@ -69,6 +73,17 @@ function dedupeBuyerLines(
   }
 
   return result;
+}
+
+function mustKnowBullets(raw: string, max = 3): string[] {
+  const t = raw.replace(/\s+/g, " ").trim();
+  if (!t) return [];
+  const parts = t
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const out = parts.length > 0 ? parts : [t];
+  return out.slice(0, max).map((s) => (s.length > 160 ? `${s.slice(0, 157)}…` : s));
 }
 
 function enrichCommissionText(text: string, price: number | null): string {
@@ -247,6 +262,8 @@ export default function ExecutiveSummarySection({
   priceWithVAT,
   quickTake,
   suppressTopics = [],
+  compact = false,
+  hideQuickTake = false,
 }: Props) {
   const cfg = VERDICT_CONFIG[v.verdict];
   const seenTexts = [v.mustKnow, ...v.hiddenTruths].map(normalizeText).filter(Boolean);
@@ -261,76 +278,120 @@ export default function ExecutiveSummarySection({
     (risk) => !suppressTopics.some((topic) => topicMatches(risk.text, topic)),
   );
   const additionalSignals = Math.max(0, v.dealKillers.length - visibleRisks.length);
+  const mustKnowItems = compact ? mustKnowBullets(v.mustKnow, 3) : [];
+  const truthsShow = compact ? visibleTruths.slice(0, 3) : visibleTruths;
+  const checksShow = compact ? visibleChecks.slice(0, 3) : visibleChecks;
+  const risksShow = compact ? visibleRisks.slice(0, 4) : visibleRisks;
 
   return (
-    <Card className="overflow-hidden">
+    <Card className="overflow-hidden border-slate-200/80 shadow-sm">
       <CardContent className="p-0">
-        <div className={`px-5 py-5 ${cfg.bg} ring-1 ring-inset ${cfg.ring}`}>
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div
-              className={`flex items-center justify-center h-12 w-12 shrink-0 rounded-full text-xl font-bold ${cfg.bg} ${cfg.text} ring-2 ring-inset ${cfg.ring}`}
-            >
-              {cfg.icon}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className={`text-xl font-bold ${cfg.text}`}>{cfg.label}</div>
-              <div className={`text-xs font-medium ${cfg.text} opacity-70 mt-0.5`}>
-                {cfg.subtitle}
+        {!compact ? (
+          <div className={`px-5 py-5 ${cfg.bg} ring-1 ring-inset ${cfg.ring}`}>
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div
+                className={`flex items-center justify-center h-12 w-12 shrink-0 rounded-full text-xl font-bold ${cfg.bg} ${cfg.text} ring-2 ring-inset ${cfg.ring}`}
+              >
+                {cfg.icon}
               </div>
-              <p className="mt-3 max-w-3xl text-sm font-medium leading-relaxed text-slate-900">
-                {v.headline}
-              </p>
+              <div className="flex-1 min-w-0">
+                <div className={`text-xl font-bold ${cfg.text}`}>{cfg.label}</div>
+                <div className={`text-xs font-medium ${cfg.text} opacity-70 mt-0.5`}>
+                  {cfg.subtitle}
+                </div>
+                <p className="mt-3 max-w-3xl text-sm font-medium leading-relaxed text-slate-900">
+                  {v.headline}
+                </p>
+              </div>
+              <div className="rounded-full border border-white/70 bg-white/70 px-3 py-1 text-xs font-medium text-slate-700">
+                Incredere {v.confidenceLabel.toLowerCase()} ({v.confidenceScore}%)
+              </div>
             </div>
-            <div className="rounded-full border border-white/70 bg-white/70 px-3 py-1 text-xs font-medium text-slate-700">
-              Incredere {v.confidenceLabel.toLowerCase()} ({v.confidenceScore}%)
-            </div>
-          </div>
 
-          <div className="mt-4 rounded-xl border border-white/70 bg-white/80 p-4">
-            <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              Ce trebuie sa stii acum
+            <div className="mt-4 rounded-xl border border-white/70 bg-white/80 p-4">
+              <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                Ce trebuie sa stii acum
+              </div>
+              <p className="mt-1 text-sm leading-relaxed text-slate-900">{v.mustKnow}</p>
             </div>
-            <p className="mt-1 text-sm leading-relaxed text-slate-900">{v.mustKnow}</p>
           </div>
-        </div>
+        ) : (
+          <div className="border-b border-slate-100 bg-slate-50/50 px-5 py-4">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-slate-500">
+              Note motor (fara repetare din header)
+            </p>
+            {mustKnowItems.length > 0 ? (
+              <ul className="mt-2 space-y-1.5">
+                {mustKnowItems.map((line, i) => (
+                  <li key={i} className="flex gap-2 text-[13px] leading-snug text-slate-800">
+                    <span className="font-semibold text-slate-400">·</span>
+                    {line}
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
+        )}
 
         <div className="px-5 py-4 space-y-4">
-          {visibleTruths.length > 0 && (
+          {truthsShow.length > 0 && (
             <div className="space-y-2">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Ce nu iti spune anuntul direct
               </div>
-              <div className="grid gap-2">
-                {visibleTruths.map((item, index) => (
-                  <div
-                    key={index}
-                    className="rounded-lg border bg-muted/20 px-3 py-2 text-sm text-slate-800"
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
+              {compact ? (
+                <ul className="space-y-1.5">
+                  {truthsShow.map((item, index) => (
+                    <li key={index} className="flex gap-2 text-[13px] leading-snug text-slate-800">
+                      <span className="text-slate-400">·</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="grid gap-2">
+                  {truthsShow.map((item, index) => (
+                    <div
+                      key={index}
+                      className="rounded-lg border bg-muted/20 px-3 py-2 text-sm text-slate-800"
+                    >
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
-          {visibleChecks.length > 0 && (
+          {checksShow.length > 0 && (
             <div className="space-y-2">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Ce verifici inainte de orice oferta
               </div>
-              <div className="grid gap-2">
-                {visibleChecks.map((item, index) => (
-                  <div
-                    key={index}
-                    className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900"
-                  >
-                    <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-white text-[11px] font-semibold text-blue-700">
-                      {index + 1}
-                    </span>
-                    <span>{item}</span>
-                  </div>
-                ))}
-              </div>
+              {compact ? (
+                <ul className="space-y-1.5">
+                  {checksShow.map((item, index) => (
+                    <li key={index} className="flex gap-2 text-[13px] leading-snug text-blue-900">
+                      <span className="font-semibold text-blue-600">{index + 1}.</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="grid gap-2">
+                  {checksShow.map((item, index) => (
+                    <div
+                      key={index}
+                      className="flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900"
+                    >
+                      <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-white text-[11px] font-semibold text-blue-700">
+                        {index + 1}
+                      </span>
+                      <span>{item}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -349,17 +410,17 @@ export default function ExecutiveSummarySection({
             />
           )}
 
-          {visibleRisks.length > 0 && (
+          {risksShow.length > 0 && (
             <div className="space-y-2">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Semnale prioritare pentru cumparator
               </div>
               <div className="grid gap-1.5">
-                {visibleRisks.map((k, i) => (
+                {risksShow.map((k, i) => (
                   <DealKillerPill key={i} killer={k} price={askingPrice} />
                 ))}
               </div>
-              {additionalSignals > 0 && (
+              {additionalSignals > 0 && !compact && (
                 <p className="text-xs text-muted-foreground">
                   +{additionalSignals} alte semnale apar detaliate mai jos in raport.
                 </p>
@@ -367,7 +428,7 @@ export default function ExecutiveSummarySection({
             </div>
           )}
 
-          {visibleQuickTake.length > 0 && (
+          {!hideQuickTake && visibleQuickTake.length > 0 && (
             <div className="space-y-2">
               <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
                 Repere rapide
@@ -391,8 +452,10 @@ export default function ExecutiveSummarySection({
             </div>
           )}
 
-          <div className="rounded-lg border bg-muted/20 p-3">
-            <p className="mb-3 text-sm text-muted-foreground">{v.confidenceTone}</p>
+          <div className="rounded-lg border border-slate-100 bg-slate-50/40 p-3">
+            {!compact ? (
+              <p className="mb-3 text-sm text-muted-foreground line-clamp-3">{v.confidenceTone}</p>
+            ) : null}
             <ConfidenceBar score={v.confidenceScore} label={v.confidenceLabel} />
           </div>
         </div>

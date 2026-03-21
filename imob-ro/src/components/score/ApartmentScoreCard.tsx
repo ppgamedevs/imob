@@ -224,6 +224,7 @@ function ReportHeaderScore({
         </div>
       </div>
       <p className="px-5 py-3 text-[13px] leading-snug text-gray-600 border-b border-gray-100 bg-gray-50/50">
+        <span className="font-medium text-gray-800">~ Estimat </span>
         {interpretation}
       </p>
       <div className="px-5 py-4 space-y-3 flex-1">

@@ -1,7 +1,7 @@
 "use client";
 
 import { CarFront, ShieldAlert, Waves, Wind } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import {
   Accordion,
@@ -10,7 +10,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   buildRecommendedNextStep,
@@ -22,15 +22,16 @@ import {
 import { buildSeismicRiskLayerFromExplain } from "@/lib/risk/seismic-layer";
 import { computeOverall } from "@/lib/risk/stack";
 import type { RiskLayerKey, RiskLayerResult, RiskLevel, RiskStackResult } from "@/lib/risk/types";
+import { riskNextStep, riskWhatThisMeans } from "@/lib/report/trust-copy";
 import { cn } from "@/lib/utils";
 
+import ReportClarityBadge, { type ClarityKind, SectionTrustFooter } from "./ReportClarityBadge";
 import SeismicSection from "./SeismicSection";
 
 interface Props {
   riskStack?: RiskStackResult | Record<string, unknown> | null;
   seismicExplain?: Record<string, unknown> | null;
   titleMentionsRisk?: boolean;
-  storageKey?: string;
 }
 
 const LAYER_LABELS: Record<RiskLayerKey, string> = {
@@ -89,6 +90,18 @@ function levelBadgeClass(level: RiskLevel): string {
   if (level === "medium") return "border-amber-200 bg-amber-50 text-amber-800";
   if (level === "low") return "border-emerald-200 bg-emerald-50 text-emerald-800";
   return "border-slate-200 bg-slate-50 text-slate-700";
+}
+
+function levelRank(level: RiskLevel): number {
+  if (level === "high") return 3;
+  if (level === "medium") return 2;
+  if (level === "low") return 1;
+  return 0;
+}
+
+function layerClarityKind(key: RiskLayerKey, layer: RiskLayerResult): ClarityKind {
+  if (layer.level === "unknown") return "unknown";
+  return sourceModeForLayer(key) === "official" ? "confirmed" : "estimated";
 }
 
 function sourceModeLabel(mode: "official" | "proxy"): string {
@@ -266,12 +279,8 @@ export default function RiskStackSection({
   riskStack,
   seismicExplain,
   titleMentionsRisk = false,
-  storageKey,
 }: Props) {
   const resolved = normalizeRiskStack(riskStack, seismicExplain);
-  const accordionStorageKey = storageKey
-    ? `risk-stack:open:${storageKey}`
-    : "risk-stack:open:default";
   const orderedKeys = useMemo(() => {
     return orderRiskLayerKeys(resolved.layers);
   }, [resolved.layers]);
@@ -301,123 +310,101 @@ export default function RiskStackSection({
     () => orderedKeys.every((key) => resolved.layers[key].level === "unknown"),
     [orderedKeys, resolved.layers],
   );
-  const [openItem, setOpenItem] = useState<RiskLayerKey>(orderedKeys[0] ?? "seismic");
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const rankedKeys = useMemo(() => {
+    return [...orderedKeys].sort(
+      (a, b) => levelRank(resolved.layers[b].level) - levelRank(resolved.layers[a].level),
+    );
+  }, [orderedKeys, resolved.layers]);
 
-    const stored = window.localStorage.getItem(accordionStorageKey);
-    if (
-      stored === "seismic" ||
-      stored === "flood" ||
-      stored === "pollution" ||
-      stored === "traffic"
-    ) {
-      setOpenItem(stored);
-      return;
-    }
+  const topTwoKeys = rankedKeys.slice(0, 2);
 
-    setOpenItem(orderedKeys[0] ?? "seismic");
-  }, [accordionStorageKey, orderedKeys]);
-
-  function handleOpenChange(value: string) {
-    const nextValue =
-      value === "seismic" || value === "flood" || value === "pollution" || value === "traffic"
-        ? value
-        : (orderedKeys[0] ?? "seismic");
-
-    setOpenItem(nextValue);
-    if (typeof window !== "undefined") {
-      window.localStorage.setItem(accordionStorageKey, nextValue);
-    }
-  }
+  const whatRiskMeans =
+    insightItems[0] ?? riskWhatThisMeans(resolved.overallLevel);
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="space-y-1">
-            <CardTitle className="text-base">Risk stack</CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Vedere unificata asupra riscurilor structurale, de mediu si de confort urban.
-            </p>
+    <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
+      <CardHeader className="pb-2">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle className="text-base">Ce riscuri exista?</CardTitle>
+            <CardDescription className="mt-1 max-w-prose">
+              Risc general din date disponibile — nu inlocuieste expertiza la fata locului. ✔ = sursa
+              publica directa; ~ = model estimat.
+            </CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col items-end gap-1">
+            <span className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+              Risc general
+            </span>
             <Badge
               variant={levelVariant(resolved.overallLevel)}
-              className={cn("border", levelBadgeClass(resolved.overallLevel))}
+              className={cn("border text-sm", levelBadgeClass(resolved.overallLevel))}
             >
               {levelLabel(resolved.overallLevel)}
             </Badge>
-            <div
-              className={cn(
-                "rounded-full border px-3 py-1 text-sm font-semibold",
-                resolved.overallScore != null
-                  ? "border-border bg-muted/20 text-foreground"
-                  : "border-dashed border-muted-foreground/40 text-muted-foreground",
-              )}
-            >
-              {resolved.overallScore != null ? `${resolved.overallScore}/100` : "Scor indisponibil"}
-            </div>
+            {resolved.overallScore != null && (
+              <span className="text-xs text-muted-foreground">Scor agregat ~ {resolved.overallScore}/100</span>
+            )}
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3">
-        {resolved.notes.length > 0 && (
-          <div className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-900">
-            {resolved.notes.join(" ")}
-          </div>
-        )}
-
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700">
-          <span className="font-medium text-slate-900">Cum citesti scorul:</span> `0-34` scazut,
-          `35-69` mediu, `70-100` ridicat. `Oficial` indica o sursa directa sau un registru public,
-          iar `Proxy` indica o estimare contextuala utila pentru comparatie rapida.
-        </div>
-
-        {insightBlock.dominantKey && (
-          <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-3">
-            <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-red-900">
-              <span>Top risk</span>
-              <Badge className="border border-red-200 bg-white text-red-800">
-                {LAYER_LABELS[insightBlock.dominantKey]}
-              </Badge>
-            </div>
-            <p className="mt-1 text-xs text-red-800">
-              {resolved.layers[insightBlock.dominantKey].summary}
+      <CardContent className="space-y-4">
+        {!allLayersUnknown && (
+          <div className="space-y-2">
+            <p className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
+              Top 2 semnale (prioritizate)
             </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {topTwoKeys.map((key) => {
+                const layer = resolved.layers[key];
+                const meta = LAYER_META[key];
+                const Icon = meta.icon;
+                return (
+                  <div
+                    key={key}
+                    className="rounded-lg bg-slate-50/90 p-3 ring-1 ring-slate-100"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className={cn("rounded-full border p-1.5 shrink-0", meta.chipClass)}>
+                          <Icon className={cn("h-3.5 w-3.5", meta.iconClass)} />
+                        </div>
+                        <span className="text-sm font-semibold text-slate-900 truncate">
+                          {LAYER_LABELS[key]}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <Badge
+                          variant={levelVariant(layer.level)}
+                          className={cn("border text-[10px]", levelBadgeClass(layer.level))}
+                        >
+                          {levelLabel(layer.level)}
+                        </Badge>
+                        <ReportClarityBadge kind={layerClarityKind(key, layer)} />
+                      </div>
+                    </div>
+                    <p className="mt-2 text-xs leading-snug text-slate-700 line-clamp-3">
+                      {layer.summary}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
-        {!allLayersUnknown && insightItems.length > 0 && (
-          <div className="rounded-lg border border-violet-200 bg-violet-50 px-3 py-3">
-            <div className="text-sm font-medium text-violet-900">Concluzii rapide</div>
-            <ul className="mt-2 space-y-1">
-              {insightItems.map((item, index) => (
-                <li key={index} className="flex items-start gap-2 text-xs text-violet-900">
-                  <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-400" />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+        <SectionTrustFooter
+          whatThisMeans={whatRiskMeans}
+          nextStep={recommendedNextStep ?? riskNextStep()}
+        />
+
+        {resolved.notes.length > 0 && (
+          <p className="text-xs text-slate-600">{resolved.notes.join(" ")}</p>
         )}
 
-        {recommendedNextStep && (
-          <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-3">
-            <div className="text-sm font-medium text-emerald-900">Pas recomandat</div>
-            <p className="mt-1 text-xs text-emerald-900">{recommendedNextStep}</p>
-          </div>
-        )}
-
-        <Accordion
-          type="single"
-          collapsible
-          value={openItem}
-          onValueChange={handleOpenChange}
-          className="rounded-lg border"
-        >
+        <Accordion type="multiple" defaultValue={[]} className="rounded-lg ring-1 ring-slate-200/80">
           {orderedKeys.map((key) => {
             const layer = resolved.layers[key];
             const meta = LAYER_META[key];
