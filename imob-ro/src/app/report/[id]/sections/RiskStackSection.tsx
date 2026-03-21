@@ -228,7 +228,11 @@ function GenericLayerBody({ layer }: { layer: RiskLayerResult }) {
         <div className="rounded-md border bg-muted/20 px-3 py-2">
           <div className="text-muted-foreground">Incredere</div>
           <div className="font-medium">
-            {layer.confidence != null ? `${Math.round(layer.confidence * 100)}%` : "In curs"}
+            {layer.confidence != null
+              ? `${Math.round(layer.confidence * 100)}%`
+              : layer.level === "unknown"
+                ? "Nesetat"
+                : "In curs"}
           </div>
         </div>
         <div className="rounded-md border bg-muted/20 px-3 py-2">

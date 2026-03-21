@@ -17,9 +17,13 @@ const ALLOWED_DOMAINS = [
   "imobiliare.ro",
   "olx.ro",
   "storia.ro",
+  "olxcdn.com",
+  "publi24.ro",
+  "lajumate.ro",
+  "homezz.ro",
+  "anuntul.ro",
   "images.unsplash.com",
   "res.cloudinary.com",
-  // Add other trusted image CDNs
 ];
 
 function isAllowedDomain(url: string): boolean {

@@ -17,10 +17,17 @@ export function resolveLocation(features: Record<string, unknown>) {
     addressRaw:
       typeof features.addressRaw === "string"
         ? features.addressRaw
-        : typeof features.address === "string"
-          ? features.address
+        : typeof features.address_raw === "string"
+          ? features.address_raw
+          : typeof features.address === "string"
+            ? features.address
+            : null,
+    areaSlug:
+      typeof features.areaSlug === "string"
+        ? features.areaSlug
+        : typeof features.area_slug === "string"
+          ? features.area_slug
           : null,
-    areaSlug: typeof features.areaSlug === "string" ? features.areaSlug : null,
   };
 }
 

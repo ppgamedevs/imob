@@ -50,8 +50,12 @@ function deriveRoomsFromTitle(title?: string | null, rooms?: number | null): num
   return m ? Number(m[1]) : null;
 }
 
-function normalizeExtractedWrapper(raw: any) {
-  const n = normalizeExtracted ? normalizeExtracted(raw) : raw || {};
+/**
+ * `normalizeExtracted` is async (geocode, metro). Must await — otherwise `n` is a Promise
+ * and spread/`n.lat` silently break; risk stack, maps, and notarial inputs lose coords/area.
+ */
+async function normalizeExtractedWrapper(raw: any) {
+  const n = normalizeExtracted ? await normalizeExtracted(raw) : raw || {};
   const priceEur = toEur(
     raw.price ?? (n.price_eur as number | undefined),
     raw.currency ?? n.currency ?? "EUR",
@@ -74,7 +78,7 @@ export async function updateFeatureSnapshot(analysisId: string) {
   });
   if (!a?.extractedListing) throw new Error("No extracted data");
 
-  const f = await Promise.resolve(normalizeExtractedWrapper(a.extractedListing as any));
+  const f = await normalizeExtractedWrapper(a.extractedListing as any);
 
   // geocode if missing coords
   let city: string | undefined, neighborhood: string | undefined;

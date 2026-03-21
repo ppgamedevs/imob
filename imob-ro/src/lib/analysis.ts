@@ -162,6 +162,28 @@ const SCORING_STEPS: PipelineStep[] = [
   { name: "dedup", run: (id) => stepDedup(id) },
 ];
 
+async function mergeFeaturesFromExtracted(
+  analysisId: string,
+  features: Record<string, unknown>,
+): Promise<Record<string, unknown>> {
+  const ex = await prisma.extractedListing.findUnique({
+    where: { analysisId },
+    select: { lat: true, lng: true, addressRaw: true, areaM2: true },
+  });
+  if (!ex) return features;
+  const m = { ...features };
+  if (typeof m.lat !== "number" && ex.lat != null) m.lat = ex.lat;
+  if (typeof m.lng !== "number" && ex.lng != null) m.lng = ex.lng;
+  if (m.addressRaw == null && m.address_raw == null && ex.addressRaw) {
+    m.addressRaw = ex.addressRaw;
+  }
+  if (m.area_m2 == null && m.areaM2 == null && ex.areaM2 != null) {
+    m.area_m2 = ex.areaM2;
+    m.areaM2 = ex.areaM2;
+  }
+  return m;
+}
+
 async function runScoringPipeline(analysisId: string): Promise<void> {
   const fsnap = await prisma.featureSnapshot.findUnique({
     where: { analysisId },
@@ -173,7 +195,8 @@ async function runScoringPipeline(analysisId: string): Promise<void> {
     return;
   }
 
-  const features = fsnap.features as Record<string, unknown>;
+  let features = fsnap.features as Record<string, unknown>;
+  features = await mergeFeaturesFromExtracted(analysisId, features);
 
   for (const step of SCORING_STEPS) {
     const start = Date.now();

@@ -118,6 +118,14 @@ function normalizeReportPhotoUrl(entry: unknown): string | null {
   return null;
 }
 
+/** Same-origin proxy avoids hotlink blocks; /api/img enforces domain allowlist. */
+function reportGalleryImgSrc(absoluteUrl: string): string {
+  if (absoluteUrl.startsWith("http")) {
+    return `/api/img?w=1280&src=${encodeURIComponent(absoluteUrl)}`;
+  }
+  return absoluteUrl;
+}
+
 function looksLikeAddress(raw: string): boolean {
   if (!raw || raw.length < 5 || raw.length > 300) return false;
   const lower = raw.toLowerCase();
@@ -1633,10 +1641,11 @@ export default async function ReportPage({ params }: Props) {
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={src}
+                          src={reportGalleryImgSrc(src)}
                           alt={`Foto ${i + 1}`}
                           className="absolute inset-0 w-full h-full object-cover"
                           loading={i < 2 ? "eager" : "lazy"}
+                          referrerPolicy="no-referrer"
                         />
                         {photosLikelyRenders && i === 0 && (
                           <div className="absolute bottom-1 left-1 rounded bg-black/70 px-1.5 py-0.5 text-[10px] text-white font-medium">

@@ -8,8 +8,13 @@ export async function applySeismicToAnalysis(analysisId: string, features: Recor
   const f = features ?? {};
   const lat = (f.lat as number) ?? null;
   const lng = (f.lng as number) ?? null;
-  const addressRaw = (f.addressRaw as string) ?? (f.address as string) ?? null;
-  const yearBuilt = (f.yearBuilt as number) ?? null;
+  const addressRaw =
+    (f.addressRaw as string) ??
+    (f.address_raw as string) ??
+    (f.address as string) ??
+    null;
+  const yearBuilt =
+    (f.yearBuilt as number) ?? (f.year_built as number) ?? null;
   const areaSlug = (f.areaSlug as string) ?? (f.area_slug as string) ?? null;
 
   let sector: number | null = null;
