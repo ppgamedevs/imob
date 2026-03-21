@@ -489,6 +489,20 @@ export default async function ReportPage({ params }: Props) {
     }
   }
 
+  // Price anchors: local range needs areaSlug + AreaDaily. Pipeline AVM lives on ScoreSnapshot;
+  // without this fallback, avmMid stays null, PriceAnchorsSection can hide entirely (incl. notarial).
+  const snapForAnchors = analysis.scoreSnapshot;
+  const priceAnchorsRange =
+    priceRange ??
+    (snapForAnchors?.avmMid != null
+      ? {
+          low: Math.round(snapForAnchors.avmLow ?? snapForAnchors.avmMid!),
+          high: Math.round(snapForAnchors.avmHigh ?? snapForAnchors.avmMid!),
+          mid: Math.round(snapForAnchors.avmMid!),
+          conf: snapForAnchors.avmConf ?? 0,
+        }
+      : null);
+
   // Neighborhood Vibe Index + Transport summary (gated)
   let vibeResult: Awaited<ReturnType<typeof computeVibeScores>> | null = null;
   let transportResult: Awaited<ReturnType<typeof getTransportSummary>> | null = null;
@@ -1166,9 +1180,9 @@ export default async function ReportPage({ params }: Props) {
                 />
                 <PriceAnchorsSection
                   askingPrice={actualPrice ?? null}
-                  avmLow={priceRange?.low ?? null}
-                  avmMid={priceRange?.mid ?? null}
-                  avmHigh={priceRange?.high ?? null}
+                  avmLow={priceAnchorsRange?.low ?? null}
+                  avmMid={priceAnchorsRange?.mid ?? null}
+                  avmHigh={priceAnchorsRange?.high ?? null}
                   notarialTotal={notarialTotal}
                   notarialZone={notarialZone}
                   notarialYear={notarialYear}

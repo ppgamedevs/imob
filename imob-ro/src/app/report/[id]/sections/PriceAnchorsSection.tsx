@@ -39,7 +39,8 @@ export default function PriceAnchorsSection({
   const hasAvm = avmMid != null;
   const hasNotarial = showNotarial && notarialTotal != null;
 
-  if (!hasAvm && !askingPrice) return null;
+  // Show section if we have market estimate, listing price, OR notarial anchor alone
+  if (!hasAvm && !askingPrice && !hasNotarial) return null;
 
   const overpricing =
     askingPrice != null && avmMid != null
@@ -72,7 +73,7 @@ export default function PriceAnchorsSection({
   type Anchor = { value: number; label: string; color: string; dotBorder: string; subLabel?: string };
   const anchors: Anchor[] = [];
 
-  if (hasNotarial && notarialTotal) {
+  if (hasNotarial && notarialTotal != null) {
     anchors.push({
       value: notarialTotal,
       label: "Valoare notariala",
@@ -244,7 +245,7 @@ export default function PriceAnchorsSection({
         )}
 
         {/* Notarial context */}
-        {hasNotarial && notarialTotal && avmMid && (
+        {hasNotarial && notarialTotal != null && avmMid != null && (
           <div className="text-xs text-muted-foreground bg-slate-50/80 rounded-lg p-2.5 ring-1 ring-slate-100">
             Valoarea notariala ({fmt(notarialTotal, currency)}) este valoarea minima fiscala
             folosita de notari pentru calculul taxelor. Pretul real de piata este de obicei
