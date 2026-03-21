@@ -7,18 +7,18 @@ export function buildConfidenceNarrative(
   compsCount: number,
 ): string {
   if (compsCount < 3) {
-    return "Incredere scazuta — prea putine comparabile pentru o ancora solida.";
+    return "Incredere scazuta - prea putine comparabile pentru o ancora solida.";
   }
   if (confidenceLevel === "low") {
-    return "Incredere scazuta — date incomplete sau dispersate in zona.";
+    return "Incredere scazuta - date incomplete sau dispersate in zona.";
   }
   if (confidenceLevel === "medium") {
-    return "Incredere medie — estimarea e utila, dar merita verificata manual.";
+    return "Incredere medie - estimarea e utila, dar merita verificata manual.";
   }
   if (confidenceLevel === "high") {
-    return "Incredere relativ ridicata — semnale si comparabile suficient de aliniate.";
+    return "Incredere relativ ridicata - semnale si comparabile suficient de aliniate.";
   }
-  return "Incredere limitata — foloseste raportul ca reper, nu ca verdict final.";
+  return "Incredere limitata - foloseste raportul ca reper, nu ca verdict final.";
 }
 
 export function priceWhatThisMeans(
@@ -44,9 +44,9 @@ export function priceNextStep(compsCount: number): string {
 
 export function riskWhatThisMeans(overallLevel: "low" | "medium" | "high" | "unknown"): string {
   if (overallLevel === "high") return "Exista cel putin un risc care merita clarificat inainte de oferta.";
-  if (overallLevel === "medium") return "Riscuri de context — nu sunt neaparat blocante, dar trebuie privite la fata locului.";
-  if (overallLevel === "low") return "Nu am detectat riscuri majore in datele disponibile — nu inlocuieste expertiza la fata locului.";
-  return "Straturi incomplete — concluziile despre risc sunt partiale.";
+  if (overallLevel === "medium") return "Riscuri de context - nu sunt neaparat blocante, dar trebuie privite la fata locului.";
+  if (overallLevel === "low") return "Nu am detectat riscuri majore in datele disponibile - nu inlocuieste expertiza la fata locului.";
+  return "Straturi incomplete - concluziile despre risc sunt partiale.";
 }
 
 export function riskNextStep(): string {

@@ -40,7 +40,7 @@ export default function ReportProsConsSection({ pros, cons, maxEach = 5 }: Props
           ) : (
             c.map((line, i) => (
               <li key={i} className="flex gap-2 text-[13px] leading-snug text-amber-950">
-                <span className="shrink-0 font-bold text-amber-700">–</span>
+                <span className="shrink-0 font-bold text-amber-700">-</span>
                 <span>{line}</span>
               </li>
             ))

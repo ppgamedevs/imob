@@ -57,7 +57,7 @@ export function HomeHero() {
           </h1>
 
           <p className="mx-auto mt-4 max-w-[560px] text-[16px] leading-relaxed text-gray-600 md:text-[17px]">
-            Lipești URL-ul unui anunț — îți spunem dacă prețul are sens, cât ar putea dura vânzarea,
+            Lipești URL-ul unui anunț - îți spunem dacă prețul are sens, cât ar putea dura vânzarea,
             ce riscuri merită privite și cu ce te poți întoarce la negociere.
           </p>
         </div>

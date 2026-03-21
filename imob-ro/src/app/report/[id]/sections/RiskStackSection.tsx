@@ -329,7 +329,7 @@ export default function RiskStackSection({
           <div>
             <CardTitle className="text-base">Ce riscuri exista?</CardTitle>
             <CardDescription className="mt-1 max-w-prose">
-              Risc general din date disponibile — nu inlocuieste expertiza la fata locului. ✔ = sursa
+              Risc general din date disponibile - nu inlocuieste expertiza la fata locului. ✔ = sursa
               publica directa; ~ = model estimat.
             </CardDescription>
           </div>

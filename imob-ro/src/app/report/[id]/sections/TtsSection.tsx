@@ -33,7 +33,7 @@ export default function TtsSection({
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Cat de repede s-ar putea vinde ceva similar?</CardTitle>
         <CardDescription>
-          Model ~ estimat din pret vs mediana zonei si sezonalitate — nu e promisiune de lichiditate.
+          Model ~ estimat din pret vs mediana zonei si sezonalitate - nu e promisiune de lichiditate.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -41,7 +41,7 @@ export default function TtsSection({
           <div className="space-y-3">
             {minMonths != null && maxMonths != null ? (
               <div className="text-2xl font-bold tabular-nums">
-                {minMonths}–{maxMonths} luni <span className="text-sm font-medium text-muted-foreground">(~)</span>
+                {minMonths}-{maxMonths} luni <span className="text-sm font-medium text-muted-foreground">(~)</span>
               </div>
             ) : estimateMonths != null ? (
               <div className="text-2xl font-bold tabular-nums">
@@ -54,8 +54,8 @@ export default function TtsSection({
               <p className="text-sm text-muted-foreground">Bucket: {rangeLabel}</p>
             )}
             <SectionTrustFooter
-              whatThisMeans="Lichiditatea reala depinde de pret, prezentare si momentul pietei — foloseste ca reper, nu ca garantie."
-              nextStep="Daca vinzi similar, compara cu 2–3 tranzactii recente din bloc sau strada, nu doar cu acest interval."
+              whatThisMeans="Lichiditatea reala depinde de pret, prezentare si momentul pietei - foloseste ca reper, nu ca garantie."
+              nextStep="Daca vinzi similar, compara cu 2-3 tranzactii recente din bloc sau strada, nu doar cu acest interval."
             />
           </div>
         ) : (

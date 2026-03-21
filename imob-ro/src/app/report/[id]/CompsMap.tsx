@@ -251,7 +251,7 @@ export function CompsMap({
                 stroke="white"
                 strokeWidth={0.3}
               >
-                <title>{t.name} ({t.mode}) – {t.distanceM}m</title>
+                <title>{t.name} ({t.mode}) - {t.distanceM}m</title>
               </rect>
             );
           })}
@@ -260,7 +260,7 @@ export function CompsMap({
         {showSeismic &&
           seismicPts.map((s) => {
             const color = RISK_COLORS[s.riskClass] ?? "#6b7280";
-            const title = `${s.riskClass}${s.addressRaw ? ` – ${s.addressRaw}` : ""}${s.distanceM != null ? ` (${s.distanceM}m)` : ""}`;
+            const title = `${s.riskClass}${s.addressRaw ? ` - ${s.addressRaw}` : ""}${s.distanceM != null ? ` (${s.distanceM}m)` : ""}`;
             return (
               <DiamondMarker
                 key={`seis-${s.id}`}

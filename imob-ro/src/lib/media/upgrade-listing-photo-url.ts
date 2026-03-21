@@ -63,7 +63,9 @@ function stripDownsizingSearchParams(u: URL): void {
  * Safe to call on any string; returns original on failure.
  */
 export function upgradeListingPhotoUrl(raw: string): string {
-  if (!raw || typeof raw !== "string" || !raw.startsWith("http")) return raw;
+  if (!raw || typeof raw !== "string") return raw;
+  if (raw.startsWith("//")) raw = `https:${raw}`;
+  if (!raw.startsWith("http")) return raw;
   try {
     const u = new URL(raw);
     const host = u.hostname.toLowerCase();

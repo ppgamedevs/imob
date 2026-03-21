@@ -20,7 +20,15 @@ const analyzeRequestSchema = z.object({
       rooms: z.number().min(1).max(100).optional(),
       addressRaw: z.string().max(500).optional(),
       sourceUrl: z.string().url().max(2048).optional(),
-      photos: z.array(z.string().url().max(2048)).max(50).optional(),
+      photos: z
+        .array(
+          z.union([
+            z.string().url().max(2048),
+            z.object({ url: z.string().url().max(2048) }),
+          ]),
+        )
+        .max(50)
+        .optional(),
     })
     .passthrough(),
 });
@@ -144,7 +152,8 @@ export async function POST(req: Request) {
   }
 
   const rawPhotos = Array.isArray(sanitizedExtracted.photos) ? sanitizedExtracted.photos : [];
-  const photos = rawPhotos.filter((u: string) => isSafeUrl(u).safe);
+  // sanitizeListing normalizes photo entries to plain URL strings
+  const photos = (rawPhotos as string[]).filter((u) => typeof u === "string" && isSafeUrl(u).safe);
 
   // Merge description into sourceMeta so the LLM worker can use it
   const sourceMeta = {

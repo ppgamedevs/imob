@@ -8,7 +8,7 @@ interface Props {
 }
 
 /**
- * Native details/summary — no CLS, works without client JS for expand.
+ * Native details/summary - no CLS, works without client JS for expand.
  */
 export default function ReportCollapsible({
   title,

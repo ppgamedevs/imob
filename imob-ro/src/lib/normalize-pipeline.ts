@@ -98,12 +98,12 @@ export async function updateFeatureSnapshot(analysisId: string) {
     }
   }
 
-  // area slug
-  let areaSlug: string | undefined;
+  // area slug (must use snake_case key: Zod parse strips unknown keys like `areaSlug`)
+  let computedAreaSlug: string | undefined;
   if (city && neighborhood && /bucure/i.test(city)) {
-    areaSlug = slugifyRo(`bucuresti-${neighborhood}`);
+    computedAreaSlug = slugifyRo(`bucuresti-${neighborhood}`);
   } else if (lat != null && lng != null) {
-    areaSlug = gridSlug(lat, lng, 2);
+    computedAreaSlug = gridSlug(lat, lng, 2);
   }
 
   // distance to metro
@@ -113,7 +113,13 @@ export async function updateFeatureSnapshot(analysisId: string) {
     if (st) distMetroM = Math.round(st.distM);
   }
 
-  const features = { ...f, lat, lng, city, areaSlug, distMetroM };
+  const features = {
+    ...f,
+    lat,
+    lng,
+    area_slug: computedAreaSlug ?? (f as { area_slug?: string | null }).area_slug ?? null,
+    dist_to_metro: distMetroM ?? (f as { dist_to_metro?: number | null }).dist_to_metro ?? null,
+  };
 
   // validate/sanitize using Zod schema when available; if validation fails, log and persist raw features
   try {

@@ -109,11 +109,11 @@ export default function DataInsightsSection(props: Props) {
   if (comparableCount >= 4) {
     certain.push(`${comparableCount} comparabile folosite in model.`);
   } else if (props.hasPriceEstimate && comparableCount > 0) {
-    unclear.push(`Doar ${comparableCount} comparabile apropiate — estimare fragila.`);
+    unclear.push(`Doar ${comparableCount} comparabile apropiate - estimare fragila.`);
     pushUnique(moneyHints, "Valideaza pretul manual in zona.");
   } else if (props.hasPriceEstimate) {
     unclear.push("Estimare bazata mai mult pe statistica de zona.");
-    pushUnique(moneyHints, "Cauta 3–4 anunturi echivalente pe strazi apropiate.");
+    pushUnique(moneyHints, "Cauta 3-4 anunturi echivalente pe strazi apropiate.");
   }
 
   if (props.confidenceLevel === "low" && props.hasPriceEstimate) {
@@ -122,11 +122,11 @@ export default function DataInsightsSection(props: Props) {
 
   const sl = props.seismicLevel;
   if (sl === "RS1" || sl === "RsI") {
-    pushUnique(moneyHints, "Clasa RsI — verifica finantare si expertiza.");
+    pushUnique(moneyHints, "Clasa RsI - verifica finantare si expertiza.");
   } else if (sl === "RS2" || sl === "RsII") {
-    pushUnique(moneyHints, "Clasa RsII — confirma structura inainte de oferta.");
+    pushUnique(moneyHints, "Clasa RsII - confirma structura inainte de oferta.");
   } else if (sl === "RS3" || sl === "RsIII") {
-    pushUnique(moneyHints, "RsIII — posibile costuri suplimentare.");
+    pushUnique(moneyHints, "RsIII - posibile costuri suplimentare.");
   }
 
   const completeness = Math.round((certain.length / Math.max(1, certain.length + unclear.length)) * 100);
@@ -139,10 +139,10 @@ export default function DataInsightsSection(props: Props) {
 
   const whatMeans =
     completeness >= 70
-      ? "Majoritatea reperelor esentiale sunt prezente — totusi confirma la fata locului ce e ~ estimat."
+      ? "Majoritatea reperelor esentiale sunt prezente - totusi confirma la fata locului ce e ~ estimat."
       : completeness >= 45
         ? "Lista de neclaritati e lunga: nu te baza doar pe raport pentru oferta fermă."
-        : "Date incomplete — trateaza raportul ca ghid, nu ca verdict final.";
+        : "Date incomplete - trateaza raportul ca ghid, nu ca verdict final.";
 
   return (
     <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
@@ -151,7 +151,7 @@ export default function DataInsightsSection(props: Props) {
           <div>
             <CardTitle className="text-base">Ce stim sigur si ce nu din acest anunt</CardTitle>
             <CardDescription className="mt-1">
-              ✔ = reiese clar din datele extrase. ? = gol sau neclar — merita verificat.
+              ✔ = reiese clar din datele extrase. ? = gol sau neclar - merita verificat.
             </CardDescription>
           </div>
           <span

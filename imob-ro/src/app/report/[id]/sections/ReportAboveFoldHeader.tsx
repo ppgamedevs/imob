@@ -20,7 +20,7 @@ export interface ReportAboveFoldHeaderProps {
 }
 
 /**
- * Layer 1–3: decision header (full width) → Pe scurt → pro / contra.
+ * Layer 1-3: decision header (full width) -> Pe scurt -> pro / contra.
  * Price blocks + score sit below this band (page).
  */
 export default function ReportAboveFoldHeader({

@@ -4,7 +4,7 @@ const primary = {
   icon: BarChart3,
   title: "Preț estimat corect",
   description:
-    "Interval de piață derivat din AVM și tranzacții similare în zonă — reper clar înainte de ofertă sau negociere.",
+    "Interval de piață derivat din AVM și tranzacții similare în zonă - reper clar înainte de ofertă sau negociere.",
 };
 
 const secondary = [
@@ -44,7 +44,7 @@ export function HomeFeatures() {
             Tot ce contează, într-un singur raport
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-gray-600 md:text-[16px]">
-            Nu o listă de funcții — o structură gândită pentru cumpărători care vor să înțeleagă
+            Nu o listă de funcții - o structură gândită pentru cumpărători care vor să înțeleagă
             prețul înainte să se angajeze.
           </p>
         </div>

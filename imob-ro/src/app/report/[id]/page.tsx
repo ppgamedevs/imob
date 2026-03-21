@@ -102,8 +102,9 @@ function isPropertyPhoto(url: string): boolean {
 
 /** Coerce stored JSON photo entries and upgrade CDN thumbnails to larger variants. */
 function normalizeReportPhotoUrl(entry: unknown): string | null {
-  if (typeof entry === "string" && entry.startsWith("http")) {
-    return upgradeListingPhotoUrl(entry);
+  if (typeof entry === "string") {
+    const u = entry.startsWith("//") ? `https:${entry}` : entry;
+    if (u.startsWith("http")) return upgradeListingPhotoUrl(u);
   }
   if (
     entry &&
@@ -111,7 +112,8 @@ function normalizeReportPhotoUrl(entry: unknown): string | null {
     "url" in entry &&
     typeof (entry as { url: unknown }).url === "string"
   ) {
-    const u = (entry as { url: string }).url;
+    let u = (entry as { url: string }).url;
+    if (u.startsWith("//")) u = `https:${u}`;
     if (u.startsWith("http")) return upgradeListingPhotoUrl(u);
   }
   return null;
@@ -806,7 +808,7 @@ export default async function ReportPage({ params }: Props) {
         ? "Pretul poate fi plasat fata de comparabile si intervalul estimat."
         : confidenceData?.level === "medium"
           ? "Pretul este plasabil, dar ramane marja de incertitudine."
-          : "Validarea pretului este limitata — foloseste estimarea conservativ.";
+          : "Validarea pretului este limitata - foloseste estimarea conservativ.";
 
   const riskImpactLine = (() => {
     const lvl = normalizedRiskStack.overallLevel;
@@ -1126,7 +1128,7 @@ export default async function ReportPage({ params }: Props) {
           </div>
         )}
 
-      {/* 1–3 Decision → TLDR → pro/contra; 4 Pret+scor; then risk, harta, costuri, detalii */}
+      {/* 1-3 Decision -> TLDR -> pro/contra; 4 Pret+scor; then risk, harta, costuri, detalii */}
       {extracted && (
         <>
           <div className="mb-12 space-y-8 md:space-y-10">
@@ -1253,8 +1255,8 @@ export default async function ReportPage({ params }: Props) {
                 <CardTitle className="text-base">Comparabile gasite automat in zona</CardTitle>
                 <CardDescription>
                   {comps.length
-                    ? `${comps.length} rezultate · mediana zonei ~ ${compsStats?.median ? `${Math.round(compsStats.median)} EUR/mp` : "—"} (~ estimat)`
-                    : "Lista goala — nu am putut extrage comparabile utile pentru acest punct."}
+                    ? `${comps.length} rezultate · mediana zonei ~ ${compsStats?.median ? `${Math.round(compsStats.median)} EUR/mp` : "-"} (~ estimat)`
+                    : "Lista goala - nu am putut extrage comparabile utile pentru acest punct."}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -1285,12 +1287,12 @@ export default async function ReportPage({ params }: Props) {
                     </p>
                     <p className="text-[13px] text-slate-800">
                       <span className="font-semibold">Ce inseamna pentru tine: </span>
-                      Estimarea de pret din raport are mai putina ancora obiectiva — nu trata intervalul
+                      Estimarea de pret din raport are mai putina ancora obiectiva - nu trata intervalul
                       ca „pret corect”.
                     </p>
                     <p className="text-[13px] text-slate-800">
                       <span className="font-semibold">Pas urmator: </span>
-                      Recomandare: foloseste o evaluare independenta sau cauta manual 3–4 anunturi similare
+                      Recomandare: foloseste o evaluare independenta sau cauta manual 3-4 anunturi similare
                       (aceeasi zona, mp, finisaj).
                     </p>
                   </div>

@@ -84,7 +84,7 @@ export default function AppFooter() {
               <span className="text-[16px] font-bold tracking-tight text-gray-900">ImobIntel</span>
             </Link>
             <p className="mt-4 max-w-[240px] text-[13px] leading-relaxed text-gray-600">
-              Inteligență imobiliară pentru cumpărători și investitori din România — claritate
+              Inteligență imobiliară pentru cumpărători și investitori din România - claritate
               înainte de decizie.
             </p>
             {/* Social icons */}

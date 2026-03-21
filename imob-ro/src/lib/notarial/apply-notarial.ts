@@ -3,15 +3,33 @@ import { prisma } from "@/lib/db";
 import { lookupNotarialGrid } from "./lookup";
 
 export async function applyNotarialToAnalysis(analysisId: string, features: Record<string, unknown>) {
-  const areaM2 = typeof features.areaM2 === "number" ? features.areaM2 : null;
-  if (!areaM2) return null;
+  const areaM2 =
+    typeof features.areaM2 === "number"
+      ? features.areaM2
+      : typeof features.area_m2 === "number"
+        ? features.area_m2
+        : null;
+  if (!areaM2 || areaM2 <= 0) return null;
+
+  const areaSlug =
+    typeof features.areaSlug === "string"
+      ? features.areaSlug
+      : typeof features.area_slug === "string"
+        ? features.area_slug
+        : null;
+  const addressRaw =
+    typeof features.addressRaw === "string"
+      ? features.addressRaw
+      : typeof features.address_raw === "string"
+        ? features.address_raw
+        : null;
 
   const result = await lookupNotarialGrid({
     areaM2,
     sector: typeof features.sector === "number" ? features.sector : null,
     neighborhood: typeof features.neighborhood === "string" ? features.neighborhood : null,
-    areaSlug: typeof features.areaSlug === "string" ? features.areaSlug : (typeof features.area_slug === "string" ? features.area_slug : null),
-    addressRaw: typeof features.addressRaw === "string" ? features.addressRaw : null,
+    areaSlug,
+    addressRaw,
     propertyType: "apartment",
   });
 

@@ -64,7 +64,7 @@ export default function TransportSection({
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Cum arata accesul si transportul?</CardTitle>
           <CardDescription>
-            Date lipsa — nu am putut ancora punctul pe harta pentru statii reale.
+            Date lipsa - nu am putut ancora punctul pe harta pentru statii reale.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
@@ -88,10 +88,10 @@ export default function TransportSection({
 
   const accessMeans =
     transitScore >= 60
-      ? "Acces relativ bun la statii — util pentru naveta fara masina."
+      ? "Acces relativ bun la statii - util pentru naveta fara masina."
       : transitScore >= 35
-        ? "Acces moderat — unele rute pot necesita mai mult timp sau schimbari."
-        : "Acces slab la transport in comun in raza analizata — verifica nevoia de masina.";
+        ? "Acces moderat - unele rute pot necesita mai mult timp sau schimbari."
+        : "Acces slab la transport in comun in raza analizata - verifica nevoia de masina.";
 
   return (
     <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
@@ -217,7 +217,7 @@ export default function TransportSection({
         />
 
         <p className="text-[10px] text-muted-foreground border-t border-slate-100 pt-2">
-          ~5 km/h presupus pentru mers pe jos. {locationInferred ? "Locatie inferata din titlu — distantele pot varia." : ""}
+          ~5 km/h presupus pentru mers pe jos. {locationInferred ? "Locatie inferata din titlu - distantele pot varia." : ""}
         </p>
       </CardContent>
     </Card>

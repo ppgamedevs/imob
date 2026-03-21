@@ -95,7 +95,7 @@ function zoneGapSummaryLine(flags: string[]): string {
   if (/parc|verde|linist/i.test(blob)) {
     return "Impact: confort locuire si agrement in zona.";
   }
-  return "Context despre ce lipseste in proximitate — nu inseamna automat „zona rea”.";
+  return "Context despre ce lipseste in proximitate - nu inseamna automat „zona rea”.";
 }
 
 const SEVERITY_BADGE: Record<
@@ -149,9 +149,13 @@ function ZoneGapsPanel({
           </li>
         ))}
       </ul>
+      <p className="mt-2 text-[11px] leading-snug text-slate-500">
+        Sursa punctelor de interes: OpenStreetMap. Unele locatii (magazine mici, scoli private etc.) pot
+        lipsi din harta chiar daca exista in zona.
+      </p>
       <p className="mt-3 text-[12px] text-slate-700">
         <span className="font-semibold">Pas urmator: </span>
-        Plimba-te 10–15 min in jur ca sa simti lipsurile in viata reala (nu doar pe harta).
+        Plimba-te 10-15 min in jur ca sa simti lipsurile in viata reala (nu doar pe harta).
       </p>
     </div>
   );
@@ -217,7 +221,7 @@ export default function IntelScoreCards({ intel, loading }: Props) {
         })}
       </div>
 
-      {/* Zone gaps — informative, not error-state */}
+      {/* Zone gaps - informative, not error-state */}
       {intel.redFlags.length > 0 && (
         <ZoneGapsPanel redFlags={intel.redFlags} familyScore={intel.scores.family.value} />
       )}

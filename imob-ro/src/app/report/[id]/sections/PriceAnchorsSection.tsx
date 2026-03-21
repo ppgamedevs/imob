@@ -104,7 +104,7 @@ export default function PriceAnchorsSection({
           <div>
             <CardTitle className="text-base">Unde se pozitioneaza pretul?</CardTitle>
             <CardDescription className="mt-1 max-w-prose">
-              ~ = estimat din model. ✔ = din anunt sau reper fiscal. Nu e pret „corect” unic — e un
+              ~ = estimat din model. ✔ = din anunt sau reper fiscal. Nu e pret „corect” unic - e un
               reper pentru decizie.
             </CardDescription>
           </div>
@@ -137,8 +137,8 @@ export default function PriceAnchorsSection({
               </div>
               <SectionTrustFooter
                 className="mt-3 bg-white/80"
-                whatThisMeans="Fara estimare, nu stii daca listarea e la piata sau nu — nu te baza doar pe pretul din anunt."
-                nextStep="Recomandare: foloseste o evaluare independenta sau 3–4 anunturi comparabile verificate manual."
+                whatThisMeans="Fara estimare, nu stii daca listarea e la piata sau nu - nu te baza doar pe pretul din anunt."
+                nextStep="Recomandare: foloseste o evaluare independenta sau 3-4 anunturi comparabile verificate manual."
               />
             </div>
 

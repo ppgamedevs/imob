@@ -317,6 +317,7 @@ function computeWalkability(
 
 function computeRedFlags(
   poisByCategory: Record<PoiCategoryKey, OverpassPoi[]>,
+  dims: { convenience: number; family: number; walkability: number },
 ): string[] {
   const flags: string[] = [];
 
@@ -326,21 +327,31 @@ function computeRedFlags(
   const transport = poisByCategory.transport ?? [];
   const medical = poisByCategory.medical ?? [];
 
-  if (countWithin(shops, 1000) === 0)
-    flags.push("0 magazine/farmacii in 1 km");
-  if (countWithin(transport, 800) === 0)
+  // Only surface "gaps" when the related dimension score is weak, to avoid false alarms
+  // (OSM coverage varies; metro may exist but not be tagged as a bus_stop node nearby).
+  if (countWithin(shops, 1200) === 0 && dims.convenience < 48) {
+    flags.push(
+      "Magazine/farmacii: nu apar mapate in OpenStreetMap in 1.2 km (uneori lipsesc din harta - verifica la fata locului).",
+    );
+  }
+  if (countWithin(transport, 800) === 0) {
     flags.push("0 statii de transport in 800m");
-  if (countWithin(schools, 1500) === 0)
-    flags.push("0 scoli/gradinite in 1.5 km");
-  if (countWithin(parks, 1000) === 0)
-    flags.push("0 parcuri in 1 km");
-  if (countWithin(medical, 2000) === 0)
-    flags.push("0 unitati medicale in 2 km");
-
-  // Pharmacy specifically
-  const pharmacies = shops.filter((p) => p.subType === "pharmacy");
-  if (countWithin(pharmacies, 800) === 0 && countWithin(shops, 800) > 0)
-    flags.push("0 farmacii in 800m");
+  }
+  if (countWithin(schools, 2000) === 0 && dims.family < 52) {
+    flags.push(
+      "Scoli/gradinite: nu apar mapate in OpenStreetMap in 2 km (poate exista nemapate - confirma la fata locului).",
+    );
+  }
+  if (countWithin(parks, 1200) === 0 && dims.family < 45 && dims.walkability < 55) {
+    flags.push(
+      "Parcuri/spatii verzi: nu apar mapate in OpenStreetMap in 1.2 km (uneori sunt sub-etichetate).",
+    );
+  }
+  if (countWithin(medical, 2500) === 0 && dims.convenience < 42) {
+    flags.push(
+      "Unitati medicale: nu apar mapate in OpenStreetMap in 2.5 km (clinici mici pot lipsi din OSM).",
+    );
+  }
 
   return flags;
 }
@@ -354,7 +365,11 @@ export function computeIntelScores(
   const fam = computeFamily(poisByCategory);
   const night = computeNightlifeRisk(poisByCategory);
   const walk = computeWalkability(poisByCategory);
-  const redFlags = computeRedFlags(poisByCategory);
+  const redFlags = computeRedFlags(poisByCategory, {
+    convenience: conv.score,
+    family: fam.score,
+    walkability: walk.score,
+  });
 
   return {
     scores: {

@@ -127,7 +127,7 @@ function EurM2Distribution({
           )}
           {q1 != null && q3 != null && (
             <span className="inline-flex items-center gap-1">
-              <span className="inline-block h-1.5 w-3 rounded bg-blue-400/40 border border-blue-400/60" /> Q1–Q3
+              <span className="inline-block h-1.5 w-3 rounded bg-blue-400/40 border border-blue-400/60" /> Q1-Q3
             </span>
           )}
         </div>

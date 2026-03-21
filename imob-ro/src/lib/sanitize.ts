@@ -147,7 +147,9 @@ export async function sanitizeAddress(address: string): Promise<string> {
  * ```
  */
 export function sanitizeURL(url: string): string {
-  const trimmed = url.trim();
+  let trimmed = url.trim();
+  // Protocol-relative CDN URLs (common on listing sites) -> absolute https
+  if (trimmed.startsWith("//")) trimmed = `https:${trimmed}`;
 
   // Block dangerous protocols
   if (
@@ -203,8 +205,18 @@ export async function sanitizeListing<T extends Record<string, any>>(listing: T)
   }
   if (Array.isArray(sanitized.photos)) {
     sanitized.photos = sanitized.photos
-      .map((url: string) => {
-        const clean = sanitizeURL(url);
+      .map((entry: unknown) => {
+        const raw =
+          typeof entry === "string"
+            ? entry
+            : entry &&
+                typeof entry === "object" &&
+                "url" in entry &&
+                typeof (entry as { url: unknown }).url === "string"
+              ? (entry as { url: string }).url
+              : "";
+        if (!raw) return "";
+        const clean = sanitizeURL(raw);
         return clean ? upgradeListingPhotoUrl(clean) : "";
       })
       .filter(Boolean);

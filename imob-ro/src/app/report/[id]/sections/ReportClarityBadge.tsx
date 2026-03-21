@@ -41,7 +41,7 @@ export default function ReportClarityBadge({ kind, className }: Props) {
         kind === "confirmed"
           ? "Din anunt, sursa publica declarata sau reper fiscal."
           : kind === "estimated"
-            ? "Model sau proxy — poate diferi de realitate."
+            ? "Model sau proxy - poate diferi de realitate."
             : "Nu avem date suficiente in acest moment."
       }
     >

@@ -120,11 +120,11 @@ function labelFor(score: number): ScoreLabel {
 
 /** One-line buyer-facing interpretation (not just the label word). */
 const LABEL_INTERPRETATION: Record<ScoreLabel, string> = {
-  Excelent: "Profil foarte bun pe criteriile noastre — verifica totusi contractul si starea reala.",
+  Excelent: "Profil foarte bun pe criteriile noastre - verifica totusi contractul si starea reala.",
   Bun: "Profil solid; decizia depinde de buget si de ce gasesti la vizionare.",
-  OK: "Acceptabil, dar nu e o oportunitate clara — compara si negociaza.",
+  OK: "Acceptabil, dar nu e o oportunitate clara - compara si negociaza.",
   Atentie: "Semnale mixte; merita verificari inainte de o oferta fermă.",
-  Evita: "Profil slab pe datele actuale — risc sau pret dezechilibrat.",
+  Evita: "Profil slab pe datele actuale - risc sau pret dezechilibrat.",
 };
 
 // ---------------------------------------------------------------------------
@@ -193,7 +193,7 @@ function CompactScore({ data, scoreLabel }: { data: ApartmentScore; scoreLabel: 
 }
 
 // ---------------------------------------------------------------------------
-// Report header variant (above the fold — score + bars only, no pro/con/actions)
+// Report header variant (above the fold - score + bars only, no pro/con/actions)
 // ---------------------------------------------------------------------------
 
 function ReportHeaderScore({

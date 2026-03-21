@@ -9,7 +9,7 @@ const blocks = [
   {
     icon: GitCompareArrows,
     title: "Comparabile reale din zonă",
-    text: "Proprietăți apropiate ca suprafață, camere și zonă — nu agregări vagi.",
+    text: "Proprietăți apropiate ca suprafață, camere și zonă - nu agregări vagi.",
   },
   {
     icon: Activity,
@@ -19,7 +19,7 @@ const blocks = [
   {
     icon: ShieldAlert,
     title: "Riscuri care pot afecta decizia",
-    text: "De la seismic la semnale de piață — context, nu alarmism.",
+    text: "De la seismic la semnale de piață - context, nu alarmism.",
   },
 ] as const;
 

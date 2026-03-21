@@ -148,7 +148,7 @@ export default function AcquisitionCostsSection({
     rows.push({
       label: "Comision agentie cumparator",
       range: `${fmt(commLow)} - ${fmt(commHigh)} EUR`,
-      note: `Estimat ${commissionPctLow}–${commissionPctHigh}% din ${fmt(priceEur)} EUR`,
+      note: `Estimat ${commissionPctLow}-${commissionPctHigh}% din ${fmt(priceEur)} EUR`,
     });
   } else {
     rows.push({
@@ -164,7 +164,7 @@ export default function AcquisitionCostsSection({
       <CardHeader className="pb-2">
         <CardTitle className="text-base">Ce costuri sa iei in calcul?</CardTitle>
         <CardDescription>
-          Simulare ~ estimativa la {fmt(priceEur)} EUR{hasPlusTVA ? " + TVA" : ""} — notarul stabileste
+          Simulare ~ estimativa la {fmt(priceEur)} EUR{hasPlusTVA ? " + TVA" : ""} - notarul stabileste
           sumele finale.
         </CardDescription>
       </CardHeader>
@@ -227,7 +227,7 @@ export default function AcquisitionCostsSection({
                 <div className="text-sm font-medium text-amber-900">Comision neclarificat</div>
                 <p className="text-[11px] text-amber-800 mt-1 leading-relaxed">
                   Anuntul nu specifica daca exista comision pentru cumparator. In Romania, comisionul
-                  standard este de 1–3% din pretul proprietatii. Intrebati explicit agentia inainte de
+                  standard este de 1-3% din pretul proprietatii. Intrebati explicit agentia inainte de
                   vizionare pentru a evita costuri neasteptate. Comisionul este negociabil.
                 </p>
               </div>
@@ -282,13 +282,13 @@ export default function AcquisitionCostsSection({
         <div className="rounded-lg bg-blue-50/50 p-3 ring-1 ring-blue-100/80 space-y-1">
           <div className="text-sm font-medium text-blue-900">Acte si notar</div>
           <p className="text-[11px] text-blue-800">
-            Avocat / notar inainte de semnare — buget orientativ {fmt(costs.specialistLow)}–
+            Avocat / notar inainte de semnare - buget orientativ {fmt(costs.specialistLow)}-
             {fmt(costs.specialistHigh)} EUR.
           </p>
         </div>
 
         <SectionTrustFooter
-          whatThisMeans="Totalul de mai sus nu include comisionul daca e neclar — nu trata suma ca factura finala."
+          whatThisMeans="Totalul de mai sus nu include comisionul daca e neclar - nu trata suma ca factura finala."
           nextStep={
             commissionStatus === "unknown"
               ? "Confirma explicit cu agentul: procent comision, cine plateste, si daca e inclus TVA."
