@@ -72,9 +72,9 @@ const socialLinks = [
 
 export default function AppFooter() {
   return (
-    <footer className="border-t border-gray-100 bg-white">
-      <div className="mx-auto max-w-[1200px] px-5 py-14 md:py-16">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-5 md:gap-10">
+    <footer className="border-t border-gray-200/90 bg-gray-50/40">
+      <div className="mx-auto max-w-[1200px] px-5 py-16 md:py-20">
+        <div className="grid grid-cols-2 gap-10 md:grid-cols-5 md:gap-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2">
@@ -83,8 +83,9 @@ export default function AppFooter() {
               </span>
               <span className="text-[16px] font-bold tracking-tight text-gray-900">ImobIntel</span>
             </Link>
-            <p className="mt-3 max-w-[220px] text-[13px] leading-relaxed text-gray-500">
-              Platforma de analiza imobiliara pentru cumparatori si investitori din Romania.
+            <p className="mt-4 max-w-[240px] text-[13px] leading-relaxed text-gray-600">
+              Inteligență imobiliară pentru cumpărători și investitori din România — claritate
+              înainte de decizie.
             </p>
             {/* Social icons */}
             <div className="mt-5 flex flex-wrap items-center gap-2.5">
@@ -105,10 +106,10 @@ export default function AppFooter() {
 
           {/* Produs */}
           <div>
-            <h4 className="text-[12px] font-semibold uppercase tracking-wider text-gray-400">
+            <h4 className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500">
               Produs
             </h4>
-            <ul className="mt-4 space-y-2.5">
+            <ul className="mt-5 space-y-3">
               {productLinks.map((l) => (
                 <li key={l.href}>
                   <Link
@@ -124,10 +125,10 @@ export default function AppFooter() {
 
           {/* Companie */}
           <div>
-            <h4 className="text-[12px] font-semibold uppercase tracking-wider text-gray-400">
+            <h4 className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500">
               Companie
             </h4>
-            <ul className="mt-4 space-y-2.5">
+            <ul className="mt-5 space-y-3">
               {companyLinks.map((l) => (
                 <li key={l.href}>
                   <Link
@@ -143,10 +144,10 @@ export default function AppFooter() {
 
           {/* Legal */}
           <div>
-            <h4 className="text-[12px] font-semibold uppercase tracking-wider text-gray-400">
+            <h4 className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500">
               Legal
             </h4>
-            <ul className="mt-4 space-y-2.5">
+            <ul className="mt-5 space-y-3">
               {legalLinks.map((l) => (
                 <li key={l.href}>
                   <Link
@@ -162,10 +163,10 @@ export default function AppFooter() {
 
           {/* Contact */}
           <div>
-            <h4 className="text-[12px] font-semibold uppercase tracking-wider text-gray-400">
+            <h4 className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500">
               Contact
             </h4>
-            <ul className="mt-4 space-y-2.5">
+            <ul className="mt-5 space-y-3">
               <li>
                 <a
                   href="mailto:contact@imobintel.ro"
@@ -175,7 +176,10 @@ export default function AppFooter() {
                 </a>
               </li>
               <li>
-                <Link href="/contact" className="text-[13px] text-gray-600 hover:text-gray-900 transition-colors">
+                <Link
+                  href="/contact"
+                  className="text-[13px] text-gray-600 hover:text-gray-900 transition-colors"
+                >
                   Formular contact
                 </Link>
               </li>
@@ -184,7 +188,7 @@ export default function AppFooter() {
         </div>
 
         {/* ANPC / SOL badges */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+        <div className="mt-14 flex flex-wrap items-center justify-center gap-4">
           <a
             href="https://anpc.ro/ce-este-sal/"
             target="_blank"
@@ -195,7 +199,9 @@ export default function AppFooter() {
               ANPC
             </span>
             <span className="leading-tight">
-              <span className="block font-semibold text-gray-900 text-[12px]">Solutionarea alternativa</span>
+              <span className="block font-semibold text-gray-900 text-[12px]">
+                Solutionarea alternativa
+              </span>
               a litigiilor
             </span>
           </a>
@@ -209,14 +215,16 @@ export default function AppFooter() {
               SOL
             </span>
             <span className="leading-tight">
-              <span className="block font-semibold text-gray-900 text-[12px]">Solutionarea online</span>
+              <span className="block font-semibold text-gray-900 text-[12px]">
+                Solutionarea online
+              </span>
               a litigiilor
             </span>
           </a>
         </div>
 
         {/* Bottom bar */}
-        <div className="mt-8 border-t border-gray-100 pt-8">
+        <div className="mt-12 border-t border-gray-200/90 pt-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex flex-col sm:flex-row items-center gap-2 text-[12px] text-gray-400">
               <span>Copyright &copy; {new Date().getFullYear()} OnlyTips SRL</span>

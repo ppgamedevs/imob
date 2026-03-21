@@ -6,6 +6,11 @@
 import * as cheerio from "cheerio";
 import { XMLParser } from "fast-xml-parser";
 
+import {
+  pickLargestSrcsetUrl,
+  upgradeListingPhotoUrl,
+} from "@/lib/media/upgrade-listing-photo-url";
+
 import type { DiscoverResult, SourceAdapter } from "../types";
 
 export const adapterStoria: SourceAdapter = {
@@ -59,8 +64,8 @@ export const adapterStoria: SourceAdapter = {
     const title =
       nextData?.ad?.title ??
       ($('h1[data-cy="adPageAdTitle"]').text().trim() ||
-      $("h1").first().text().trim() ||
-      $("title").text().split("|")[0]?.trim());
+        $("h1").first().text().trim() ||
+        $("title").text().split("|")[0]?.trim());
 
     // Price
     let price: number | undefined;
@@ -69,9 +74,7 @@ export const adapterStoria: SourceAdapter = {
       price = parseInt(String(nextData.ad.target.Price).replace(/\D/g, ""));
     }
     if (!price) {
-      const priceText =
-        $('[data-cy="adPageHeaderPrice"]').text() ||
-        $(".offer-price").text();
+      const priceText = $('[data-cy="adPageHeaderPrice"]').text() || $(".offer-price").text();
       const match = priceText?.match(/[\d\s,.]+/);
       if (match) price = parseInt(match[0].replace(/[\s,.]/g, ""));
       if (priceText?.includes("lei") || priceText?.includes("RON")) currency = "RON";
@@ -131,7 +134,10 @@ export const adapterStoria: SourceAdapter = {
     }
 
     // Floor - also try total floors for "X/Y" format
-    const ndTotalFloors = chars["building_floors_num"] ?? chars["number_of_floors"] ?? nextData?.ad?.target?.Building_floors_num;
+    const ndTotalFloors =
+      chars["building_floors_num"] ??
+      chars["number_of_floors"] ??
+      nextData?.ad?.target?.Building_floors_num;
     if (floorRaw && ndTotalFloors) {
       const total = String(ndTotalFloors).match(/(\d+)/);
       if (total && !floorRaw.includes("/")) {
@@ -144,7 +150,10 @@ export const adapterStoria: SourceAdapter = {
     }
 
     // Description (extract early so address fallback can use it)
-    const description: string | undefined = nextData?.ad?.description ?? $('section[data-cy="adDescription"] div').text().trim() ?? undefined;
+    const description: string | undefined =
+      nextData?.ad?.description ??
+      $('section[data-cy="adDescription"] div').text().trim() ??
+      undefined;
 
     // Address
     let addressRaw =
@@ -156,7 +165,7 @@ export const adapterStoria: SourceAdapter = {
     // Fallback: extract address from description using Romanian street patterns
     if (!addressRaw && description) {
       const addrMatch = description.match(
-        /(?:pe\s+|pe\s+strada\s+|str\.?\s+|strada\s+|in\s+zona\s+|bulevardul\s+|bd\.?\s+|calea\s+|aleea\s+|soseaua\s+|sos\.?\s+|intrarea\s+|drumul\s+|piata\s+|splaiul\s+)([A-ZÀ-Ž][A-Za-zÀ-ž\s.-]{3,50})/i
+        /(?:pe\s+|pe\s+strada\s+|str\.?\s+|strada\s+|in\s+zona\s+|bulevardul\s+|bd\.?\s+|calea\s+|aleea\s+|soseaua\s+|sos\.?\s+|intrarea\s+|drumul\s+|piata\s+|splaiul\s+)([A-ZÀ-Ž][A-Za-zÀ-ž\s.-]{3,50})/i,
       );
       if (addrMatch) {
         const street = addrMatch[0].trim();
@@ -169,7 +178,8 @@ export const adapterStoria: SourceAdapter = {
       const sectorMatch = title.match(/sector(?:ul)?\s*(\d)/i);
       const zoneMatch = title.match(/(?:zona|cartier(?:ul)?)\s+([A-ZÀ-Ž][A-Za-zÀ-ž\s.-]{3,30})/i);
       // Known neighborhoods often appear directly in the title
-      const KNOWN_AREAS = /\b(Militari|Drumul Taberei|Crangasi|Rahova|Berceni|Titan|Colentina|Pantelimon|Floreasca|Dorobanti|Pipera|Tineretului|Dristor|Iancului|Obor|Cotroceni|Lujerului|Victoriei|Unirii|Romana|Giulesti|Baneasa|Herastrau|Primaverii|Domenii|13 Septembrie|Sebastian|Ferentari|Giurgiului|Vitan|Mihai Bravu|Decebal|Alba Iulia|Popesti Leordeni|Voluntari|Chiajna|Bragadiru)\b/i;
+      const KNOWN_AREAS =
+        /\b(Militari|Drumul Taberei|Crangasi|Rahova|Berceni|Titan|Colentina|Pantelimon|Floreasca|Dorobanti|Pipera|Tineretului|Dristor|Iancului|Obor|Cotroceni|Lujerului|Victoriei|Unirii|Romana|Giulesti|Baneasa|Herastrau|Primaverii|Domenii|13 Septembrie|Sebastian|Ferentari|Giurgiului|Vitan|Mihai Bravu|Decebal|Alba Iulia|Popesti Leordeni|Voluntari|Chiajna|Bragadiru)\b/i;
       const areaMatch = title.match(KNOWN_AREAS);
       if (sectorMatch) addressRaw = `Sector ${sectorMatch[1]}, Bucuresti`;
       else if (zoneMatch) addressRaw = zoneMatch[1].trim() + ", Bucuresti";
@@ -178,18 +188,21 @@ export const adapterStoria: SourceAdapter = {
 
     // Photos
     const photos: string[] = [];
-    $('img[src*="img.storia"], img[src*="statics.storia"], picture img, [data-cy="adPageGallery"] img, .swiper-slide img').each((_, el) => {
+    $(
+      'img[src*="img.storia"], img[src*="statics.storia"], picture img, [data-cy="adPageGallery"] img, .swiper-slide img',
+    ).each((_, el) => {
       const src = $(el).attr("src") || $(el).attr("data-src");
-      if (src && !src.includes("placeholder") && !src.includes("thumbnail") && src.startsWith("http")) {
+      if (
+        src &&
+        !src.includes("placeholder") &&
+        !src.includes("thumbnail") &&
+        src.startsWith("http")
+      ) {
         const srcset = $(el).attr("srcset");
-        if (srcset) {
-          const largest = srcset.split(",").pop()?.trim().split(" ")[0];
-          if (largest?.startsWith("http")) {
-            photos.push(largest);
-            return;
-          }
-        }
-        photos.push(src);
+        const fromSet = pickLargestSrcsetUrl(srcset);
+        const raw = fromSet ?? src;
+        photos.push(upgradeListingPhotoUrl(raw));
+        return;
       }
     });
 
@@ -203,7 +216,9 @@ export const adapterStoria: SourceAdapter = {
           lat = parseFloat(json.geo.latitude);
           lng = parseFloat(json.geo.longitude);
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     });
 
     // Geocode from __NEXT_DATA__
@@ -260,7 +275,7 @@ export const adapterStoria: SourceAdapter = {
  */
 function parseNextData($: cheerio.CheerioAPI): any | null {
   try {
-    const script = $('script#__NEXT_DATA__').html();
+    const script = $("script#__NEXT_DATA__").html();
     if (!script) return null;
     const parsed = JSON.parse(script);
     return parsed?.props?.pageProps ?? null;
@@ -277,8 +292,7 @@ function buildCharacteristicsMap(nd: any): Record<string, string> {
   const map: Record<string, string> = {};
   if (!nd?.ad) return map;
 
-  const chars: any[] =
-    nd.ad.characteristics ?? nd.ad.features ?? nd.ad.params ?? [];
+  const chars: any[] = nd.ad.characteristics ?? nd.ad.features ?? nd.ad.params ?? [];
   for (const c of chars) {
     const key = (c.key ?? c.code ?? c.name ?? "").toLowerCase();
     const val = c.localizedValue ?? c.value ?? c.label ?? "";
@@ -315,8 +329,12 @@ function findLabelValue($: cheerio.CheerioAPI, labelFragment: string): string | 
     if (result) return;
     const node = $(el);
     // Only check direct text (not deep subtree) to avoid matching wrapper divs
-    const ownText = node.contents().filter((_, c) => c.type === "text")
-      .text().trim().toLowerCase();
+    const ownText = node
+      .contents()
+      .filter((_, c) => c.type === "text")
+      .text()
+      .trim()
+      .toLowerCase();
     if (!ownText.includes(lf)) return;
     // The value is typically in the next sibling or a child <span>/<dd>
     const sibling = node.next().text().trim();
@@ -346,7 +364,8 @@ function sanitizeShortField(val?: string | null): string | undefined {
   const trimmed = val.trim();
   if (!trimmed) return undefined;
   if (trimmed.length > 50) return undefined;
-  if (trimmed.startsWith("{") || trimmed.startsWith("[") || trimmed.startsWith("<")) return undefined;
+  if (trimmed.startsWith("{") || trimmed.startsWith("[") || trimmed.startsWith("<"))
+    return undefined;
   return trimmed;
 }
 

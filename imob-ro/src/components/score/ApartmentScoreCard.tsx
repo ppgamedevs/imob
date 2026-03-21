@@ -118,6 +118,15 @@ function labelFor(score: number): ScoreLabel {
   return "Evita";
 }
 
+/** One-line buyer-facing interpretation (not just the label word). */
+const LABEL_INTERPRETATION: Record<ScoreLabel, string> = {
+  Excelent: "Profil foarte bun pe criteriile noastre — verifica totusi contractul si starea reala.",
+  Bun: "Profil solid; decizia depinde de buget si de ce gasesti la vizionare.",
+  OK: "Acceptabil, dar nu e o oportunitate clara — compara si negociaza.",
+  Atentie: "Semnale mixte; merita verificari inainte de o oferta fermă.",
+  Evita: "Profil slab pe datele actuale — risc sau pret dezechilibrat.",
+};
+
 // ---------------------------------------------------------------------------
 // Sub-score bar
 // ---------------------------------------------------------------------------
@@ -180,6 +189,49 @@ function CompactScore({ data, scoreLabel }: { data: ApartmentScore; scoreLabel: 
         </p>
       </TooltipContent>
     </Tooltip>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Report header variant (above the fold — score + bars only, no pro/con/actions)
+// ---------------------------------------------------------------------------
+
+function ReportHeaderScore({
+  data,
+  scoreLabel,
+}: {
+  data: ApartmentScore;
+  scoreLabel: string;
+}) {
+  const cfg = LABEL_CONFIG[data.label];
+  const interpretation = LABEL_INTERPRETATION[data.label];
+
+  return (
+    <div
+      className={`h-full flex flex-col rounded-2xl border border-gray-200/90 bg-white shadow-md shadow-gray-200/40 ring-1 ring-black/[0.04] overflow-hidden`}
+    >
+      <div className="px-5 py-5 flex flex-col sm:flex-row sm:items-center gap-4 border-b border-gray-100">
+        <ScoreRing score={data.score} size={88} />
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-gray-500">
+            {scoreLabel}
+          </p>
+          <p className={`mt-1 text-2xl font-extrabold tracking-tight tabular-nums ${cfg.text}`}>
+            {data.score}
+            <span className="text-lg font-bold text-gray-400">/100</span>
+          </p>
+          <p className="text-[11px] font-semibold text-gray-800 mt-0.5">{data.label}</p>
+        </div>
+      </div>
+      <p className="px-5 py-3 text-[13px] leading-snug text-gray-600 border-b border-gray-100 bg-gray-50/50">
+        {interpretation}
+      </p>
+      <div className="px-5 py-4 space-y-3 flex-1">
+        {(["value", "risk", "liquidity", "lifestyle"] as const).map((key) => (
+          <SubScoreBar key={key} id={key} value={data.subscores[key]} />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -264,7 +316,7 @@ function FullScore({ data, showActions = true, scoreLabel }: { data: ApartmentSc
 
 interface ApartmentScoreCardProps {
   score: ApartmentScore;
-  variant?: "compact" | "full";
+  variant?: "compact" | "full" | "reportHeader";
   showActions?: boolean;
   scoreLabel?: string;
 }
@@ -276,5 +328,6 @@ export default function ApartmentScoreCard({
   scoreLabel = "Scor apartament",
 }: ApartmentScoreCardProps) {
   if (variant === "compact") return <CompactScore data={score} scoreLabel={scoreLabel} />;
+  if (variant === "reportHeader") return <ReportHeaderScore data={score} scoreLabel={scoreLabel} />;
   return <FullScore data={score} showActions={showActions} scoreLabel={scoreLabel} />;
 }

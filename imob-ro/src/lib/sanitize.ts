@@ -1,3 +1,5 @@
+import { upgradeListingPhotoUrl } from "@/lib/media/upgrade-listing-photo-url";
+
 // Lazy load DOMPurify to avoid bundling browser code during build
 let DOMPurify: any = null;
 async function getDOMPurify() {
@@ -200,7 +202,12 @@ export async function sanitizeListing<T extends Record<string, any>>(listing: T)
     sanitized.sourceUrl = sanitizeURL(sanitized.sourceUrl);
   }
   if (Array.isArray(sanitized.photos)) {
-    sanitized.photos = sanitized.photos.map((url: string) => sanitizeURL(url)).filter(Boolean);
+    sanitized.photos = sanitized.photos
+      .map((url: string) => {
+        const clean = sanitizeURL(url);
+        return clean ? upgradeListingPhotoUrl(clean) : "";
+      })
+      .filter(Boolean);
   }
 
   return sanitized;

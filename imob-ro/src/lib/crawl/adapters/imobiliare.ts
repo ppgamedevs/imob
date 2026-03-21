@@ -6,6 +6,11 @@
 import * as cheerio from "cheerio";
 import { XMLParser } from "fast-xml-parser";
 
+import {
+  pickLargestSrcsetUrl,
+  upgradeListingPhotoUrl,
+} from "@/lib/media/upgrade-listing-photo-url";
+
 import type { DiscoverResult, SourceAdapter } from "../types";
 
 function findSpecText($: cheerio.CheerioAPI, label: string): string | undefined {
@@ -26,7 +31,10 @@ function findSpecText($: cheerio.CheerioAPI, label: string): string | undefined 
   });
 
   if (!result) {
-    const re = new RegExp(label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[:\\s]+([^<\\n]{1,80})", "i");
+    const re = new RegExp(
+      label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "[:\\s]+([^<\\n]{1,80})",
+      "i",
+    );
     const raw = $.html();
     const m = raw.match(re);
     if (m) result = m[1].trim();
@@ -119,11 +127,15 @@ export const adapterImobiliare: SourceAdapter = {
 
     // --- TVA / +TVA detection ---
     let plusTVA = false;
-    const priceAreaHtml = $('[itemprop="price"]').closest("div, span, h1, h2, h3, section").html() ?? "";
+    const priceAreaHtml =
+      $('[itemprop="price"]').closest("div, span, h1, h2, h3, section").html() ?? "";
     if (/\+\s*TVA/i.test(priceAreaHtml) || /\+\s*TVA/i.test(rawHtml.slice(0, 4000))) {
       plusTVA = true;
     }
-    if (!plusTVA && /(?:pre[tț]ul?\s+(?:afisat\s+)?nu\s+include|fara|f[aă]r[aă])\s+TVA/i.test(rawHtml)) {
+    if (
+      !plusTVA &&
+      /(?:pre[tț]ul?\s+(?:afisat\s+)?nu\s+include|fara|f[aă]r[aă])\s+TVA/i.test(rawHtml)
+    ) {
       plusTVA = true;
     }
     if (!plusTVA && /TVA\s+inclus/i.test(rawHtml)) {
@@ -133,7 +145,10 @@ export const adapterImobiliare: SourceAdapter = {
     // --- Suprafata ---
     let areaM2: number | undefined;
 
-    const suputilaText = findSpecText($, "Suprafață utilă") || findSpecText($, "Sup. utilă") || findSpecText($, "Suprafata utila");
+    const suputilaText =
+      findSpecText($, "Suprafață utilă") ||
+      findSpecText($, "Sup. utilă") ||
+      findSpecText($, "Suprafata utila");
     if (suputilaText) {
       const m = suputilaText.match(/(\d+)/);
       if (m) areaM2 = parseInt(m[1], 10);
@@ -154,14 +169,18 @@ export const adapterImobiliare: SourceAdapter = {
       ];
       for (const pat of areaPatterns) {
         const m = rawHtml.match(pat);
-        if (m) { areaM2 = parseInt(m[1], 10); break; }
+        if (m) {
+          areaM2 = parseInt(m[1], 10);
+          break;
+        }
       }
     }
 
     // --- Rooms ---
     let rooms: number | undefined;
 
-    const roomsText = findSpecText($, "Nr. cam") || findSpecText($, "Număr camere") || findSpecText($, "camere");
+    const roomsText =
+      findSpecText($, "Nr. cam") || findSpecText($, "Număr camere") || findSpecText($, "camere");
     if (roomsText) {
       const m = roomsText.match(/(\d+)/);
       if (m) rooms = parseInt(m[1], 10);
@@ -208,10 +227,10 @@ export const adapterImobiliare: SourceAdapter = {
     function cleanAddress(raw: string | undefined): string | undefined {
       if (!raw) return undefined;
       let addr = raw
-        .replace(/\s*pre[tț]\s+[\d.,]+\s*€?.*/i, "")  // strip "preț 124.000 € + TVA..."
-        .replace(/\s*\|.*$/g, "")                        // strip "| Imobiliare.ro"
-        .replace(/\s*\+\s*TVA.*/i, "")                   // strip "+ TVA" leftovers
-        .replace(/\s*€.*/g, "")                           // strip "€ ..." leftovers
+        .replace(/\s*pre[tț]\s+[\d.,]+\s*€?.*/i, "") // strip "preț 124.000 € + TVA..."
+        .replace(/\s*\|.*$/g, "") // strip "| Imobiliare.ro"
+        .replace(/\s*\+\s*TVA.*/i, "") // strip "+ TVA" leftovers
+        .replace(/\s*€.*/g, "") // strip "€ ..." leftovers
         .replace(/\s{2,}/g, " ")
         .trim();
       if (addr.length < 3 || addr.length > 200) return undefined;
@@ -220,88 +239,87 @@ export const adapterImobiliare: SourceAdapter = {
 
     const addressRaw = cleanAddress(
       $('[itemprop="address"]').text().trim() ||
-      $('meta[property="og:street-address"]').attr("content")?.trim() ||
-      (() => {
-        // Try breadcrumb location
-        const breadcrumb = $('[itemprop="itemListElement"]').last().find('[itemprop="name"]').text().trim();
-        if (breadcrumb && breadcrumb.length > 3 && breadcrumb.length < 150) return breadcrumb;
-        // Try location-specific selectors
-        const locEl = $(".listing-page__location, [class*='location']").first().text().trim();
-        if (locEl && locEl.length < 200 && !/descriere|detalii|galerie/i.test(locEl)) return locEl;
-        // Regex fallback from raw HTML
-        const loc = rawHtml.match(/(?:Militari|Drumul Taberei|Crângași|Crangasi|Sector \d|București|Bucuresti|Voluntari|Pipera|Floreasca|Dorobanți|Dorobanti|Titan|Berceni|Colentina|Rahova|Pantelimon|Lujerului|Dristor|Obor|Tineretului|Iancului|Cotroceni|Giulesti|Baneasa|Herastrau|Greenfield|Pallady|Metalurgiei|Mihai Bravu|Decebal)[^<"]*/i);
-        return loc ? loc[0].trim().slice(0, 150) : undefined;
-      })(),
+        $('meta[property="og:street-address"]').attr("content")?.trim() ||
+        (() => {
+          // Try breadcrumb location
+          const breadcrumb = $('[itemprop="itemListElement"]')
+            .last()
+            .find('[itemprop="name"]')
+            .text()
+            .trim();
+          if (breadcrumb && breadcrumb.length > 3 && breadcrumb.length < 150) return breadcrumb;
+          // Try location-specific selectors
+          const locEl = $(".listing-page__location, [class*='location']").first().text().trim();
+          if (locEl && locEl.length < 200 && !/descriere|detalii|galerie/i.test(locEl))
+            return locEl;
+          // Regex fallback from raw HTML
+          const loc = rawHtml.match(
+            /(?:Militari|Drumul Taberei|Crângași|Crangasi|Sector \d|București|Bucuresti|Voluntari|Pipera|Floreasca|Dorobanți|Dorobanti|Titan|Berceni|Colentina|Rahova|Pantelimon|Lujerului|Dristor|Obor|Tineretului|Iancului|Cotroceni|Giulesti|Baneasa|Herastrau|Greenfield|Pallady|Metalurgiei|Mihai Bravu|Decebal)[^<"]*/i,
+          );
+          return loc ? loc[0].trim().slice(0, 150) : undefined;
+        })(),
     );
 
     // --- Photos ---
     const photos: string[] = [];
     const seenPhotos = new Set<string>();
-    const PHOTO_EXCLUDE = /logo|avatar|agent|banner|sprite|icon|favicon|placeholder|widget|\/similar\b|\/recomandate\b|1x1|pixel|\.svg/i;
-    const SIZE_RE = /\/(\d{2,4})x(\d{2,4})\//;
-
-    function upgradePhotoUrl(imgUrl: string): string {
-      let upgraded = imgUrl.replace(SIZE_RE, (full, w, h) => {
-        const nw = parseInt(w, 10);
-        const nh = parseInt(h, 10);
-        if (nw >= 1200 && nh >= 900) return full;
-        return "/1220x924/";
-      });
-      upgraded = upgraded.replace(/_thumb\b/i, "").replace(/_small\b/i, "");
-      return upgraded;
-    }
-
-    function bestSrcFromSrcset(srcset: string | undefined): string | null {
-      if (!srcset) return null;
-      let best: { url: string; w: number } | null = null;
-      for (const part of srcset.split(",")) {
-        const m = part.trim().match(/^(\S+)\s+(\d+)w$/);
-        if (m) {
-          const w = parseInt(m[2], 10);
-          if (!best || w > best.w) best = { url: m[1], w };
-        }
-      }
-      return best?.url ?? null;
-    }
+    const PHOTO_EXCLUDE =
+      /logo|avatar|agent|banner|sprite|icon|favicon|placeholder|widget|\/similar\b|\/recomandate\b|1x1|pixel|\.svg/i;
+    const DEDUP_SIZE_RE = /\/\d{2,4}x\d{2,4}\//g;
 
     function addPhoto(src: string) {
       if (!src || PHOTO_EXCLUDE.test(src)) return;
-      const full = upgradePhotoUrl(new URL(src, url).toString());
-      const key = full.replace(/\?.*$/, "").replace(SIZE_RE, "/SIZE/");
+      const full = upgradeListingPhotoUrl(new URL(src, url).toString());
+      const key = full.replace(/\?.*$/, "").replace(DEDUP_SIZE_RE, "/SIZE/");
       if (seenPhotos.has(key)) return;
       seenPhotos.add(key);
       photos.push(full);
     }
 
     // Priority 1: Gallery images from JSON/script data (highest quality)
-    const gallerySection = rawHtml.match(/"gallery":\s*\[([^\]]+)\]/i)
-      ?? rawHtml.match(/"images":\s*\[([^\]]+)\]/i)
-      ?? rawHtml.match(/"photos":\s*\[([^\]]+)\]/i);
+    const gallerySection =
+      rawHtml.match(/"gallery":\s*\[([^\]]+)\]/i) ??
+      rawHtml.match(/"images":\s*\[([^\]]+)\]/i) ??
+      rawHtml.match(/"photos":\s*\[([^\]]+)\]/i);
     if (gallerySection) {
       const urls = gallerySection[1].matchAll(/https?:\/\/[^"'\s]+(?:\.jpg|\.jpeg|\.png|\.webp)/gi);
       for (const m of urls) addPhoto(m[0]);
     }
 
     // Priority 2: Gallery container images - prefer srcset > data-original > data-src > src
-    $('[class*="gallery"] img, [class*="carousel"] img, [class*="slider"] img, [data-gallery] img').each((_, el) => {
-      const srcset = bestSrcFromSrcset($(el).attr("srcset") || $(el).attr("data-srcset"));
-      const src = srcset || $(el).attr("data-original") || $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src");
+    $(
+      '[class*="gallery"] img, [class*="carousel"] img, [class*="slider"] img, [data-gallery] img',
+    ).each((_, el) => {
+      const srcset = pickLargestSrcsetUrl($(el).attr("srcset") || $(el).attr("data-srcset"));
+      const src =
+        srcset ||
+        $(el).attr("data-original") ||
+        $(el).attr("data-src") ||
+        $(el).attr("data-lazy-src") ||
+        $(el).attr("src");
       if (src) addPhoto(src);
     });
 
     // Priority 3: <picture> / <source> elements with high-res srcset
     if (photos.length < 3) {
       $("picture source, [class*='gallery'] source").each((_, el) => {
-        const srcset = bestSrcFromSrcset($(el).attr("srcset"));
+        const srcset = pickLargestSrcsetUrl($(el).attr("srcset"));
         if (srcset) addPhoto(srcset);
       });
     }
 
     // Priority 4: broader img search scoped to listing content
     if (photos.length < 3) {
-      $('img[src*="imobiliare"], img[data-src*="imobiliare"], img[data-lazy-src*="imobiliare"]').each((_, el) => {
-        const srcset = bestSrcFromSrcset($(el).attr("srcset") || $(el).attr("data-srcset"));
-        const src = srcset || $(el).attr("data-original") || $(el).attr("data-src") || $(el).attr("data-lazy-src") || $(el).attr("src");
+      $(
+        'img[src*="imobiliare"], img[data-src*="imobiliare"], img[data-lazy-src*="imobiliare"]',
+      ).each((_, el) => {
+        const srcset = pickLargestSrcsetUrl($(el).attr("srcset") || $(el).attr("data-srcset"));
+        const src =
+          srcset ||
+          $(el).attr("data-original") ||
+          $(el).attr("data-src") ||
+          $(el).attr("data-lazy-src") ||
+          $(el).attr("src");
         if (src) addPhoto(src);
       });
     }
@@ -330,12 +348,16 @@ export const adapterImobiliare: SourceAdapter = {
     let sellerType: string | undefined;
 
     // Priority 1: explicit spec field (most reliable)
-    const sellerSpec = findSpecText($, "Tip vânzător") || findSpecText($, "Tip vanzator") || findSpecText($, "Oferit de");
+    const sellerSpec =
+      findSpecText($, "Tip vânzător") ||
+      findSpecText($, "Tip vanzator") ||
+      findSpecText($, "Oferit de");
     if (sellerSpec) {
       const sl = sellerSpec.toLowerCase();
       if (sl.includes("dezvoltator") || sl.includes("constructor")) sellerType = "dezvoltator";
       else if (sl.includes("proprietar") || sl.includes("particular")) sellerType = "proprietar";
-      else if (sl.includes("agent") || sl.includes("agentie") || sl.includes("agenție")) sellerType = "agentie";
+      else if (sl.includes("agent") || sl.includes("agentie") || sl.includes("agenție"))
+        sellerType = "agentie";
     }
 
     // Priority 2: developer signals from title + description (not whole-page HTML)
@@ -356,7 +378,9 @@ export const adapterImobiliare: SourceAdapter = {
 
     // Priority 3: contact section / seller name hints
     if (!sellerType) {
-      const contactSection = $('[class*="contact"], [class*="seller"], [class*="ofertant"]').text().toLowerCase();
+      const contactSection = $('[class*="contact"], [class*="seller"], [class*="ofertant"]')
+        .text()
+        .toLowerCase();
       if (/dezvoltator|constructor|residence|city|towers|park|plaza/i.test(contactSection)) {
         sellerType = "dezvoltator";
       } else if (/agentie|agenție|agent\s+imobiliar/i.test(contactSection)) {
@@ -379,7 +403,9 @@ export const adapterImobiliare: SourceAdapter = {
       zeroCommission = true;
     }
     if (!zeroCommission) {
-      const badgeText = $('[class*="comision"], [class*="commission"], [class*="badge"]').text().toLowerCase();
+      const badgeText = $('[class*="comision"], [class*="commission"], [class*="badge"]')
+        .text()
+        .toLowerCase();
       if (/comision\s*0\s*%/.test(badgeText) || /0\s*%\s*comision/.test(badgeText)) {
         zeroCommission = true;
       }
@@ -407,7 +433,9 @@ export const adapterImobiliare: SourceAdapter = {
 
     // Detect "Proprietate nelocuita" (never lived in)
     let neverLivedIn = false;
-    const nelocuitaText = $('[class*="badge"], [class*="feature"], [class*="tag"], li, span').text().toLowerCase();
+    const nelocuitaText = $('[class*="badge"], [class*="feature"], [class*="tag"], li, span')
+      .text()
+      .toLowerCase();
     if (/proprietate\s+nelocuit[aă]/i.test(nelocuitaText)) {
       neverLivedIn = true;
     }

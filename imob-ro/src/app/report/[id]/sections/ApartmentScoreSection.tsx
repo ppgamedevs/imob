@@ -5,7 +5,7 @@ import type { ApartmentScore } from "@/lib/score/apartmentScore";
 
 interface Props {
   score: ApartmentScore;
-  variant?: "compact" | "full";
+  variant?: "compact" | "full" | "reportHeader";
   showActions?: boolean;
   scoreLabel?: string;
 }
