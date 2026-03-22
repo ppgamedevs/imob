@@ -1,32 +1,19 @@
 import { fetchCustomOverpassFeatures } from "@/lib/geo/overpass";
 
 import type { RiskLayerResult } from "../types";
-import { clampScore, resolveLocation, riskLevelFromScore, unknownRiskLayer } from "./shared";
+import { clampScore, riskLevelFromScore } from "./shared";
+import { proxyConfidenceFromLocationSource, resolveCoordsForOsmProxy } from "./location-fallback";
+import { withProxyDisclaimer } from "./osm-proxy-shared";
 
-export async function evalFlood(
-  features: Record<string, unknown>,
-): Promise<RiskLayerResult> {
-  const { lat, lng, addressRaw, areaSlug } = resolveLocation(features);
-
-  if (lat == null || lng == null) {
-    return unknownRiskLayer(
-      "flood",
-      "Date indisponibile momentan pentru stratul de inundatii. Fara coordonate precise nu putem calcula proxy-ul OSM.",
-      [
-        addressRaw || areaSlug
-          ? `Adresa disponibila pentru completare ulterioara: ${addressRaw ?? areaSlug}.`
-          : "Adauga o locatie mai precisa pentru a activa evaluarea.",
-        "Cand exista coordonate, evaluarea foloseste proximitatea fata de ape, canale si bazine din OpenStreetMap.",
-      ],
-    );
-  }
+export async function evalFlood(features: Record<string, unknown>): Promise<RiskLayerResult> {
+  const { lat, lng, source: locSource } = await resolveCoordsForOsmProxy(features);
 
   const waterFeatures = await fetchCustomOverpassFeatures({
     lat,
     lng,
     radiusM: 1000,
     cacheCategory: "risk-flood-water",
-    limit: 30,
+    limit: 40,
     filters: [
       'node["natural"="water"]',
       'way["natural"="water"]',
@@ -52,29 +39,44 @@ export async function evalFlood(
     else if (nearestWater <= 250) score += 38;
     else if (nearestWater <= 500) score += 22;
     else score += 8;
+  } else {
+    score += 10;
   }
   score += Math.min(countWithin500 * 8, 20);
   score += Math.min(waterDensity * 2, 12);
   const finalScore = clampScore(score);
   const level = riskLevelFromScore(finalScore);
+  const confidence = proxyConfidenceFromLocationSource(locSource, waterFeatures.length);
+
+  let summary = nearestWater != null
+    ? `Proxy hidrologic OSM: apa curgatoare / lacuri cartate; cel mai apropiat reper la ~${nearestWater} m.`
+    : `Proxy hidrologic OSM: fara corp de apa cartat in 1 km (nu exclude riscul real — harta poate fi incompleta).`;
+
+  if (locSource === "bucharest_center") {
+    summary +=
+      " Locatie necunoscuta — ancora centru Bucuresti; foloseste doar pentru screening relativ intre anunturi.";
+  } else if (locSource !== "coordinates") {
+    summary += " Coordonate estimate din text/adresa.";
+  }
+
+  const bullet1 =
+    nearestWater != null
+      ? `Cel mai apropiat reper hidrografic cartat: ${nearestWater} m.`
+      : `Niciun reper natural=water / waterway in raza de 1 km (conform OSM).`;
+
+  const bullet2 = `${countWithin500} repere in 500 m, ${waterDensity} in 1 km — folosite ca densitate de context.`;
+
+  const bullet3 =
+    "Nu reprezinta hazard oficial la inundatii; doar proximitate fata de elemente de apa din harta voluntara.";
 
   return {
     key: "flood",
     level,
     score: finalScore,
-    confidence: nearestWater != null ? 0.48 : 0.34,
-    summary:
-      nearestWater != null
-        ? `Expunere hidrologica estimata din proximitatea fata de apa: cel mai apropiat reper este la aproximativ ${nearestWater} m.`
-        : "Expunerea hidrologica estimata este redusa in jurul proprietatii, pe baza reperelor OSM disponibile.",
-    details: [
-      nearestWater != null
-        ? `Cel mai apropiat corp de apa sau canal cartat este la ${nearestWater} m.`
-        : "Nu a fost identificat niciun corp de apa cartat in raza relevanta de 1 km.",
-      `${countWithin500} repere hidrografice in 500 m si ${waterDensity} in 1 km.`,
-      "Acesta este un indicator orientativ de context local, util pentru screening rapid, nu o harta oficiala de hazard la inundatii.",
-    ],
-    sourceName: "OpenStreetMap (proxy)",
+    confidence,
+    summary,
+    details: withProxyDisclaimer([bullet1, bullet2, bullet3]),
+    sourceName: "OpenStreetMap (Overpass) + model proxy",
     sourceUrl: "https://www.openstreetmap.org",
     updatedAt: new Date().toISOString(),
   };

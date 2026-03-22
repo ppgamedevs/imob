@@ -1,87 +1,113 @@
 import { getTransportSummary } from "@/lib/geo/transport";
-import { fetchCustomOverpassFeatures } from "@/lib/geo/overpass";
 
 import type { RiskLayerResult } from "../types";
-import { clampScore, resolveLocation, riskLevelFromScore, unknownRiskLayer } from "./shared";
+import { clampScore, riskLevelFromScore } from "./shared";
+import { proxyConfidenceFromLocationSource, resolveCoordsForOsmProxy } from "./location-fallback";
+import {
+  countRoadBuckets,
+  fetchRoadNetworkAround,
+  isMajorHighway,
+  nearestRoad,
+  nearestRoadWhere,
+  roadDensityPerKm2,
+  withProxyDisclaimer,
+} from "./osm-proxy-shared";
 
-export async function evalTraffic(
-  features: Record<string, unknown>,
-): Promise<RiskLayerResult> {
-  const { lat, lng, addressRaw, areaSlug } = resolveLocation(features);
+const RADIUS_M = 800;
 
-  if (lat == null || lng == null) {
-    return unknownRiskLayer(
-      "traffic",
-      "Date indisponibile momentan pentru stratul de trafic. Fara coordonate nu putem calcula proxy-ul de expunere.",
-      [
-        addressRaw || areaSlug
-          ? `Locatie pregatita pentru evaluare ulterioara: ${addressRaw ?? areaSlug}.`
-          : "Adauga coordonate precise pentru a activa scorul de trafic.",
-        "Cand exista coordonate, stratul foloseste artere majore si accesul la transport public.",
-      ],
-    );
-  }
+function scoreFromMajorDistance(distanceM: number): number {
+  if (distanceM <= 25) return 48;
+  if (distanceM <= 60) return 34;
+  if (distanceM <= 120) return 22;
+  if (distanceM <= 220) return 12;
+  return 6;
+}
 
-  const [majorRoads, transportSummary] = await Promise.all([
-    fetchCustomOverpassFeatures({
-      lat,
-      lng,
-      radiusM: 800,
-      cacheCategory: "risk-traffic-roads",
-      limit: 50,
-      filters: [
-        'way["highway"="motorway"]',
-        'way["highway"="trunk"]',
-        'way["highway"="primary"]',
-        'way["highway"="secondary"]',
-      ],
-    }).catch(() => []),
+function scoreFromAnyRoad(distanceM: number, highway: string): number {
+  if (isMajorHighway(highway)) return scoreFromMajorDistance(distanceM);
+  if (distanceM <= 35) return 22;
+  if (distanceM <= 80) return 14;
+  if (distanceM <= 160) return 8;
+  return 4;
+}
+
+export async function evalTraffic(features: Record<string, unknown>): Promise<RiskLayerResult> {
+  const { lat, lng, source: locSource } = await resolveCoordsForOsmProxy(features);
+
+  const [roads, transportSummary] = await Promise.all([
+    fetchRoadNetworkAround(lat, lng, RADIUS_M, "risk-traffic-roads-v2", 120),
     getTransportSummary(lat, lng).catch(() => null),
   ]);
 
-  const nearestRoad = majorRoads[0]?.distanceM ?? null;
+  const majorNearest = nearestRoadWhere(roads, isMajorHighway);
+  const anyNearest = nearestRoad(roads);
+  const buckets = countRoadBuckets(roads);
+  const densityKm2 = roadDensityPerKm2(roads.length, RADIUS_M);
   const transitScore = transportSummary?.transitScore ?? null;
   const metroWalk = transportSummary?.nearestMetro?.walkMinutes ?? null;
   const nearbyStops = transportSummary?.totalNearby ?? 0;
 
-  let score = 10;
-  if (nearestRoad != null) {
-    if (nearestRoad <= 25) score += 48;
-    else if (nearestRoad <= 60) score += 34;
-    else if (nearestRoad <= 120) score += 20;
-    else score += 8;
+  let score = 8;
+  if (majorNearest) {
+    score += scoreFromMajorDistance(majorNearest.distanceM);
+  } else if (anyNearest) {
+    score += scoreFromAnyRoad(anyNearest.distanceM, anyNearest.highway);
+  } else {
+    score += 10;
   }
-  score += Math.min(majorRoads.length * 2, 18);
+
+  score += Math.min(buckets.major * 3 + buckets.collector * 2 + buckets.local, 24);
+  score += Math.min(Math.round(densityKm2 / 5), 16);
+
+  const majorShare = roads.length > 0 ? buckets.major / roads.length : 0;
+  score += Math.round(majorShare * 14);
 
   if (transitScore != null) {
-    // Better public transport slightly offsets road exposure for mobility,
-    // but keeps the layer focused on traffic pressure / noise proxy.
-    if (transitScore >= 70) score -= 8;
+    if (transitScore >= 70) score -= 9;
     else if (transitScore >= 45) score -= 4;
   }
 
   const finalScore = clampScore(score);
   const level = riskLevelFromScore(finalScore);
+  const confidence = proxyConfidenceFromLocationSource(
+    locSource,
+    roads.length + (transportSummary ? 8 : 0),
+  );
+
+  let summary = `Proxy trafic: ierarhie rutiera OSM (motorway→primary), densitatea segmentelor si accesul la transport in comun.`;
+  if (locSource === "bucharest_center") {
+    summary +=
+      " Locatie necunoscuta — ancora centru Bucuresti; valoarea este orientativa pentru comparatie intre anunturi.";
+  } else if (locSource !== "coordinates") {
+    summary += " Coordonate estimate din text/adresa.";
+  }
+
+  const hwMaj = majorNearest?.highway.replace(/_/g, " ") ?? null;
+  const bullet1 = majorNearest
+    ? `Artera majora cea mai apropiata: ${hwMaj} la ${majorNearest.distanceM} m.`
+    : anyNearest
+      ? `Fara motorway/trunk/primary/secondary in top distante; cel mai apropiat segment: ${anyNearest.highway.replace(/_/g, " ")} la ${anyNearest.distanceM} m.`
+      : `Nu apar drumuri cartate in ${RADIUS_M} m (OSM poate lipsi din zona).`;
+
+  const bullet2 = `Densitate si ierarhie: ${roads.length} segmente (~${densityKm2}/km²); majore ${buckets.major}, colectoare ${buckets.collector}, locale ${buckets.local}.`;
+
+  const bullet3 =
+    metroWalk != null
+      ? `Transport: metrou la ~${metroWalk} min pe jos; ${nearbyStops} opriri in 800 m (scor tranzit ~${transitScore != null ? transitScore : "—"}).`
+      : transportSummary
+        ? `${nearbyStops} opriri de transport in 800 m; fara metrou apropiat in datele noastre.`
+        : `Transport in comun: doar proxy rutier OSM (fara statii GTFS in acest calcul).`;
 
   return {
     key: "traffic",
     level,
     score: finalScore,
-    confidence: transportSummary ? 0.56 : 0.42,
-    summary:
-      nearestRoad != null
-        ? `Presiunea de trafic estimata este influentata de o artera majora aflata la aproximativ ${nearestRoad} m de proprietate.`
-        : "Presiunea de trafic estimata pare limitata in imediata proximitate, pe baza retelei rutiere disponibile.",
-    details: [
-      `${majorRoads.length} segmente de drum major detectate in 800 m.`,
-      metroWalk != null
-        ? `Metrou la aproximativ ${metroWalk} min pe jos; ${nearbyStops} statii in 800 m.`
-        : transportSummary
-          ? `${nearbyStops} statii de transport in 800 m, fara metrou apropiat confirmat.`
-          : "Datele de transport public nu au fost disponibile pentru aceasta evaluare.",
-      "Scorul combina expunerea la artere cu accesibilitatea de transport si functioneaza ca proxy de trafic, presiune rutiera si potential zgomot urban.",
-    ],
-    sourceName: transportSummary ? "OpenStreetMap + GTFS (proxy)" : "OpenStreetMap (proxy)",
+    confidence,
+    summary,
+    details: withProxyDisclaimer([bullet1, bullet2, bullet3]),
+    sourceName: transportSummary
+      ? "OpenStreetMap (Overpass) + GTFS + model proxy"
+      : "OpenStreetMap (Overpass) + model proxy",
     sourceUrl: "https://www.openstreetmap.org",
     updatedAt: new Date().toISOString(),
   };

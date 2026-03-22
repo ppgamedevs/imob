@@ -14,6 +14,7 @@ export function resolveLocation(features: Record<string, unknown>) {
   return {
     lat: typeof features.lat === "number" ? features.lat : null,
     lng: typeof features.lng === "number" ? features.lng : null,
+    title: typeof features.title === "string" ? features.title : null,
     addressRaw:
       typeof features.addressRaw === "string"
         ? features.addressRaw
