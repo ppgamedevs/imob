@@ -1,5 +1,7 @@
 import * as cheerio from "cheerio";
 
+import { extractLatLngFromHtml } from "@/lib/geo/extract-coords-from-html";
+
 import type { DiscoverResult, SourceAdapter } from "../types";
 
 function stripDiacritics(s: string): string {
@@ -21,15 +23,23 @@ export const adapterPubli24: SourceAdapter = {
     const $ = cheerio.load(html);
 
     const links: string[] = [];
-    $('a[href*="/anunt/"]').each((_, el) => {
-      const href = $(el).attr("href");
-      if (href && href.includes("/anunt/")) {
-        const absolute = new URL(href, listUrl).toString();
-        if (absolute.includes("publi24.ro")) {
-          links.push(absolute);
-        }
+    const pushListing = (href: string | undefined) => {
+      if (!href) return;
+      const absolute = new URL(href, listUrl).toString();
+      if (!absolute.includes("publi24.ro")) return;
+      const p = new URL(absolute).pathname.split("/").filter(Boolean);
+      if (href.includes("/anunt/")) {
+        links.push(absolute);
+        return;
       }
-    });
+      if (absolute.includes("/anunturi/imobiliare/de-vanzare/") && p.length >= 6) {
+        links.push(absolute);
+      }
+    };
+    $('a[href*="/anunt/"]').each((_, el) => pushListing($(el).attr("href")));
+    $('a[href*="/anunturi/imobiliare/de-vanzare/"]').each((_, el) =>
+      pushListing($(el).attr("href")),
+    );
 
     const nextHref =
       $('a[rel="next"]').attr("href") ||
@@ -44,18 +54,48 @@ export const adapterPubli24: SourceAdapter = {
     const $ = cheerio.load(html);
     const rawHtml = html as string;
 
-    // --- JSON-LD ---
-    let ld: Record<string, unknown> | null = null;
+    // --- JSON-LD (@graph + arrays) ---
+    const ldNodes: Record<string, unknown>[] = [];
     $('script[type="application/ld+json"]').each((_, el) => {
-      if (ld) return;
       try {
-        const obj = JSON.parse($(el).html() ?? "");
-        const node = (Array.isArray(obj) ? obj[0] : obj) as Record<string, unknown>;
-        if (node?.["@type"] || node?.name) ld = node;
-      } catch { /* ignore */ }
+        const raw = $(el).html()?.trim();
+        if (!raw) return;
+        const obj = JSON.parse(raw) as unknown;
+        if (Array.isArray(obj)) {
+          for (const n of obj) if (n && typeof n === "object") ldNodes.push(n as Record<string, unknown>);
+        } else if (obj && typeof obj === "object" && Array.isArray((obj as { "@graph"?: unknown[] })["@graph"])) {
+          for (const n of (obj as { "@graph": unknown[] })["@graph"]) {
+            if (n && typeof n === "object") ldNodes.push(n as Record<string, unknown>);
+          }
+        } else if (obj && typeof obj === "object") {
+          ldNodes.push(obj as Record<string, unknown>);
+        }
+      } catch {
+        /* ignore */
+      }
     });
-    const ldData = (ld ?? {}) as Record<string, unknown>;
-    const ldOffers = ((ldData.offers as Record<string, unknown> | undefined) ?? {});
+
+    let ldData: Record<string, unknown> =
+      ldNodes.find((n) => n.name && (n.offers || n.price)) ??
+      ldNodes.find((n) => n.name) ??
+      ldNodes[0] ??
+      {};
+    const ldOffers = (ldData.offers && typeof ldData.offers === "object"
+      ? ldData.offers
+      : {}) as Record<string, unknown>;
+
+    function coercePrice(raw: unknown): number | undefined {
+      if (raw == null) return undefined;
+      if (typeof raw === "number" && Number.isFinite(raw)) return Math.round(raw);
+      if (typeof raw === "object" && raw !== null && "price" in raw) {
+        return coercePrice((raw as { price: unknown }).price);
+      }
+      const s = String(raw).replace(/[^\d]/g, "");
+      if (s.length >= 4) return parseInt(s, 10);
+      const loose = String(raw).replace(/[\s.]/g, "").replace(",", ".");
+      const n = parseFloat(loose);
+      return Number.isFinite(n) ? Math.round(n) : undefined;
+    }
 
     // --- Title ---
     const title =
@@ -69,18 +109,18 @@ export const adapterPubli24: SourceAdapter = {
     let currency = "EUR";
 
     // Publi24 shows "45 000 EUR 1552 EUR/m2" near title
-    const priceRegex = /([\d][.\d\s]*\d)\s*(?:EUR|€)/i;
-    const ronRegex = /([\d][.\d\s]*\d)\s*(?:RON|lei)/i;
+    const priceRegex = /([\d][\d\s.,]*)\s*(?:EUR|€)/i;
+    const ronRegex = /([\d][\d\s.,]*)\s*(?:RON|lei)/i;
 
     // Try from JSON-LD first
-    const ldPrice = Object.keys(ldOffers).length > 0
-      ? ldOffers.price
-      : ldData.price;
-    if (ldPrice) {
-      price = parseInt(String(ldPrice).replace(/[\s,.]/g, ""));
-      const ldCurrency = Object.keys(ldOffers).length > 0
-        ? ldOffers.priceCurrency
-        : ldData.priceCurrency;
+    const ldPrice =
+      Object.keys(ldOffers).length > 0 ? ldOffers.price ?? (ldOffers as { lowPrice?: unknown }).lowPrice : ldData.price;
+    if (ldPrice != null) {
+      price = coercePrice(ldPrice);
+      const ldCurrency =
+        Object.keys(ldOffers).length > 0
+          ? ldOffers.priceCurrency ?? (ldOffers as { priceCurrency?: unknown }).priceCurrency
+          : ldData.priceCurrency;
       if (ldCurrency) currency = String(ldCurrency).toUpperCase();
     }
 
@@ -89,11 +129,11 @@ export const adapterPubli24: SourceAdapter = {
       const priceZone = $("h1").parent().text() + " " + $('[class*="price"]').text();
       const eurMatch = priceZone.match(priceRegex);
       if (eurMatch) {
-        price = parseInt(eurMatch[1].replace(/[\s.]/g, ""));
+        price = coercePrice(eurMatch[1]);
       } else {
         const ronMatch = priceZone.match(ronRegex);
         if (ronMatch) {
-          price = parseInt(ronMatch[1].replace(/[\s.]/g, ""));
+          price = coercePrice(ronMatch[1]);
           currency = "RON";
         }
       }
@@ -102,7 +142,7 @@ export const adapterPubli24: SourceAdapter = {
     // Final fallback: full body text
     if (!price) {
       const bodyMatch = rawHtml.match(priceRegex);
-      if (bodyMatch) price = parseInt(bodyMatch[1].replace(/[\s.]/g, ""));
+      if (bodyMatch) price = coercePrice(bodyMatch[1]);
     }
 
     // --- Specs ---
@@ -238,7 +278,13 @@ export const adapterPubli24: SourceAdapter = {
         !src.includes("google") &&
         !src.includes("facebook") &&
         !src.includes("apple") &&
-        (src.includes("publi24") || src.includes("romimo") || src.includes("cdn") || src.includes("cloudfront"))
+        (src.includes("publi24") ||
+          src.includes("romimo") ||
+          src.includes("cdn") ||
+          src.includes("cloudfront") ||
+          src.includes("amazonaws") ||
+          src.includes("img.") ||
+          /\.(jpe?g|png|webp)(\?|$)/i.test(src))
       ) {
         photos.push(src);
       }
@@ -261,6 +307,13 @@ export const adapterPubli24: SourceAdapter = {
         }
       }
     });
+    if (lat == null || lng == null) {
+      const geo = extractLatLngFromHtml(rawHtml);
+      if (geo) {
+        lat = geo.lat;
+        lng = geo.lng;
+      }
+    }
 
     // Description
     let description: string | undefined;

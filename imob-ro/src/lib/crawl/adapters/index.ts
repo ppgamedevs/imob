@@ -18,6 +18,7 @@ export const ADAPTERS: SourceAdapter[] = [
 ];
 
 export function pickAdapter(u: URL): SourceAdapter {
-  const host = u.hostname.replace(/^www\./, "");
+  let host = u.hostname.replace(/^www\./, "").toLowerCase();
+  if (host === "m.publi24.ro") host = "publi24.ro";
   return ADAPTERS.find((a) => a.domain === host) || adapterGeneric;
 }

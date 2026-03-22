@@ -1,9 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import type { FairPriceResult } from "@/lib/report/pricing";
-import { priceNextStep, priceWhatThisMeans } from "@/lib/report/trust-copy";
-
-import ReportClarityBadge, { SectionTrustFooter } from "./ReportClarityBadge";
+import ReportClarityBadge from "./ReportClarityBadge";
 
 interface Props {
   priceRange: { low: number; high: number; mid: number; conf: number } | null;
@@ -192,20 +190,14 @@ export default function VerdictSection({
     return (
       <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Putem avea incredere in pret?</CardTitle>
-          <CardDescription>
-            Nu avem inca un interval estimat robust pentru acest anunt.
-          </CardDescription>
+          <CardTitle className="text-base">Preț vs. piață</CardTitle>
+          <CardDescription>Interval estimat indisponibil pentru acest punct.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <div className="flex flex-wrap items-center gap-2">
             <ReportClarityBadge kind="unknown" />
-            <span className="text-muted-foreground">Estimare pret indisponibila.</span>
+            <span className="text-muted-foreground">Fără interval AVM în datele curente.</span>
           </div>
-          <SectionTrustFooter
-            whatThisMeans="Fara interval estimat, nu poti compara automat cu piata."
-            nextStep={priceNextStep(compsCount)}
-          />
         </CardContent>
       </Card>
     );
@@ -219,6 +211,8 @@ export default function VerdictSection({
       : null;
 
   const hasRobust = !!(fair && fair.compsUsed >= 3 && range.mid > 0);
+  const precizieLabel =
+    confLevel === "high" ? "ridicată" : confLevel === "medium" ? "medie" : confLevel === "low" ? "scăzută" : null;
   const eurM2Display =
     actualPrice && fair?.comps?.[0]?.areaM2
       ? Math.round(actualPrice / fair.comps[0].areaM2)
@@ -231,9 +225,16 @@ export default function VerdictSection({
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <CardTitle className="text-base">Putem avea incredere in pret?</CardTitle>
+            <CardTitle className="text-base">Preț vs. piață</CardTitle>
             <CardDescription className="mt-1">
-              Intervalul de mai jos este un <strong>model</strong>, nu o garantie.
+              {compsCount < 3 ? (
+                <span className="inline-flex items-center gap-1 font-medium text-amber-800">
+                  <span aria-hidden>⚠</span>
+                  Comparabile insuficiente (precizie scăzută)
+                </span>
+              ) : (
+                <span>Interval estimat din model + piață.</span>
+              )}
             </CardDescription>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -243,6 +244,11 @@ export default function VerdictSection({
               </Badge>
             )}
             {confLevel && <ConfidenceDot level={confLevel} />}
+            {precizieLabel ? (
+              <Badge variant="outline" className="text-[10px] border-slate-200 bg-slate-50">
+                Precizie: {precizieLabel}
+              </Badge>
+            ) : null}
             <ReportClarityBadge kind="estimated" />
           </div>
         </div>
@@ -280,13 +286,12 @@ export default function VerdictSection({
           <div className="pt-3 border-t border-slate-100 text-sm space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <ReportClarityBadge kind="confirmed" />
-              <span className="text-muted-foreground">Pret cerut (din anunt): </span>
+              <span className="text-muted-foreground">Preț listat: </span>
               <span className="font-semibold">{fmt(actualPrice, currency)}</span>
             </div>
             {eurM2Display != null && (
               <p className="text-xs text-muted-foreground pl-1">
-                ≈ {eurM2Display.toLocaleString("ro-RO")} {currency}/mp{" "}
-                <span className="italic">(~ estimat din pret si suprafata din anunt)</span>
+                ≈ {eurM2Display.toLocaleString("ro-RO")} {currency}/m² (din anunț)
               </p>
             )}
           </div>
@@ -324,8 +329,8 @@ export default function VerdictSection({
         )}
 
         {confLevel === "low" && (
-          <div className="text-xs text-amber-600 bg-amber-50 rounded p-2">
-            Estimare orientativa - date insuficiente in zona. Rezultatele pot varia semnificativ.
+          <div className="text-xs font-semibold text-amber-900 bg-amber-50 rounded p-2">
+            ⚠ Precizie scăzută — interval larg.
           </div>
         )}
 
@@ -336,10 +341,6 @@ export default function VerdictSection({
           </div>
         )}
 
-        <SectionTrustFooter
-          whatThisMeans={priceWhatThisMeans(hasRobust, compsCount, confLevel)}
-          nextStep={priceNextStep(compsCount)}
-        />
       </CardContent>
     </Card>
   );

@@ -1,37 +1,28 @@
-import type { PriceVerdictPill } from "@/lib/report/price-verdict-badge";
 import type { ExecutiveVerdict } from "@/lib/report/verdict";
 
 import ReportDecisionBlock from "./ReportDecisionBlock";
-import ReportPriceFairnessBlock from "./ReportPriceFairnessBlock";
 import ReportProsConsSection from "./ReportProsConsSection";
-import ReportTldrStrip, { type TldrItem } from "./ReportTldrStrip";
+import ReportQuickMetricsStrip, { type QuickMetricItem } from "./ReportQuickMetricsStrip";
 
 export interface ReportAboveFoldHeaderProps {
   verdict: ExecutiveVerdict;
+  /** Location + typology (decision title) */
   propertyTitle: string | null;
   askingPrice: number | null;
   currency: string;
   priceSecondaryLine?: string | null;
   hasPlusTVA?: boolean;
-  priceTrustLine: string;
-  riskImpactLine: string;
-  confidenceNarrative: string;
-  tldrItems: TldrItem[];
+  eurPerM2?: number | null;
+  areaM2?: number | null;
+  sellerType?: string | null;
+  pricePositionLabel?: string | null;
+  quickMetrics: QuickMetricItem[];
   pros: string[];
   cons: string[];
-  /** EUR mid vs EUR list — homepage-style fairness strip */
-  priceFairness?: {
-    pill: PriceVerdictPill;
-    listedEur: number;
-    estimatedMidEur: number;
-    /** Extra line under list price (e.g. RON original) */
-    listedExtraLine?: string | null;
-  } | null;
 }
 
 /**
- * Layer 1-3: decision header (full width) -> Pe scurt -> pro / contra.
- * Price blocks + score sit below this band (page).
+ * Layer 1: decision header + quick metrics + pro / contra (max bullets capped in section).
  */
 export default function ReportAboveFoldHeader({
   verdict,
@@ -40,16 +31,16 @@ export default function ReportAboveFoldHeader({
   currency,
   priceSecondaryLine,
   hasPlusTVA,
-  priceTrustLine,
-  riskImpactLine,
-  confidenceNarrative,
-  tldrItems,
+  eurPerM2,
+  areaM2,
+  sellerType,
+  pricePositionLabel,
+  quickMetrics,
   pros,
   cons,
-  priceFairness,
 }: ReportAboveFoldHeaderProps) {
   return (
-    <div className="space-y-6 md:space-y-7">
+    <div className="space-y-4 md:space-y-5">
       <ReportDecisionBlock
         verdict={verdict}
         propertyTitle={propertyTitle}
@@ -57,22 +48,13 @@ export default function ReportAboveFoldHeader({
         currency={currency}
         priceSecondaryLine={priceSecondaryLine}
         hasPlusTVA={hasPlusTVA}
-        priceTrustLine={priceTrustLine}
-        riskImpactLine={riskImpactLine}
-        confidenceNarrative={confidenceNarrative}
+        eurPerM2={eurPerM2}
+        areaM2={areaM2}
+        sellerType={sellerType}
+        pricePositionLabel={pricePositionLabel}
       />
-      {priceFairness ? (
-        <ReportPriceFairnessBlock
-          verdict={priceFairness.pill}
-          listedPrice={priceFairness.listedEur}
-          estimatedMid={priceFairness.estimatedMidEur}
-          currency="EUR"
-          hasPlusTVA={hasPlusTVA}
-          listedExtraLine={priceFairness.listedExtraLine}
-        />
-      ) : null}
-      <ReportTldrStrip items={tldrItems} maxItems={4} />
-      <ReportProsConsSection pros={pros} cons={cons} maxEach={5} />
+      <ReportQuickMetricsStrip items={quickMetrics} />
+      <ReportProsConsSection pros={pros} cons={cons} maxEach={3} />
     </div>
   );
 }

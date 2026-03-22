@@ -44,7 +44,8 @@ type UrlCheckResult =
 function checkListingUrl(urlStr: string): UrlCheckResult {
   try {
     const u = new URL(urlStr);
-    const host = u.hostname.replace(/^www\./, "").toLowerCase();
+    let host = u.hostname.replace(/^www\./, "").toLowerCase();
+    if (host === "m.publi24.ro") host = "publi24.ro";
     const path = u.pathname.toLowerCase();
 
     if (!SUPPORTED_HOSTS.has(host)) {
@@ -115,6 +116,11 @@ function checkListingUrl(urlStr: string): UrlCheckResult {
       }
       if (path.includes("/anunt/")) return { ok: true };
       if (/\/\d+$/.test(path)) return { ok: true };
+      // New Publi24 listing URLs: /anunturi/imobiliare/de-vanzare/{tip}/{localitate}/.../slug (no /anunt/)
+      if (path.includes("/anunturi/imobiliare/de-vanzare/")) {
+        const depth = path.split("/").filter(Boolean).length;
+        if (depth >= 6) return { ok: true };
+      }
       if (path.includes("/anunturi/") && !path.includes("/anunt/")) {
         return { ok: false, error: "Acest link pare sa fie o pagina de cautare, nu un anunt individual." };
       }

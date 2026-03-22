@@ -129,78 +129,49 @@ function buildPositiveInsights(intel: IntelResult): string[] {
   return out.slice(0, 2);
 }
 
-/** Low OSM coverage — honesty panel, not “deficiency”. */
+/** Low OSM coverage — short signal, no false precision. */
 function LowDataZonePanel() {
   return (
-    <div className="mt-5 space-y-4 rounded-xl bg-sky-50/40 px-4 py-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <h3 className="text-sm font-semibold text-slate-900">Vizibilitate redusa asupra zonei</h3>
-        <span className="inline-flex rounded-full bg-white px-2.5 py-0.5 text-[11px] font-semibold text-sky-900 ring-1 ring-sky-200/80">
-          Date limitate
+    <div className="mt-5 rounded-xl border border-amber-200/80 bg-amber-50/50 px-4 py-3">
+      <p className="text-sm font-semibold text-amber-950">
+        <span className="mr-1.5" aria-hidden>
+          ⚠
         </span>
-      </div>
-      <p className="text-sm leading-relaxed text-slate-700">
-        Nu am identificat suficiente puncte de interes din datele disponibile (OpenStreetMap si, cand
-        exista, surse complementare).
+        Date parțiale pentru zonă — scorurile sunt orientative, nu un catalog complet de POI.
       </p>
-      <div>
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5">
-          Ce inseamna pentru tine
-        </p>
-        <ul className="space-y-1 text-sm text-slate-700">
-          <li className="flex gap-2">
-            <span className="text-sky-600 shrink-0">•</span>
-            <span>Nu putem evalua walkability sau comoditati cu incredere ridicata.</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-sky-600 shrink-0">•</span>
-            <span>Scorurile pot fi subestimate — lipsa punctelor pe harta nu inseamna lipsa in realitate.</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-sky-600 shrink-0">•</span>
-            <span>Lipsa datelor OSM nu este un verdict despre calitatea cartierului.</span>
-          </li>
-        </ul>
-      </div>
-      <div>
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5">
-          Ce poti face
-        </p>
-        <ul className="space-y-1 text-sm text-slate-700">
-          <li className="flex gap-2">
-            <span className="text-sky-600 shrink-0">•</span>
-            <span>Verifica zona pe Google Maps sau harti locale.</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-sky-600 shrink-0">•</span>
-            <span>Viziteaza fizic inainte de decizie.</span>
-          </li>
-          <li className="flex gap-2">
-            <span className="text-sky-600 shrink-0">•</span>
-            <span>Compara cu alte anunturi din aceeasi zona.</span>
-          </li>
-        </ul>
-      </div>
     </div>
   );
 }
 
 function FacilitiesIdentifiedPanel({ intel }: { intel: IntelResult }) {
   const insights = buildPositiveInsights(intel);
+  const rowsWithData = FACILITY_ROWS.filter((row) => (intel.categoryCounts[row.key] ?? 0) > 0);
   return (
     <div className="mt-5 space-y-3 rounded-xl bg-emerald-50/35 px-4 py-4">
-      <h3 className="text-sm font-semibold text-slate-900">Facilitati identificate in zona</h3>
+      <h3 className="text-sm font-semibold text-slate-900">Facilități confirmate în date (OSM)</h3>
       <p className="text-xs text-slate-600">
-        Numar puncte cartate in OpenStreetMap pentru raza curenta (orientativ).
+        Afișăm doar categorii cu cel puțin un punct cartat — nu listăm „0” ca verdict negativ.
       </p>
-      <ul className="space-y-2 text-sm text-slate-800">
-        {FACILITY_ROWS.map(({ key, label }) => (
-          <li key={key} className="flex justify-between gap-4 border-b border-emerald-100/80 pb-2 last:border-0 last:pb-0">
-            <span className="text-slate-600">{label}</span>
-            <span className="font-semibold tabular-nums">{intel.categoryCounts[key] ?? 0}</span>
-          </li>
-        ))}
-      </ul>
+      {rowsWithData.length === 0 ? (
+        <p className="text-sm text-slate-700">
+          <span className="mr-1" aria-hidden>
+            ⚠
+          </span>
+          Date parțiale pentru zonă — niciun POI confirmat în rază pentru categoriile urmărite.
+        </p>
+      ) : (
+        <ul className="space-y-2 text-sm text-slate-800">
+          {rowsWithData.map(({ key, label }) => (
+            <li
+              key={key}
+              className="flex justify-between gap-4 border-b border-emerald-100/80 pb-2 last:border-0 last:pb-0"
+            >
+              <span className="text-slate-600">{label}</span>
+              <span className="font-semibold tabular-nums">{intel.categoryCounts[key]}</span>
+            </li>
+          ))}
+        </ul>
+      )}
       {insights.length > 0 && (
         <ul className="pt-1 space-y-1 text-sm text-slate-700">
           {insights.map((line, i) => (
@@ -217,8 +188,11 @@ function FacilitiesIdentifiedPanel({ intel }: { intel: IntelResult }) {
 
 function PartialDataNote() {
   return (
-    <p className="mt-5 text-sm leading-relaxed text-slate-600">
-      Acoperire OSM partiala: scorurile sunt orientative. Verifica la fata locului ce conteaza pentru tine.
+    <p className="mt-5 text-sm font-medium text-slate-700">
+      <span className="mr-1" aria-hidden>
+        ⚠
+      </span>
+      Date parțiale pentru zonă — scoruri orientative.
     </p>
   );
 }

@@ -1,7 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { SectionTrustFooter } from "./ReportClarityBadge";
-
 const EUR_TO_RON = 5;
 
 type CommissionStatus = "zero" | "standard" | "unknown";
@@ -162,10 +160,9 @@ export default function AcquisitionCostsSection({
   return (
     <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base">Ce costuri sa iei in calcul?</CardTitle>
+        <CardTitle className="text-base">Costuri achiziție</CardTitle>
         <CardDescription>
-          Simulare ~ estimativa la {fmt(priceEur)} EUR{hasPlusTVA ? " + TVA" : ""} - notarul stabileste
-          sumele finale.
+          Simulare la {fmt(priceEur)} EUR{hasPlusTVA ? " + TVA" : ""} — sumele finale le stabilește notarul.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -197,42 +194,17 @@ export default function AcquisitionCostsSection({
           ))}
         </div>
 
-        {/* Educational tooltip about 0% commission */}
         {commissionStatus === "zero" && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3 space-y-1.5">
-            <div className="flex items-start gap-2">
-              <span className="text-amber-600 text-base leading-none mt-0.5">⚠</span>
-              <div>
-                <div className="text-sm font-medium text-amber-900">
-                  Ce inseamna &ldquo;Comision 0% cumparator&rdquo;?
-                  <InfoTooltip text="In Romania, comisionul agentiei este de obicei 2-3% si poate fi platit de cumparator, vanzator sau impartit. Cand anuntul spune '0% cumparator', vanzatorul suporta integral acest cost." />
-                </div>
-                <p className="text-[11px] text-amber-800 mt-1 leading-relaxed">
-                  Agentul imobiliar este platit integral de vanzator. Asta inseamna ca interesul financiar
-                  al agentului este aliniat cu cel al vanzatorului - sa obtina un pret cat mai mare.
-                  Ca cumparator, puteti lua in calcul angajarea propriului agent sau avocat care sa va
-                  reprezinte exclusiv interesele in negociere.
-                </p>
-              </div>
-            </div>
-          </div>
+          <p className="text-xs font-medium text-amber-900 bg-amber-50/80 border border-amber-100 rounded-lg px-3 py-2">
+            Comision 0% cumpărător = plătește vânzătorul — aliniere interese cu vânzătorul.
+            <InfoTooltip text="În România comisionul agenției e de obicei 1–3%; „0% cumpărător” înseamnă că vânzătorul acoperă comisionul agenției." />
+          </p>
         )}
 
-        {/* Unknown commission warning */}
         {commissionStatus === "unknown" && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50/70 p-3 space-y-1.5">
-            <div className="flex items-start gap-2">
-              <span className="text-amber-600 text-base leading-none mt-0.5">⚠</span>
-              <div>
-                <div className="text-sm font-medium text-amber-900">Comision neclarificat</div>
-                <p className="text-[11px] text-amber-800 mt-1 leading-relaxed">
-                  Anuntul nu specifica daca exista comision pentru cumparator. In Romania, comisionul
-                  standard este de 1-3% din pretul proprietatii. Intrebati explicit agentia inainte de
-                  vizionare pentru a evita costuri neasteptate. Comisionul este negociabil.
-                </p>
-              </div>
-            </div>
-          </div>
+          <p className="text-xs font-medium text-amber-900 bg-amber-50/80 border border-amber-100 rounded-lg px-3 py-2">
+            Comision cumpărător neclar în anunț — confirmă cu agenția înainte de vizionare.
+          </p>
         )}
 
         {/* Reduced VAT eligibility */}
@@ -266,39 +238,24 @@ export default function AcquisitionCostsSection({
           </div>
         )}
 
-        <div className="rounded-lg bg-gray-50 border p-3 flex items-start justify-between gap-3">
+        <div className="rounded-xl bg-slate-900 text-white border border-slate-800 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <div className="text-sm font-bold text-gray-900">Total costuri estimative</div>
-            <div className="text-[11px] text-muted-foreground mt-0.5">
-              {hasPlusTVA ? "Include TVA" : "Fara pretul proprietatii"}
-              {commissionStatus === "unknown" && " (comision neinclus)"}
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-300">
+              Total costuri estimate
+            </div>
+            <div className="text-[11px] text-slate-400 mt-1">
+              {hasPlusTVA ? "Include TVA listat" : "Exclude prețul proprietății"}
+              {commissionStatus === "unknown" ? " · comision neinclus" : ""}
             </div>
           </div>
-          <div className="text-sm font-bold text-gray-900 whitespace-nowrap">
-            {fmt(totalLow)} - {fmt(totalHigh)} EUR
+          <div className="text-2xl font-bold tabular-nums tracking-tight">
+            {fmt(totalLow)} – {fmt(totalHigh)} EUR
           </div>
         </div>
 
-        <div className="rounded-lg bg-blue-50/50 p-3 ring-1 ring-blue-100/80 space-y-1">
-          <div className="text-sm font-medium text-blue-900">Acte si notar</div>
-          <p className="text-[11px] text-blue-800">
-            Avocat / notar inainte de semnare - buget orientativ {fmt(costs.specialistLow)}-
-            {fmt(costs.specialistHigh)} EUR.
-          </p>
-        </div>
-
-        <SectionTrustFooter
-          whatThisMeans="Totalul de mai sus nu include comisionul daca e neclar - nu trata suma ca factura finala."
-          nextStep={
-            commissionStatus === "unknown"
-              ? "Confirma explicit cu agentul: procent comision, cine plateste, si daca e inclus TVA."
-              : "Cere notarului un deviz de taxe inainte de avans."
-          }
-        />
-
-        <p className="text-[10px] text-muted-foreground">
-          Sumele sunt estimative si pot varia. Consultati un notar pentru costuri exacte.
-          Curs EUR/RON utilizat: 1 EUR = {EUR_TO_RON} RON.
+        <p className="text-[11px] text-muted-foreground">
+          Avocat / notar: ~{fmt(costs.specialistLow)}–{fmt(costs.specialistHigh)} EUR. Curs 1 EUR ={" "}
+          {EUR_TO_RON} RON.
         </p>
       </CardContent>
     </Card>
