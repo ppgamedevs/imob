@@ -21,6 +21,7 @@ import {
   RISK_LAYER_LABELS,
   sourceModeForLayer,
 } from "@/lib/risk/executive";
+import { isRiskLayerShownInReport } from "@/lib/risk/report-risk-visibility";
 import type { RiskLayerKey, RiskLayerResult, RiskLevel, RiskStackResult } from "@/lib/risk/types";
 import { riskNextStep, riskWhatThisMeans } from "@/lib/report/trust-copy";
 import { cn } from "@/lib/utils";
@@ -191,7 +192,11 @@ export default function RiskStackSection({
   titleMentionsRisk = false,
 }: Props) {
   const resolved = applyReportRiskVisibility(normalizeRiskStack(riskStack, seismicExplain));
-  const orderedKeys = useMemo(() => orderRiskLayerKeysForReport(resolved.layers), [resolved.layers]);
+  const orderedKeys = useMemo(
+    () =>
+      orderRiskLayerKeysForReport(resolved.layers).filter((k) => isRiskLayerShownInReport(k)),
+    [resolved.layers],
+  );
   const insightBlock = useMemo(
     () => buildRiskInsights(resolved, orderedKeys),
     [orderedKeys, resolved],

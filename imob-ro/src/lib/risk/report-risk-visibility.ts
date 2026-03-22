@@ -1,4 +1,20 @@
-import type { RiskLayerKey } from "./types";
+import type { RiskLayerKey, RiskLayerResult } from "./types";
+
+/**
+ * Flood / inundații: produs — strat eliminat din UI. Păstrăm cheia în schema JSON doar pentru compatibilitate.
+ * Folosit la normalizare ca să nu reapară texte vechi din DB („dataset neintegrat”, etc.).
+ */
+export const CANONICAL_HIDDEN_FLOOD_LAYER: RiskLayerResult = {
+  key: "flood",
+  level: "unknown",
+  score: null,
+  confidence: null,
+  summary: "",
+  details: [],
+  sourceName: null,
+  sourceUrl: null,
+  updatedAt: null,
+};
 
 /**
  * Flood / inundații: product decision — never show in report or PDF (user request).

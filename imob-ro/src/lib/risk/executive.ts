@@ -1,5 +1,6 @@
 import { buildSeismicRiskLayerFromExplain } from "./seismic-layer";
 import {
+  CANONICAL_HIDDEN_FLOOD_LAYER,
   filterRiskLayersForReport,
   RISK_LAYERS_HIDDEN_IN_REPORT,
 } from "./report-risk-visibility";
@@ -126,7 +127,8 @@ export function normalizeRiskStack(
   const fallbackSeismic = buildSeismicRiskLayerFromExplain(seismicExplain ?? null, null);
   const layers: Record<RiskLayerKey, RiskLayerResult> = {
     seismic: normalizeLayer("seismic", rawLayers?.seismic, fallbackSeismic),
-    flood: normalizeLayer("flood", rawLayers?.flood),
+    // Ignore stale flood payloads from older score snapshots — user-facing layer removed.
+    flood: CANONICAL_HIDDEN_FLOOD_LAYER,
     pollution: normalizeLayer("pollution", rawLayers?.pollution),
     traffic: normalizeLayer("traffic", rawLayers?.traffic),
   };

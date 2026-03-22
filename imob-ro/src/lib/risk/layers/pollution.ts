@@ -1,5 +1,6 @@
 import { fetchCustomOverpassFeatures } from "@/lib/geo/overpass";
 
+import { getAirQuality, type AirQualityReading } from "../aqicn";
 import type { RiskLayerResult } from "../types";
 import { clampScore, riskLevelFromScore } from "./shared";
 import { proxyConfidenceFromLocationSource, resolveCoordsForOsmProxy } from "./location-fallback";
@@ -14,6 +15,51 @@ import {
 
 const RADIUS_M = 800;
 
+/** Map WAQI AQI (higher = worse air) to our 0–100 exposure-style score. */
+function scoreFromAqi(aqi: number): number {
+  if (aqi <= 50) return 18;
+  if (aqi <= 100) return 38;
+  if (aqi <= 150) return 55;
+  if (aqi <= 200) return 72;
+  return 85;
+}
+
+function buildPollutionLayerFromWaqi(
+  reading: AirQualityReading,
+  locSource: string,
+): RiskLayerResult {
+  const finalScore = clampScore(scoreFromAqi(reading.aqi));
+  const level = riskLevelFromScore(finalScore);
+  const details: string[] = [
+    `AQI ${reading.aqi} — ${reading.label}.`,
+    reading.stationName ? `Stație WAQI: ${reading.stationName}.` : "",
+    reading.pm25 != null ? `PM2.5: ${reading.pm25.toFixed(1)} µg/m³.` : "",
+    reading.no2 != null ? `NO₂: ${reading.no2.toFixed(1)} µg/m³.` : "",
+  ].filter(Boolean);
+  details.push(
+    "Indicele vine de la stația publică cea mai apropiată (WAQI); poate diferi de strada exactă a imobilului.",
+  );
+  if (locSource === "bucharest_center") {
+    details.push(
+      "Locație necunoscută — ancora centru București; folosiți și secțiunea „Calitatea aerului” din raport.",
+    );
+  } else if (locSource !== "coordinates") {
+    details.push("Coordonate estimate din text/adresă, nu din GPS.");
+  }
+
+  return {
+    key: "pollution",
+    level,
+    score: finalScore,
+    confidence: 0.82,
+    summary: `Poluare aer (WAQI): ${reading.label} — AQI ${reading.aqi}.`,
+    details,
+    sourceName: "WAQI / AQICN",
+    sourceUrl: "https://waqi.info/",
+    updatedAt: reading.updatedAt,
+  };
+}
+
 function scoreFromProximityStress(stressM: number): number {
   if (stressM <= 35) return 44;
   if (stressM <= 75) return 30;
@@ -24,6 +70,18 @@ function scoreFromProximityStress(stressM: number): number {
 
 export async function evalPollution(features: Record<string, unknown>): Promise<RiskLayerResult> {
   const { lat, lng, source: locSource } = await resolveCoordsForOsmProxy(features);
+
+  if (
+    typeof lat === "number" &&
+    typeof lng === "number" &&
+    Number.isFinite(lat) &&
+    Number.isFinite(lng)
+  ) {
+    const waqiReading = await getAirQuality(lat, lng).catch(() => null);
+    if (waqiReading) {
+      return buildPollutionLayerFromWaqi(waqiReading, locSource);
+    }
+  }
 
   const [roads, industrialSources, fuelSources] = await Promise.all([
     fetchRoadNetworkAround(lat, lng, RADIUS_M, "risk-pollution-roads-v2", 100),
