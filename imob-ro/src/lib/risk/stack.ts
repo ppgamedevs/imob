@@ -35,8 +35,14 @@ export function computeOverall(
   const unknownLayers = entries.filter(([, layer]) => layer.level === "unknown" || layer.score == null);
 
   if (unknownLayers.length > 0) {
+    const label: Record<RiskLayerKey, string> = {
+      seismic: "Seismic",
+      flood: "Inundatii",
+      pollution: "Poluare",
+      traffic: "Trafic",
+    };
     notes.push(
-      `Straturi indisponibile momentan: ${unknownLayers.map(([key]) => key).join(", ")}.`,
+      `Straturi indisponibile momentan: ${unknownLayers.map(([key]) => label[key] ?? key).join(", ")}.`,
     );
   }
 

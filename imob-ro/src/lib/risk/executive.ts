@@ -1,5 +1,8 @@
 import { buildSeismicRiskLayerFromExplain } from "./seismic-layer";
-import { filterRiskLayersForReport, RISK_LAYERS_HIDDEN_IN_REPORT } from "./report-risk-visibility";
+import {
+  filterRiskLayersForReport,
+  RISK_LAYERS_HIDDEN_IN_REPORT,
+} from "./report-risk-visibility";
 import { computeOverall } from "./stack";
 import type { RiskLayerKey, RiskLayerResult, RiskLevel, RiskStackResult } from "./types";
 
@@ -127,10 +130,11 @@ export function normalizeRiskStack(
     pollution: normalizeLayer("pollution", rawLayers?.pollution),
     traffic: normalizeLayer("traffic", rawLayers?.traffic),
   };
-  const computedOverall = computeOverall(layers);
-  const notes = Array.isArray(raw?.notes)
-    ? raw.notes.filter((item): item is string => typeof item === "string")
-    : computedOverall.notes;
+  const computedOverall = computeOverall(layers, {
+    excludeKeys: RISK_LAYERS_HIDDEN_IN_REPORT,
+  });
+  // Always derive notes from layers with hidden keys excluded (ignore stale DB strings mentioning flood).
+  const notes = computedOverall.notes;
 
   return {
     overallScore:

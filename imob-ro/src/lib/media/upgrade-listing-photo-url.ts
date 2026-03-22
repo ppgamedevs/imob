@@ -90,6 +90,13 @@ export function upgradeListingPhotoUrl(raw: string): string {
       return u.toString();
     }
 
+    // Roam CDN (i.roamcdn.net): do NOT rewrite gallery-thumb-* / listing-thumb-* to /WxH/ —
+    // the resize backend returns 5xx for guessed segments; larger variants must come from HTML/JSON.
+    if (fullHost.includes("roamcdn.net")) {
+      stripDownsizingSearchParams(u);
+      return u.toString();
+    }
+
     // Storia / Otodom-style img.* paths often embed /WxH/
     if (
       fullHost.includes("storia.ro") ||

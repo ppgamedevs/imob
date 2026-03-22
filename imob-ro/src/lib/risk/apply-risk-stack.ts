@@ -2,13 +2,13 @@ import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/db";
 
-import { evalFlood } from "./layers/flood";
 import { evalPollution } from "./layers/pollution";
 import { evalTraffic } from "./layers/traffic";
 import { applySeismicToAnalysis } from "./apply-seismic";
 import { buildSeismicRiskLayerFromExplain } from "./seismic-layer";
+import { RISK_LAYERS_HIDDEN_IN_REPORT } from "./report-risk-visibility";
 import { computeOverall } from "./stack";
-import type { RiskStackResult } from "./types";
+import type { RiskLayerResult, RiskStackResult } from "./types";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -31,11 +31,20 @@ export async function applyRiskStackToAnalysis(
   const existingExplain = isRecord(snapshot?.explain) ? snapshot.explain : {};
   const seismicExplain = isRecord(existingExplain.seismic) ? existingExplain.seismic : null;
 
-  const [flood, pollution, traffic] = await Promise.all([
-    evalFlood(features),
-    evalPollution(features),
-    evalTraffic(features),
-  ]);
+  const [pollution, traffic] = await Promise.all([evalPollution(features), evalTraffic(features)]);
+
+  /** Flood layer kept for schema compatibility; not shown in report / PDF (product decision). */
+  const flood: RiskLayerResult = {
+    key: "flood",
+    level: "unknown",
+    score: null,
+    confidence: null,
+    summary: "Strat inundații dezactivat în raport.",
+    details: [],
+    sourceName: null,
+    sourceUrl: null,
+    updatedAt: null,
+  };
 
   const layers = {
     seismic: buildSeismicRiskLayerFromExplain(seismicExplain, snapshot?.updatedAt ?? null),
@@ -43,7 +52,7 @@ export async function applyRiskStackToAnalysis(
     pollution,
     traffic,
   };
-  const overall = computeOverall(layers);
+  const overall = computeOverall(layers, { excludeKeys: RISK_LAYERS_HIDDEN_IN_REPORT });
   const riskStack: RiskStackResult = {
     ...overall,
     layers,

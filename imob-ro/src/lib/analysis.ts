@@ -319,9 +319,25 @@ export async function startAnalysis(analysisId: string, url: string) {
   }
 }
 
+/** Sets llmEnrichedAt so report UI stops waiting when LLM will never run. */
+async function markLlmTextSkipped(analysisId: string): Promise<void> {
+  await prisma.extractedListing
+    .updateMany({
+      where: { analysisId, llmEnrichedAt: null },
+      data: { llmEnrichedAt: new Date() },
+    })
+    .catch(() => {});
+}
+
 async function enqueueLlmEnrichment(analysisId: string): Promise<void> {
-  if (process.env.LLM_EXTRACT_ENABLED === "false") return;
-  if (!process.env.OPENAI_API_KEY) return;
+  if (process.env.LLM_EXTRACT_ENABLED === "false") {
+    await markLlmTextSkipped(analysisId);
+    return;
+  }
+  if (!process.env.OPENAI_API_KEY?.trim()) {
+    await markLlmTextSkipped(analysisId);
+    return;
+  }
 
   const { enrichTextForAnalysis } = await import("./llm/worker");
 

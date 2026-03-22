@@ -1,6 +1,8 @@
+import type { PriceVerdictPill } from "@/lib/report/price-verdict-badge";
 import type { ExecutiveVerdict } from "@/lib/report/verdict";
 
 import ReportDecisionBlock from "./ReportDecisionBlock";
+import ReportPriceFairnessBlock from "./ReportPriceFairnessBlock";
 import ReportProsConsSection from "./ReportProsConsSection";
 import ReportTldrStrip, { type TldrItem } from "./ReportTldrStrip";
 
@@ -17,6 +19,14 @@ export interface ReportAboveFoldHeaderProps {
   tldrItems: TldrItem[];
   pros: string[];
   cons: string[];
+  /** EUR mid vs EUR list — homepage-style fairness strip */
+  priceFairness?: {
+    pill: PriceVerdictPill;
+    listedEur: number;
+    estimatedMidEur: number;
+    /** Extra line under list price (e.g. RON original) */
+    listedExtraLine?: string | null;
+  } | null;
 }
 
 /**
@@ -36,6 +46,7 @@ export default function ReportAboveFoldHeader({
   tldrItems,
   pros,
   cons,
+  priceFairness,
 }: ReportAboveFoldHeaderProps) {
   return (
     <div className="space-y-6 md:space-y-7">
@@ -50,6 +61,16 @@ export default function ReportAboveFoldHeader({
         riskImpactLine={riskImpactLine}
         confidenceNarrative={confidenceNarrative}
       />
+      {priceFairness ? (
+        <ReportPriceFairnessBlock
+          verdict={priceFairness.pill}
+          listedPrice={priceFairness.listedEur}
+          estimatedMid={priceFairness.estimatedMidEur}
+          currency="EUR"
+          hasPlusTVA={hasPlusTVA}
+          listedExtraLine={priceFairness.listedExtraLine}
+        />
+      ) : null}
       <ReportTldrStrip items={tldrItems} maxItems={4} />
       <ReportProsConsSection pros={pros} cons={cons} maxEach={5} />
     </div>

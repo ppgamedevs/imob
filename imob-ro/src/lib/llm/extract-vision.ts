@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 
 import sharp from "sharp";
 
+import { upgradeListingPhotoUrl } from "@/lib/media/upgrade-listing-photo-url";
 import { logger } from "@/lib/obs/logger";
 
 import { callStructured } from "./client";
@@ -88,6 +89,7 @@ export async function extractVisionWithLlm(
 ): Promise<LlmVisionExtraction | null> {
   const urls = photoUrls
     .filter((u) => u.startsWith("http"))
+    .map((u) => upgradeListingPhotoUrl(u))
     .slice(0, MAX_PHOTOS);
 
   if (!urls.length) return null;

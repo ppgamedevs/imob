@@ -6,6 +6,7 @@
 import * as cheerio from "cheerio";
 import { XMLParser } from "fast-xml-parser";
 
+import { extractLatLngFromHtml } from "@/lib/geo/extract-coords-from-html";
 import {
   pickLargestSrcsetUrl,
   upgradeListingPhotoUrl,
@@ -263,30 +264,51 @@ export const adapterImobiliare: SourceAdapter = {
     // --- Photos ---
     const photos: string[] = [];
     const seenPhotos = new Set<string>();
+    /** Roam CDN: same file often appears as listing-thumb-400w (cards) and gallery-thumb-140w (JSON) — keep widest. */
+    const roamIndexByMediaKey = new Map<string, number>();
     const PHOTO_EXCLUDE =
       /logo|avatar|agent|banner|sprite|icon|favicon|placeholder|widget|\/similar\b|\/recomandate\b|1x1|pixel|\.svg/i;
     const DEDUP_SIZE_RE = /\/\d{2,4}x\d{2,4}\//g;
+    const ROAM_MEDIA_RE =
+      /\/prod-property-core-backend-media-imo\/(\d+)\/([a-f0-9-]+\.(?:jpe?g|png|webp))\b/i;
+
+    function roamListingMediaKey(photoUrl: string): string | null {
+      const m = photoUrl.match(ROAM_MEDIA_RE);
+      return m ? `${m[1]}/${m[2].toLowerCase()}` : null;
+    }
+
+    function roamThumbScore(photoUrl: string): number {
+      const u = photoUrl.toLowerCase();
+      const m = u.match(/\/(?:listing|gallery)-thumb-(\d+)w\//);
+      if (m) return parseInt(m[1], 10);
+      const dim = u.match(/\/(\d{3,4})x(\d{3,4})\//);
+      if (dim) return Math.max(parseInt(dim[1], 10), parseInt(dim[2], 10));
+      return 0;
+    }
 
     function addPhoto(src: string) {
       if (!src || PHOTO_EXCLUDE.test(src)) return;
       const full = upgradeListingPhotoUrl(new URL(src, url).toString());
+      const roamKey = roamListingMediaKey(full);
+      if (roamKey) {
+        const score = roamThumbScore(full);
+        const idx = roamIndexByMediaKey.get(roamKey);
+        if (idx === undefined) {
+          roamIndexByMediaKey.set(roamKey, photos.length);
+          photos.push(full);
+          return;
+        }
+        const cur = photos[idx];
+        if (roamThumbScore(cur) < score) photos[idx] = full;
+        return;
+      }
       const key = full.replace(/\?.*$/, "").replace(DEDUP_SIZE_RE, "/SIZE/");
       if (seenPhotos.has(key)) return;
       seenPhotos.add(key);
       photos.push(full);
     }
 
-    // Priority 1: Gallery images from JSON/script data (highest quality)
-    const gallerySection =
-      rawHtml.match(/"gallery":\s*\[([^\]]+)\]/i) ??
-      rawHtml.match(/"images":\s*\[([^\]]+)\]/i) ??
-      rawHtml.match(/"photos":\s*\[([^\]]+)\]/i);
-    if (gallerySection) {
-      const urls = gallerySection[1].matchAll(/https?:\/\/[^"'\s]+(?:\.jpg|\.jpeg|\.png|\.webp)/gi);
-      for (const m of urls) addPhoto(m[0]);
-    }
-
-    // Priority 2: Gallery container images - prefer srcset > data-original > data-src > src
+    // Priority 1: Gallery container images - prefer srcset > lazy attrs > src (often listing-thumb-400w in HTML)
     $(
       '[class*="gallery"] img, [class*="carousel"] img, [class*="slider"] img, [data-gallery] img',
     ).each((_, el) => {
@@ -299,6 +321,16 @@ export const adapterImobiliare: SourceAdapter = {
         $(el).attr("src");
       if (src) addPhoto(src);
     });
+
+    // Priority 2: Gallery images from JSON/script (may be gallery-thumb-140w only — deduped vs DOM above)
+    const gallerySection =
+      rawHtml.match(/"gallery":\s*\[([^\]]+)\]/i) ??
+      rawHtml.match(/"images":\s*\[([^\]]+)\]/i) ??
+      rawHtml.match(/"photos":\s*\[([^\]]+)\]/i);
+    if (gallerySection) {
+      const urls = gallerySection[1].matchAll(/https?:\/\/[^"'\s]+(?:\.jpg|\.jpeg|\.png|\.webp)/gi);
+      for (const m of urls) addPhoto(m[0]);
+    }
 
     // Priority 3: <picture> / <source> elements with high-res srcset
     if (photos.length < 3) {
@@ -341,6 +373,13 @@ export const adapterImobiliare: SourceAdapter = {
       if (parsedLat > 43 && parsedLat < 49 && parsedLng > 20 && parsedLng < 30) {
         lat = parsedLat;
         lng = parsedLng;
+      }
+    }
+    if (lat == null || lng == null) {
+      const g = extractLatLngFromHtml(rawHtml);
+      if (g) {
+        lat = g.lat;
+        lng = g.lng;
       }
     }
 

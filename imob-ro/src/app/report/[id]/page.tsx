@@ -29,6 +29,7 @@ import {
   generateNegotiationPoints,
   type NegotiationInput,
 } from "@/lib/report/negotiation";
+import { computePriceVerdictPill } from "@/lib/report/price-verdict-badge";
 import { computeFairRange, type FairPriceResult, findComparables } from "@/lib/report/pricing";
 import { buildConfidenceNarrative } from "@/lib/report/trust-copy";
 import { buildQuickTake, computeExecutiveVerdict, type VerdictInput } from "@/lib/report/verdict";
@@ -40,6 +41,8 @@ import {
   orderRiskLayerKeysForReport,
   RISK_LAYER_LABELS,
 } from "@/lib/risk/executive";
+import { getAirQuality } from "@/lib/risk/aqicn";
+import { mapSeismicExplainToBuyerView } from "@/lib/risk/seismic-label";
 import { matchSeismic } from "@/lib/risk/seismic";
 import { type ApartmentScoreInput, computeApartmentScore } from "@/lib/score/apartmentScore";
 import type { NormalizedFeatures } from "@/lib/types/pipeline";
@@ -63,9 +66,9 @@ import ListingInsightsSection from "./sections/ListingInsightsSection";
 import MethodologySection from "./sections/MethodologySection";
 import NegotiationPointsSection from "./sections/NegotiationPointsSection";
 import PriceAnchorsSection from "./sections/PriceAnchorsSection";
-import RiskStackSection from "./sections/RiskStackSection";
 import SellerChecklist from "./sections/SellerChecklist";
 import TransportSection from "./sections/TransportSection";
+import ReportRiskSection from "@/components/report/ReportRiskSection";
 import TtsSection from "./sections/TtsSection";
 import VerdictSection from "./sections/VerdictSection";
 import { ViewTracker } from "./ViewTracker";
@@ -525,15 +528,18 @@ export default async function ReportPage({ params }: Props) {
     }
   }
 
+  let airQualityReading: Awaited<ReturnType<typeof getAirQuality>> = null;
   if (geoLat != null && geoLng != null) {
-    const [vibe, transport] = await Promise.all([
+    const [vibe, transport, airQ] = await Promise.all([
       flags.poi ? computeVibeScores(geoLat, geoLng).catch(() => null) : Promise.resolve(null),
       flags.transport
         ? getTransportSummary(geoLat, geoLng).catch(() => null)
         : Promise.resolve(null),
+      getAirQuality(geoLat, geoLng).catch(() => null),
     ]);
     vibeResult = vibe;
     transportResult = transport;
+    airQualityReading = airQ;
   }
 
   // Tier check for notarial data visibility
@@ -578,6 +584,7 @@ export default async function ReportPage({ params }: Props) {
     /risc\s*seismic|bulina\s*rosie|clasa\s*de\s*risc|expertiza\s*tehnic/.test(
       `${extracted?.title ?? ""} ${((extracted?.sourceMeta as Record<string, unknown>)?.description as string) ?? ""}`.toLowerCase(),
     );
+  const buyerSeismicView = mapSeismicExplainToBuyerView(seismicExplain, titleMentionsRisk);
   const normalizedRiskStack = applyReportRiskVisibility(
     normalizeRiskStack(riskStackExplain ?? null, seismicExplain ?? null),
   );
@@ -877,6 +884,26 @@ export default async function ReportPage({ params }: Props) {
       ? `≈ ${priceEurConverted.toLocaleString("ro-RO")} EUR echivalent`
       : null;
 
+  const reportPriceFairness =
+    actualPrice != null &&
+    actualPrice > 0 &&
+    priceAnchorsRange?.mid != null &&
+    priceAnchorsRange.mid > 0
+      ? (() => {
+          const pill = computePriceVerdictPill(actualPrice, priceAnchorsRange.mid);
+          if (!pill) return null;
+          return {
+            pill,
+            listedEur: actualPrice,
+            estimatedMidEur: priceAnchorsRange.mid,
+            listedExtraLine:
+              isRon && extracted?.price
+                ? `${(extracted.price as number).toLocaleString("ro-RO")} RON în anunț`
+                : null,
+          };
+        })()
+      : null;
+
   const confidenceNarrative = buildConfidenceNarrative(confidenceData?.level, comps.length);
 
   const reportJsonLd = extracted
@@ -1157,6 +1184,7 @@ export default async function ReportPage({ params }: Props) {
               tldrItems={reportTldrItems}
               pros={apartmentScore.pros}
               cons={apartmentScore.cons}
+              priceFairness={reportPriceFairness}
             />
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
@@ -1219,19 +1247,9 @@ export default async function ReportPage({ params }: Props) {
           </div>
 
           <div className="space-y-10 mb-10">
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-10">
-              <RiskStackSection
-                riskStack={riskStackExplain ?? null}
-                seismicExplain={
-                  seismicExplain
-                    ? seismicExplain
-                    : {
-                        riskClass: seismic.level !== "None" ? seismic.level : null,
-                        sourceUrl: seismic.sourceUrl,
-                      }
-                }
-                titleMentionsRisk={titleMentionsRisk}
-              />
+            <ReportRiskSection airQuality={airQualityReading} seismic={buyerSeismicView} />
+
+            <div className="max-w-xl">
               <TtsSection
                 ttsBucket={ttsResult?.bucket ?? analysis?.scoreSnapshot?.ttsBucket}
                 scoreDays={ttsResult?.scoreDays}

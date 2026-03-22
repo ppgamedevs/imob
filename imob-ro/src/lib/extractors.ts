@@ -1,5 +1,6 @@
 import { pickAdapter } from "./crawl/adapters";
 import { getServerWhitelist } from "./config";
+import { extractLatLngFromHtml } from "@/lib/geo/extract-coords-from-html";
 import { logger } from "./obs/logger";
 
 type Extracted = {
@@ -187,6 +188,15 @@ export function extractGeneric(html: string): Extracted {
   // photos from og:image
   const ogImage = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
   if (ogImage) result.photos = [ogImage[1]];
+
+  // Coordinates (imobiliare.ro / map widgets / ld+json) — critical for POI + risk proxies
+  if (result.lat == null || result.lng == null) {
+    const geo = extractLatLngFromHtml(html);
+    if (geo) {
+      result.lat = geo.lat;
+      result.lng = geo.lng;
+    }
+  }
 
   return result;
 }

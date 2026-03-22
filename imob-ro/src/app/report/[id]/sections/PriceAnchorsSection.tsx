@@ -1,5 +1,9 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  computePriceVerdictPill,
+  formatDeltaAsPercent,
+} from "@/lib/report/price-verdict-badge";
 import ReportClarityBadge, { SectionTrustFooter } from "./ReportClarityBadge";
 
 interface Props {
@@ -42,28 +46,19 @@ export default function PriceAnchorsSection({
   // Show section if we have market estimate, listing price, OR notarial anchor alone
   if (!hasAvm && !askingPrice && !hasNotarial) return null;
 
-  const overpricing =
-    askingPrice != null && avmMid != null
-      ? Math.round(((askingPrice - avmMid) / avmMid) * 100)
+  const fairPill =
+    askingPrice != null && askingPrice > 0 && avmMid != null && avmMid > 0
+      ? computePriceVerdictPill(askingPrice, avmMid)
       : null;
 
-  let verdictLabel = "";
-  let verdictColor = "";
-  if (overpricing != null) {
-    if (overpricing > 10) {
-      verdictLabel = "Supraevaluat";
-      verdictColor = "bg-red-100 text-red-800";
-    } else if (overpricing > 3) {
-      verdictLabel = "Usor peste piata";
-      verdictColor = "bg-amber-100 text-amber-800";
-    } else if (overpricing >= -3) {
-      verdictLabel = "Pret corect";
-      verdictColor = "bg-green-100 text-green-800";
-    } else {
-      verdictLabel = "Sub piata";
-      verdictColor = "bg-blue-100 text-blue-800";
-    }
-  }
+  const verdictLabel = fairPill?.label ?? "";
+  const verdictColor = fairPill
+    ? fairPill.tone === "green"
+      ? "bg-emerald-50 text-emerald-900 border-emerald-200"
+      : fairPill.tone === "yellow"
+        ? "bg-amber-50 text-amber-950 border-amber-200"
+        : "bg-rose-50 text-rose-950 border-rose-200"
+    : "";
 
   const negotiationMargin =
     askingPrice != null && avmMid != null && askingPrice > avmMid
@@ -109,14 +104,12 @@ export default function PriceAnchorsSection({
               reper pentru decizie.
             </CardDescription>
           </div>
-          {verdictLabel && (
+          {verdictLabel && fairPill && (
             <Badge variant="outline" className={`text-xs shrink-0 ${verdictColor}`}>
               {verdictLabel}
-              {overpricing != null && overpricing !== 0 && (
-                <span className="ml-1 font-normal">
-                  ({overpricing > 0 ? "+" : ""}{overpricing}%)
-                </span>
-              )}
+              <span className="ml-1 font-normal tabular-nums">
+                ({formatDeltaAsPercent(fairPill.delta)})
+              </span>
             </Badge>
           )}
         </div>

@@ -38,7 +38,10 @@ async function markEnrichAttempted(
 }
 
 export async function enrichTextForAnalysis(analysisId: string): Promise<boolean> {
-  if (!LLM_ENABLED()) return false;
+  if (!LLM_ENABLED()) {
+    await markEnrichAttempted(analysisId, "llmEnrichedAt");
+    return false;
+  }
 
   if (inFlightText.has(analysisId)) {
     logger.debug({ analysisId }, "Text enrichment already in flight, skipping");
@@ -47,6 +50,7 @@ export async function enrichTextForAnalysis(analysisId: string): Promise<boolean
 
   if (isRateLimited()) {
     logger.warn({ analysisId }, "LLM rate limit reached, skipping text enrichment");
+    await markEnrichAttempted(analysisId, "llmEnrichedAt");
     return false;
   }
 
@@ -145,7 +149,10 @@ export async function enrichTextForAnalysis(analysisId: string): Promise<boolean
 }
 
 export async function enrichVisionForAnalysis(analysisId: string): Promise<boolean> {
-  if (!LLM_ENABLED()) return false;
+  if (!LLM_ENABLED()) {
+    await markEnrichAttempted(analysisId, "llmVisionAt");
+    return false;
+  }
 
   if (inFlightVision.has(analysisId)) {
     logger.debug({ analysisId }, "Vision enrichment already in flight, skipping");
@@ -154,6 +161,7 @@ export async function enrichVisionForAnalysis(analysisId: string): Promise<boole
 
   if (isRateLimited()) {
     logger.warn({ analysisId }, "LLM rate limit reached, skipping vision enrichment");
+    await markEnrichAttempted(analysisId, "llmVisionAt");
     return false;
   }
 

@@ -212,23 +212,6 @@ export default function VerdictSection({
   }
 
   const { low, high, mid } = range;
-  let verdict: "Subevaluat" | "Pret corect" | "Supraevaluat" = "Pret corect";
-  let overpricingPct = 0;
-  let badgeVariant: "default" | "secondary" | "destructive" = "default";
-
-  if (actualPrice) {
-    overpricingPct = Math.round(((actualPrice - mid) / mid) * 100);
-    if (actualPrice < low) {
-      verdict = "Subevaluat";
-      badgeVariant = "default";
-    } else if (actualPrice > high) {
-      verdict = "Supraevaluat";
-      badgeVariant = "destructive";
-    } else {
-      verdict = "Pret corect";
-      badgeVariant = "secondary";
-    }
-  }
 
   const askingEurM2 =
     actualPrice && compsFair?.comps?.[0]
@@ -265,17 +248,7 @@ export default function VerdictSection({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Verdict badge */}
-        <div className="flex items-center gap-3">
-          <Badge variant={badgeVariant} className="text-base px-3 py-1">
-            {verdict}
-          </Badge>
-          {actualPrice != null && overpricingPct !== 0 && (
-            <span className="text-sm text-muted-foreground">
-              {overpricingPct > 0 ? "+" : ""}{overpricingPct}% fata de estimare
-            </span>
-          )}
-        </div>
+        {/* Verdict pill lives above the fold in ReportPriceFairnessBlock */}
 
         {/* Range display */}
         <div className="grid grid-cols-3 gap-4 text-sm">
