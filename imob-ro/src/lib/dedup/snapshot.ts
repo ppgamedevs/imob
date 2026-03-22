@@ -6,36 +6,53 @@
 import { prisma } from "@/lib/db";
 
 export async function rebuildGroupSnapshot(groupId: string) {
-  // Fetch all analyses in this group with their features
+  // DedupEdge has analysisId but no Prisma relation to Analysis (only group FK) — load analyses in a second query.
   const edges = await prisma.dedupEdge.findMany({
     where: { groupId },
-    include: {
-      analysis: {
-        include: {
-          featureSnapshot: true,
-          extractedListing: true,
-          scoreSnapshot: true,
-        },
-      },
-    } as any,
   });
 
   if (!edges.length) return;
 
+  const analysisIds = [...new Set(edges.map((e) => e.analysisId))];
+  const analyses = await prisma.analysis.findMany({
+    where: { id: { in: analysisIds } },
+    include: {
+      featureSnapshot: true,
+      extractedListing: true,
+      scoreSnapshot: true,
+    },
+  });
+  const analysisById = new Map(analyses.map((a) => [a.id, a]));
+
   // Build candidate rows for canonical selection
   const rows = edges.map((edge) => {
-    const a = (edge as any).analysis;
-    const f = a?.featureSnapshot?.features ?? {};
-    const extracted = a?.extractedListing ?? {};
+    const a = analysisById.get(edge.analysisId);
+    if (!a) return null;
+    const f = (a.featureSnapshot?.features ?? {}) as Record<string, unknown>;
+    const extracted = (a.extractedListing ?? {}) as Record<string, unknown>;
+
+    const title = typeof extracted.title === "string" ? extracted.title : null;
+    const priceEur = typeof f.priceEur === "number" ? f.priceEur : null;
+    const areaM2 = typeof f.areaM2 === "number" ? f.areaM2 : null;
+    const rooms = typeof f.rooms === "number" ? f.rooms : null;
+    const floorRaw = typeof f.floorRaw === "string" ? f.floorRaw : null;
+    const yearBuilt = typeof f.yearBuilt === "number" ? f.yearBuilt : null;
+    const lat = typeof f.lat === "number" ? f.lat : null;
+    const lng = typeof f.lng === "number" ? f.lng : null;
+    const photos = extracted.photos;
+    const photo =
+      Array.isArray(photos) && photos.length > 0 && typeof photos[0] === "string"
+        ? photos[0]
+        : null;
 
     // Completeness score (more fields = better canonical candidate)
     const completeness =
-      (f.priceEur ? 1 : 0) +
-      (f.areaM2 ? 1 : 0) +
-      (f.rooms ? 1 : 0) +
-      (f.yearBuilt ? 1 : 0) +
-      (f.lat && f.lng ? 1 : 0) +
-      (extracted.title ? 1 : 0);
+      (priceEur != null ? 1 : 0) +
+      (areaM2 != null ? 1 : 0) +
+      (rooms != null ? 1 : 0) +
+      (yearBuilt != null ? 1 : 0) +
+      (lat != null && lng != null ? 1 : 0) +
+      (title ? 1 : 0);
 
     // Extract domain from sourceUrl
     let domain = "unknown";
@@ -50,21 +67,23 @@ export async function rebuildGroupSnapshot(groupId: string) {
 
     return {
       id: a.id,
-      title: extracted.title ?? null,
-      priceEur: f.priceEur ?? null,
-      areaM2: f.areaM2 ?? null,
-      rooms: f.rooms ?? null,
-      floorRaw: f.floorRaw ?? null,
-      yearBuilt: f.yearBuilt ?? null,
-      lat: f.lat ?? null,
-      lng: f.lng ?? null,
-      photo: Array.isArray(extracted.photos) ? extracted.photos[0] : null,
+      title,
+      priceEur,
+      areaM2,
+      rooms,
+      floorRaw,
+      yearBuilt,
+      lat,
+      lng,
+      photo,
       createdAt: a.createdAt,
       completeness,
       domain,
       sourceUrl: a.sourceUrl ?? "",
     };
-  });
+  }).filter((r): r is NonNullable<typeof r> => r != null);
+
+  if (!rows.length) return;
 
   // Sort by completeness (desc), then recency (desc)
   rows.sort((a, b) => b.completeness - a.completeness || +b.createdAt - +a.createdAt);
@@ -132,19 +151,17 @@ export async function getGroupSnapshot(groupId: string) {
 export async function getGroupSources(groupId: string) {
   const edges = await prisma.dedupEdge.findMany({
     where: { groupId },
-    include: {
-      analysis: {
-        select: {
-          id: true,
-          sourceUrl: true,
-          createdAt: true,
-        },
-      },
-    } as any,
   });
+  const analysisIds = [...new Set(edges.map((e) => e.analysisId))];
+  const analyses = await prisma.analysis.findMany({
+    where: { id: { in: analysisIds } },
+    select: { id: true, sourceUrl: true, createdAt: true },
+  });
+  const analysisById = new Map(analyses.map((a) => [a.id, a]));
 
   return edges.map((edge) => {
-    const a = (edge as any).analysis;
+    const a = analysisById.get(edge.analysisId);
+    if (!a) return null;
     let domain = "unknown";
     try {
       if (a.sourceUrl) {
@@ -161,5 +178,5 @@ export async function getGroupSources(groupId: string) {
       domain,
       createdAt: a.createdAt,
     };
-  });
+  }).filter((r): r is NonNullable<typeof r> => r != null);
 }

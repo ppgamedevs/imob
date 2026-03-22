@@ -224,11 +224,27 @@ const FETCH_HEADERS_SETS: Record<string, string>[] = [
 
 const MAX_SERVER_FETCH_RETRIES = 2;
 
+function extraFetchHeadersForHost(urlStr: string): Record<string, string> {
+  try {
+    const host = new URL(urlStr).hostname.replace(/^www\./, "").toLowerCase();
+    if (host === "publi24.ro") {
+      return {
+        Referer: "https://www.publi24.ro/",
+      };
+    }
+  } catch {
+    /* ignore */
+  }
+  return {};
+}
+
 async function fetchWithRetry(url: string, timeoutMs = 15_000): Promise<{ ok: boolean; html: string } | null> {
   const log = logger.child({ url, fn: "fetchWithRetry" });
+  const hostExtra = extraFetchHeadersForHost(url);
 
   for (let attempt = 0; attempt < MAX_SERVER_FETCH_RETRIES; attempt++) {
-    const headers = FETCH_HEADERS_SETS[attempt % FETCH_HEADERS_SETS.length];
+    const base = FETCH_HEADERS_SETS[attempt % FETCH_HEADERS_SETS.length];
+    const headers = { ...base, ...hostExtra };
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), timeoutMs);
