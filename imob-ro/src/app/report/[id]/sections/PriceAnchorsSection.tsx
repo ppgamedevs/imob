@@ -223,7 +223,7 @@ export default function PriceAnchorsSection({
                     </div>
                     <div className="font-semibold text-sm">{fmt(a.value, currency)}</div>
                     {a.subLabel && (
-                      <div className="text-[10px] text-muted-foreground truncate">{a.subLabel}</div>
+                      <div className="text-[10px] text-muted-foreground break-words">{a.subLabel}</div>
                     )}
                   </div>
                 </div>
@@ -251,6 +251,14 @@ export default function PriceAnchorsSection({
             folosita de notari pentru calculul taxelor. Pretul real de piata este de obicei
             {" "}{Math.round(((avmMid - notarialTotal) / notarialTotal) * 100)}% mai mare.
           </div>
+        )}
+
+        {showNotarial && !hasNotarial && (hasAvm || askingPrice != null) && (
+          <p className="text-xs text-muted-foreground rounded-lg bg-amber-50/50 p-2.5 ring-1 ring-amber-100/80">
+            Grila notariala nu a putut fi afisata (lipsa potrivire zona / mp in baza de date sau analiza
+            veche). Re-ruleaza analiza cu adresa si suprafata complete, sau verifica daca sectorul e
+            acoperit in grila.
+          </p>
         )}
 
       </CardContent>

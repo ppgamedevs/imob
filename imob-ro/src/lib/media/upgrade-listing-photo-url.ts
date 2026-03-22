@@ -119,6 +119,19 @@ export function upgradeListingPhotoUrl(raw: string): string {
       return u.toString();
     }
 
+    // Generic listing CDNs: bump /WxH/ path segments and filename sizes on obvious image URLs
+    if (/\.(jpe?g|webp|png|gif)(\?|$)/i.test(u.pathname)) {
+      let path = u.pathname;
+      const before = path;
+      path = replacePathDimensions(path, "/1600x1200/");
+      path = replaceFilenameDimensions(path);
+      if (path !== before) {
+        u.pathname = path;
+        stripDownsizingSearchParams(u);
+        return u.toString();
+      }
+    }
+
     return raw;
   } catch {
     return raw;

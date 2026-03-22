@@ -10,7 +10,7 @@ import {
 import { prisma } from "@/lib/db";
 import { flags } from "@/lib/feature-flags";
 import { geocodeWithNominatim, inferLocationFromText, nearestStationM } from "@/lib/geo";
-import { upgradeListingPhotoUrl } from "@/lib/media/upgrade-listing-photo-url";
+import { normalizeReportPhotoEntry } from "@/lib/media/normalize-report-photo";
 import { getTransportSummary } from "@/lib/geo/transport";
 import { computeVibeScores } from "@/lib/geo/vibe";
 import type { LlmTextExtraction, LlmVisionExtraction } from "@/lib/llm/types";
@@ -98,25 +98,6 @@ const PHOTO_BLACKLIST_PATTERNS = [
 
 function isPropertyPhoto(url: string): boolean {
   return !PHOTO_BLACKLIST_PATTERNS.some((p) => p.test(url));
-}
-
-/** Coerce stored JSON photo entries and upgrade CDN thumbnails to larger variants. */
-function normalizeReportPhotoUrl(entry: unknown): string | null {
-  if (typeof entry === "string") {
-    const u = entry.startsWith("//") ? `https:${entry}` : entry;
-    if (u.startsWith("http")) return upgradeListingPhotoUrl(u);
-  }
-  if (
-    entry &&
-    typeof entry === "object" &&
-    "url" in entry &&
-    typeof (entry as { url: unknown }).url === "string"
-  ) {
-    let u = (entry as { url: string }).url;
-    if (u.startsWith("//")) u = `https:${u}`;
-    if (u.startsWith("http")) return upgradeListingPhotoUrl(u);
-  }
-  return null;
 }
 
 /** Same-origin proxy avoids hotlink blocks; /api/img enforces domain allowlist. */
@@ -419,6 +400,7 @@ export default async function ReportPage({ params }: Props) {
 
   // Score explain data
   const scoreExplain = analysis.scoreSnapshot?.explain as Record<string, unknown> | null;
+  const notarialExplain = scoreExplain?.notarial as Record<string, unknown> | undefined;
   const compsExplain = scoreExplain?.comps as Record<string, unknown> | undefined;
   const compsStats = compsExplain?.eurM2 as
     | { median?: number; q1?: number; q3?: number }
@@ -566,10 +548,16 @@ export default async function ReportPage({ params }: Props) {
   // }
   // if (isAdmin) showNotarial = true;
 
-  // Notarial grid data from ScoreSnapshot
-  const notarialTotal = analysis.scoreSnapshot?.notarialTotal ?? null;
-  const notarialZone = analysis.scoreSnapshot?.notarialZone ?? null;
-  const notarialYear = analysis.scoreSnapshot?.notarialYear ?? null;
+  // Notarial grid: prefer Prisma columns, fallback to explain JSON (older rows / partial writes)
+  const notarialTotal =
+    analysis.scoreSnapshot?.notarialTotal ??
+    (typeof notarialExplain?.totalValue === "number" ? notarialExplain.totalValue : null);
+  const notarialZone =
+    analysis.scoreSnapshot?.notarialZone ??
+    (typeof notarialExplain?.zone === "string" ? notarialExplain.zone : null);
+  const notarialYear =
+    analysis.scoreSnapshot?.notarialYear ??
+    (typeof notarialExplain?.year === "number" ? notarialExplain.year : null);
 
   // LLM enrichment data (read from DB, never call LLM here)
   const llmText = extracted?.llmTextExtract as unknown as LlmTextExtraction | null;
@@ -1634,7 +1622,7 @@ export default async function ReportPage({ params }: Props) {
               const allPhotos =
                 extracted && Array.isArray(extracted.photos)
                   ? (extracted.photos as unknown[])
-                      .map(normalizeReportPhotoUrl)
+                      .map(normalizeReportPhotoEntry)
                       .filter((u): u is string => u != null)
                       .filter(isPropertyPhoto)
                   : [];

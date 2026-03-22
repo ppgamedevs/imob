@@ -48,7 +48,7 @@ export default function ReportDecisionBlock({
       aria-label="Decizie"
     >
       {propertyTitle ? (
-        <p className="mb-4 line-clamp-1 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 md:text-left">
+        <p className="mb-4 text-center text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400 md:text-left break-words">
           {propertyTitle}
         </p>
       ) : null}
@@ -73,13 +73,13 @@ export default function ReportDecisionBlock({
           <dt className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
             Claritate pret
           </dt>
-          <dd className="mt-1.5 text-[13px] font-medium leading-snug text-slate-800 line-clamp-2">
+          <dd className="mt-1.5 text-[13px] font-medium leading-snug text-slate-800 break-words">
             {priceTrustLine}
           </dd>
         </div>
         <div className="min-w-0">
           <dt className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">Impact</dt>
-          <dd className="mt-1.5 text-[13px] font-semibold leading-snug text-slate-900 line-clamp-2">
+          <dd className="mt-1.5 text-[13px] font-semibold leading-snug text-slate-900 break-words">
             {riskImpactLine}
           </dd>
         </div>

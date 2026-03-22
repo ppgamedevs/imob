@@ -159,14 +159,32 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     payload: e.payload,
   }));
 
+  const explainSnap = isRecord(ssRecord?.explain) ? ssRecord.explain : null;
+  const notarialSnap = isRecord(explainSnap?.notarial) ? explainSnap.notarial : null;
   const notarialTotal =
-    typeof ssRecord?.notarialTotal === "number" ? (ssRecord.notarialTotal as number) : null;
+    typeof ssRecord?.notarialTotal === "number"
+      ? (ssRecord.notarialTotal as number)
+      : typeof notarialSnap?.totalValue === "number"
+        ? (notarialSnap.totalValue as number)
+        : null;
   const notarialEurM2 =
-    typeof ssRecord?.notarialEurM2 === "number" ? (ssRecord.notarialEurM2 as number) : null;
+    typeof ssRecord?.notarialEurM2 === "number"
+      ? (ssRecord.notarialEurM2 as number)
+      : typeof notarialSnap?.eurPerM2 === "number"
+        ? (notarialSnap.eurPerM2 as number)
+        : null;
   const notarialZone =
-    typeof ssRecord?.notarialZone === "string" ? (ssRecord.notarialZone as string) : null;
+    typeof ssRecord?.notarialZone === "string"
+      ? (ssRecord.notarialZone as string)
+      : typeof notarialSnap?.zone === "string"
+        ? (notarialSnap.zone as string)
+        : null;
   const notarialYear =
-    typeof ssRecord?.notarialYear === "number" ? (ssRecord.notarialYear as number) : null;
+    typeof ssRecord?.notarialYear === "number"
+      ? (ssRecord.notarialYear as number)
+      : typeof notarialSnap?.year === "number"
+        ? (notarialSnap.year as number)
+        : null;
 
   const sourceMeta = (a.extractedListing?.sourceMeta ?? {}) as Record<string, unknown>;
   const llmText = a.extractedListing?.llmTextExtract as unknown as LlmTextExtraction | null;

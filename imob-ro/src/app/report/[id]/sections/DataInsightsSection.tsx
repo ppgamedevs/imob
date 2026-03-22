@@ -26,14 +26,6 @@ function pushUnique(items: string[], value: string) {
   if (!items.includes(value)) items.push(value);
 }
 
-function truncateLine(raw: string, max = 95): string {
-  const t = raw.replace(/\s+/g, " ").trim();
-  if (t.length <= max) return t;
-  const cut = t.slice(0, max);
-  const sp = cut.lastIndexOf(" ");
-  return (sp > 50 ? cut.slice(0, sp) : cut).trim() + "…";
-}
-
 export default function DataInsightsSection(props: Props) {
   const certain: string[] = [];
   const unclear: string[] = [];
@@ -131,10 +123,10 @@ export default function DataInsightsSection(props: Props) {
 
   const completeness = Math.round((certain.length / Math.max(1, certain.length + unclear.length)) * 100);
 
-  const certainShow = certain.slice(0, MAX_EACH).map(truncateLine);
-  const unclearShow = unclear.slice(0, MAX_EACH).map(truncateLine);
+  const certainShow = certain.slice(0, MAX_EACH).map((s) => s.replace(/\s+/g, " ").trim());
+  const unclearShow = unclear.slice(0, MAX_EACH).map((s) => s.replace(/\s+/g, " ").trim());
   const topMoney = moneyHints[0]
-    ? truncateLine(moneyHints[0], 120)
+    ? moneyHints[0].replace(/\s+/g, " ").trim()
     : "Nu am detectat o „capcana” unica, dar verifica tot ce e neclar mai sus.";
 
   const whatMeans =
@@ -174,10 +166,13 @@ export default function DataInsightsSection(props: Props) {
               A. Ce este sigur
             </div>
             <ul className="space-y-1.5">
-              {certainShow.map((item) => (
-                <li key={item} className="text-[13px] leading-snug text-emerald-950 flex gap-2">
-                  <span className="text-emerald-600 shrink-0">✔</span>
-                  <span>{item}</span>
+              {certainShow.map((item, i) => (
+                <li
+                  key={`c-${i}`}
+                  className="text-[13px] leading-snug text-emerald-950 flex gap-2 items-start"
+                >
+                  <span className="text-emerald-600 shrink-0 pt-0.5">✔</span>
+                  <span className="min-w-0 flex-1 break-words">{item}</span>
                 </li>
               ))}
             </ul>
@@ -190,10 +185,13 @@ export default function DataInsightsSection(props: Props) {
               B. Ce nu este clar
             </div>
             <ul className="space-y-1.5">
-              {unclearShow.map((item) => (
-                <li key={item} className="text-[13px] leading-snug text-amber-950 flex gap-2">
-                  <span className="text-amber-700 shrink-0">?</span>
-                  <span>{item}</span>
+              {unclearShow.map((item, i) => (
+                <li
+                  key={`u-${i}`}
+                  className="text-[13px] leading-snug text-amber-950 flex gap-2 items-start"
+                >
+                  <span className="text-amber-700 shrink-0 pt-0.5">?</span>
+                  <span className="min-w-0 flex-1 break-words">{item}</span>
                 </li>
               ))}
             </ul>
