@@ -46,6 +46,7 @@
 - `MAPBOX_API_TOKEN` - Geocoding
 - `CRON_SECRET` - Cron job authentication
 - `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` - Google OAuth
+- `GOOGLE_PLACES_API_KEY` or `GOOGLE_MAPS_API_KEY` - Optional **server-only** fallback for sparse OSM POIs in `/api/geo/intel*` (Places API must be enabled; never expose to the client)
 
 **Configuration:**
 

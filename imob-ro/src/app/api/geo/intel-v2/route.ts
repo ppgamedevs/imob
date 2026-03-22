@@ -9,8 +9,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { rateLimit } from "@/lib/http/rate";
 import { POI_CATEGORY_KEYS, type PoiCategoryKey } from "@/lib/geo/poiCategories";
-import { fetchOverpassPois, type OverpassPoi } from "@/lib/geo/overpass";
-import { makeCacheKey, getCachedPois, setCachedPois } from "@/lib/geo/cache";
+import type { OverpassPoi } from "@/lib/geo/overpass";
+import { validateLatLng, isLikelyRomania } from "@/lib/geo/coords";
+import { fetchIntelPoisMerged } from "@/lib/geo/fetchIntelPois";
+import type { PoiIngestionMeta } from "@/lib/geo/poiIngestion";
 import { computeIntelScores, type IntelResult } from "@/lib/geo/intelScoring";
 import { querySignals, type DemandSignals } from "@/lib/geo/signals/querySignals";
 import { classifyZone, type ZoneTypeResult } from "@/lib/geo/zoneType";
@@ -28,7 +30,7 @@ function roundCoord(val: number): number {
 }
 
 function makeSnapshotKey(lat: number, lng: number, radius: number): string {
-  return `intel-v2:${roundCoord(lat)}:${roundCoord(lng)}:${radius}`;
+  return `intel-v2e:${roundCoord(lat)}:${roundCoord(lng)}:${radius}`;
 }
 
 export interface IntelV2Response {
@@ -36,6 +38,9 @@ export interface IntelV2Response {
   scores: IntelResult["scores"];
   evidence: IntelResult["evidence"];
   redFlags: string[];
+  zoneDataQuality: IntelResult["zoneDataQuality"];
+  categoryCounts: IntelResult["categoryCounts"];
+  uncertainScores: IntelResult["uncertainScores"];
   poisByCategory: Record<PoiCategoryKey, OverpassPoi[]>;
   // V2 additions
   zoneType: ZoneTypeResult;
@@ -45,9 +50,35 @@ export interface IntelV2Response {
   radius: number;
   center: { lat: number; lng: number };
   cachedAt: string | null;
+  /** How POIs were loaded (OSM, optional Google, radii). Never omit when compute succeeded. */
+  poiIngestion: PoiIngestionMeta;
 }
 
 type FallbackMetroData = { name: string; distanceM: number } | null;
+
+function countPoisInPayload(pois: Record<PoiCategoryKey, OverpassPoi[]>): number {
+  return POI_CATEGORY_KEYS.reduce((s, k) => s + (pois[k]?.length ?? 0), 0);
+}
+
+/** Backfill meta for snapshots saved before `poiIngestion` existed. */
+function ensureIntelV2PoiMeta(payload: IntelV2Response, radius: number): IntelV2Response {
+  if (payload.poiIngestion) return payload;
+  const n = countPoisInPayload(payload.poisByCategory);
+  return {
+    ...payload,
+    poiIngestion: {
+      osmTotal: n,
+      googleTotal: 0,
+      mergedTotal: n,
+      fetchRadiusM: Math.max(1000, radius),
+      usedGoogleFallback: false,
+      notice:
+        n === 0
+          ? "Date limitate, estimare bazata pe surse disponibile."
+          : undefined,
+    },
+  };
+}
 
 async function getFallbackMetroData(
   lat: number,
@@ -90,29 +121,18 @@ function reconcileTransitFallback(
     redFlags,
     commuter,
     zoneType: classifyZone(
-      { scores: payload.scores, evidence: payload.evidence, redFlags },
+      {
+        scores: payload.scores,
+        evidence: payload.evidence,
+        redFlags,
+        zoneDataQuality: payload.zoneDataQuality,
+        categoryCounts: payload.categoryCounts,
+        uncertainScores: payload.uncertainScores,
+      },
       payload.poisByCategory,
       payload.signals,
     ),
   };
-}
-
-async function fetchCategoryWithCache(
-  lat: number,
-  lng: number,
-  radius: number,
-  category: PoiCategoryKey,
-): Promise<OverpassPoi[]> {
-  const cacheKey = makeCacheKey(lat, lng, radius, category);
-  const cached = await getCachedPois(cacheKey);
-  if (cached) return cached;
-  try {
-    const pois = await fetchOverpassPois(lat, lng, radius, category);
-    setCachedPois(cacheKey, lat, lng, radius, category, pois).catch(() => {});
-    return pois;
-  } catch {
-    return [];
-  }
 }
 
 async function computeFullIntel(
@@ -120,17 +140,29 @@ async function computeFullIntel(
   lng: number,
   radius: number,
 ): Promise<IntelV2Response> {
-  // 1. Fetch POIs (parallel)
-  const results = await Promise.all(
-    POI_CATEGORY_KEYS.map(async (cat) => {
-      const pois = await fetchCategoryWithCache(lat, lng, radius, cat);
-      return [cat, pois] as const;
-    }),
-  );
-  const poisByCategory = Object.fromEntries(results) as Record<PoiCategoryKey, OverpassPoi[]>;
+  const coordCheck = validateLatLng(lat, lng);
+  if (!coordCheck.ok) {
+    throw new Error(`Invalid coordinates: ${coordCheck.reason}`);
+  }
+
+  // 1. POIs: batched Overpass (semantic radii) + optional Google merge + per-category display caps
+  const merged = await fetchIntelPoisMerged({
+    lat,
+    lng,
+    userRadiusM: radius,
+  });
+  const { poisByCategory, pipelineQuality } = merged;
+  let { poiIngestion } = merged;
+  if (!isLikelyRomania(lat, lng)) {
+    const extra = "Coordonate in afara ariei Romania — rezultate orientative.";
+    poiIngestion = {
+      ...poiIngestion,
+      notice: poiIngestion.notice ? `${poiIngestion.notice} ${extra}` : extra,
+    };
+  }
 
   // 2. Compute base scores
-  const intel = computeIntelScores(poisByCategory);
+  const intel = computeIntelScores(poisByCategory, { pipelineQuality });
   const fallbackMetro = await getFallbackMetroData(lat, lng);
   const hasNearbyTransitFallback = fallbackMetro != null && fallbackMetro.distanceM <= 800;
   const resolvedRedFlags = hasNearbyTransitFallback
@@ -160,6 +192,9 @@ async function computeFullIntel(
     scores: resolvedIntel.scores,
     evidence: resolvedIntel.evidence,
     redFlags: resolvedIntel.redFlags,
+    zoneDataQuality: resolvedIntel.zoneDataQuality,
+    categoryCounts: resolvedIntel.categoryCounts,
+    uncertainScores: resolvedIntel.uncertainScores,
     poisByCategory,
     zoneType,
     signals,
@@ -167,6 +202,7 @@ async function computeFullIntel(
     radius,
     center: { lat, lng },
     cachedAt: null,
+    poiIngestion,
   };
 }
 
@@ -192,8 +228,15 @@ export async function GET(req: Request) {
   const lng = parseFloat(lngStr);
   const radius = radiusStr ? parseInt(radiusStr, 10) : 1000;
 
-  if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) {
+  const coordCheck = validateLatLng(lat, lng);
+  if (!coordCheck.ok) {
     return NextResponse.json({ error: "Invalid coordinates" }, { status: 400 });
+  }
+  if (!isLikelyRomania(lat, lng)) {
+    console.warn("[intel-v2] coordinates outside Romania bbox — POI results are best-effort", {
+      lat,
+      lng,
+    });
   }
   if (!VALID_RADII.includes(radius)) {
     return NextResponse.json({ error: `Invalid radius. Allowed: ${VALID_RADII.join(", ")}` }, { status: 400 });
@@ -206,7 +249,10 @@ export async function GET(req: Request) {
       where: { key: snapshotKey },
     });
     if (snapshot && snapshot.expiresAt > new Date()) {
-      const payload = snapshot.payload as unknown as IntelV2Response;
+      const payload = ensureIntelV2PoiMeta(
+        snapshot.payload as unknown as IntelV2Response,
+        radius,
+      );
       const fallbackMetro = await getFallbackMetroData(lat, lng);
       const resolvedPayload = reconcileTransitFallback(payload, fallbackMetro);
       return NextResponse.json({ ...resolvedPayload, cachedAt: snapshot.computedAt.toISOString() });

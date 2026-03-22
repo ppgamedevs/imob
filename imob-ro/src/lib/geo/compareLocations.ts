@@ -85,8 +85,14 @@ export function compareLocations(
     }
   }
 
-  // Red flags count (fewer is better)
-  metrics.push(compareMetric("redFlags", "Lipsuri zona", intelA.redFlags.length, intelB.redFlags.length, false));
+  metrics.push(
+    compareMetric(
+      "zonePoiCoverage",
+      "Acoperire POI (OSM)",
+      intelA.zoneDataQuality.totalPois,
+      intelB.zoneDataQuality.totalPois,
+    ),
+  );
 
   // Compute wins
   const winsA: string[] = [];

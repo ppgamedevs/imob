@@ -29,13 +29,19 @@ function emptyPois(): Record<PoiCategoryKey, OverpassPoi[]> {
 }
 
 describe("computeIntelScores", () => {
-  it("returns low scores for empty POIs", () => {
+  it("empty POIs: low-data mode, softened scores, no misleading red flags", () => {
     const result = computeIntelScores(emptyPois());
-    expect(result.scores.convenience.value).toBeLessThanOrEqual(10);
-    expect(result.scores.family.value).toBeLessThanOrEqual(25);
-    expect(result.scores.nightlifeRisk.value).toBeLessThanOrEqual(5);
-    expect(result.scores.walkability.value).toBeLessThanOrEqual(5);
-    expect(result.redFlags.length).toBeGreaterThan(0);
+    expect(result.zoneDataQuality.lowDataMode).toBe(true);
+    expect(result.zoneDataQuality.totalPois).toBe(0);
+    expect(result.redFlags.length).toBe(0);
+    expect(result.uncertainScores.convenience).toBe(true);
+    expect(result.uncertainScores.walkability).toBe(true);
+    expect(result.uncertainScores.nightlifeRisk).toBe(true);
+    // Softened toward neutral — not a punitive "0/100 = bad neighborhood"
+    expect(result.scores.convenience.value).toBeGreaterThanOrEqual(35);
+    expect(result.scores.convenience.value).toBeLessThanOrEqual(55);
+    // Nightlife neutral + uncertain when OSM empty (not "silent zero risk")
+    expect(result.scores.nightlifeRisk.value).toBe(40);
   });
 
   it("scores convenience based on supermarkets + transport", () => {
@@ -70,6 +76,14 @@ describe("computeIntelScores", () => {
 
   it("gives high nightlife risk with many bars/clubs", () => {
     const pois = emptyPois();
+    // Enough cross-category POIs so zone is not in low-data mode (nightlife is meaningful)
+    pois.supermarket = [makePoi("supermarket", 250, "convenience"), makePoi("supermarket", 400, "bakery")];
+    pois.transport = [makePoi("transport", 300, "bus_stop"), makePoi("transport", 400, "tram_stop")];
+    pois.school = [makePoi("school", 600, "school")];
+    pois.medical = [makePoi("medical", 700, "doctors")];
+    pois.park = [makePoi("park", 500, "park")];
+    pois.gym = [makePoi("gym", 800, "fitness_centre")];
+    pois.parking = [makePoi("parking", 900, "parking")];
     pois.restaurant = [
       makePoi("restaurant", 200, "bar"),
       makePoi("restaurant", 300, "bar"),
@@ -79,6 +93,7 @@ describe("computeIntelScores", () => {
       makePoi("restaurant", 500, "restaurant"),
     ];
     const result = computeIntelScores(pois);
+    expect(result.zoneDataQuality.lowDataMode).toBe(false);
     expect(result.scores.nightlifeRisk.value).toBeGreaterThan(50);
   });
 
@@ -96,14 +111,12 @@ describe("computeIntelScores", () => {
     expect(result.evidence.walkability.some((e) => e.includes("categorii"))).toBe(true);
   });
 
-  it("generates red flags for missing essentials", () => {
+  it("sparse POIs: no red-flag strings (OSM gaps are not product conclusions)", () => {
     const pois = emptyPois();
-    // Only restaurants, nothing else
     pois.restaurant = [makePoi("restaurant", 200)];
     const result = computeIntelScores(pois);
-    expect(result.redFlags.some((f) => f.includes("magazine"))).toBe(true);
-    expect(result.redFlags.some((f) => f.includes("transport"))).toBe(true);
-    expect(result.redFlags.some((f) => f.includes("parcuri"))).toBe(true);
+    expect(result.redFlags.length).toBe(0);
+    expect(result.zoneDataQuality.lowDataMode).toBe(true);
   });
 
   it("all scores are clamped 0-100", () => {

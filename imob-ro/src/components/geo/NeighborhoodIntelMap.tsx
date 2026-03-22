@@ -12,7 +12,7 @@ import {
   type PoiCategoryKey,
 } from "@/lib/geo/poiCategories";
 import type { OverpassPoi } from "@/lib/geo/overpass";
-import type { IntelResult } from "@/lib/geo/intelScoring";
+import { normalizeIntelResultForUi, type IntelResult } from "@/lib/geo/intelScoring";
 
 // Lazy-load the Leaflet map to avoid SSR issues
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
@@ -255,15 +255,7 @@ export default function NeighborhoodIntelMap({
 
             <TabsContent value="intel" className="mt-3">
               <IntelScoreCards
-                intel={
-                  data
-                    ? {
-                        scores: data.scores,
-                        evidence: data.evidence,
-                        redFlags: data.redFlags,
-                      }
-                    : null
-                }
+                intel={data ? normalizeIntelResultForUi(data, data.poisByCategory) : null}
                 loading={loading}
               />
             </TabsContent>
@@ -283,8 +275,9 @@ export default function NeighborhoodIntelMap({
         </div>
 
         <div className="px-4 pb-3">
-          <p className="text-[10px] text-muted-foreground">
-            Date OpenStreetMap via Overpass API. Distantele sunt in linie dreapta. Scorurile sunt calculate automat pe baza densitatii si proximitatii punctelor de interes.
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            OpenStreetMap (Overpass). Distantele sunt in linie dreapta. Lipsa unui POI pe harta nu
+            inseamna ca nu exista in realitate.
           </p>
         </div>
       </CardContent>

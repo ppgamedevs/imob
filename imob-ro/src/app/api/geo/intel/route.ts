@@ -5,36 +5,13 @@
  * and returns a comprehensive neighborhood intelligence payload.
  */
 import { NextResponse } from "next/server";
-import { POI_CATEGORY_KEYS, type PoiCategoryKey } from "@/lib/geo/poiCategories";
-import { fetchOverpassPois, type OverpassPoi } from "@/lib/geo/overpass";
-import { makeCacheKey, getCachedPois, setCachedPois } from "@/lib/geo/cache";
+import { validateLatLng } from "@/lib/geo/coords";
+import { fetchIntelPoisMerged } from "@/lib/geo/fetchIntelPois";
 import { computeIntelScores } from "@/lib/geo/intelScoring";
 
 const VALID_RADII = [500, 1000, 1500, 2000];
-const MAX_LAT = 90;
-const MAX_LNG = 180;
 
 export const dynamic = "force-dynamic";
-
-async function fetchCategoryWithCache(
-  lat: number,
-  lng: number,
-  radius: number,
-  category: PoiCategoryKey,
-): Promise<OverpassPoi[]> {
-  const cacheKey = makeCacheKey(lat, lng, radius, category);
-
-  const cached = await getCachedPois(cacheKey);
-  if (cached) return cached;
-
-  try {
-    const pois = await fetchOverpassPois(lat, lng, radius, category);
-    setCachedPois(cacheKey, lat, lng, radius, category, pois).catch(() => {});
-    return pois;
-  } catch {
-    return [];
-  }
-}
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -54,7 +31,8 @@ export async function GET(req: Request) {
   const lng = parseFloat(lngStr);
   const radius = radiusStr ? parseInt(radiusStr, 10) : 1000;
 
-  if (isNaN(lat) || isNaN(lng) || Math.abs(lat) > MAX_LAT || Math.abs(lng) > MAX_LNG) {
+  const coordCheck = validateLatLng(lat, lng);
+  if (!coordCheck.ok) {
     return NextResponse.json({ error: "Invalid coordinates" }, { status: 400 });
   }
 
@@ -65,25 +43,20 @@ export async function GET(req: Request) {
     );
   }
 
-  // Fetch all categories in parallel
-  const results = await Promise.all(
-    POI_CATEGORY_KEYS.map(async (cat) => {
-      const pois = await fetchCategoryWithCache(lat, lng, radius, cat);
-      return [cat, pois] as const;
-    }),
-  );
-
-  const poisByCategory = Object.fromEntries(results) as Record<
-    PoiCategoryKey,
-    OverpassPoi[]
-  >;
-
-  const intel = computeIntelScores(poisByCategory);
-
-  return NextResponse.json({
-    ...intel,
-    poisByCategory,
-    radius,
-    center: { lat, lng },
-  });
+  try {
+    const merged = await fetchIntelPoisMerged({ lat, lng, userRadiusM: radius });
+    const intel = computeIntelScores(merged.poisByCategory, {
+      pipelineQuality: merged.pipelineQuality,
+    });
+    return NextResponse.json({
+      ...intel,
+      poisByCategory: merged.poisByCategory,
+      poiIngestion: merged.poiIngestion,
+      radius,
+      center: { lat, lng },
+    });
+  } catch (e) {
+    console.error("[intel] fetchIntelPoisMerged failed:", e);
+    return NextResponse.json({ error: "Failed to load POI data" }, { status: 502 });
+  }
 }

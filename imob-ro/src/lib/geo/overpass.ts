@@ -9,12 +9,13 @@
  */
 import { haversineM } from "@/lib/geo";
 import { getCachedPoisTyped, makeCacheKey, setCachedPois } from "./cache";
-import { POI_CATEGORIES, type PoiCategoryKey } from "./poiCategories";
+import { fetchOverpassIntelCategory } from "@/lib/geo/poi/fetch-overpass-intel-category";
+import type { PoiCategoryKey } from "./poiCategories";
 
 const OVERPASS_ENDPOINT =
   process.env.OVERPASS_ENDPOINT ?? "https://overpass-api.de/api/interpreter";
 
-const OVERPASS_TIMEOUT_S = 10;
+const OVERPASS_TIMEOUT_S = 25;
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 1500;
 
@@ -31,26 +32,6 @@ export interface OverpassFeature {
 
 export interface OverpassPoi extends OverpassFeature {
   category: PoiCategoryKey;
-}
-
-export function buildOverpassQuery(
-  lat: number,
-  lng: number,
-  radiusM: number,
-  category: PoiCategoryKey,
-): string {
-  const cat = POI_CATEGORIES[category];
-  if (!cat) throw new Error(`Unknown POI category: ${category}`);
-
-  const filters = cat.overpassFilters
-    .map((f) => `${f}(around:${radiusM},${lat},${lng});`)
-    .join("\n  ");
-
-  return `[out:json][timeout:${OVERPASS_TIMEOUT_S}];
-(
-  ${filters}
-);
-out center tags;`;
 }
 
 export function buildCustomOverpassQuery(
@@ -83,6 +64,14 @@ function inferSubType(tags: Record<string, string>): string | null {
   );
 }
 
+/** Run arbitrary Overpass QL (used by batched POI pipeline). */
+export async function fetchOverpassInterpret(
+  query: string,
+  retries = MAX_RETRIES,
+): Promise<unknown> {
+  return fetchWithRetry(query, retries);
+}
+
 async function fetchWithRetry(
   query: string,
   retries = MAX_RETRIES,
@@ -92,7 +81,7 @@ async function fetchWithRetry(
       const controller = new AbortController();
       const timer = setTimeout(
         () => controller.abort(),
-        (OVERPASS_TIMEOUT_S + 5) * 1000,
+        (OVERPASS_TIMEOUT_S + 8) * 1000,
       );
 
       const res = await fetch(OVERPASS_ENDPOINT, {
@@ -135,11 +124,7 @@ export async function fetchOverpassPois(
   category: PoiCategoryKey,
   limit?: number,
 ): Promise<OverpassPoi[]> {
-  const cat = POI_CATEGORIES[category];
-  const maxResults = limit ?? cat.defaultLimit;
-  const query = buildOverpassQuery(lat, lng, radiusM, category);
-  const results = await fetchOverpassFeatures(query, lat, lng, radiusM, category, maxResults);
-  return results as OverpassPoi[];
+  return fetchOverpassIntelCategory(lat, lng, radiusM, category, limit);
 }
 
 async function fetchOverpassFeatures(
@@ -159,7 +144,12 @@ async function fetchOverpassFeatures(
       center?: { lat: number; lon: number };
       tags?: Record<string, string>;
     }[];
+    remark?: string;
   } | null;
+
+  if (json?.remark) {
+    console.warn(`[overpass] remark (${category}):`, json.remark);
+  }
 
   if (!json?.elements) return [];
 

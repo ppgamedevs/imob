@@ -4,8 +4,22 @@ import type { IntelResult } from "@/lib/geo/intelScoring";
 import type { DemandSignals } from "@/lib/geo/signals/querySignals";
 import type { OverpassPoi } from "@/lib/geo/overpass";
 import type { PoiCategoryKey } from "@/lib/geo/poiCategories";
+import { POI_CATEGORY_KEYS } from "@/lib/geo/poiCategories";
+
+const DEFAULT_TEST_COUNTS: Record<PoiCategoryKey, number> = {
+  supermarket: 2,
+  transport: 2,
+  school: 2,
+  medical: 1,
+  restaurant: 1,
+  park: 2,
+  gym: 0,
+  parking: 0,
+};
 
 function makeIntel(overrides: Partial<Record<string, number>> = {}): IntelResult {
+  const totalPois = POI_CATEGORY_KEYS.reduce((s, k) => s + DEFAULT_TEST_COUNTS[k], 0);
+  const categoriesWithData = POI_CATEGORY_KEYS.filter((k) => DEFAULT_TEST_COUNTS[k] > 0).length;
   return {
     scores: {
       convenience: { value: overrides.convenience ?? 50, label: "Acceptabil", labelRo: "Comoditate zilnica" },
@@ -15,6 +29,20 @@ function makeIntel(overrides: Partial<Record<string, number>> = {}): IntelResult
     },
     evidence: { convenience: [], family: [], nightlifeRisk: [], walkability: [] },
     redFlags: [],
+    zoneDataQuality: {
+      level: "medie",
+      totalPois,
+      categoriesWithData,
+      emptyCategoryCount: POI_CATEGORY_KEYS.length - categoriesWithData,
+      lowDataMode: false,
+    },
+    categoryCounts: { ...DEFAULT_TEST_COUNTS },
+    uncertainScores: {
+      convenience: false,
+      family: false,
+      walkability: false,
+      nightlifeRisk: false,
+    },
   };
 }
 

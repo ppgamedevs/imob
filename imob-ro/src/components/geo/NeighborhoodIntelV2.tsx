@@ -15,11 +15,12 @@ import {
   type PoiCategoryKey,
 } from "@/lib/geo/poiCategories";
 import type { OverpassPoi } from "@/lib/geo/overpass";
-import type { IntelResult } from "@/lib/geo/intelScoring";
+import { normalizeIntelResultForUi, type IntelResult } from "@/lib/geo/intelScoring";
 import type { DemandSignals } from "@/lib/geo/signals/querySignals";
 import type { ZoneTypeResult } from "@/lib/geo/zoneType";
 import type { CommuterResult } from "@/lib/geo/commuterRings";
 import type { CompareVerdict } from "@/lib/geo/compareLocations";
+import type { PoiIngestionMeta } from "@/lib/geo/poiIngestion";
 
 const MapView = dynamic(() => import("./MapView"), { ssr: false });
 
@@ -36,6 +37,9 @@ interface IntelV2Data {
   scores: IntelResult["scores"];
   evidence: IntelResult["evidence"];
   redFlags: string[];
+  zoneDataQuality?: IntelResult["zoneDataQuality"];
+  categoryCounts?: IntelResult["categoryCounts"];
+  uncertainScores?: IntelResult["uncertainScores"];
   poisByCategory: Record<PoiCategoryKey, OverpassPoi[]>;
   zoneType: ZoneTypeResult;
   signals: DemandSignals;
@@ -43,6 +47,7 @@ interface IntelV2Data {
   radius: number;
   center: { lat: number; lng: number };
   cachedAt: string | null;
+  poiIngestion?: PoiIngestionMeta;
 }
 
 // ---- Helpers ----
@@ -118,9 +123,31 @@ export default function NeighborhoodIntelV2({
       setCompareData(bData);
 
       if (data) {
+        const intelA = normalizeIntelResultForUi(
+          {
+            scores: data.scores,
+            evidence: data.evidence,
+            redFlags: data.redFlags,
+            zoneDataQuality: data.zoneDataQuality,
+            categoryCounts: data.categoryCounts,
+            uncertainScores: data.uncertainScores,
+          },
+          data.poisByCategory,
+        );
+        const intelB = normalizeIntelResultForUi(
+          {
+            scores: bData.scores,
+            evidence: bData.evidence,
+            redFlags: bData.redFlags,
+            zoneDataQuality: bData.zoneDataQuality,
+            categoryCounts: bData.categoryCounts,
+            uncertainScores: bData.uncertainScores,
+          },
+          bData.poisByCategory,
+        );
         const verdict = compareLocations(
-          { scores: data.scores, evidence: data.evidence, redFlags: data.redFlags },
-          { scores: bData.scores, evidence: bData.evidence, redFlags: bData.redFlags },
+          intelA,
+          intelB,
           data.signals,
           bData.signals,
           data.zoneType,
@@ -163,13 +190,13 @@ export default function NeighborhoodIntelV2({
     <Card className="overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between flex-wrap gap-2">
-          <CardTitle className="text-base flex items-center gap-2">
+          <CardTitle className="text-base flex items-center gap-2 flex-wrap">
             Harta inteligenta
-            {totalPois > 0 && (
-              <span className="text-xs font-normal text-muted-foreground">
-                ({totalPois} POI)
-              </span>
-            )}
+            <span className="text-xs font-normal text-muted-foreground">
+              {totalPois > 0
+                ? `(${totalPois} locatii in raza)`
+                : "Date limitate, estimare bazata pe surse disponibile"}
+            </span>
             {data?.cachedAt && (
               <span className="text-[10px] font-normal text-muted-foreground">
                 (cache)
@@ -307,8 +334,23 @@ export default function NeighborhoodIntelV2({
 
             <TabsContent value="intel" className="mt-3">
               <IntelScoreCards
-                intel={data ? { scores: data.scores, evidence: data.evidence, redFlags: data.redFlags } : null}
+                intel={
+                  data
+                    ? normalizeIntelResultForUi(
+                        {
+                          scores: data.scores,
+                          evidence: data.evidence,
+                          redFlags: data.redFlags,
+                          zoneDataQuality: data.zoneDataQuality,
+                          categoryCounts: data.categoryCounts,
+                          uncertainScores: data.uncertainScores,
+                        },
+                        data.poisByCategory,
+                      )
+                    : null
+                }
                 loading={loading}
+                poiIngestion={data?.poiIngestion ?? null}
               />
             </TabsContent>
 
@@ -354,12 +396,18 @@ export default function NeighborhoodIntelV2({
         </div>
 
         <div className="px-4 pb-3 space-y-1">
-          <p className="text-[10px] text-muted-foreground">
-            Date OpenStreetMap via Overpass API. Distantele sunt in linie dreapta. Scorurile si clasificarea zonei sunt calculate automat pe baza densitatii si proximitatii punctelor de interes.
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            {data?.poiIngestion?.usedGoogleFallback
+              ? "OpenStreetMap + Google Places. Distantele sunt in linie dreapta."
+              : "OpenStreetMap (Overpass). Distantele sunt in linie dreapta."}{" "}
+            Lipsa unui punct pe harta nu inseamna ca nu exista in realitate.
           </p>
-          <p className="text-[10px] text-muted-foreground">
-            Semnalele de piata sunt bazate pe date interne (anunturi analizate, estimari, cautari) si pot fi imprecise in zone cu volum redus de date.
-          </p>
+          {data?.poiIngestion?.fetchRadiusM != null && data.poiIngestion.fetchRadiusM > radius && (
+            <p className="text-[10px] text-muted-foreground/90 leading-relaxed">
+              Cautare puncte la minimum {data.poiIngestion.fetchRadiusM} m pentru acoperire; afisare
+              filtrata la {radius} m.
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>
@@ -389,8 +437,9 @@ function PoiList({
 
   if (pois.length === 0) {
     return (
-      <div className="text-sm text-muted-foreground py-4 text-center">
-        Niciun punct de interes ({cat.labelRo}) in raza selectata.
+      <div className="text-sm text-muted-foreground py-4 text-center leading-relaxed px-2">
+        Date limitate, estimare bazata pe surse disponibile — nu am gasit intrari pentru{" "}
+        {cat.labelRo} in raza selectata.
       </div>
     );
   }

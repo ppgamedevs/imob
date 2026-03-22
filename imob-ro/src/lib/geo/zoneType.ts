@@ -97,7 +97,10 @@ function scoreFamilie(
 
   if (parks >= 2) { score += 15; evidence.push(`${parks} parcuri in 800m`); }
   if (schools >= 2) { score += 15; evidence.push(`${schools} scoli/gradinite in 1 km`); }
-  else if (schools === 0) { score -= 10; warnings.push("0 scoli in 1 km"); }
+  else if (schools === 0 && !intel.zoneDataQuality.lowDataMode) {
+    score -= 10;
+    warnings.push("0 scoli in 1 km");
+  }
 
   const playgrounds = countSubType(poisByCategory, "park", "playground", 800);
   if (playgrounds > 0) { score += 10; evidence.push(`${playgrounds} locuri de joaca`); }
@@ -297,10 +300,6 @@ function scoreStagnanta(
     }
   }
 
-  if (intel.redFlags.length >= 3) {
-    score += 10; evidence.push(`${intel.redFlags.length} lipsuri in zona`);
-  }
-
   return { type: "stagnanta", score, evidence, warnings, confidenceBase: signals?.confidence ?? "scazuta" };
 }
 
@@ -333,6 +332,12 @@ export function classifyZone(
     else if (confidence === "medie") confidence = "scazuta";
   }
   if (winner.score < 20) confidence = "scazuta";
+  if (intel.zoneDataQuality.lowDataMode && confidence === "ridicata") confidence = "medie";
+  if (intel.zoneDataQuality.lowDataMode && confidence === "medie") confidence = "scazuta";
+
+  if (intel.zoneDataQuality.lowDataMode) {
+    winner.warnings.unshift("Putine puncte OSM in raza aleasa — tipul zonei este orientativ.");
+  }
 
   // Add runner-up info to warnings if close
   if (winner.score - runnerUp.score < 15) {

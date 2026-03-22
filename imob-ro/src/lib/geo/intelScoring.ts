@@ -10,7 +10,8 @@
  * Each score includes supporting evidence and red flags.
  */
 import type { OverpassPoi } from "./overpass";
-import type { PoiCategoryKey } from "./poiCategories";
+import type { PoiDataQuality } from "@/lib/geo/poi/types";
+import { POI_CATEGORY_KEYS, type PoiCategoryKey } from "./poiCategories";
 
 // ---- Types ----
 
@@ -18,6 +19,29 @@ export interface IntelScore {
   value: number;
   label: string;
   labelRo: string;
+}
+
+/** How complete OSM POI coverage is for this radius (not “how bad the neighborhood is”). */
+export type ZoneDataQualityLevel = "scazuta" | "medie" | "ridicata";
+
+export interface ZoneDataQuality {
+  level: ZoneDataQualityLevel;
+  totalPois: number;
+  categoriesWithData: number;
+  emptyCategoryCount: number;
+  /** Sparse OSM → soften scores, never treat gaps as “lipsuri reale”. */
+  lowDataMode: boolean;
+  /** From batched POI pipeline evaluator (optional). */
+  confidence?: "low" | "medium" | "high";
+  dataQualityReasons?: string[];
+}
+
+export interface UncertainScores {
+  convenience: boolean;
+  family: boolean;
+  walkability: boolean;
+  /** Low OSM coverage → do not present nightlife risk as factual. */
+  nightlifeRisk: boolean;
 }
 
 export interface IntelResult {
@@ -33,7 +57,12 @@ export interface IntelResult {
     nightlifeRisk: string[];
     walkability: string[];
   };
+  /** Deprecated: kept empty. Do not surface “0 X in OSM” as product conclusions. */
   redFlags: string[];
+  zoneDataQuality: ZoneDataQuality;
+  categoryCounts: Record<PoiCategoryKey, number>;
+  /** When true, show “Estimare incerta” for that dimension (low OSM coverage). */
+  uncertainScores: UncertainScores;
 }
 
 // ---- Helpers ----
@@ -198,7 +227,7 @@ function computeFamily(
     raw += 10;
   } else {
     raw -= 5;
-    evidence.push(`${barsNear} baruri/cluburi < 500m (zona zgomotoasa)"`);
+    evidence.push(`${barsNear} baruri/cluburi < 500m (zona zgomotoasa)`);
   }
 
   // Playground bonus
@@ -217,7 +246,17 @@ function computeFamily(
 
 function computeNightlifeRisk(
   poisByCategory: Record<PoiCategoryKey, OverpassPoi[]>,
+  lowDataMode: boolean,
 ): { score: number; evidence: string[] } {
+  if (lowDataMode) {
+    return {
+      score: 40,
+      evidence: [
+        "Date insuficiente pentru evaluarea zgomotului nocturn — nu interpreta acest scor ca verdict despre zona.",
+      ],
+    };
+  }
+
   const restaurants = poisByCategory.restaurant ?? [];
   const evidence: string[] = [];
   let raw = 0;
@@ -263,7 +302,7 @@ function computeNightlifeRisk(
   if (raw < 10) {
     evidence.push("Zona linistita, risc redus de zgomot nocturn");
   } else if (raw >= 60) {
-    evidence.push("Risc ridicat de zgomot nocturn");
+    evidence.push("Indicii de activitate nocturna in datele disponibile (verifica la fata locului)");
   }
 
   return { score: clamp(raw), evidence: evidence.slice(0, 5) };
@@ -313,63 +352,159 @@ function computeWalkability(
   return { score: clamp(raw), evidence: evidence.slice(0, 5) };
 }
 
-// ---- Red Flags ----
+// ---- Zone data quality (OSM coverage) ----
 
-function computeRedFlags(
+function computeCategoryCounts(
   poisByCategory: Record<PoiCategoryKey, OverpassPoi[]>,
-  dims: { convenience: number; family: number; walkability: number },
-): string[] {
-  const flags: string[] = [];
+): Record<PoiCategoryKey, number> {
+  return Object.fromEntries(
+    POI_CATEGORY_KEYS.map((k) => [k, poisByCategory[k]?.length ?? 0]),
+  ) as Record<PoiCategoryKey, number>;
+}
 
-  const shops = poisByCategory.supermarket ?? [];
-  const schools = poisByCategory.school ?? [];
-  const parks = poisByCategory.park ?? [];
-  const transport = poisByCategory.transport ?? [];
-  const medical = poisByCategory.medical ?? [];
+export function computeZoneDataQuality(
+  categoryCounts: Record<PoiCategoryKey, number>,
+): ZoneDataQuality {
+  const totalPois = POI_CATEGORY_KEYS.reduce((s, k) => s + categoryCounts[k], 0);
+  const categoriesWithData = POI_CATEGORY_KEYS.filter((k) => categoryCounts[k] > 0).length;
+  const emptyCategoryCount = POI_CATEGORY_KEYS.length - categoriesWithData;
 
-  // Only surface "gaps" when the related dimension score is weak, to avoid false alarms
-  // (OSM coverage varies; metro may exist but not be tagged as a bus_stop node nearby).
-  if (countWithin(shops, 1200) === 0 && dims.convenience < 48) {
-    flags.push(
-      "Magazine/farmacii: nu apar mapate in OpenStreetMap in 1.2 km (uneori lipsesc din harta - verifica la fata locului).",
-    );
-  }
-  if (countWithin(transport, 800) === 0) {
-    flags.push("0 statii de transport in 800m");
-  }
-  if (countWithin(schools, 2000) === 0 && dims.family < 52) {
-    flags.push(
-      "Scoli/gradinite: nu apar mapate in OpenStreetMap in 2 km (poate exista nemapate - confirma la fata locului).",
-    );
-  }
-  if (countWithin(parks, 1200) === 0 && dims.family < 45 && dims.walkability < 55) {
-    flags.push(
-      "Parcuri/spatii verzi: nu apar mapate in OpenStreetMap in 1.2 km (uneori sunt sub-etichetate).",
-    );
-  }
-  if (countWithin(medical, 2500) === 0 && dims.convenience < 42) {
-    flags.push(
-      "Unitati medicale: nu apar mapate in OpenStreetMap in 2.5 km (clinici mici pot lipsi din OSM).",
-    );
+  const lowDataMode =
+    totalPois < 10 ||
+    emptyCategoryCount >= 5 ||
+    (totalPois < 22 && emptyCategoryCount >= 4) ||
+    (totalPois < 16 && emptyCategoryCount >= 3);
+
+  let level: ZoneDataQualityLevel;
+  if (lowDataMode || totalPois < 14) {
+    level = "scazuta";
+  } else if (totalPois >= 48 && emptyCategoryCount <= 1) {
+    level = "ridicata";
+  } else if (totalPois >= 32 && emptyCategoryCount <= 2) {
+    level = "ridicata";
+  } else {
+    level = "medie";
   }
 
-  return flags;
+  return {
+    level,
+    totalPois,
+    categoriesWithData,
+    emptyCategoryCount,
+    lowDataMode,
+  };
+}
+
+function mergeZoneDataQualityWithPipeline(
+  base: ZoneDataQuality,
+  pipeline: PoiDataQuality | undefined,
+): ZoneDataQuality {
+  if (!pipeline) return base;
+  const lowDataMode = base.lowDataMode || pipeline.lowDataMode;
+  let level = base.level;
+  if (lowDataMode && level === "ridicata") {
+    level = "medie";
+  }
+  return {
+    ...base,
+    lowDataMode,
+    level,
+    confidence: pipeline.confidence,
+    dataQualityReasons: pipeline.reasons,
+  };
+}
+
+/** Pull convenience / family / walkability toward neutral when OSM is sparse. */
+function softenUncertainScore(raw: number): number {
+  return clamp(Math.round(raw * 0.26 + 50 * 0.74));
+}
+
+/**
+ * Build a full IntelResult for UI (handles older cached API payloads missing zone metadata).
+ */
+export function normalizeIntelResultForUi(
+  partial: Pick<IntelResult, "scores" | "evidence"> & {
+    redFlags?: string[];
+    zoneDataQuality?: ZoneDataQuality;
+    categoryCounts?: Record<PoiCategoryKey, number>;
+    uncertainScores?: UncertainScores;
+  },
+  poisByCategory?: Record<PoiCategoryKey, OverpassPoi[]> | null,
+): IntelResult {
+  const categoryCounts =
+    partial.categoryCounts ??
+    (poisByCategory
+      ? computeCategoryCounts(poisByCategory)
+      : (Object.fromEntries(POI_CATEGORY_KEYS.map((k) => [k, 0])) as Record<
+          PoiCategoryKey,
+          number
+        >));
+  const zoneDataQuality = partial.zoneDataQuality ?? computeZoneDataQuality(categoryCounts);
+  const uncertainScores: UncertainScores =
+    partial.uncertainScores ??
+    (zoneDataQuality.lowDataMode
+      ? {
+          convenience: true,
+          family: true,
+          walkability: true,
+          nightlifeRisk: true,
+        }
+      : {
+          convenience: false,
+          family: false,
+          walkability: false,
+          nightlifeRisk: false,
+        });
+
+  return {
+    scores: partial.scores,
+    evidence: partial.evidence,
+    redFlags: partial.redFlags ?? [],
+    zoneDataQuality,
+    categoryCounts,
+    uncertainScores,
+  };
 }
 
 // ---- Main API ----
 
 export function computeIntelScores(
   poisByCategory: Record<PoiCategoryKey, OverpassPoi[]>,
+  options?: { pipelineQuality?: PoiDataQuality },
 ): IntelResult {
-  const conv = computeConvenience(poisByCategory);
-  const fam = computeFamily(poisByCategory);
-  const night = computeNightlifeRisk(poisByCategory);
-  const walk = computeWalkability(poisByCategory);
-  const redFlags = computeRedFlags(poisByCategory, {
-    convenience: conv.score,
-    family: fam.score,
-    walkability: walk.score,
-  });
+  const categoryCounts = computeCategoryCounts(poisByCategory);
+  let zoneDataQuality = computeZoneDataQuality(categoryCounts);
+  zoneDataQuality = mergeZoneDataQualityWithPipeline(
+    zoneDataQuality,
+    options?.pipelineQuality,
+  );
+
+  const convRaw = computeConvenience(poisByCategory);
+  const famRaw = computeFamily(poisByCategory);
+  const night = computeNightlifeRisk(poisByCategory, zoneDataQuality.lowDataMode);
+  const walkRaw = computeWalkability(poisByCategory);
+
+  let conv = convRaw;
+  let fam = famRaw;
+  let walk = walkRaw;
+  let uncertainScores: UncertainScores = {
+    convenience: false,
+    family: false,
+    walkability: false,
+    nightlifeRisk: false,
+  };
+
+  if (zoneDataQuality.lowDataMode) {
+    conv = { ...conv, score: softenUncertainScore(conv.score) };
+    fam = { ...fam, score: softenUncertainScore(fam.score) };
+    walk = { ...walk, score: softenUncertainScore(walk.score) };
+    uncertainScores = {
+      convenience: true,
+      family: true,
+      walkability: true,
+      nightlifeRisk: true,
+    };
+  }
 
   return {
     scores: {
@@ -400,6 +535,9 @@ export function computeIntelScores(
       nightlifeRisk: night.evidence,
       walkability: walk.evidence,
     },
-    redFlags,
+    redFlags: [],
+    zoneDataQuality,
+    categoryCounts,
+    uncertainScores,
   };
 }

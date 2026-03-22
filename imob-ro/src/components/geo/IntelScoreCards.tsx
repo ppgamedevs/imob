@@ -1,10 +1,14 @@
 "use client";
 
-import type { IntelResult } from "@/lib/geo/intelScoring";
+import type { IntelResult, ZoneDataQualityLevel } from "@/lib/geo/intelScoring";
+import { POI_CATEGORY_KEYS, type PoiCategoryKey } from "@/lib/geo/poiCategories";
+import type { PoiIngestionMeta } from "@/lib/geo/poiIngestion";
 
 interface Props {
   intel: IntelResult | null;
   loading?: boolean;
+  /** Server POI pipeline meta (OSM / Google / notices). */
+  poiIngestion?: PoiIngestionMeta | null;
 }
 
 const SCORE_CONFIG: {
@@ -51,9 +55,38 @@ const SCORE_CONFIG: {
   },
 ];
 
+const QUALITY_LABEL_RO: Record<ZoneDataQualityLevel, string> = {
+  scazuta: "Scazuta",
+  medie: "Medie",
+  ridicata: "Ridicata",
+};
+
+const QUALITY_BADGE: Record<
+  ZoneDataQualityLevel,
+  { className: string }
+> = {
+  scazuta: {
+    className: "bg-sky-50 text-sky-900 ring-sky-200/70",
+  },
+  medie: {
+    className: "bg-sky-50/80 text-sky-950 ring-sky-200/60",
+  },
+  ridicata: {
+    className: "bg-emerald-50 text-emerald-900 ring-emerald-200/70",
+  },
+};
+
+const FACILITY_ROWS: { key: PoiCategoryKey; label: string }[] = [
+  { key: "supermarket", label: "Magazine / proximitate" },
+  { key: "transport", label: "Transport" },
+  { key: "school", label: "Scoli / gradinite" },
+  { key: "park", label: "Parcuri / verde" },
+  { key: "medical", label: "Medical" },
+];
+
 function ScoreBar({ value, colorBar }: { value: number; colorBar: string }) {
   return (
-    <div className="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+    <div className="h-2 w-full rounded-full bg-slate-100/90 overflow-hidden">
       <div
         className={`h-full rounded-full transition-all duration-500 ${colorBar}`}
         style={{ width: `${value}%` }}
@@ -67,109 +100,138 @@ function EvidenceList({ items }: { items: string[] }) {
   return (
     <ul className="mt-2 space-y-0.5">
       {items.map((item, i) => (
-        <li key={i} className="text-xs text-muted-foreground flex items-start gap-1.5">
-          <span className="shrink-0 mt-0.5 h-1 w-1 rounded-full bg-gray-400" />
-          {item}
+        <li key={i} className="text-xs text-slate-600 flex items-start gap-1.5">
+          <span className="shrink-0 mt-0.5 h-1 w-1 rounded-full bg-slate-400" />
+          <span className="min-w-0">{item}</span>
         </li>
       ))}
     </ul>
   );
 }
 
-type GapSeverity = "redus" | "mediu" | "ridicat";
-
-function zoneGapSeverity(familyScore: number, flagCount: number): GapSeverity {
-  if (flagCount >= 4 || familyScore < 35) return "ridicat";
-  if (flagCount >= 2 || familyScore < 55) return "mediu";
-  return "redus";
+function strongCoverageMode(q: IntelResult["zoneDataQuality"]): boolean {
+  if (q.lowDataMode) return false;
+  return q.level === "ridicata" || (q.level === "medie" && q.totalPois >= 26);
 }
 
-function zoneGapSummaryLine(flags: string[]): string {
-  const blob = flags.join(" ").toLowerCase();
-  if (/scoal|gradinit|copil|famili/i.test(blob)) {
-    return "Impact: poate conta pentru familii cu copii sau rutina zilnica.";
+function buildPositiveInsights(intel: IntelResult): string[] {
+  const c = intel.categoryCounts;
+  const out: string[] = [];
+  if ((c.transport ?? 0) >= 3) {
+    out.push("Transport public bine reprezentat in datele OSM pentru raza selectata.");
   }
-  if (/transport|metrou|statie|parcare/i.test(blob)) {
-    return "Impact: relevant pentru mobilitate si timp in trafic.";
+  if ((c.supermarket ?? 0) >= 2) {
+    out.push("Mai multe puncte de cumparaturi cartate in apropiere.");
   }
-  if (/parc|verde|linist/i.test(blob)) {
-    return "Impact: confort locuire si agrement in zona.";
+  if ((c.park ?? 0) >= 1 && intel.scores.family.value >= 50) {
+    out.push("Spatii verzi cartate in zona.");
   }
-  return "Context despre ce lipseste in proximitate - nu inseamna automat „zona rea”.";
+  return out.slice(0, 2);
 }
 
-const SEVERITY_BADGE: Record<
-  GapSeverity,
-  { label: string; className: string }
-> = {
-  redus: {
-    label: "Impact redus",
-    className: "bg-slate-100 text-slate-700 ring-slate-200/80",
-  },
-  mediu: {
-    label: "Impact mediu",
-    className: "bg-sky-50 text-sky-900 ring-sky-200/70",
-  },
-  ridicat: {
-    label: "Impact ridicat",
-    className: "bg-amber-50 text-amber-950 ring-amber-200/80",
-  },
-};
-
-function ZoneGapsPanel({
-  redFlags,
-  familyScore,
-}: {
-  redFlags: string[];
-  familyScore: number;
-}) {
-  const severity = zoneGapSeverity(familyScore, redFlags.length);
-  const badge = SEVERITY_BADGE[severity];
-  const summary = zoneGapSummaryLine(redFlags);
-
+/** Low OSM coverage — honesty panel, not “deficiency”. */
+function LowDataZonePanel() {
   return (
-    <div className="rounded-xl border border-slate-200/90 bg-slate-50/60 p-4 ring-1 ring-slate-100">
-      <div className="flex flex-wrap items-center justify-between gap-2 gap-y-1">
-        <h3 className="text-sm font-semibold text-slate-800">Lipsuri zona</h3>
-        <span
-          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${badge.className}`}
-        >
-          {badge.label}
+    <div className="mt-5 space-y-4 rounded-xl bg-sky-50/40 px-4 py-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <h3 className="text-sm font-semibold text-slate-900">Vizibilitate redusa asupra zonei</h3>
+        <span className="inline-flex rounded-full bg-white px-2.5 py-0.5 text-[11px] font-semibold text-sky-900 ring-1 ring-sky-200/80">
+          Date limitate
         </span>
       </div>
-      <p className="mt-2 text-xs leading-snug text-slate-600">{summary}</p>
-      <ul className="mt-3 space-y-1.5">
-        {redFlags.map((flag, i) => (
-          <li
-            key={i}
-            className="flex items-start gap-2 text-[13px] leading-snug text-slate-700"
-          >
-            <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-slate-400" aria-hidden />
-            <span>{flag}</span>
+      <p className="text-sm leading-relaxed text-slate-700">
+        Nu am identificat suficiente puncte de interes din datele disponibile (OpenStreetMap si, cand
+        exista, surse complementare).
+      </p>
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5">
+          Ce inseamna pentru tine
+        </p>
+        <ul className="space-y-1 text-sm text-slate-700">
+          <li className="flex gap-2">
+            <span className="text-sky-600 shrink-0">•</span>
+            <span>Nu putem evalua walkability sau comoditati cu incredere ridicata.</span>
           </li>
-        ))}
-      </ul>
-      <p className="mt-2 text-[11px] leading-snug text-slate-500">
-        Sursa punctelor de interes: OpenStreetMap. Unele locatii (magazine mici, scoli private etc.) pot
-        lipsi din harta chiar daca exista in zona.
-      </p>
-      <p className="mt-3 text-[12px] text-slate-700">
-        <span className="font-semibold">Pas urmator: </span>
-        Plimba-te 10-15 min in jur ca sa simti lipsurile in viata reala (nu doar pe harta).
-      </p>
+          <li className="flex gap-2">
+            <span className="text-sky-600 shrink-0">•</span>
+            <span>Scorurile pot fi subestimate — lipsa punctelor pe harta nu inseamna lipsa in realitate.</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-sky-600 shrink-0">•</span>
+            <span>Lipsa datelor OSM nu este un verdict despre calitatea cartierului.</span>
+          </li>
+        </ul>
+      </div>
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1.5">
+          Ce poti face
+        </p>
+        <ul className="space-y-1 text-sm text-slate-700">
+          <li className="flex gap-2">
+            <span className="text-sky-600 shrink-0">•</span>
+            <span>Verifica zona pe Google Maps sau harti locale.</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-sky-600 shrink-0">•</span>
+            <span>Viziteaza fizic inainte de decizie.</span>
+          </li>
+          <li className="flex gap-2">
+            <span className="text-sky-600 shrink-0">•</span>
+            <span>Compara cu alte anunturi din aceeasi zona.</span>
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }
 
-export default function IntelScoreCards({ intel, loading }: Props) {
+function FacilitiesIdentifiedPanel({ intel }: { intel: IntelResult }) {
+  const insights = buildPositiveInsights(intel);
+  return (
+    <div className="mt-5 space-y-3 rounded-xl bg-emerald-50/35 px-4 py-4">
+      <h3 className="text-sm font-semibold text-slate-900">Facilitati identificate in zona</h3>
+      <p className="text-xs text-slate-600">
+        Numar puncte cartate in OpenStreetMap pentru raza curenta (orientativ).
+      </p>
+      <ul className="space-y-2 text-sm text-slate-800">
+        {FACILITY_ROWS.map(({ key, label }) => (
+          <li key={key} className="flex justify-between gap-4 border-b border-emerald-100/80 pb-2 last:border-0 last:pb-0">
+            <span className="text-slate-600">{label}</span>
+            <span className="font-semibold tabular-nums">{intel.categoryCounts[key] ?? 0}</span>
+          </li>
+        ))}
+      </ul>
+      {insights.length > 0 && (
+        <ul className="pt-1 space-y-1 text-sm text-slate-700">
+          {insights.map((line, i) => (
+            <li key={i} className="flex gap-2">
+              <span className="text-emerald-600 shrink-0">✓</span>
+              <span>{line}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function PartialDataNote() {
+  return (
+    <p className="mt-5 text-sm leading-relaxed text-slate-600">
+      Acoperire OSM partiala: scorurile sunt orientative. Verifica la fata locului ce conteaza pentru tine.
+    </p>
+  );
+}
+
+export default function IntelScoreCards({ intel, loading, poiIngestion }: Props) {
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="rounded-lg border p-3 animate-pulse">
-            <div className="h-4 w-24 bg-gray-200 rounded mb-2" />
-            <div className="h-2 w-full bg-gray-200 rounded mb-2" />
-            <div className="h-3 w-16 bg-gray-200 rounded" />
+          <div key={i} className="rounded-lg p-3 animate-pulse bg-slate-50/80">
+            <div className="h-4 w-24 bg-slate-200/80 rounded mb-2" />
+            <div className="h-2 w-full bg-slate-200/80 rounded mb-2" />
+            <div className="h-3 w-16 bg-slate-200/80 rounded" />
           </div>
         ))}
       </div>
@@ -178,39 +240,82 @@ export default function IntelScoreCards({ intel, loading }: Props) {
 
   if (!intel) return null;
 
+  const q = intel.zoneDataQuality;
+  const qualityBadge = QUALITY_BADGE[q.level];
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
+      <div>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+          <h3 className="text-sm font-semibold text-slate-900">Calitatea datelor despre zona</h3>
+          <span
+            className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ring-1 ${qualityBadge.className}`}
+          >
+            Calitate date zona: {QUALITY_LABEL_RO[q.level]}
+          </span>
+        </div>
+        <p className="text-xs text-slate-500">
+          {q.totalPois === 0 ? (
+            "Date limitate, estimare bazata pe surse disponibile."
+          ) : (
+            <>
+              {q.totalPois} puncte · {q.categoriesWithData} categorii cu date (din{" "}
+              {POI_CATEGORY_KEYS.length})
+              {poiIngestion?.usedGoogleFallback
+                ? " · surse: OpenStreetMap + Google Places"
+                : " · sursa: OpenStreetMap"}
+            </>
+          )}
+        </p>
+        {poiIngestion?.notice && (
+          <p className="text-xs text-slate-600 mt-1.5 leading-snug">{poiIngestion.notice}</p>
+        )}
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {SCORE_CONFIG.map((cfg) => {
           const score = intel.scores[cfg.key];
           const evidence = intel.evidence[cfg.key];
+          const uncertain =
+            cfg.key === "nightlifeRisk"
+              ? intel.uncertainScores.nightlifeRisk
+              : intel.uncertainScores[cfg.key as "convenience" | "family" | "walkability"];
 
           return (
-            <div
-              key={cfg.key}
-              className={`rounded-lg p-3 ring-1 ring-black/5 ${cfg.colorBg}`}
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-sm font-medium flex items-center gap-1.5">
+            <div key={cfg.key} className={`rounded-xl px-3 py-3 ${cfg.colorBg} shadow-none`}>
+              <div className="flex items-center justify-between mb-1.5 gap-2">
+                <span className="text-sm font-medium flex items-center gap-1.5 min-w-0">
                   <span>{cfg.icon}</span>
-                  <span>{score.labelRo}</span>
+                  <span className="truncate">{score.labelRo}</span>
                 </span>
-                <span className={`text-sm font-bold ${cfg.colorText} inline-flex items-baseline gap-1`}>
-                  {score.value}
-                  <span className="font-normal text-xs text-muted-foreground">/100</span>
-                  <span className="text-[9px] font-medium uppercase tracking-wide text-slate-500">
-                    ~ estimat
+                <span className={`text-sm font-bold ${cfg.colorText} inline-flex flex-col items-end shrink-0`}>
+                  <span className="inline-flex items-baseline gap-1">
+                    {score.value}
+                    <span className="font-normal text-xs text-slate-500">/100</span>
                   </span>
+                  {uncertain ? (
+                    <span className="text-[9px] font-semibold uppercase tracking-wide text-sky-700">
+                      Estimare incerta
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-medium uppercase tracking-wide text-slate-500">
+                      ~ estimat
+                    </span>
+                  )}
                 </span>
               </div>
 
               <ScoreBar value={score.value} colorBar={cfg.colorBar} />
 
-              <div className="mt-1 flex items-center justify-between">
-                <span className="text-[10px] text-muted-foreground">{cfg.description}</span>
-                <span className={`text-xs font-medium ${cfg.colorText}`}>
+              <div className="mt-1 flex items-center justify-between gap-2">
+                <span className="text-[10px] text-slate-600 leading-snug">{cfg.description}</span>
+                <span className={`text-xs font-medium shrink-0 ${cfg.colorText}`}>
                   {cfg.invertedRisk
-                    ? score.value >= 60 ? "Ridicat" : score.value >= 30 ? "Moderat" : "Scazut"
+                    ? score.value >= 60
+                      ? "Ridicat"
+                      : score.value >= 30
+                        ? "Moderat"
+                        : "Scazut"
                     : score.label}
                 </span>
               </div>
@@ -221,9 +326,12 @@ export default function IntelScoreCards({ intel, loading }: Props) {
         })}
       </div>
 
-      {/* Zone gaps - informative, not error-state */}
-      {intel.redFlags.length > 0 && (
-        <ZoneGapsPanel redFlags={intel.redFlags} familyScore={intel.scores.family.value} />
+      {q.lowDataMode ? (
+        <LowDataZonePanel />
+      ) : strongCoverageMode(q) ? (
+        <FacilitiesIdentifiedPanel intel={intel} />
+      ) : (
+        <PartialDataNote />
       )}
     </div>
   );
