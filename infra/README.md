@@ -291,6 +291,20 @@ docker compose exec postgres psql -U imobintel_admin -d postgres -c "
 
 ## 9. Troubleshooting
 
+### `docker compose up -d --build` dar site-ul tot nu merge (mai ales cu mai multe proiecte pe același VPS)
+
+Pe server, din `infra/`:
+
+```bash
+chmod +x scripts/diagnose-stack.sh && ./scripts/diagnose-stack.sh
+```
+
+Script-ul arată statusul serviciilor, **cine ocupă 80/443 pe host**, ultimele loguri API/Caddy și un `wget` din Caddy spre `imobintel-api:3000/api/health/live`. Dacă API-ul nu răspunde 200, citește stack trace-ul în loguri (Prisma, `DATABASE_URL`, variabile lipsă). Dacă migrările nu au rulat niciodată:
+
+```bash
+docker compose exec imobintel-api npx prisma migrate deploy
+```
+
 ### `ERR_SSL_PROTOCOL_ERROR` or site down, but `docker compose ps` looks fine
 
 1. **Only one thing can listen on host `80` and `443`.** If another stack (e.g. another project’s Caddy) already publishes those ports, either stop it or use **one** reverse proxy that routes all domains. Check:
@@ -349,6 +363,7 @@ infra/
 │   ├── backup.sh               # pg_dump + gzip + rotation
 │   ├── restore.sh              # Restore from .sql.gz
 │   ├── healthcheck.sh          # PG, Redis, API, disk checks
+│   ├── diagnose-stack.sh       # VPS: ps, port 80/443, logs, wget health
 │   └── crontab.example         # All cron schedules with CRON_SECRET
 └── README.md
 ```
