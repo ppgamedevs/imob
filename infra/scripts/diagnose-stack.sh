@@ -25,11 +25,12 @@ echo "=== Ultimile loguri caddy (80 linii) ==="
 docker compose logs --tail=80 caddy 2>&1 || true
 
 echo ""
-echo "=== Din containerul caddy: health către API (trebuie HTTP 200) ==="
+echo "=== Health /api/health/live (HTTP 200) ==="
 if docker compose ps --status running --format '{{.Name}}' | grep -q caddy; then
   docker compose exec -T caddy wget -q -S -O /dev/null http://imobintel-api:3000/api/health/live 2>&1 || true
 else
-  echo "(caddy nu rulează — sări peste wget)"
+  echo "(fără infra-caddy — test din imobintel-api, port din \$PORT în container)"
+  docker compose exec -T imobintel-api sh -c 'wget -q -S -O /dev/null "http://127.0.0.1:${PORT:-3000}/api/health/live"' 2>&1 || true
 fi
 
 echo ""

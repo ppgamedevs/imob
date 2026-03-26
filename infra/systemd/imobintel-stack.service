@@ -11,9 +11,14 @@
 #
 # Notă: containerele au deja restart: unless-stopped; acest unit asigură
 # docker compose up -d după reboot sau dacă stack-ul a fost oprit manual.
+#
+# Caddy din infra e opțional (profile "edge"). Implicit NU pornește infra-caddy
+# (compatibil cu un Caddy central pe 80/443). Pentru VPS doar Imob cu TLS propriu:
+#   Environment=COMPOSE_PROFILES=edge
+# lângă celelalte Environment= din [Service].
 
 [Unit]
-Description=ImobIntel (Docker Compose — Caddy, API, Postgres, Redis)
+Description=ImobIntel (Docker Compose — API, Postgres, Redis; Caddy opțional profile edge)
 After=docker.service network-online.target
 Wants=network-online.target
 Requires=docker.service

@@ -2,7 +2,7 @@
 
 Production infrastructure for ImobIntel and future projects.
 
-- **Full stack on the VPS** — Next.js (pages + `/api/*`), Postgres, Redis, Caddy (TLS)
+- **Stack on the VPS** — Next.js (pages + `/api/*`), Postgres, Redis; **Caddy inclus e opțional** (`--profile edge`) dacă ai deja un reverse proxy pe 80/443
 - **Single origin** — `https://imobintel.ro` serves UI and API; optional `api.imobintel.ro` is the same app for direct API access / CORS
 
 ## Architecture
@@ -137,13 +137,18 @@ nano .env    # Fill in ALL passwords and secrets
 mkdir -p backups
 chmod +x scripts/*.sh
 
-# Build and start
+# Build and start (fără Caddy Imob — typical dacă TLS + 80/443 le are alt Caddy pe același VPS)
 docker compose up -d --build
+
+# SAU: VPS dedicat doar ImobIntel — pornește și Caddy-ul din infra (TLS pe imobintel.ro)
+# docker compose --profile edge up -d --build
 
 # Verify
 docker compose ps
 docker compose logs -f --tail=50
 ```
+
+**Notă:** `docker compose up` implicit **nu** mai pornește `infra-caddy` (profile `edge`), ca să nu crape cu `Bind for 0.0.0.0:80 failed` când alt proiect ocupă deja porturile. Dacă tocmai ai încercat să pornești vechiul container Caddy și a rămas creat dar oprit: `docker compose rm -sf caddy` apoi `docker compose up -d --build`.
 
 ### Optional: systemd unit (boot + explicit stack start)
 
@@ -164,7 +169,7 @@ Fișierul sursă: [`infra/systemd/imobintel-stack.service`](systemd/imobintel-st
 Migrations use the admin user (superuser) since they may ALTER tables:
 
 ```bash
-docker compose exec imobintel-api npx prisma migrate deploy
+docker compose exec imobintel-api prisma migrate deploy
 ```
 
 ### Enable monitoring (optional)
@@ -245,7 +250,7 @@ cd ~/imob && git pull
 cd infra && docker compose up -d --build imobintel-api
 
 # Run migrations if schema changed
-docker compose exec imobintel-api npx prisma migrate deploy
+docker compose exec imobintel-api prisma migrate deploy
 ```
 
 ---
@@ -301,9 +306,9 @@ Ca Imob să fie singurul „edge” pe acel IP:
    cd ~/path/to/carintel && docker compose stop caddy
    # sau: docker stop carintel-caddy-1
    ```
-2. Pornește Imob din `~/apps/imob/infra`:
+2. Pornește Imob din `~/apps/imob/infra` **cu** Caddy-ul din infra:
    ```bash
-   docker compose up -d --build --force-recreate caddy imobintel-api
+   docker compose --profile edge up -d --build --force-recreate caddy imobintel-api
    ```
 3. Verifică că **Imob** deține porturile și că Caddy are mapare pe host:
    ```bash
@@ -311,9 +316,11 @@ Ca Imob să fie singurul „edge” pe acel IP:
    ```
    Ar trebui să vezi ceva de forma `0.0.0.0:80->80/tcp` pe **`infra-caddy`** (sau numele echivalent), nu pe containerul CarIntel.
 
+**Dacă deja folosești un Caddy unic pentru toate domeniile:** lasă `docker compose up` **fără** `--profile edge`; proiectul Imob rulează doar API + DB + Redis, iar `imobintel.ro` merge prin Caddy-ul mare.
+
 **Alternativă dacă vrei ambele proiecte live pe același VPS și același IP:** nu există două „standalone” edge-uri; ai nevoie de **un singur** reverse proxy care să routeze toate domeniile (Imob + CarIntel) — sau de **al doilea IP public** (ex. IP suplimentar Hetzner), câte un stack pe IP-ul lui, fiecare cu `:80`/`:443`.
 
-După ce `infra-caddy` chiar ascultă pe 80/443, erorile cu `lookup imobintel-api on 127.0.0.11:53: connection refused` dispar adesea după un **`docker compose up -d --force-recreate`** al stack-ului Imob; dacă persistă, verifică `sudo systemctl restart docker` și firewall-ul `FORWARD` pentru bridge-ul Docker.
+După ce `infra-caddy` chiar ascultă pe 80/443, erorile cu `lookup imobintel-api on 127.0.0.11:53: connection refused` dispar adesea după un **`docker compose --profile edge up -d --force-recreate`** al stack-ului Imob; dacă persistă, verifică `sudo systemctl restart docker` și firewall-ul `FORWARD` pentru bridge-ul Docker.
 
 ---
 
@@ -327,7 +334,7 @@ Pe server, din `infra/`:
 chmod +x scripts/diagnose-stack.sh && ./scripts/diagnose-stack.sh
 ```
 
-Script-ul arată statusul serviciilor, **cine ocupă 80/443 pe host**, ultimele loguri API/Caddy și un `wget` din Caddy spre `imobintel-api:3000/api/health/live`. Dacă API-ul nu răspunde 200, citește stack trace-ul în loguri (Prisma, `DATABASE_URL`, variabile lipsă). Dacă migrările nu au rulat niciodată, folosește **Prisma din imagine** (versiunea pin-uită în Dockerfile), nu `npx prisma` (care poate instala Prisma 7+ și strică schema):
+Script-ul arată statusul serviciilor, **cine ocupă 80/443 pe host**, ultimele loguri API/Caddy și un health `wget` (din containerul Caddy Imob dacă rulează, altfel din `imobintel-api`). Dacă API-ul nu răspunde 200, citește stack trace-ul în loguri (Prisma, `DATABASE_URL`, variabile lipsă). Dacă migrările nu au rulat niciodată, folosește **Prisma din imagine** (versiunea pin-uită în Dockerfile), nu `npx prisma` (care poate instala Prisma 7+ și strică schema):
 
 ```bash
 docker compose exec imobintel-api prisma migrate deploy
@@ -342,10 +349,12 @@ docker compose exec imobintel-api prisma migrate deploy
    sudo ss -tlnp | grep -E ':80|:443'
    ```
 
-2. **Caddy can’t resolve `imobintel-api` (logs: `lookup imobintel-api on 127.0.0.53`)** — the container was using the host’s systemd-resolved stub, which does not work inside Docker. `docker-compose.yml` sets `dns: [127.0.0.11]` on **caddy** so Docker’s embedded DNS resolves service names and forwards public lookups. After changing compose:
+2. **`Bind for 0.0.0.0:80 failed: port is already allocated`** — alt reverse proxy folosește 80/443. Nu porni Caddy-ul din Imob: `docker compose up -d --build` (fără `--profile edge`). eventual `docker compose rm -sf caddy`.
+
+2b. **Caddy Imob nu poate rezolva `imobintel-api` (logs: `lookup … on 127.0.0.11`)** — doar dacă folosești **`--profile edge`**. `docker-compose.yml` setează `dns: [127.0.0.11]` pe **caddy**. După modificări:
 
    ```bash
-   docker compose up -d --force-recreate caddy
+   docker compose --profile edge up -d --force-recreate caddy
    ```
 
 3. **Let’s Encrypt also needs working DNS from the container** — same `127.0.0.53` issue breaks `acme-v02.api.letsencrypt.org` lookups. Fixing DNS on Caddy fixes renewals too.

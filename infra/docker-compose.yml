@@ -69,8 +69,12 @@ services:
       retries: 12
       start_period: 60s
 
-  # ─── Reverse proxy (public: 80, 443) ──────────────────────
+  # ─── Reverse proxy (public: 80, 443) — OPTIONAL ───────────
+  # Oprit implicit: pe VPS-uri cu Caddy central, 80/443 sunt deja folosite.
+  # Standalone (Imob deține TLS): docker compose --profile edge up -d
   caddy:
+    profiles:
+      - edge
     image: caddy:2-alpine
     restart: unless-stopped
     env_file: .env
