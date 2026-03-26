@@ -6,10 +6,14 @@
 # ===========================================
 
 CRON_SECRET=YOUR_CRON_SECRET
+# Producție Docker: folosește URL public (port 3000 nu e pe host). Ex.: API=https://imobintel.ro
 API=http://localhost:3000
 
 # Crawl tick — every 5 minutes
 */5 * * * * curl -sf --max-time 30 -H "x-cron-secret: $CRON_SECRET" $API/api/cron/crawl-tick > /dev/null 2>&1
+
+# Seed discover — every 5 minutes (reîncarcă cozi discover → detail)
+*/5 * * * * curl -sf --max-time 120 -H "x-cron-secret: $CRON_SECRET" $API/api/cron/seed-discover > /dev/null 2>&1
 
 # Dedup tick — every 15 minutes
 */15 * * * * curl -sf --max-time 60 -H "x-cron-secret: $CRON_SECRET" $API/api/cron/dedup-tick > /dev/null 2>&1

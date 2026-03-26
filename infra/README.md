@@ -203,13 +203,18 @@ In Stripe Dashboard → Webhooks:
 
 ## 4. Cron Jobs
 
-All crons run on the VPS via crontab, calling the API with `CRON_SECRET`:
+All crons run on the VPS via crontab (or **systemd timers** în `infra/systemd/`),
+calling the API with `CRON_SECRET` și, în producție, **URL public** (`https://imobintel.ro`), nu `localhost:3000` dacă portul nu e mapat pe host.
+
+`crontab.example` include **`crawl-tick`** și **`seed-discover`** la fiecare **5 minute** — fără `seed-discover`, coada `CrawlJob` se poate goli și nu se mai adaugă anunțuri noi.
 
 ```bash
 crontab scripts/crontab.example
 # Edit to replace YOUR_CRON_SECRET with actual value from .env
 crontab -e
 ```
+
+Timers systemd (alternativ): `sudo ./infra/systemd/install-timers.sh` — verificare: `systemctl list-timers 'imob-*'`. După `git pull`, dacă modifici `*.timer`, copiază din nou în `/etc/systemd/system/` și `systemctl daemon-reload`.
 
 Middleware on `/api/cron/*` rejects requests without a valid `x-cron-secret`
 header (or `Authorization: Bearer <secret>`). In local dev with no
