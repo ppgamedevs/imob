@@ -287,6 +287,34 @@ docker compose exec postgres psql -U imobintel_admin -d postgres -c "
 "
 ```
 
+### Standalone ImobIntel (fără să depinzi de Caddy-ul altui proiect)
+
+Stack-ul `infra/` **este** standalone: Postgres, Redis, Next.js și **Caddy-ul propriu** cu TLS pentru domeniile din `Caddyfile`.
+
+**Constrângerea de la Linux:** pe **același IP public** pot exista **cel mult** ascultători pe **`:80`** și **`:443`**. Dacă `carintel-caddy` (sau orice alt Nginx/Caddy) este deja mapat pe `0.0.0.0:80` și `:443`, containerul `infra-caddy` fie **nu primește** aceste mapări, fie nu pornește corect — și traficul HTTP(S) nu mai intră pe configurația Imob.
+
+Ca Imob să fie singurul „edge” pe acel IP:
+
+1. **Eliberă 80/443** pe server (conștient că site-urile care treceau prin vechiul Caddy nu mai au TLS pe acest IP până le muți):
+   ```bash
+   # exemplu — folosește directorul real al celuilalt proiect
+   cd ~/path/to/carintel && docker compose stop caddy
+   # sau: docker stop carintel-caddy-1
+   ```
+2. Pornește Imob din `~/apps/imob/infra`:
+   ```bash
+   docker compose up -d --build --force-recreate caddy imobintel-api
+   ```
+3. Verifică că **Imob** deține porturile și că Caddy are mapare pe host:
+   ```bash
+   docker ps --format 'table {{.Names}}\t{{.Ports}}' | grep -E 'caddy|80|443'
+   ```
+   Ar trebui să vezi ceva de forma `0.0.0.0:80->80/tcp` pe **`infra-caddy`** (sau numele echivalent), nu pe containerul CarIntel.
+
+**Alternativă dacă vrei ambele proiecte live pe același VPS și același IP:** nu există două „standalone” edge-uri; ai nevoie de **un singur** reverse proxy care să routeze toate domeniile (Imob + CarIntel) — sau de **al doilea IP public** (ex. IP suplimentar Hetzner), câte un stack pe IP-ul lui, fiecare cu `:80`/`:443`.
+
+După ce `infra-caddy` chiar ascultă pe 80/443, erorile cu `lookup imobintel-api on 127.0.0.11:53: connection refused` dispar adesea după un **`docker compose up -d --force-recreate`** al stack-ului Imob; dacă persistă, verifică `sudo systemctl restart docker` și firewall-ul `FORWARD` pentru bridge-ul Docker.
+
 ---
 
 ## 9. Troubleshooting
@@ -299,10 +327,10 @@ Pe server, din `infra/`:
 chmod +x scripts/diagnose-stack.sh && ./scripts/diagnose-stack.sh
 ```
 
-Script-ul arată statusul serviciilor, **cine ocupă 80/443 pe host**, ultimele loguri API/Caddy și un `wget` din Caddy spre `imobintel-api:3000/api/health/live`. Dacă API-ul nu răspunde 200, citește stack trace-ul în loguri (Prisma, `DATABASE_URL`, variabile lipsă). Dacă migrările nu au rulat niciodată:
+Script-ul arată statusul serviciilor, **cine ocupă 80/443 pe host**, ultimele loguri API/Caddy și un `wget` din Caddy spre `imobintel-api:3000/api/health/live`. Dacă API-ul nu răspunde 200, citește stack trace-ul în loguri (Prisma, `DATABASE_URL`, variabile lipsă). Dacă migrările nu au rulat niciodată, folosește **Prisma din imagine** (versiunea pin-uită în Dockerfile), nu `npx prisma` (care poate instala Prisma 7+ și strică schema):
 
 ```bash
-docker compose exec imobintel-api npx prisma migrate deploy
+docker compose exec imobintel-api prisma migrate deploy
 ```
 
 ### `ERR_SSL_PROTOCOL_ERROR` or site down, but `docker compose ps` looks fine
