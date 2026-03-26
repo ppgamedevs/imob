@@ -145,6 +145,20 @@ docker compose ps
 docker compose logs -f --tail=50
 ```
 
+### Optional: systemd unit (boot + explicit stack start)
+
+Containerele au `restart: unless-stopped`, deci după reboot Docker le repornește de obicei singur. Dacă vrei același model ca un `.service` dedicat (ex. `artemisrx.service`) — **pornește `docker compose up -d` la boot** și poți folosi `systemctl start|stop imobintel-stack` — folosește șablonul din repo:
+
+```bash
+sudo cp systemd/imobintel-stack.service /etc/systemd/system/
+# Înlocuiește @@WORKDIR@@ cu calea la infra (ex. /home/deploy/imob/infra) și @@USER@@ cu userul de deploy
+sudo sed -i 's|@@WORKDIR@@|/home/deploy/imob/infra|g; s|@@USER@@|deploy|g' /etc/systemd/system/imobintel-stack.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now imobintel-stack.service
+```
+
+Fișierul sursă: [`infra/systemd/imobintel-stack.service`](systemd/imobintel-stack.service). Separat de acesta există doar timer-ele `imob-crawl-*.service` / `*.timer` pentru pipeline-ul de crawl (vezi `install-timers.sh`).
+
 ### Run migrations
 
 Migrations use the admin user (superuser) since they may ALTER tables:

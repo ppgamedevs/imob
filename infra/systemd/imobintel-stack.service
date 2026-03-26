@@ -1,0 +1,33 @@
+# ImobIntel — pornește stack-ul Docker Compose la boot (ca artemisrx.service).
+#
+# Instalare (Ubuntu, user deploy, repo în ~/imob):
+#   sudo cp imobintel-stack.service /etc/systemd/system/
+#   sudo sed -i 's|@@WORKDIR@@|/home/deploy/imob/infra|g; s|@@USER@@|deploy|g' /etc/systemd/system/imobintel-stack.service
+#   # sau editează manual WorkingDirectory= și User=
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now imobintel-stack.service
+#
+# Verificare: systemctl status imobintel-stack.service && docker compose -f .../infra/docker-compose.yml ps
+#
+# Notă: containerele au deja restart: unless-stopped; acest unit asigură
+# docker compose up -d după reboot sau dacă stack-ul a fost oprit manual.
+
+[Unit]
+Description=ImobIntel (Docker Compose — Caddy, API, Postgres, Redis)
+After=docker.service network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+User=@@USER@@
+Group=@@USER@@
+WorkingDirectory=@@WORKDIR@@
+Environment=COMPOSE_PROJECT_NAME=imobintel
+ExecStart=/usr/bin/docker compose up -d --remove-orphans
+ExecStop=/usr/bin/docker compose down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
