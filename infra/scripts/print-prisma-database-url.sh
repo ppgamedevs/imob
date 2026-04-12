@@ -19,5 +19,5 @@ if [[ -z "${IMOBINTEL_APP_PASSWORD:-}" ]]; then
   exit 1
 fi
 enc=$(python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "$IMOBINTEL_APP_PASSWORD")
-# sslmode=disable: Docker Postgres is usually non-TLS; Prisma/libpq "prefer" can misbehave and surface as P1000.
-echo "DATABASE_URL=postgresql://${user}:${enc}@postgres:5432/${db}?sslmode=disable"
+# sslmode=disable + channel_binding=disable: Docker Postgres / libpq / Prisma (P1000 false auth) workarounds.
+echo "DATABASE_URL=postgresql://${user}:${enc}@postgres:5432/${db}?sslmode=disable&channel_binding=disable"
