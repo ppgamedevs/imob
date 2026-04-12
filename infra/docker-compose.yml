@@ -50,7 +50,7 @@ services:
     environment:
       # Prefer DATABASE_URL from .env when set (password must be URL-encoded: @ → %40, etc.).
       # Otherwise built from IMOBINTEL_* — Compose can mangle passwords with $ @ # : unless escaped in .env.
-      DATABASE_URL: "${DATABASE_URL:-postgresql://${IMOBINTEL_APP_USER:-imobintel}:${IMOBINTEL_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}}"
+      DATABASE_URL: "${DATABASE_URL:-postgresql://${IMOBINTEL_APP_USER:-imobintel}:${IMOBINTEL_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable}"
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
