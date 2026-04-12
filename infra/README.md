@@ -323,6 +323,8 @@ Ca Imob să fie singurul „edge” pe acel IP:
 
 **Dacă deja folosești un Caddy unic pentru toate domeniile:** lasă `docker compose up` **fără** `--profile edge`; proiectul Imob rulează doar API + DB + Redis, iar `imobintel.ro` merge prin Caddy-ul mare.
 
+**CarIntel Caddy + rețea `carintel_edge`:** `docker-compose.yml` atașează `imobintel-api` la rețeaua externă `carintel_edge` (aceeași folosită de `carintel-caddy-1`), ca `reverse_proxy` către `infra-imobintel-api-1:3000` să funcționeze după fiecare recreate. Rețeaua trebuie să existe înainte de `docker compose up` (o creează stack-ul CarIntel) sau, pe un mediu doar Imob: `docker network create carintel_edge`.
+
 **Alternativă dacă vrei ambele proiecte live pe același VPS și același IP:** nu există două „standalone” edge-uri; ai nevoie de **un singur** reverse proxy care să routeze toate domeniile (Imob + CarIntel) — sau de **al doilea IP public** (ex. IP suplimentar Hetzner), câte un stack pe IP-ul lui, fiecare cu `:80`/`:443`.
 
 După ce `infra-caddy` chiar ascultă pe 80/443, erorile cu `lookup imobintel-api on 127.0.0.11:53: connection refused` dispar adesea după un **`docker compose --profile edge up -d --force-recreate`** al stack-ului Imob; dacă persistă, verifică `sudo systemctl restart docker` și firewall-ul `FORWARD` pentru bridge-ul Docker.

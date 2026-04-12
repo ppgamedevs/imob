@@ -60,6 +60,9 @@ services:
     networks:
       - internal
       - web
+      # CarIntel Caddy (carintel-caddy-1) reverse_proxies to this container; network must exist.
+      # Created by CarIntel stack, or: docker network create carintel_edge
+      - carintel_edge
     # System Caddy on the host cannot use Docker hostnames — proxy to 127.0.0.1:3000.
     # Safe: loopback only, not exposed on the public interface. Not needed if you use
     # only infra Caddy (--profile edge) on the same compose `web` network.
@@ -135,6 +138,9 @@ networks:
     driver: bridge
   web:
     driver: bridge
+  carintel_edge:
+    external: true
+    name: carintel_edge
 
 volumes:
   pg_data:
