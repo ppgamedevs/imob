@@ -60,6 +60,11 @@ services:
     networks:
       - internal
       - web
+    # System Caddy on the host cannot use Docker hostnames — proxy to 127.0.0.1:3000.
+    # Safe: loopback only, not exposed on the public interface. Not needed if you use
+    # only infra Caddy (--profile edge) on the same compose `web` network.
+    ports:
+      - "127.0.0.1:3000:3000"
     # 127.0.0.1: Alpine "localhost" → ::1 while Node listens on IPv4 → refused
     # /api/health/live: fast 200 without DB/Stripe/Resend (deep check stays at /api/health)
     healthcheck:
