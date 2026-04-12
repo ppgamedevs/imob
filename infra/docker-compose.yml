@@ -15,8 +15,12 @@ services:
       - ./postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
       - ./scripts/init-db.sh:/docker-entrypoint-initdb.d/init-db.sh:ro
     command: postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
+    # Unique host on `internal` only — avoids DNS name `postgres` colliding with other stacks
+    # (e.g. CarIntel) when `imobintel-api` is also on `carintel_edge`.
     networks:
-      - internal
+      internal:
+        aliases:
+          - imobintel-pg
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -51,7 +55,7 @@ services:
       # Prefer DATABASE_URL from .env when set (password must be URL-encoded: @ → %40, etc.).
       # Otherwise built from IMOBINTEL_* — Compose can mangle passwords with $ @ # : unless escaped in .env.
       # channel_binding=disable: avoids SCRAM + libpq channel-binding quirks in Docker (can look like P1000).
-      DATABASE_URL: "${DATABASE_URL:-postgresql://${IMOBINTEL_APP_USER:-imobintel}:${IMOBINTEL_APP_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable&channel_binding=disable}"
+      DATABASE_URL: "${DATABASE_URL:-postgresql://${IMOBINTEL_APP_USER:-imobintel}:${IMOBINTEL_APP_PASSWORD}@imobintel-pg:5432/${POSTGRES_DB}?sslmode=disable&channel_binding=disable}"
       NODE_ENV: production
       PORT: "3000"
       HOSTNAME: "0.0.0.0"

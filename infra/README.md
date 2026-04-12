@@ -323,7 +323,7 @@ Ca Imob să fie singurul „edge” pe acel IP:
 
 **Dacă deja folosești un Caddy unic pentru toate domeniile:** lasă `docker compose up` **fără** `--profile edge`; proiectul Imob rulează doar API + DB + Redis, iar `imobintel.ro` merge prin Caddy-ul mare.
 
-**CarIntel Caddy + rețea `carintel_edge`:** `docker-compose.yml` atașează `imobintel-api` la rețeaua externă `carintel_edge` (aceeași folosită de `carintel-caddy-1`), ca `reverse_proxy` către `infra-imobintel-api-1:3000` să funcționeze după fiecare recreate. Rețeaua trebuie să existe înainte de `docker compose up` (o creează stack-ul CarIntel) sau, pe un mediu doar Imob: `docker network create carintel_edge`.
+**CarIntel Caddy + rețea `carintel_edge`:** `docker-compose.yml` atașează `imobintel-api` la rețeaua externă `carintel_edge` (aceeași folosită de `carintel-caddy-1`), ca `reverse_proxy` către `infra-imobintel-api-1:3000` să funcționeze după fiecare recreate. Rețeaua trebuie să existe înainte de `docker compose up` (o creează stack-ul CarIntel) sau, pe un mediu doar Imob: `docker network create carintel_edge`. Host-ul DB în `DATABASE_URL` este **`imobintel-pg`** (alias pe rețeaua `internal`), nu `postgres`, ca să nu existe coliziune DNS cu alt serviciu `postgres` de pe `carintel_edge`.
 
 **Alternativă dacă vrei ambele proiecte live pe același VPS și același IP:** nu există două „standalone” edge-uri; ai nevoie de **un singur** reverse proxy care să routeze toate domeniile (Imob + CarIntel) — sau de **al doilea IP public** (ex. IP suplimentar Hetzner), câte un stack pe IP-ul lui, fiecare cu `:80`/`:443`.
 
