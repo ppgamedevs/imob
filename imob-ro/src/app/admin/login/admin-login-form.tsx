@@ -18,46 +18,58 @@ export function AdminLoginForm({ from, passwordLoginEnabled }: Props) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    const value = password.trim();
+    if (!value) {
+      setError("Introdu parola.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const res = await fetch(
-        // URL absolut, evită probleme când aplicația e servită din subpath / proxy
-        new URL("/api/admin/portal", window.location.origin).toString(),
-        {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ password }),
-          credentials: "include",
-        },
-      );
+      const res = await fetch(new URL("/api/admin/portal", window.location.origin).toString(), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ password: value }),
+        credentials: "include",
+      });
 
       if (res.ok) {
-        // Navigare full page ca browserul aplice cookie httpOnly înainte de a încărca /admin
         window.location.assign(from);
         return;
       }
 
-      let detail = "";
+      type ErrBody = { error?: string; message?: string };
+      let j: ErrBody = {};
       try {
-        const j = (await res.json()) as { message?: string };
-        if (j?.message) detail = ` ${j.message}`;
+        j = (await res.json()) as ErrBody;
       } catch {
         /* ignore */
       }
+      const detail = j?.message ? ` ${j.message}` : "";
 
       if (res.status === 401) {
         setError("Parolă incorectă.");
         return;
       }
+      if (res.status === 400) {
+        if (j?.error === "password_required") {
+          setError("Introdu parola.");
+        } else {
+          setError("Cerere invalidă." + detail);
+        }
+        return;
+      }
       if (res.status === 503) {
         setError(
-          "Autentificarea prin parolă nu e configurată pe server sau lipsește secretul." + detail,
+          "Autentificarea prin parolă nu e configurată pe server sau lipsește secretul (ADMIN_PORTAL_PASSWORD / ADMIN_PORTAL_SECRET)." +
+            detail,
         );
         return;
       }
       setError(`Nu s-a putut autentifica (cod ${res.status}).` + detail);
     } catch {
-      setError("Eroare de rețea sau reîncercare; verifică conexiunea.");
+      setError("Eroare de rețea; reîncearcă sau verifică conexiunea.");
     } finally {
       setLoading(false);
     }
@@ -85,6 +97,17 @@ export function AdminLoginForm({ from, passwordLoginEnabled }: Props) {
       </div>
 
       <form onSubmit={onSubmit} className="space-y-3" noValidate>
+        {/* Câmp „username” invizibil: recomandat pentru accesibilitate la formulare doar parolă + elimină avertismentul Chrome. */}
+        <input
+          type="text"
+          name="imob_admin_user_hint"
+          autoComplete="username"
+          defaultValue="imobintel-admin"
+          className="sr-only"
+          tabIndex={-1}
+          readOnly
+          aria-hidden
+        />
         <div>
           <label htmlFor="admin-pw" className="text-xs font-medium text-zinc-600">
             Parolă acces
@@ -100,9 +123,15 @@ export function AdminLoginForm({ from, passwordLoginEnabled }: Props) {
             required
             disabled={loading}
             autoFocus
+            aria-invalid={error ? "true" : "false"}
+            aria-describedby={error ? "admin-login-err" : undefined}
           />
         </div>
-        {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+        {error ? (
+          <p id="admin-login-err" className="text-sm text-rose-600" role="alert" aria-live="polite">
+            {error}
+          </p>
+        ) : null}
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Se verifică…" : "Continuă"}
         </Button>

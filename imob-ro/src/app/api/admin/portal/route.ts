@@ -3,12 +3,23 @@ import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 
 import {
-  clearAdminPortalCookie,
+  ADMIN_PORTAL_COOKIE,
   isAdminPortalPasswordConfigured,
-  setAdminPortalCookie,
-} from "@/lib/admin-portal-session";
+  JWT_MAX_AGE_SEC,
+  signAdminPortalToken,
+} from "@/lib/admin-portal-jwt";
 
 export const runtime = "nodejs";
+
+function adminPortalResponseCookies() {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    maxAge: JWT_MAX_AGE_SEC,
+    path: "/",
+  };
+}
 
 function verifyPasswordPlain(plain: string): boolean {
   const expected = process.env.ADMIN_PORTAL_PASSWORD?.trim();
@@ -21,6 +32,9 @@ function verifyPasswordPlain(plain: string): boolean {
 /**
  * POST /api/admin/portal
  * Body JSON: { "password": "..." } — setează cookie-ul de sesiune admin (7 zile).
+ *
+ * Setăm cookie pe `NextResponse` explicit — pattern mai fiabil pe Vercel / App Router
+ * decât `cookies().set()` doar prin `next/headers` în unele configurații.
  */
 export async function POST(request: Request) {
   if (!isAdminPortalPasswordConfigured()) {
@@ -52,23 +66,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
+  let token: string;
   try {
-    await setAdminPortalCookie();
+    token = await signAdminPortalToken();
   } catch (e) {
-    console.error("admin portal cookie", e);
+    console.error("admin portal sign", e);
     return NextResponse.json(
       { error: "config", message: "Lipsește ADMIN_PORTAL_SECRET pe server" },
       { status: 503 },
     );
   }
 
-  return NextResponse.json({ ok: true });
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set(ADMIN_PORTAL_COOKIE, token, adminPortalResponseCookies());
+  return res;
 }
 
 /**
  * DELETE /api/admin/portal — șterge sesiunea (logout admin portal).
  */
 export async function DELETE() {
-  await clearAdminPortalCookie();
-  return NextResponse.json({ ok: true });
+  const res = NextResponse.json({ ok: true });
+  res.cookies.delete(ADMIN_PORTAL_COOKIE);
+  return res;
 }
