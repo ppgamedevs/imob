@@ -31,7 +31,7 @@ export default async function AdminLoginPage({
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center bg-zinc-50/80 px-4 py-16">
-      <AdminLoginForm passwordLoginEnabled={isAdminPortalPasswordConfigured()} />
+      <AdminLoginForm from={from} passwordLoginEnabled={isAdminPortalPasswordConfigured()} />
     </div>
   );
 }

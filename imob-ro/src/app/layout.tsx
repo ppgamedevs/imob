@@ -122,7 +122,8 @@ export default function RootLayout({
     name: "ImobIntel",
     url: SITE_URL,
     logo: `${SITE_URL}/logo.png`,
-    description: "Rapoarte din link de anunț pentru cumpărători; reper orientativ, nu evaluare oficială.",
+    description:
+      "Rapoarte din link de anunț pentru cumpărători; reper orientativ, nu evaluare oficială.",
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "Customer Service",
@@ -165,7 +166,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Script src="https://www.googletagmanager.com/gtag/js?id=G-Q40GJ9B2H8" strategy="lazyOnload" />
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-Q40GJ9B2H8"
+          strategy="lazyOnload"
+        />
         <Script id="gtag-init" strategy="lazyOnload">
           {`window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
@@ -176,7 +180,9 @@ gtag('config', 'G-Q40GJ9B2H8');`}
           <ToastProvider>
             <div className="flex min-h-screen flex-col pb-16 md:pb-0">
               <AppHeader />
-              <main className="flex-1">{children}</main>
+              <main id="main" className="flex-1">
+                {children}
+              </main>
               <AppFooter />
               <MobileBar />
             </div>
