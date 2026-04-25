@@ -43,10 +43,12 @@ export async function verifyAdminPortalToken(token: string): Promise<boolean> {
 }
 
 export async function signAdminPortalToken(): Promise<string> {
+  // jose: numeric `setExpirationTime` = Unix *timestamp*, not a duration (e.g. 604800s became exp=1970).
+  const exp = new Date(Date.now() + JWT_MAX_AGE_SEC * 1000);
   return new SignJWT({ typ: "iim_ap_v1" })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(JWT_MAX_AGE_SEC)
+    .setExpirationTime(exp)
     .sign(requireSecretKeyBytesForSigning());
 }
 

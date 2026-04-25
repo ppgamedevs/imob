@@ -14,6 +14,15 @@ import {
 
 export type AdminLoginState = { error: string } | null;
 
+function debugAdminPortal(step: string, extra?: string) {
+  if (process.env.DEBUG_ADMIN_PORTAL !== "1") return;
+  console.error(
+    "[admin-portal:loginToAdminPortal]",
+    step,
+    extra ? extra.replace(/\s/g, " ") : "",
+  );
+}
+
 function safeFromParam(raw: FormDataEntryValue | null): string {
   const v = typeof raw === "string" ? raw : "";
   if (!v || !v.startsWith("/") || v.startsWith("//")) return "/admin";
@@ -38,6 +47,7 @@ export async function loginToAdminPortal(
   formData: FormData,
 ): Promise<AdminLoginState> {
   if (!isAdminPortalPasswordConfigured()) {
+    debugAdminPortal("abort", "no ADMIN_PORTAL_PASSWORD");
     return {
       error:
         "Lipsește ADMIN_PORTAL_PASSWORD pe server. Setează variabila de mediu și redeployează.",
@@ -48,9 +58,11 @@ export async function loginToAdminPortal(
   const passwordRaw = formData.get("password");
   const password = typeof passwordRaw === "string" ? passwordRaw.trim() : "";
   if (!password) {
+    debugAdminPortal("abort", "empty password");
     return { error: "Introdu parola." };
   }
   if (!verifyPasswordPlain(password)) {
+    debugAdminPortal("abort", "wrong password");
     return { error: "Parolă incorectă." };
   }
 
@@ -58,10 +70,12 @@ export async function loginToAdminPortal(
   try {
     token = await signAdminPortalToken();
   } catch {
+    debugAdminPortal("abort", "sign token failed (ADMIN_PORTAL_SECRET?)");
     return { error: "Lipsește sau e invalidă ADMIN_PORTAL_SECRET pe server." };
   }
 
   const jar = await cookies();
+  debugAdminPortal("cookie_set+redirect", `from=${from}`);
   jar.set(ADMIN_PORTAL_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
