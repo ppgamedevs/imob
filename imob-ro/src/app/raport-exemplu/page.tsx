@@ -45,14 +45,25 @@ export default async function RaportExempluPage() {
           reîncarcă pagina. În producție, rulează o dată același seed (sau un script de migrare care
           inserează rândul).
         </p>
-        <p className="mt-6">
+        <p className="mt-4 text-muted-foreground text-[15px] leading-relaxed">
+          Analizarea unui anunț real e un flux separat: nu completează rândul de probă de mai sus.
+          Când acest ecran e gol, revino aici după ce datele de demo sunt pe server, sau trece
+          direct la o analiză pe un anunț real.
+        </p>
+        <div className="mt-8 flex flex-wrap items-center gap-4">
+          <Link
+            href="/"
+            className="inline-flex items-center justify-center rounded-md border border-border bg-background px-4 py-2.5 text-sm font-medium shadow-sm transition hover:bg-muted/60"
+          >
+            Pagina principală
+          </Link>
           <Link
             href="/analyze"
-            className="text-primary font-medium underline underline-offset-4 hover:text-primary/90"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
           >
-            Verifică un anunț real
+            Analizează un anunț
           </Link>
-        </p>
+        </div>
       </div>
     );
   }
