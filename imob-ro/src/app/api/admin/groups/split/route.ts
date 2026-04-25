@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { requireAdmin } from "@/lib/auth-guards";
+import { isAdminApiAccess } from "@/lib/auth-guards";
 import { prisma } from "@/lib/db";
 import { rebuildGroupSnapshot } from "@/lib/dedup/snapshot";
 
@@ -20,8 +20,9 @@ const splitGroupSchema = z.object({
  */
 export async function POST(request: NextRequest) {
   try {
-    // Admin guard
-    await requireAdmin();
+    if (!(await isAdminApiAccess())) {
+      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+    }
 
     const formData = await request.formData();
     const groupId = formData.get("groupId") as string;

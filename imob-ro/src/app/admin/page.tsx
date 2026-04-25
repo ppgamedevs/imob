@@ -263,6 +263,19 @@ export default async function AdminHomePage() {
           </Card>
         </Link>
 
+        <Link href="/admin/market-coverage">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader>
+              <CardTitle>Acoperire piață (rapoarte plătite)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Listări curate pe oraș, sector, zonă, camere, suprafață, recență — unde e volum pentru vânzare
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
         <Link href="/admin/report-quality">
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
             <CardHeader>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { z } from "zod";
 
-import { auth } from "@/lib/auth";
+import { isAdminApiAccess } from "@/lib/auth-guards";
 import { reconcileReportUnlockMarkPaidIfStripePaid } from "@/lib/admin/report-unlock-reconcile";
 import { logger } from "@/lib/obs/logger";
 
@@ -13,17 +13,12 @@ const bodySchema = z.object({
   reportUnlockId: z.string().min(1),
 });
 
-async function requireAdminApi(): Promise<boolean> {
-  const session = await auth();
-  return session?.user?.role === "admin";
-}
-
 /**
  * POST /api/admin/report-unlocks/reconcile — verify Stripe and mark `ReportUnlock` paid if payment succeeded
  * (used when webhooks/redirect did not update the row).
  */
 export async function POST(req: Request) {
-  if (!(await requireAdminApi())) {
+  if (!(await isAdminApiAccess())) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   if (!process.env.STRIPE_SECRET_KEY) {

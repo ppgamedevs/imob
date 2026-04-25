@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { execFile } from "child_process";
 import { promisify } from "util";
 
-import { auth } from "@/lib/auth";
+import { isAdminApiAccess } from "@/lib/auth-guards";
 import { acquireLock, releaseLock, getLastRun } from "@/lib/jobs/lock";
 
 const execFileAsync = promisify(execFile);
@@ -16,8 +16,7 @@ async function requireAdminApi(req: Request): Promise<boolean> {
   const authHeader = req.headers.get("authorization");
   if (ADMIN_TOKEN && authHeader === `Bearer ${ADMIN_TOKEN}`) return true;
 
-  const session = await auth();
-  return session?.user?.role === "admin";
+  return isAdminApiAccess();
 }
 
 type JobName = "seismic-import" | "poi-import" | "gtfs-import" | "dedup-recompute";

@@ -1,16 +1,30 @@
 import { redirect } from "next/navigation";
 
+import { getAdminPortalSession } from "@/lib/admin-portal-session";
 import { auth } from "@/lib/auth";
 
 /**
- * Verify the current user is an admin
- * @throws Redirects to sign-in or returns 403 if not admin
+ * Pentru route handlers `app/api/**`: parolă portal sau rol admin NextAuth.
+ */
+export async function isAdminApiAccess(): Promise<boolean> {
+  if (await getAdminPortalSession()) return true;
+  const session = await auth();
+  return session?.user?.role === "admin";
+}
+
+/**
+ * Verify the current user is an admin (cont NextAuth cu rol admin **sau** sesiune parolă portal).
+ * @throws Redirects to /admin/login sau eroare dacă are sesiune dar nu e admin
  */
 export async function requireAdmin() {
+  if (await getAdminPortalSession()) {
+    return;
+  }
+
   const session = await auth();
 
   if (!session?.user) {
-    redirect("/auth/signin");
+    redirect("/admin/login");
   }
 
   if (session.user.role !== "admin") {

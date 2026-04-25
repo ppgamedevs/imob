@@ -1,21 +1,16 @@
 import { NextResponse } from "next/server";
 
-import { auth } from "@/lib/auth";
+import { isAdminApiAccess } from "@/lib/auth-guards";
 import { lookupReportUnlocksForAdmin } from "@/lib/admin/report-unlock-reconcile";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-async function requireAdminApi(): Promise<boolean> {
-  const session = await auth();
-  return session?.user?.role === "admin";
-}
-
 /**
  * GET /api/admin/report-unlocks/lookup?q= — find ReportUnlock by session id, pi id, CUID, analysis id, or email
  */
 export async function GET(req: Request) {
-  if (!(await requireAdminApi())) {
+  if (!(await isAdminApiAccess())) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   const { searchParams } = new URL(req.url);

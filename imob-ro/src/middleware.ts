@@ -2,6 +2,8 @@ import { jwtVerify } from "jose";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+import { ADMIN_PORTAL_COOKIE, verifyAdminPortalToken } from "@/lib/admin-portal-jwt";
+
 /**
  * Middleware to protect admin and agent routes
  *
@@ -73,14 +75,30 @@ export async function middleware(request: NextRequest) {
 
   const hasSession = !!sessionCookie;
 
-  // Protect all /admin routes
+  // Protect all /admin routes: sesiune NextAuth, sau parolă portal (JWT httpOnly)
   if (pathname.startsWith("/admin")) {
-    if (!hasSession) {
-      const signInUrl = new URL("/auth/signin", request.url);
-      signInUrl.searchParams.set("callbackUrl", pathname);
-      return NextResponse.redirect(signInUrl);
+    const isLogin = pathname === "/admin/login" || pathname.startsWith("/admin/login/");
+    if (isLogin) {
+      return NextResponse.next();
     }
-    // Role verification happens in page components with requireAdmin()
+
+    const portalCookie = request.cookies.get(ADMIN_PORTAL_COOKIE);
+    let portalOk = false;
+    if (portalCookie?.value) {
+      portalOk = await verifyAdminPortalToken(portalCookie.value);
+    }
+
+    if (portalOk) {
+      return NextResponse.next();
+    }
+
+    if (hasSession) {
+      return NextResponse.next();
+    }
+
+    const login = new URL("/admin/login", request.url);
+    login.searchParams.set("from", pathname);
+    return NextResponse.redirect(login);
   }
 
   // Protect dashboard routes

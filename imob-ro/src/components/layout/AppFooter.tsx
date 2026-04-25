@@ -1,8 +1,9 @@
+import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { ExternalLink } from "lucide-react";
 
 import { BuyerReportTrustNote } from "@/components/common/buyer-report-trust-note";
+import { complianceLogoById } from "@/components/compliance/ComplianceLogos";
 import { flags } from "@/lib/flags";
 
 /** Core navigation (no duplicate legal index pages; those sit under „Legal”). */
@@ -26,29 +27,61 @@ const legalPageLinks = [
 const legalTrustRail = [
   {
     href: "https://anpc.ro/ce-este-sal/",
-    badge: "ANPC",
+    logoId: "anpc" as const,
     title: "Soluționarea alternativă a litigiilor",
     subtitle: "Cadrul național și informații oficiale pentru consumatori",
   },
   {
     href: "https://ec.europa.eu/consumers/odr",
-    badge: "SOL",
+    logoId: "odr" as const,
     title: "Soluționarea online a litigiilor",
     subtitle: "Platforma europeană ODR, Comisia Europeană",
   },
   {
     href: "https://www.anaf.ro/anaf/internet/ANAF/servicii_online/verificare_informatii",
-    badge: "ANAF",
+    logoId: "anaf" as const,
     title: "Verificare ANAF",
     subtitle: "Servicii online ANAF, verificări oficiale",
   },
   {
     href: "https://consumer-redress.ec.europa.eu/site-relocation_en?event=main.home2.show&lng=RO",
-    badge: "UE",
+    logoId: "eu" as const,
     title: "Litigii consumatori UE",
     subtitle: "Redresare transfrontalieră, Comisia Europeană",
   },
 ] as const;
+
+const legalTrustFooterShort: {
+  href: string;
+  label: string;
+  logoId: keyof typeof complianceLogoById;
+  logoClass: string;
+}[] = [
+  {
+    href: "https://anpc.ro/ce-este-sal/",
+    label: "SAL (ANPC)",
+    logoId: "anpc",
+    logoClass: "h-3.5 w-[4.2rem] shrink-0",
+  },
+  {
+    href: "https://ec.europa.eu/consumers/odr",
+    label: "ODR",
+    logoId: "odr",
+    logoClass: "h-3.5 w-16 shrink-0",
+  },
+  {
+    href: "https://www.anaf.ro/anaf/internet/ANAF/servicii_online/verificare_informatii",
+    label: "Verificare ANAF",
+    logoId: "anaf",
+    logoClass: "h-3.5 w-20 shrink-0",
+  },
+  {
+    href: "https://consumer-redress.ec.europa.eu/site-relocation_en?event=main.home2.show&lng=RO",
+    label: "Litigii consumatori UE",
+    logoId: "eu",
+    logoClass: "h-3.5 w-[4.2rem] shrink-0",
+  },
+];
 
 function optionalProductLinks() {
   const out: { href: string; label: string }[] = [];
@@ -290,31 +323,36 @@ export default function AppFooter() {
             Conformare și resurse oficiale
           </p>
           <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
-            {legalTrustRail.map((item) => (
-              <li key={item.href} className="flex min-h-0 sm:min-h-[132px]">
-                <a
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex h-full w-full min-h-[120px] flex-col rounded-2xl border border-zinc-200/80 bg-white/80 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-zinc-300 hover:bg-white hover:shadow-md"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <span className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-lg bg-zinc-100/90 text-[10px] font-semibold tabular-nums text-zinc-600 ring-1 ring-zinc-200/80">
-                      {item.badge}
-                    </span>
-                    <ExternalLink
-                      className="h-3.5 w-3.5 shrink-0 text-zinc-300 transition-colors group-hover:text-zinc-500"
-                      aria-hidden
-                    />
-                  </div>
-                  <p className="mt-3 text-[13px] font-semibold leading-snug text-zinc-900">
-                    {item.title}
-                  </p>
-                  <p className="mt-1 flex-1 text-[11px] leading-relaxed text-zinc-500">{item.subtitle}</p>
-                  <span className="mt-2 text-[10px] font-medium text-zinc-400">Site extern</span>
-                </a>
-              </li>
-            ))}
+            {legalTrustRail.map((item) => {
+              const Logo = complianceLogoById[item.logoId];
+              return (
+                <li key={item.href} className="flex min-h-0 sm:min-h-[132px]">
+                  <a
+                    href={item.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex h-full w-full min-h-[120px] flex-col rounded-2xl border border-zinc-200/80 bg-white/80 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-zinc-300 hover:bg-white hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="inline-flex min-h-9 w-full min-w-0 max-w-[calc(100%-1.5rem)] items-center justify-start text-zinc-800">
+                        <Logo className="h-8 w-auto max-w-full object-left object-contain" />
+                      </span>
+                      <ExternalLink
+                        className="h-3.5 w-3.5 shrink-0 text-zinc-300 transition-colors group-hover:text-zinc-500"
+                        aria-hidden
+                      />
+                    </div>
+                    <p className="mt-3 text-[13px] font-semibold leading-snug text-zinc-900">
+                      {item.title}
+                    </p>
+                    <p className="mt-1 flex-1 text-[11px] leading-relaxed text-zinc-500">
+                      {item.subtitle}
+                    </p>
+                    <span className="mt-2 text-[10px] font-medium text-zinc-400">Site extern</span>
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
@@ -333,41 +371,24 @@ export default function AppFooter() {
               <span>Toate drepturile rezervate</span>
             </div>
             <nav
-              className="flex max-w-md flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-zinc-400 md:justify-end"
+              className="flex max-w-md flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[11px] text-zinc-400 md:justify-end"
               aria-label="Linkuri legale scurte"
             >
-              <a
-                href="https://anpc.ro/ce-este-sal/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors hover:text-zinc-600"
-              >
-                SAL (ANPC)
-              </a>
-              <a
-                href="https://ec.europa.eu/consumers/odr"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors hover:text-zinc-600"
-              >
-                ODR
-              </a>
-              <a
-                href="https://www.anaf.ro/anaf/internet/ANAF/servicii_online/verificare_informatii"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors hover:text-zinc-600"
-              >
-                Verificare ANAF
-              </a>
-              <a
-                href="https://consumer-redress.ec.europa.eu/site-relocation_en?event=main.home2.show&lng=RO"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="transition-colors hover:text-zinc-600"
-              >
-                Litigii consumatori UE
-              </a>
+              {legalTrustFooterShort.map((s) => {
+                const L = complianceLogoById[s.logoId];
+                return (
+                  <a
+                    key={s.href}
+                    href={s.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex max-w-full items-center gap-1.5 transition-colors hover:text-zinc-600"
+                  >
+                    <L className={s.logoClass} aria-hidden />
+                    <span className="min-w-0 whitespace-nowrap">{s.label}</span>
+                  </a>
+                );
+              })}
             </nav>
           </div>
         </div>
