@@ -27,6 +27,7 @@ import {
   orderRiskLayerKeysForReport,
   RISK_LAYER_LABELS,
 } from "@/lib/risk/executive";
+import { resolveNotarialDisplayForReport } from "@/lib/notarial/notarial-validate";
 import { computeApartmentScore } from "@/lib/score/apartmentScore";
 import type { NormalizedFeatures } from "@/types/analysis";
 
@@ -66,6 +67,8 @@ export type PdfReportData = {
   notarialEurM2?: number | null;
   notarialZone?: string | null;
   notarialYear?: number | null;
+  /** True when grid matched but numeric display is suppressed (UI shows neutral copy). */
+  notarialShowNeutralNote?: boolean;
   trustScore?: number | null;
   trustBadge?: string | null;
   trustReasons?: { plus?: string[]; minus?: string[] } | null;
@@ -244,33 +247,6 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     payload: e.payload,
   }));
 
-  const explainSnap = isRecord(ssRecord?.explain) ? ssRecord.explain : null;
-  const notarialSnap = isRecord(explainSnap?.notarial) ? explainSnap.notarial : null;
-  const notarialTotal =
-    typeof ssRecord?.notarialTotal === "number"
-      ? (ssRecord.notarialTotal as number)
-      : typeof notarialSnap?.totalValue === "number"
-        ? (notarialSnap.totalValue as number)
-        : null;
-  const notarialEurM2 =
-    typeof ssRecord?.notarialEurM2 === "number"
-      ? (ssRecord.notarialEurM2 as number)
-      : typeof notarialSnap?.eurPerM2 === "number"
-        ? (notarialSnap.eurPerM2 as number)
-        : null;
-  const notarialZone =
-    typeof ssRecord?.notarialZone === "string"
-      ? (ssRecord.notarialZone as string)
-      : typeof notarialSnap?.zone === "string"
-        ? (notarialSnap.zone as string)
-        : null;
-  const notarialYear =
-    typeof ssRecord?.notarialYear === "number"
-      ? (ssRecord.notarialYear as number)
-      : typeof notarialSnap?.year === "number"
-        ? (notarialSnap.year as number)
-        : null;
-
   const sourceMeta = (a.extractedListing?.sourceMeta ?? {}) as Record<string, unknown>;
   const llmText = a.extractedListing?.llmTextExtract as unknown as LlmTextExtraction | null;
   const lat = typeof f?.lat === "number" ? f.lat : null;
@@ -338,6 +314,30 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
       : ((a.extractedListing?.areaM2 as number | null) ?? null);
   const rooms =
     typeof f?.rooms === "number" ? f.rooms : ((a.extractedListing?.rooms as number | null) ?? null);
+  const fRecord = (f ?? {}) as Record<string, unknown>;
+  const notarialRes = resolveNotarialDisplayForReport({
+    scoreSnapshot: a.scoreSnapshot
+      ? {
+          notarialTotal: a.scoreSnapshot.notarialTotal,
+          notarialEurM2: a.scoreSnapshot.notarialEurM2,
+          notarialZone: a.scoreSnapshot.notarialZone,
+          notarialYear: a.scoreSnapshot.notarialYear,
+          explain: a.scoreSnapshot.explain,
+        }
+      : null,
+    askingPriceEur: priceEur,
+    avmMidEur: avmMid,
+    features: {
+      ...fRecord,
+      title: a.extractedListing?.title ?? fRecord.title,
+      rooms: a.extractedListing?.rooms ?? fRecord.rooms,
+    },
+  });
+  const notarialTotal = notarialRes.notarialTotal;
+  const notarialEurM2 = notarialRes.notarialEurM2;
+  const notarialZone = notarialRes.notarialZone;
+  const notarialYear = notarialRes.notarialYear;
+  const notarialShowNeutralNote = notarialRes.showNeutralNote;
   const saneRoomsForNeg = sanitizeRooms(rooms, a.extractedListing?.title ?? null);
   const yearBuilt =
     typeof f?.yearBuilt === "number"
@@ -704,6 +704,7 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     notarialEurM2,
     notarialZone,
     notarialYear,
+    notarialShowNeutralNote,
     trustScore,
     trustBadge,
     trustReasons,

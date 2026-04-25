@@ -4,13 +4,13 @@ import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const proDisplayRon = process.env.NEXT_PUBLIC_SUBSCRIPTION_PRO_RON?.trim() || "99";
+const proDisplayRon = process.env.NEXT_PUBLIC_SUBSCRIPTION_PRO_RON?.trim() || "499";
 
 const proFeatures = [
-  "Cote mai mari: până la 300 de analize și 30 de PDF pe lună (conform planului Pro activ în cont).",
-  "Comparabile avansate și scor detaliat (AVM, risc, yield: în funcție de conținutul raportului).",
-  "Istoric până la 90 de zile, alerte, partajare link, export CSV, conform cotelor planului Pro.",
-  "Un singur flux de plată: Stripe, același preț; nu alegi între abonamente Standard și Pro aici, există o singură ofertă activă de abonament.",
+  "Rapoarte complete nelimitate în cont (în cotele tehnice afișate; conform planului Pro).",
+  "Acces prin API public: chei, limite de rată, documentație — din cont, după abonare.",
+  "Cote ridicate PDF, comparabile avansate, scor detaliat, export CSV, istoric și alerte — conform cotelor planului Pro.",
+  "Un singur abonament activ în aplicație; confirmi prețul final în Stripe.",
 ];
 
 export default function SubscribePage() {

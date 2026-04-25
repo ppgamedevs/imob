@@ -29,7 +29,10 @@
     "smoke:health": "tsx scripts/smoke-check-health.ts",
     "smoke:unlocks": "tsx scripts/smoke-recent-unlocks.ts",
     "smoke:sitemap": "tsx scripts/verify-sitemap-smoke.ts",
-    "smoke:quick": "tsx scripts/smoke-check-env.ts && tsx scripts/smoke-check-health.ts"
+    "smoke:quick": "tsx scripts/smoke-check-env.ts && tsx scripts/smoke-check-health.ts",
+    "qa:reports:recent": "tsx scripts/qa-reports-recent.ts",
+    "qa:portal:run": "tsx scripts/qa-real-portal-reports.ts",
+    "notarial:audit": "tsx scripts/notarial-audit.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.0",

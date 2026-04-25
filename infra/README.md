@@ -206,7 +206,7 @@ In Stripe Dashboard → Webhooks:
 All crons run on the VPS via crontab (or **systemd timers** în `infra/systemd/`),
 calling the API with `CRON_SECRET` și, în producție, **URL public** (`https://imobintel.ro`), nu `localhost:3000` dacă portul nu e mapat pe host.
 
-`crontab.example` include **`crawl-tick`** și **`seed-discover`** la fiecare **5 minute** — fără `seed-discover`, coada `CrawlJob` se poate goli și nu se mai adaugă anunțuri noi.
+`crontab.example` rulează **`crawl-tick`** la fiecare **3 minute** (procesare coadă) și **`seed-discover`** la fiecare **5 minute** (reîncărcare discover → detail) — fără `seed-discover`, coada `CrawlJob` se poate goli și nu se mai adaugă anunțuri noi.
 
 ```bash
 crontab scripts/crontab.example

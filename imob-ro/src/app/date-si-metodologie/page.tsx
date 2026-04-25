@@ -34,6 +34,11 @@ const faqItems = [
       "Nu. Ne bazăm în principal pe anunțuri publice agregate și comparabile similare, plus surse publice acolo unde le integrăm (de exemplu straturi de risc sau repertorii, când potrivirea există). Nu avem acces la baza ta de tranzacții oficiale completă pe fiecare ușă.",
   },
   {
+    question: "Ce înseamnă „referința fiscală notarială” din raport?",
+    answer:
+      "Reper fiscal folosit în contexte notariale. Nu este preț de piață și nu estimează onorariul notarului. Cifrele exacte de taxe sau tarife rămân la notar, după starea actelor tale.",
+  },
+  {
     question: "De ce intervalul de preț diferă de ce văd în alte aplicații?",
     answer:
       "Fiecare serviciu folosește alt set de date, filtre și ajustări. La noi vezi un coridor și o încredere: diferențele sunt normale până la o verificare pe teren și la acte.",
@@ -102,6 +107,10 @@ export default function DateSiMetodologiePage() {
           <li>
             <strong>Reper de piață</strong>: comparații cu alte oferte asemănătoare (nivel
             aproximativ pe cameră, suprafață, distanță, aliniere la piață).
+          </li>
+          <li>
+            <strong>Referință fiscală notarială</strong> (când apare în raport): reper fiscal folosit
+            în contexte notariale; nu e preț de piață și nu estimează onorariul notarului.
           </li>
           <li>
             <strong>Preț pe metru pătrat</strong> derivat din prețul listat și suprafață, apoi

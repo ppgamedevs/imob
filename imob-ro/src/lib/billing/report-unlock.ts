@@ -20,7 +20,7 @@ function normEmail(e: string | null | undefined): string | null {
   return e.trim().toLowerCase();
 }
 
-const DEFAULT_UNLOCK_RON = 49;
+const DEFAULT_UNLOCK_RON = 19;
 
 function reportUnlockPriceRonFromEnvOrDefault(): number {
   const ron = process.env.REPORT_UNLOCK_PRICE_RON;
@@ -32,8 +32,8 @@ function reportUnlockPriceRonFromEnvOrDefault(): number {
 }
 
 /**
- * Display and Stripe use the same source: `REPORT_UNLOCK_AMOUNT_CENTS` when set, else `REPORT_UNLOCK_PRICE_RON` (default 49).
- * Default 49 RON. Override with REPORT_UNLOCK_PRICE_RON=49 (or use REPORT_UNLOCK_AMOUNT_CENTS for exact bani).
+ * Display and Stripe use the same source: `REPORT_UNLOCK_AMOUNT_CENTS` when set, else `REPORT_UNLOCK_PRICE_RON` (default 19).
+ * Default 19 RON. Override with REPORT_UNLOCK_PRICE_RON=19 (or use REPORT_UNLOCK_AMOUNT_CENTS for exact bani).
  */
 export function getReportUnlockPriceRon(): number {
   const fromCents = process.env.REPORT_UNLOCK_AMOUNT_CENTS;

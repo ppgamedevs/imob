@@ -97,13 +97,13 @@ type Props = {
   sourcePortal: string;
   preliminarySignal: string;
   teaser: { kind: PreviewTeaserKind; line: string };
-  /** Server-computed: "Deblochează raportul complet - 49 RON" */
+  /** Server-computed: e.g. "Deblochează raportul complet - 19 RON" (from getReportUnlockPriceRon). */
   unlockButtonLabel: string;
   /** One line: încredere + scurt, fără certitudine statistică. */
   confidenceLine?: string;
   /** Off when `NEXT_PUBLIC_REPORT_UNLOCK_GUEST_CHECKOUT=0` and user is not signed in. */
   canUseStripeForUnlock: boolean;
-  /** Commercial gate: hide 49 RON CTA when false. */
+  /** Commercial gate: hide per-raport pay CTA when false. */
   canShowPaywall: boolean;
   /** Shown when `!canShowPaywall` (do_not_sell or weak). */
   paywallBlockMessageRo: string | null;
@@ -188,7 +188,7 @@ export function ReportPreviewPanel(props: Props) {
       <div className="mt-6">
         <p className="text-sm font-semibold text-slate-900">Raportul complet îți arată estimarea de preț, comparabilele, riscurile și argumentele de negociere.</p>
         <div className="mt-2 text-sm text-slate-600">
-          <ReportDisclaimer className="!text-sm !text-slate-600" />
+          <ReportDisclaimer className="!text-sm !text-slate-600" showDataOriginLink={false} />
         </div>
         <ul className="mt-4 list-inside list-disc space-y-1.5 text-sm text-slate-700">
           {FULL_INCLUDES.map((t) => (

@@ -132,13 +132,13 @@ pnpm run smoke:sitemap
 
 ### 11. PDF only when unlocked (business model)
 
-- **UI:** Pe `/report/{id}` în mod previzualizare (fără acces complet), secțiunea **Export / PDF** nu apare; butonul există doar când `canViewFullReport` e adevărat (plată 49 RON, abonament, Pro, sau cookie guest după checkout).
+- **UI:** Pe `/report/{id}` în mod previzualizare (fără acces complet), secțiunea **Export / PDF** nu apare; butonul există doar când `canViewFullReport` e adevărat (plată per raport — implicit 19 RON, abonament, Pro, sau cookie guest după checkout).
 - **Locked API:** `GET /api/report/{id}/pdf` fără cookie / fără sesiune / fără drept: **403** JSON (`error: unlock_required`) cu mesaj explicite (deblocare, același browser, cont la plată; login nu e obligatoriu cu cookie de guest).
-- **Unlocked (49 RON, utilizator conectat):** `hasPaidPerReportUnlock` + PDF reușește; **cota lunară de PDF a abonamentului nu se consumă** pentru acest caz (exempt `isPerReportUnlockPdfQuotaExempt`).
+- **Unlocked (plată per raport, utilizator conectat):** `hasPaidPerReportUnlock` + PDF reușește; **cota lunară de PDF a abonamentului nu se consumă** pentru acest caz (exempt `isPerReportUnlockPdfQuotaExempt`).
 - **Unlocked (anonim, guest checkout):** după redirect, cookie `httpOnly` HMAC; același `GET` /pdf cu `credentials: same-origin` reușește. Utilizatorul neautentificat **nu** trece prin `canUse("pdf")` (blocat doar când e `userId` și **nu** e exempt deblocare per raport).
 - **Query opțional (test / link):** `GET /api/report/{id}/pdf?unlock_token=<token>` același format ca valoarea cookie-ului (HMAC v1) → același drept ca cookie-ul, fără login obligatoriu.
 - **Securitate:** tratați `unlock_token` ca **secret bearer** — același nivel ca valoarea cookie-ului. Fluxul normal = cookie **httpOnly** după checkout; `unlock_token` doar teste, suport, edge cases. Nu îl puneți în loguri, funnel, referrer sau linkuri de marketing. La analitică, URL-urile trec prin `redactSensitiveUrlParams` (funnel + server).
-- **Pass:** 403 previzualizare / fără drept; 200 cu `Content-Type: application/pdf` când e deblocat; fără consum contor abonament pentru deblocare 49 RON per raport.
+- **Pass:** 403 previzualizare / fără drept; 200 cu `Content-Type: application/pdf` când e deblocat; fără consum contor abonament pentru deblocare per raport (preț din `REPORT_UNLOCK_PRICE_RON` / default 19 RON).
 
 ### 12. Failed / cancelled checkout does not unlock
 

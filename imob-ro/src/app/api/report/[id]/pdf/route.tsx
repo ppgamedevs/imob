@@ -6,13 +6,14 @@ import { auth } from "@/lib/auth";
 import { canUse, incUsage } from "@/lib/billing/entitlements";
 import {
   canViewFullReportFromRequest,
+  getReportUnlockPriceRon,
   isPerReportUnlockPdfQuotaExempt,
 } from "@/lib/billing/report-unlock";
 import { loadPdfReportData } from "@/lib/pdf/map-report";
 
 /**
  * PDF: acces = canViewFullReportFromRequest (plată per raport, Pro, abonament, cookie guest HMAC, sau `?unlock_token=` același token).
- * Cota lunară PDF (abonament) nu se consumă la deblocare 49 RON / guest cookie; vezi isPerReportUnlockPdfQuotaExempt.
+ * Cota lunară PDF (abonament) nu se consumă la deblocare per raport / guest cookie; vezi isPerReportUnlockPdfQuotaExempt.
  * Fără deblocare: 403 JSON (unlock_required). Previzualizarea nu afișează butonul PDF.
  * Nu loga `req.url` complet: conținutul query poate include `unlock_token` (bearer) — acest route doar
  * citește `unlock_token` și nu îl reafișează.
@@ -35,12 +36,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
   const full = await canViewFullReportFromRequest(id, userId, cookieHeader, unlockToken);
   if (!full) {
+    const unlockRon = getReportUnlockPriceRon();
+    const ronLabel = Number.isInteger(unlockRon) ? String(unlockRon) : unlockRon.toFixed(2);
     return NextResponse.json(
       {
         error: "unlock_required",
         code: "unlock_required",
         message:
-          "Pentru PDF ai nevoie de raportul complet deblocat: plată 49 RON per raport, abonament care include conținutul, sau cont Pro. " +
+          `Pentru PDF ai nevoie de raportul complet deblocat: plată ${ronLabel} RON per raport, abonament care include conținutul, sau cont Pro. ` +
           "Dacă ai plătit deja, folosește același browser (cookie) sau conectează-te la contul cu care s-a făcut plata. " +
           "Autentificarea nu e obligatorie dacă ai cookie-ul de deblocare după checkout.",
       },
@@ -53,13 +56,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   if (userId && !fromPerReport) {
     const check = await canUse(userId, "pdf");
     if (!check.allowed) {
+      const unlockRon = getReportUnlockPriceRon();
+      const ronLabel = Number.isInteger(unlockRon) ? String(unlockRon) : unlockRon.toFixed(2);
       return NextResponse.json(
         {
           error: "limit_reached",
           plan: check.plan,
           used: check.used,
           max: check.max,
-          message: `Limita de PDF-uri: ${check.used}/${check.max} pe luna. Deblocarea 49 RON per raport (sau cookie de plata pentru acel anunț) nu consumă acest contor; cota se aplică la abonamentul lunar.`,
+          message: `Limita de PDF-uri: ${check.used}/${check.max} pe luna. Deblocarea ${ronLabel} RON per raport (sau cookie de plată pentru acel anunț) nu consumă acest contor; cota se aplică la abonamentul lunar.`,
         },
         { status: 402 },
       );

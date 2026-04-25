@@ -174,7 +174,7 @@ export default async function AdminReportQualityPage({ searchParams }: PageProps
       </Card>
 
       <div className="overflow-x-auto rounded-lg border border-border">
-        <table className="w-full min-w-[1200px] text-left text-sm">
+        <table className="w-full min-w-[1600px] text-left text-sm">
           <thead>
             <tr className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
               <th className="p-2 font-medium">analysisId</th>
@@ -189,6 +189,35 @@ export default async function AdminReportQualityPage({ searchParams }: PageProps
               <th className="p-2 font-medium">sell</th>
               <th className="p-2 font-medium">paywall</th>
               <th className="p-2 font-medium">risc date</th>
+              <th className="p-2 font-medium max-w-[100px]" title="matchMethod din explain.notarial">
+                not. metodă
+              </th>
+              <th className="p-2 font-medium" title="canShow: afișat în raport public">
+                not. arată
+              </th>
+              <th className="p-2 font-medium min-w-[100px]">not. supp</th>
+              <th className="p-2 font-medium min-w-[120px]">not. motiv</th>
+              <th className="p-2 font-medium tabular-nums" title="Total € dacă arată (display)">
+                not. €
+              </th>
+              <th className="p-2 font-medium tabular-nums" title="EUR/m² dacă arată (display)">
+                not. €/m²
+              </th>
+              <th className="p-2 font-medium tabular-nums" title="An grilă">
+                not. an
+              </th>
+              <th className="p-2 font-medium" title="plauzibilitate notarial">
+                not. impl
+              </th>
+              <th className="p-2 font-medium" title="încredere notarial scăzută">
+                not. low
+              </th>
+              <th
+                className="p-2 font-medium min-w-[120px] max-w-[200px]"
+                title="Atenționare automată: sector_avg, sub 45% vs preț, eur/m², an grilă, valută/unitate"
+              >
+                not. QA
+              </th>
               <th className="p-2 font-medium min-w-[140px]">lipsă câmpuri</th>
               <th className="p-2 font-medium">creat</th>
               <th className="p-2 font-medium">act</th>
@@ -198,7 +227,14 @@ export default async function AdminReportQualityPage({ searchParams }: PageProps
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.analysisId} className="border-b border-border/50 align-top">
+              <tr
+                key={r.analysisId}
+                className={`border-b border-border/50 align-top ${
+                  r.notarialRowSuspicious
+                    ? "bg-amber-100/80 dark:bg-amber-950/40"
+                    : ""
+                }`}
+              >
                 <td className="p-2 font-mono text-xs whitespace-nowrap">{r.analysisId}</td>
                 <td className="p-2 font-mono text-xs">{r.sourceHost}</td>
                 <td className="p-2 text-xs">{r.status}</td>
@@ -223,6 +259,40 @@ export default async function AdminReportQualityPage({ searchParams }: PageProps
                 <td className="p-2 text-xs font-medium">{r.sellability}</td>
                 <td className="p-2 text-xs">{r.paywallShown ? "da" : "nu"}</td>
                 <td className="p-2 text-xs">{r.reportQuality}</td>
+                <td className="p-2 text-xs font-mono break-words" title={r.notarialMatchMethod ?? ""}>
+                  {r.notarialMatchMethod ?? "—"}
+                </td>
+                <td className="p-2 text-xs">{r.notarialShown ? "da" : "nu"}</td>
+                <td className="p-2 text-xs">{r.notarialSuppressed ? "da" : "—"}</td>
+                <td
+                  className="p-2 text-xs text-muted-foreground max-w-[160px] break-words"
+                  title={r.notarialSuppressReason ?? ""}
+                >
+                  {r.notarialSuppressReason ?? "—"}
+                </td>
+                <td className="p-2 text-xs tabular-nums">
+                  {r.notarialTotalEur != null
+                    ? r.notarialTotalEur.toLocaleString("ro-RO")
+                    : "—"}
+                </td>
+                <td className="p-2 text-xs tabular-nums">
+                  {r.notarialEurM2 != null ? r.notarialEurM2.toLocaleString("ro-RO") : "—"}
+                </td>
+                <td className="p-2 text-xs tabular-nums">{r.notarialGridYear ?? "—"}</td>
+                <td className="p-2 text-xs">{r.notarialImplausible ? "da" : "—"}</td>
+                <td className="p-2 text-xs">{r.notarialMatchLowConfidence ? "da" : "—"}</td>
+                <td className="p-2 text-xs">
+                  {r.notarialSuspicionTags ? (
+                    <span
+                      className="inline-block rounded border border-amber-600/50 bg-amber-50 px-1.5 py-0.5 text-[10px] font-mono text-amber-950 dark:border-amber-500/50 dark:bg-amber-900/30 dark:text-amber-100"
+                      title={r.notarialSuspicionTags}
+                    >
+                      {r.notarialSuspicionTags}
+                    </span>
+                  ) : (
+                    "—"
+                  )}
+                </td>
                 <td className="p-2 text-xs text-muted-foreground">{r.missingFields}</td>
                 <td className="p-2 text-xs whitespace-nowrap text-muted-foreground">
                   {r.createdAt.toISOString().slice(0, 19).replace("T", " ")}
@@ -257,9 +327,16 @@ export default async function AdminReportQualityPage({ searchParams }: PageProps
 
       <p className="text-xs text-muted-foreground">
         Query: ultimele {REPORT_QUALITY_FETCH_WINDOW} rânduri <code>Analysis</code> (ordonat{" "}
-        <code>createdAt desc</code>), <code>groupBy</code> pe <code>CompMatch</code>, apoi
-        filtre în memorie; afișare max 100. Link „data-quality” când vânzarea e riscantă (sellability
-        weak/do_not_sell sau <code>reportQuality</code> insuf/weak).
+        <code>createdAt desc</code>), cu <code>extractedListing</code>, <code>featureSnapshot</code>,{" "}
+        <code>scoreSnapshot</code> (inclusiv <code>explain</code> JSON) și deblocări plătite,{" "}
+        <code>groupBy</code> pe <code>CompMatch</code>, apoi filtre în memorie; afișare max 100. Coloane
+        notariale: citite din <code>scoreSnapshot.explain.notarial</code> (metodă, canShow, motiv,
+        display € / €/m², an). Rândurile evidențiate (fundal chihlimbar) = semnal QA automat (ex.{" "}
+        <code>sector_avg</code>, total grilă sub 45% din prețul anunțului, €/m² sub 400 în
+        București/Ilfov apartament, an grilă în afara ferestrei actuale/an precedent, valută/unitate
+        <code>unknown</code> când e setată în explain). Fără expunere în UI public. Link
+        „data-quality” când vânzarea e riscantă (sellability weak/do_not_sell sau{" "}
+        <code>reportQuality</code> insuf/weak).
       </p>
     </div>
   );

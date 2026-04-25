@@ -130,9 +130,10 @@
 }
 
 /* === Accessibility: Ensure interactive targets are minimum size === */
+/* Exclude checkbox/radio: global min 44px blows up native controls; size those per-component. */
 button:not(.btn-sm),
 a:not(.link-sm),
-input,
+input:not([type="checkbox"]):not([type="radio"]),
 select,
 textarea {
   min-width: 44px;

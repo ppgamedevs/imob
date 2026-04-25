@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/db";
 
+export type NotarialMatchMethod = "neighborhood" | "sector_avg";
+
 export interface NotarialLookupResult {
   eurPerM2: number;
   maxEurPerM2: number | null;
@@ -8,6 +10,12 @@ export interface NotarialLookupResult {
   zone: string;
   year: number;
   source: string | null;
+  /** How the grid row was chosen */
+  matchMethod: NotarialMatchMethod;
+  /** Same as zone for neighborhood rows; sector rows use sector label */
+  gridSubzone: string | null;
+  /** minEurPerM2 from DB row (EUR/m²) */
+  rawEurPerM2: number;
 }
 
 const NEIGHBORHOOD_ALIASES: Record<string, string[]> = {
@@ -173,7 +181,7 @@ export async function lookupNotarialGrid(params: {
       orderBy: { year: "desc" },
     });
     if (match) {
-      return buildResult(match, params.areaM2);
+      return buildResult(match, params.areaM2, "neighborhood");
     }
   }
 
@@ -205,6 +213,9 @@ export async function lookupNotarialGrid(params: {
         zone: `Sector ${sector} (medie)`,
         year: latestYear,
         source: sameYear[0].source,
+        matchMethod: "sector_avg",
+        gridSubzone: null,
+        rawEurPerM2: Math.round(avgMin),
       };
     }
   }
@@ -213,8 +224,16 @@ export async function lookupNotarialGrid(params: {
 }
 
 function buildResult(
-  grid: { minEurPerM2: number; maxEurPerM2: number | null; zone: string; year: number; source: string | null },
+  grid: {
+    minEurPerM2: number;
+    maxEurPerM2: number | null;
+    zone: string;
+    year: number;
+    source: string | null;
+    neighborhood: string | null;
+  },
   areaM2: number,
+  method: NotarialMatchMethod,
 ): NotarialLookupResult {
   return {
     eurPerM2: grid.minEurPerM2,
@@ -224,5 +243,8 @@ function buildResult(
     zone: grid.zone,
     year: grid.year,
     source: grid.source,
+    matchMethod: method,
+    gridSubzone: grid.neighborhood ?? grid.zone,
+    rawEurPerM2: grid.minEurPerM2,
   };
 }

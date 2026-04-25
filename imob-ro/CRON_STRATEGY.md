@@ -8,7 +8,7 @@ Vercel Hobby tier limits you to **2 cron jobs** maximum. We need 9 background jo
 
 ### ✅ Enabled (2 most critical)
 
-**1. `/api/cron/crawl-tick`** - Every 5 minutes
+**1. `/api/cron/crawl-tick`** - Every 3 minutes (infrastructure: `infra/systemd/imob-crawl-tick.timer` or `*/3` in crontab)
 
 - **Why**: Core feature - keeps listings fresh
 - **Impact**: Without this, no new listings get processed
@@ -202,7 +202,7 @@ Choose one:
 ## Testing After Deployment
 
 1. **Verify deployment succeeds** (should be green now)
-2. **Test automatic cron** (wait 5 min for crawl-tick)
+2. **Test automatic cron** (wait up to 3 min for crawl-tick)
 3. **Test manual trigger**:
    ```bash
    curl -X POST https://your-domain.vercel.app/api/cron/avm-train

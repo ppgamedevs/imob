@@ -19,9 +19,15 @@ type Props = {
   /** default: body text; legal: same with slightly more emphasis; pdfPlain: for react-pdf Text children */
   variant?: "default" | "legal" | "pdfPlain";
   className?: string;
+  /** Link to /date-si-metodologie. Set false on secondary copies of this block on the same page. @default true */
+  showDataOriginLink?: boolean;
 };
 
-export function ReportDisclaimer({ variant = "default", className }: Props) {
+export function ReportDisclaimer({
+  variant = "default",
+  className,
+  showDataOriginLink = true,
+}: Props) {
   if (variant === "pdfPlain") {
     return <>{REPORT_DISCLAIMER_FULL}</>;
   }
@@ -35,14 +41,16 @@ export function ReportDisclaimer({ variant = "default", className }: Props) {
         role="note"
       >
         <p>{REPORT_DISCLAIMER_FULL}</p>
-        <p className="mt-2 text-[12px]">
-          <Link
-            href="/date-si-metodologie"
-            className="font-medium text-blue-600 hover:underline"
-          >
-            De unde vin datele? (transparență surse și limite)
-          </Link>
-        </p>
+        {showDataOriginLink && (
+          <p className="mt-2 text-[12px]">
+            <Link
+              href="/date-si-metodologie"
+              className="font-medium text-blue-600 hover:underline"
+            >
+              De unde vin datele? (transparență surse și limite)
+            </Link>
+          </p>
+        )}
       </div>
     );
   }
@@ -52,14 +60,16 @@ export function ReportDisclaimer({ variant = "default", className }: Props) {
       role="note"
     >
       <p>{REPORT_DISCLAIMER_FULL}</p>
-      <p className="mt-2">
-        <Link
-          href="/date-si-metodologie"
-          className="font-medium text-blue-600 hover:underline"
-        >
-          De unde vin datele? (transparență surse și limite)
-        </Link>
-      </p>
+      {showDataOriginLink && (
+        <p className="mt-2">
+          <Link
+            href="/date-si-metodologie"
+            className="font-medium text-blue-600 hover:underline"
+          >
+            De unde vin datele? (transparență surse și limite)
+          </Link>
+        </p>
+      )}
     </div>
   );
 }

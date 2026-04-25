@@ -3,6 +3,11 @@ import React from "react";
 
 import { REPORT_DISCLAIMER_FULL } from "@/components/common/ReportDisclaimer";
 import type { PdfReportData } from "@/lib/pdf/map-report";
+import {
+  NOTARIAL_NEUTRAL_COPY_RO,
+  NOTARIAL_PUBLIC_PRICE_ANCHOR_LABEL_RO,
+  NOTARIAL_PUBLIC_PRICE_ANCHOR_SUBCOPY_RO,
+} from "@/lib/notarial/notarial-validate";
 
 export type PdfBrand = {
   name: string;
@@ -382,6 +387,29 @@ export default function ReportPdf(props: {
                   <Text style={s.metricValue}>{Math.round(data.avmConf * 100)}%</Text>
                 </View>
               )}
+            </View>
+          </>
+        )}
+
+        {sections.priceAnchors && (data.notarialTotal != null || data.notarialShowNeutralNote) && (
+          <>
+            <Text style={s.sectionTitle}>{NOTARIAL_PUBLIC_PRICE_ANCHOR_LABEL_RO}</Text>
+            <View style={s.infoBox}>
+              {data.notarialTotal != null ? (
+                <Text style={s.infoText}>
+                  Total orientativ: {fmt(data.notarialTotal)} {cur}
+                  {data.notarialEurM2 != null
+                    ? ` (${fmt(data.notarialEurM2)} ${cur}/m²)`
+                    : ""}
+                  {data.notarialZone ? `. Zonă (reper fiscal): ${data.notarialZone}` : ""}
+                  {data.notarialYear != null ? ` (${data.notarialYear}).` : "."}
+                </Text>
+              ) : data.notarialShowNeutralNote ? (
+                <Text style={s.infoText}>{NOTARIAL_NEUTRAL_COPY_RO}</Text>
+              ) : null}
+              <Text style={{ ...s.infoText, marginTop: 4, fontSize: 8, color: GRAY }}>
+                {NOTARIAL_PUBLIC_PRICE_ANCHOR_SUBCOPY_RO}
+              </Text>
             </View>
           </>
         )}

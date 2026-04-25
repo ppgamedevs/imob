@@ -47,6 +47,7 @@ import {
   isPublicSampleReportView,
   PUBLIC_SAMPLE_REPORT_ANALYSIS_ID,
 } from "@/lib/report/sample-public-report";
+import { resolveNotarialDisplayForReport } from "@/lib/notarial/notarial-validate";
 import { buildQuickTake, computeExecutiveVerdict, type VerdictInput } from "@/lib/report/verdict";
 import {
   applyReportRiskVisibility,
@@ -476,7 +477,6 @@ export default async function ReportPage({ params, searchParams }: Props) {
   const rentEurFromSnapshot = rentExplainBlock?.rentEur ?? null;
   const yieldGrossSnapshot = analysis.scoreSnapshot?.yieldGross ?? null;
   const yieldNetSnapshot = analysis.scoreSnapshot?.yieldNet ?? null;
-  const notarialExplain = scoreExplain?.notarial as Record<string, unknown> | undefined;
   const compsExplain = scoreExplain?.comps as Record<string, unknown> | undefined;
   const compsStats = compsExplain?.eurM2 as
     | { median?: number; q1?: number; q3?: number }
@@ -562,6 +562,31 @@ export default async function ReportPage({ params, searchParams }: Props) {
         }
       : null);
 
+  const notarialResolved = resolveNotarialDisplayForReport({
+    scoreSnapshot: analysis.scoreSnapshot
+      ? {
+          notarialTotal: analysis.scoreSnapshot.notarialTotal,
+          notarialEurM2: analysis.scoreSnapshot.notarialEurM2,
+          notarialZone: analysis.scoreSnapshot.notarialZone,
+          notarialYear: analysis.scoreSnapshot.notarialYear,
+          explain: analysis.scoreSnapshot.explain,
+        }
+      : null,
+    askingPriceEur: actualPrice,
+    avmMidEur: priceAnchorsRange?.mid ?? analysis.scoreSnapshot?.avmMid ?? null,
+    features: {
+      ...((f ?? {}) as Record<string, unknown>),
+      title: extracted?.title ?? ((f ?? {}) as Record<string, unknown>).title,
+      rooms: extracted?.rooms ?? ((f ?? {}) as Record<string, unknown>).rooms,
+    },
+  });
+  const notarialTotal = notarialResolved.notarialTotal;
+  const notarialZone = notarialResolved.notarialZone;
+  const notarialYear = notarialResolved.notarialYear;
+  const notarialEurM2Display = notarialResolved.notarialEurM2;
+  const notarialConfidence = notarialResolved.confidence;
+  const notarialShowNeutralNote = notarialResolved.showNeutralNote;
+
   // Neighborhood Vibe Index + Transport summary (gated)
   let vibeResult: Awaited<ReturnType<typeof computeVibeScores>> | null = null;
   let transportResult: Awaited<ReturnType<typeof getTransportSummary>> | null = null;
@@ -626,17 +651,6 @@ export default async function ReportPage({ params, searchParams }: Props) {
   //   } catch { /* free tier by default */ }
   // }
   // if (isAdmin) showNotarial = true;
-
-  // Notarial grid: prefer Prisma columns, fallback to explain JSON (older rows / partial writes)
-  const notarialTotal =
-    analysis.scoreSnapshot?.notarialTotal ??
-    (typeof notarialExplain?.totalValue === "number" ? notarialExplain.totalValue : null);
-  const notarialZone =
-    analysis.scoreSnapshot?.notarialZone ??
-    (typeof notarialExplain?.zone === "string" ? notarialExplain.zone : null);
-  const notarialYear =
-    analysis.scoreSnapshot?.notarialYear ??
-    (typeof notarialExplain?.year === "number" ? notarialExplain.year : null);
 
   // LLM enrichment data (read from DB, never call LLM here)
   const llmText = extracted?.llmTextExtract as unknown as LlmTextExtraction | null;
@@ -1195,7 +1209,7 @@ export default async function ReportPage({ params, searchParams }: Props) {
       )}
 
       <div className="mb-6 max-w-3xl space-y-2 rounded-lg border border-gray-200 bg-gray-50/80 px-4 py-3">
-        <BuyerReportTrustNote variant="compact" className="text-gray-600" />
+        <BuyerReportTrustNote variant="compact" className="text-gray-600" showDataLink={false} />
         <ReportDisclaimer variant="legal" className="!border-0 !bg-white/50" />
       </div>
 
@@ -1453,8 +1467,11 @@ export default async function ReportPage({ params, searchParams }: Props) {
                   avmMid={priceAnchorsRange?.mid ?? null}
                   avmHigh={priceAnchorsRange?.high ?? null}
                   notarialTotal={notarialTotal}
+                  notarialEurM2={notarialEurM2Display}
                   notarialZone={notarialZone}
                   notarialYear={notarialYear}
+                  notarialConfidence={notarialConfidence}
+                  notarialShowNeutralNote={notarialShowNeutralNote}
                   showNotarial={showNotarial}
                   currency={extracted?.currency ?? "EUR"}
                 />

@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/db";
 import {
+  isBucharestIlfovFromFeatures,
+  notarialQaFlagsFromExplain,
+} from "@/lib/notarial/notarial-validate";
+import {
   computeReportDataQualityGateFromBundle,
   computeReportSellabilityFromBundle,
   resolveActualPriceEur,
@@ -33,6 +37,23 @@ export type ReportQualityRow = {
   reportLink: string;
   dataQualityAdminLink: string | null;
   paid: boolean;
+  notarialSuppressed: boolean;
+  notarialImplausible: boolean;
+  notarialMatchLowConfidence: boolean;
+  /** From `explain.notarial.matchMethod` */
+  notarialMatchMethod: string | null;
+  /** `explain.notarial.canShow` */
+  notarialShown: boolean;
+  notarialSuppressReason: string | null;
+  /** Display total when `canShow` (same as public report). */
+  notarialTotalEur: number | null;
+  /** Display €/m² when `canShow`. */
+  notarialEurM2: number | null;
+  notarialGridYear: number | null;
+  /** Highlight row for QA (sector_avg, plausibility, old year, etc.). */
+  notarialRowSuspicious: boolean;
+  /** Comma-separated tags when suspicious. */
+  notarialSuspicionTags: string;
 };
 
 function hostFromSourceUrl(sourceUrl: string): string {
@@ -74,6 +95,130 @@ function matchHost(row: ReportQualityRow, hostSubstr: string | undefined): boole
 }
 
 export const REPORT_QUALITY_FETCH_WINDOW = 400;
+
+const NOTARIAL_CALENDAR_YEAR = new Date().getFullYear();
+
+function notarialRecordFromExplain(explain: unknown): Record<string, unknown> | null {
+  const n = (explain as Record<string, unknown> | null)?.notarial;
+  if (!n || typeof n !== "object" || n === null) return null;
+  return n as Record<string, unknown>;
+}
+
+/**
+ * Admin-only: derive notarial display columns and “suspicious” highlights from
+ * `ScoreSnapshot.explain.notarial` (no public exposure).
+ */
+function buildNotarialAdminInspect(opts: {
+  explain: unknown;
+  features: NormalizedFeatures | null;
+  addressRaw: string | null;
+  priceEur: number | null;
+  notarialColTotal: number | null;
+  notarialColEurM2: number | null;
+}): {
+  notarialMatchMethod: string | null;
+  notarialShown: boolean;
+  notarialSuppressReason: string | null;
+  notarialTotalEur: number | null;
+  notarialEurM2: number | null;
+  notarialGridYear: number | null;
+  notarialRowSuspicious: boolean;
+  notarialSuspicionTags: string;
+} {
+  const n = notarialRecordFromExplain(opts.explain);
+  if (!n) {
+    return {
+      notarialMatchMethod: null,
+      notarialShown: false,
+      notarialSuppressReason: null,
+      notarialTotalEur: null,
+      notarialEurM2: null,
+      notarialGridYear: null,
+      notarialRowSuspicious: false,
+      notarialSuspicionTags: "",
+    };
+  }
+
+  const method = typeof n.matchMethod === "string" ? n.matchMethod : null;
+  const shown = n.canShow === true;
+  const suppressReason =
+    !shown && typeof n.suppressReason === "string" && n.suppressReason.length > 0
+      ? n.suppressReason
+      : null;
+  let totalEur: number | null = shown
+    ? typeof n.displayTotalEur === "number"
+      ? (n.displayTotalEur as number)
+      : null
+    : null;
+  let eurM2: number | null = shown
+    ? typeof n.displayEurM2 === "number"
+      ? (n.displayEurM2 as number)
+      : null
+    : null;
+  if (shown) {
+    if (totalEur == null && opts.notarialColTotal != null) totalEur = opts.notarialColTotal;
+    if (eurM2 == null && opts.notarialColEurM2 != null) eurM2 = opts.notarialColEurM2;
+  }
+  const gridYear = typeof n.gridYear === "number" ? n.gridYear : null;
+
+  const featureRec: Record<string, unknown> = {
+    ...((opts.features ?? {}) as Record<string, unknown>),
+    addressRaw: opts.addressRaw ?? (opts.features as { addressRaw?: string } | null)?.addressRaw,
+  };
+  const isBuchIlfov = isBucharestIlfovFromFeatures(featureRec);
+  const pt = n.propertyType as string | undefined;
+  const isApartment = pt == null || pt === "apartment";
+
+  const interpretedEurM2 =
+    typeof n.interpretedEurM2 === "number"
+      ? (n.interpretedEurM2 as number)
+      : typeof n.eurPerM2 === "number"
+        ? (n.eurPerM2 as number)
+        : null;
+  const computedTotalEur =
+    typeof n.computedTotalEur === "number"
+      ? (n.computedTotalEur as number)
+      : typeof n.totalValue === "number"
+        ? (n.totalValue as number)
+        : null;
+
+  const rawCurrency = n.rawCurrency;
+  const rawUnit = n.rawUnit;
+  const currencyUnitSuspicious =
+    n.matched === true && (rawCurrency === "unknown" || rawUnit === "unknown");
+
+  const tagSet = new Set<string>();
+  if (method === "sector_avg") tagSet.add("sector_avg");
+  if (
+    opts.priceEur != null &&
+    opts.priceEur > 0 &&
+    computedTotalEur != null &&
+    computedTotalEur < opts.priceEur * 0.45
+  ) {
+    tagSet.add("sub_45pct_preț");
+  }
+  if (isBuchIlfov && isApartment && interpretedEurM2 != null && interpretedEurM2 < 400) {
+    tagSet.add("eur_m2_sub_400");
+  }
+  if (gridYear != null && (gridYear < NOTARIAL_CALENDAR_YEAR - 1 || gridYear > NOTARIAL_CALENDAR_YEAR)) {
+    tagSet.add("an_grilă");
+  }
+  if (currencyUnitSuspicious) {
+    tagSet.add("valută_or_unitate");
+  }
+
+  const notarialRowSuspicious = tagSet.size > 0;
+  return {
+    notarialMatchMethod: method,
+    notarialShown: shown,
+    notarialSuppressReason: suppressReason,
+    notarialTotalEur: totalEur,
+    notarialEurM2: eurM2,
+    notarialGridYear: gridYear,
+    notarialRowSuspicious,
+    notarialSuspicionTags: [...tagSet].join(", "),
+  };
+}
 
 /**
  * Last ~100 analyses after filters, using the same `buildReportSellability` and `buildReportDataQualityGate`
@@ -145,6 +290,19 @@ export async function getReportQualityTable(
         (ex?.title as string) ?? null,
       ) != null;
 
+    const nFlags = notarialQaFlagsFromExplain(bundle.scoreSnapshot?.explain);
+    const addressRaw =
+      (ex as { addressRaw?: string | null } | null)?.addressRaw ??
+      (f as { addressRaw?: string | null } | null)?.addressRaw ??
+      null;
+    const notarialInspect = buildNotarialAdminInspect({
+      explain: bundle.scoreSnapshot?.explain,
+      features: f,
+      addressRaw,
+      priceEur: actualPrice,
+      notarialColTotal: bundle.scoreSnapshot?.notarialTotal ?? null,
+      notarialColEurM2: bundle.scoreSnapshot?.notarialEurM2 ?? null,
+    });
     const row: ReportQualityRow = {
       analysisId: a.id,
       sourceHost: hostFromSourceUrl(a.sourceUrl),
@@ -172,6 +330,17 @@ export async function getReportQualityTable(
         ? "/admin/data-quality"
         : null,
       paid: a.reportUnlocks.length > 0,
+      notarialSuppressed: nFlags.notarialSuppressed,
+      notarialImplausible: nFlags.notarialImplausible,
+      notarialMatchLowConfidence: nFlags.notarialMatchLowConfidence,
+      notarialMatchMethod: notarialInspect.notarialMatchMethod,
+      notarialShown: notarialInspect.notarialShown,
+      notarialSuppressReason: notarialInspect.notarialSuppressReason,
+      notarialTotalEur: notarialInspect.notarialTotalEur,
+      notarialEurM2: notarialInspect.notarialEurM2,
+      notarialGridYear: notarialInspect.notarialGridYear,
+      notarialRowSuspicious: notarialInspect.notarialRowSuspicious,
+      notarialSuspicionTags: notarialInspect.notarialSuspicionTags,
     };
     if (options.sellability !== "all" && row.sellability !== options.sellability) continue;
     if (!matchConfidence(row, options.confidence)) continue;

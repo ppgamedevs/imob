@@ -12,8 +12,8 @@ import { RAPORT_EXEMPLU_PATH } from "@/lib/report/sample-public-report";
 import { Check } from "lucide-react";
 import Link from "next/link";
 
-const BUNDLE_RON = 149;
-const proDisplayRon = process.env.NEXT_PUBLIC_SUBSCRIPTION_PRO_RON?.trim() || "99";
+const BUNDLE_RON = 75;
+const proDisplayRon = process.env.NEXT_PUBLIC_SUBSCRIPTION_PRO_RON?.trim() || "499";
 
 const faqItems: { q: string; a: string }[] = [
   {
@@ -23,6 +23,10 @@ const faqItems: { q: string; a: string }[] = [
   {
     q: "De unde vin datele?",
     a: "Din surse publice: anunțuri (de exemplu de pe imobiliare.ro, storia.ro, olx și altele, în funcție de integrări) și ceea ce reiese din conținutul introdus. Nu avem acces la contracte reale, dosare sau informații nepublicate despre fiecare apartament.",
+  },
+  {
+    q: "Ce este „referința fiscală notarială” din raport?",
+    a: "Reper fiscal folosit în contexte notariale, ca să te poziționezi față de preț, nu preț de piață complet și nu estimare a onorariului notarului. Detaliile fiscale concrete le stabilește notarul la cazul tău.",
   },
   ...pricingFaqRefunds,
   {
@@ -167,7 +171,9 @@ export default function PricingPage() {
         {flags.pricingShowSubscription && (
           <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6">
             <h2 className="text-[18px] font-semibold text-gray-900">Investitor / agent</h2>
-            <p className="mt-0.5 text-[13px] text-gray-500">Abonament lunar, utilizatori frecvenți</p>
+            <p className="mt-0.5 text-[13px] text-gray-500">
+              Rapoarte nelimitate în cont, acces prin API pentru integrări
+            </p>
             <div className="mb-1 mt-5">
               <span className="text-[32px] font-bold tracking-tight text-gray-950">{proDisplayRon}</span>
               <span className="ml-1 text-[14px] font-medium text-gray-400">RON/lună</span>
@@ -175,9 +181,9 @@ export default function PricingPage() {
             <p className="mb-4 text-[12px] text-gray-400">Sumă indicativă, confirmi în Stripe</p>
             <ul className="mb-6 flex-1 space-y-2.5 text-[13px] text-gray-600">
               {[
-                "cote mai mari pentru analiză și PDF (vezi contul tău după abonare)",
-                "acces la scor detaliat și comparații avansate, conform planului Pro",
-                "export CSV: inclus pe Pro; acces prin API public: încă nu",
+                "analize (raport complet) nelimitate, în limita cotelor tehnice afișate în cont (plan Pro)",
+                "acces prin API public (chei, rate limits și documentație din cont, după abonare)",
+                "cote ridicate PDF, scor detaliat, comparații avansate, export CSV — conform planului Pro",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2">
                   <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" strokeWidth={2.5} />
@@ -211,17 +217,20 @@ export default function PricingPage() {
           <li className="sm:flex sm:gap-3">
             <span className="block shrink-0 font-medium text-gray-800 sm:min-w-[200px]">Abonament Pro</span>
             <span>
-              Live: un singur preț de abonament în Stripe, mapat pe planul Pro. Nu îți arătăm mai multe plăți
-              lunare deconectate de ce există de fapt la gateway.
+              Inclus: rapoarte nelimitate (în cotele contului) și acces API; un singur preț lunar în
+              Stripe (afișat mai sus), fără variante deconectate.
             </span>
           </li>
           <li className="sm:flex sm:gap-3">
             <span className="block shrink-0 font-medium text-gray-400 sm:min-w-[200px]">Pachet 5 rapoarte</span>
-            <span>Nu e încă deschis la plată. Poți folosi deblocări per raport până atunci.</span>
+            <span>
+              Preț țintă {BUNDLE_RON} RON; încă nu e deschis la plată. Până atunci, deblocare per
+              raport.
+            </span>
           </li>
           <li className="sm:flex sm:gap-3">
-            <span className="block shrink-0 font-medium text-gray-400 sm:min-w-[200px]">API public</span>
-            <span>Pe roadmap, fără dată. Nu e parte din oferta de mai sus.</span>
+            <span className="block shrink-0 font-medium text-gray-800 sm:min-w-[200px]">API public</span>
+            <span>Inclus în abonamentul Pro: chei și documentație din cont, după activare.</span>
           </li>
         </ul>
       </section>

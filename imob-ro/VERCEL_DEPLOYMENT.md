@@ -31,7 +31,7 @@ The backend stability improvements are **code-level enhancements** that work aut
 {
   "crons": [
     { "path": "/api/cron/crawl-seed", "schedule": "0 * * * *" },
-    { "path": "/api/cron/crawl-tick", "schedule": "*/5 * * * *" },
+    { "path": "/api/cron/crawl-tick", "schedule": "*/3 * * * *" },
     { "path": "/api/cron/dedup-tick", "schedule": "*/15 * * * *" },
     { "path": "/api/cron/provenance-tick", "schedule": "0 * * * *" },
     { "path": "/api/cron/avm-train", "schedule": "0 2 * * *" },

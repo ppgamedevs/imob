@@ -52,7 +52,7 @@ export default function MethodologySection({ baselineEurM2, adjustments, compsCo
             garantat. Poate diferi de prețul real de tranzacționare; încrederea depinde de comparabile,
             localizare și completitudinea datelor din anunț.
           </p>
-          <ReportDisclaimer />
+          <ReportDisclaimer showDataOriginLink={false} />
         </div>
       </CardContent>
     </Card>

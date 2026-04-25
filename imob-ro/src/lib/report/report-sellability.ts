@@ -1,5 +1,5 @@
 /**
- * Heuristic "sellability" for showing the paid 49 RON (or config) full-report unlock.
+ * Heuristic "sellability" for showing the paid per-raport unlock (REPORT_UNLOCK_PRICE_RON, default 19 RON).
  * Does not change technical report quality; gates commercial CTAs in preview only.
  */
 
@@ -25,7 +25,7 @@ export type ReportSellabilityResult = {
   /** Short Romanian explanations (for support / debugging / optional UI). */
   reasonsRo: string[];
   canShowPaywall: boolean;
-  /** If true, do not push 49 RON; free preview is the only offer. */
+  /** If true, do not push per-raport paywall; free preview is the only offer. */
   shouldOfferFreeOnly: boolean;
   /** If true, show refund- / expectation-friendly copy for paid (okay tier). */
   shouldShowRefundFriendlyCopy: boolean;

@@ -37,7 +37,7 @@ export default function Paywall({ children, locked, teaserLines = 2 }: PaywallPr
             href="/pricing"
             className="inline-block rounded-xl px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-medium hover:brightness-110 transition-all"
           >
-            Vezi planuri - de la 49 RON/luna
+            Vezi planuri de la 19 RON/raport
           </Link>
         </div>
       </div>

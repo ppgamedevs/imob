@@ -1,10 +1,17 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
+  NOTARIAL_NEUTRAL_COPY_RO,
+  NOTARIAL_PUBLIC_PRICE_ANCHOR_LABEL_RO,
+  NOTARIAL_PUBLIC_PRICE_ANCHOR_SUBCOPY_RO,
+} from "@/lib/notarial/notarial-validate";
+import {
   computePriceVerdictPill,
   formatDeltaAsPercent,
 } from "@/lib/report/price-verdict-badge";
 import ReportClarityBadge, { SectionTrustFooter } from "./ReportClarityBadge";
+
+type NotarialConf = "high" | "medium" | "low" | null;
 
 interface Props {
   askingPrice: number | null;
@@ -12,8 +19,12 @@ interface Props {
   avmMid: number | null;
   avmHigh: number | null;
   notarialTotal: number | null;
+  notarialEurM2: number | null;
   notarialZone: string | null;
   notarialYear: number | null;
+  notarialConfidence: NotarialConf;
+  /** When grid ran but we hide numbers (unreliable match) */
+  notarialShowNeutralNote: boolean;
   showNotarial: boolean;
   currency?: string;
 }
@@ -23,8 +34,24 @@ function fmt(n: number | null | undefined, currency = "EUR"): string {
   return `${Intl.NumberFormat("ro-RO", { maximumFractionDigits: 0 }).format(n)} ${currency}`;
 }
 
+function fmtEurM2(n: number | null | undefined): string {
+  if (n == null) return "-";
+  return `${Intl.NumberFormat("ro-RO", { maximumFractionDigits: 1, minimumFractionDigits: 0 }).format(n)} EUR/mp`;
+}
+
+function confLabel(c: NotarialConf): string | null {
+  if (c === "high") return "încredere: ridicată (reper recent, zonă potrivită)";
+  if (c === "medium") return "încredere: medie (verifică la notar)";
+  if (c === "low") return "încredere: redusă";
+  return null;
+}
+
+function isFiscalNotarialAnchorLabel(label: string): boolean {
+  return label === NOTARIAL_PUBLIC_PRICE_ANCHOR_LABEL_RO;
+}
+
 function anchorClarity(label: string): "confirmed" | "estimated" {
-  if (/notarial/i.test(label)) return "confirmed";
+  if (isFiscalNotarialAnchorLabel(label)) return "confirmed";
   if (/Pret cerut/i.test(label)) return "confirmed";
   return "estimated";
 }
@@ -35,16 +62,20 @@ export default function PriceAnchorsSection({
   avmMid,
   avmHigh,
   notarialTotal,
+  notarialEurM2,
   notarialZone,
   notarialYear,
+  notarialConfidence,
+  notarialShowNeutralNote,
   showNotarial,
   currency = "EUR",
 }: Props) {
   const hasAvm = avmMid != null;
   const hasNotarial = showNotarial && notarialTotal != null;
+  const showNotarialNeutral =
+    showNotarial && notarialShowNeutralNote && (hasAvm || askingPrice != null);
 
-  // Show section if we have market estimate, listing price, OR notarial anchor alone
-  if (!hasAvm && !askingPrice && !hasNotarial) return null;
+  if (!hasAvm && !askingPrice && !hasNotarial && !showNotarialNeutral) return null;
 
   const fairPill =
     askingPrice != null && askingPrice > 0 && avmMid != null && avmMid > 0
@@ -71,7 +102,7 @@ export default function PriceAnchorsSection({
   if (hasNotarial && notarialTotal != null) {
     anchors.push({
       value: notarialTotal,
-      label: "Valoare notariala",
+      label: NOTARIAL_PUBLIC_PRICE_ANCHOR_LABEL_RO,
       color: "bg-slate-400",
       dotBorder: "border-slate-500",
       subLabel: notarialZone ? `${notarialZone} (${notarialYear})` : undefined,
@@ -100,8 +131,8 @@ export default function PriceAnchorsSection({
           <div>
             <CardTitle className="text-base">Unde se pozitioneaza pretul?</CardTitle>
             <CardDescription className="mt-1 max-w-prose">
-              ~ = estimat din model. ✔ = din anunt sau reper fiscal. Nu e pret „corect” unic - e un
-              reper pentru decizie.
+              ~ = estimat din model. {NOTARIAL_PUBLIC_PRICE_ANCHOR_SUBCOPY_RO} Nu e un preț „corect”
+              unic, e un reper pentru decizie.
             </CardDescription>
           </div>
           {verdictLabel && fairPill && (
@@ -136,19 +167,32 @@ export default function PriceAnchorsSection({
               />
             </div>
 
-            {/* Show notarial price as reference when AVM is unavailable */}
             {hasNotarial && notarialTotal != null && (
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
                 <div className="flex items-start gap-2.5">
                   <div className="mt-1 w-3 h-3 rounded-full shrink-0 bg-slate-400" />
                   <div>
-                    <div className="text-xs text-muted-foreground">Valoare notariala (referinta fiscala)</div>
-                    <div className="font-semibold text-sm">{fmt(notarialTotal, currency)}</div>
+                    <div className="text-xs text-muted-foreground">
+                      {NOTARIAL_PUBLIC_PRICE_ANCHOR_LABEL_RO}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground leading-relaxed">
+                      {NOTARIAL_PUBLIC_PRICE_ANCHOR_SUBCOPY_RO}
+                    </div>
+                    <div className="font-semibold text-sm mt-0.5">{fmt(notarialTotal, currency)}</div>
+                    {notarialEurM2 != null && (
+                      <div className="text-xs text-muted-foreground tabular-nums">{fmtEurM2(notarialEurM2)}</div>
+                    )}
                     {notarialZone && (
-                      <div className="text-[10px] text-muted-foreground">{notarialZone} ({notarialYear})</div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {notarialZone} ({notarialYear})
+                      </div>
+                    )}
+                    {notarialConfidence && confLabel(notarialConfidence) && (
+                      <p className="text-[10px] text-slate-600 mt-1">{confLabel(notarialConfidence)}</p>
                     )}
                     <div className="mt-1 text-[10px] text-muted-foreground leading-relaxed">
-                      Aceasta este valoarea minima fiscala din grila notariala, folosita la calculul taxelor. Pretul real de piata este de obicei semnificativ mai mare.
+                      Minime de referință folosite în contexte fiscale; prețul pieței e de obicei mai
+                      mare.
                     </div>
                   </div>
                 </div>
@@ -157,7 +201,6 @@ export default function PriceAnchorsSection({
           </div>
         ) : (
           <>
-            {/* Visual bar with inline labels */}
             {anchors.length > 1 && (() => {
               const min = anchors[0].value;
               const max = anchors[anchors.length - 1].value;
@@ -191,9 +234,11 @@ export default function PriceAnchorsSection({
                           <div
                             className={`w-5 h-5 rounded-full border-2 ${a.color} ${a.dotBorder} shadow-sm`}
                           />
-                          <div className={`absolute whitespace-nowrap text-[10px] font-medium ${
-                            isTop ? "-top-6" : "top-6"
-                          }`}>
+                          <div
+                            className={`absolute whitespace-nowrap text-[10px] font-medium ${
+                              isTop ? "-top-6" : "top-6"
+                            }`}
+                          >
                             {fmt(a.value, currency)}
                           </div>
                         </div>
@@ -204,7 +249,6 @@ export default function PriceAnchorsSection({
               );
             })()}
 
-            {/* Anchor cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
               {anchors.map((a) => (
                 <div key={a.label} className="flex items-start gap-2.5 p-3 rounded-lg bg-slate-50/80 ring-1 ring-slate-100">
@@ -214,9 +258,20 @@ export default function PriceAnchorsSection({
                       <span className="text-xs text-muted-foreground">{a.label}</span>
                       <ReportClarityBadge kind={anchorClarity(a.label)} />
                     </div>
+                    {isFiscalNotarialAnchorLabel(a.label) && (
+                      <span className="text-[10px] text-muted-foreground block">
+                        {NOTARIAL_PUBLIC_PRICE_ANCHOR_SUBCOPY_RO}
+                      </span>
+                    )}
                     <div className="font-semibold text-sm">{fmt(a.value, currency)}</div>
+                    {isFiscalNotarialAnchorLabel(a.label) && notarialEurM2 != null && (
+                      <div className="text-xs text-muted-foreground tabular-nums">{fmtEurM2(notarialEurM2)}</div>
+                    )}
                     {a.subLabel && (
                       <div className="text-[10px] text-muted-foreground break-words">{a.subLabel}</div>
+                    )}
+                    {isFiscalNotarialAnchorLabel(a.label) && notarialConfidence && confLabel(notarialConfidence) && (
+                      <p className="text-[10px] text-slate-600 mt-0.5">{confLabel(notarialConfidence)}</p>
                     )}
                   </div>
                 </div>
@@ -225,7 +280,6 @@ export default function PriceAnchorsSection({
           </>
         )}
 
-        {/* Negotiation margin */}
         {negotiationMargin != null && negotiationMargin > 0 && (
           <div className="pt-3 border-t">
             <div className="flex items-center justify-between">
@@ -237,20 +291,26 @@ export default function PriceAnchorsSection({
           </div>
         )}
 
-        {/* Notarial context */}
         {hasNotarial && notarialTotal != null && avmMid != null && (
           <div className="text-xs text-muted-foreground bg-slate-50/80 rounded-lg p-2.5 ring-1 ring-slate-100">
-            Valoarea notariala ({fmt(notarialTotal, currency)}) este valoarea minima fiscala
-            folosita de notari pentru calculul taxelor. Pretul real de piata este de obicei
-            {" "}{Math.round(((avmMid - notarialTotal) / notarialTotal) * 100)}% mai mare.
+            {NOTARIAL_PUBLIC_PRICE_ANCHOR_LABEL_RO} ({fmt(notarialTotal, currency)}):{" "}
+            {NOTARIAL_PUBLIC_PRICE_ANCHOR_SUBCOPY_RO} Față de estimarea de piață, diferența indicativă
+            este de obicei {Math.round(((avmMid - notarialTotal) / notarialTotal) * 100)}% (orientativ).
           </div>
         )}
 
-        {showNotarial && !hasNotarial && (hasAvm || askingPrice != null) && (
+        {showNotarialNeutral && (
+          <div className="text-xs text-muted-foreground rounded-lg bg-slate-50/80 p-2.5 ring-1 ring-slate-100 space-y-1.5">
+            <p>{NOTARIAL_NEUTRAL_COPY_RO}</p>
+            <p className="text-[11px] text-slate-600">{NOTARIAL_PUBLIC_PRICE_ANCHOR_SUBCOPY_RO}</p>
+          </div>
+        )}
+
+        {showNotarial && !hasNotarial && !notarialShowNeutralNote && (hasAvm || askingPrice != null) && (
           <p className="text-xs text-muted-foreground rounded-lg bg-amber-50/50 p-2.5 ring-1 ring-amber-100/80">
-            Grila notariala nu a putut fi afisata (lipsa potrivire zona / mp in baza de date sau analiza
-            veche). Re-ruleaza analiza cu adresa si suprafata complete, sau verifica daca sectorul e
-            acoperit in grila.
+            {NOTARIAL_PUBLIC_PRICE_ANCHOR_LABEL_RO} nu a putut fi afișată (lipsă potrivire zonă / mp
+            în baza de date sau analiză veche). Reia analiza cu adresa și suprafața complete, sau
+            verifică dacă zona e acoperită în baza noastră.
           </p>
         )}
 

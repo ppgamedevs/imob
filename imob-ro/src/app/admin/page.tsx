@@ -270,7 +270,7 @@ export default async function AdminHomePage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                Ultimele analize: sellability, paywall, încredere, potrivire pentru 49 RON
+                Ultimele analize: sellability, paywall, încredere, potrivire (preț deblocare 19 RON implicit)
               </p>
             </CardContent>
           </Card>
