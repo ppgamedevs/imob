@@ -123,7 +123,7 @@ export default function OwnersLandingPage() {
           />
           <FaqItem
             q="Cât costă?"
-            a="Estimarea și dashboard-ul sunt 100% gratuite. Plătești doar dacă vrei să angajezi un profesionist din marketplace-ul nostru (disponibil curând)."
+            a="Estimarea și dashboard-ul nu au cost. Plătești doar dacă vrei să angajezi un profesionist din marketplace-ul nostru (disponibil curând), separat de estimarea automată."
           />
         </div>
       </section>

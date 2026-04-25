@@ -1,4 +1,5 @@
 "use client";
+import { postFunnelEvent } from "@/lib/tracking/funnel-client";
 import { useCallback, useMemo, useState } from "react";
 
 const SECTION_LABELS: Record<string, string> = {
@@ -39,15 +40,29 @@ export function PdfActions({ analysisId }: { analysisId: string }) {
   const handleDownload = useCallback(async () => {
     setError(null);
     setLoading(true);
+    postFunnelEvent({
+      eventName: "pdf_download_clicked",
+      analysisId,
+      path: typeof window !== "undefined" ? window.location.pathname : "/report",
+    });
     try {
-      const res = await fetch(href);
+      const res = await fetch(href, { credentials: "same-origin" });
       if (res.status === 402) {
-        const data = await res.json();
+        const data = (await res.json().catch(() => ({}))) as { message?: string };
         setError(data.message ?? "Limita de PDF-uri atinsa. Upgrade la un plan superior.");
         return;
       }
+      if (res.status === 403) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
+        setError(
+          data.message ??
+            "Acces PDF refuzat: deblocheaza raportul sau conecteaza-te la contul cu care ai platit.",
+        );
+        return;
+      }
       if (!res.ok) {
-        setError("Eroare la generarea PDF-ului.");
+        const data = (await res.json().catch(() => ({}))) as { message?: string };
+        setError(data.message ?? "Eroare la generarea PDF-ului.");
         return;
       }
       const blob = await res.blob();
@@ -57,6 +72,12 @@ export function PdfActions({ analysisId }: { analysisId: string }) {
       a.download = `raport-${analysisId}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
+      postFunnelEvent({
+        eventName: "pdf_download_completed",
+        analysisId,
+        path: typeof window !== "undefined" ? window.location.pathname : "/report",
+        metadata: { sizeBytes: blob.size },
+      });
     } catch {
       setError("Eroare de retea. Incearca din nou.");
     } finally {

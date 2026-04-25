@@ -1,11 +1,12 @@
-import type { ExecutiveVerdict, Verdict } from "@/lib/report/verdict";
+import type { BuyerVerdictKey, ExecutiveVerdict } from "@/lib/report/verdict";
 
 import { cn } from "@/lib/utils";
 
-const VERDICT_ACCENT: Record<Verdict, { headline: string }> = {
-  RECOMANDAT: { headline: "text-emerald-900" },
-  ATENTIE: { headline: "text-amber-950" },
-  EVITA: { headline: "text-red-950" },
+const BUYER_KEY_ACCENT: Record<BuyerVerdictKey, { title: string; sub: string }> = {
+  merita_analizat: { title: "text-emerald-900", sub: "text-slate-600" },
+  pare_scump: { title: "text-rose-900", sub: "text-slate-600" },
+  atentie_riscuri: { title: "text-amber-950", sub: "text-slate-600" },
+  date_insuficiente: { title: "text-slate-800", sub: "text-slate-600" },
 };
 
 const SELLER_BADGE: Record<string, { emoji: string; label: string; className: string }> = {
@@ -60,7 +61,7 @@ export interface ReportDecisionBlockProps {
 }
 
 /**
- * Decision header: left = title + verdict line; right = price block + badges.
+ * First screen: buyer-focused verdict (nuance labels), not buy/sell absolutes. Price block right.
  */
 export default function ReportDecisionBlock({
   verdict: v,
@@ -74,11 +75,8 @@ export default function ReportDecisionBlock({
   sellerType,
   pricePositionLabel,
 }: ReportDecisionBlockProps) {
-  const accent = VERDICT_ACCENT[v.verdict];
-  const verdictLine =
-    v.headline?.trim() ||
-    v.summary?.trim()?.split(/[.!?]\s/)[0]?.trim() ||
-    "Evaluare disponibilă în raport.";
+  const b = v.buyerVerdict;
+  const accent = BUYER_KEY_ACCENT[b.key];
 
   const listing =
     askingPrice != null && askingPrice > 0
@@ -95,23 +93,33 @@ export default function ReportDecisionBlock({
   return (
     <section
       className="rounded-2xl bg-white px-5 py-6 md:px-8 md:py-7 shadow-sm ring-1 ring-slate-200/90"
-      aria-label="Decizie"
+      aria-label="Rezultat pentru cumpărător"
     >
       <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between lg:gap-10">
         <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+            Verdict pentru cumpărător
+          </p>
           {propertyTitle ? (
-            <h1 className="text-lg font-semibold leading-snug tracking-tight text-slate-900 md:text-xl break-words">
+            <h1 className="mt-1 text-lg font-semibold leading-snug tracking-tight text-slate-900 md:text-xl break-words">
               {propertyTitle}
             </h1>
           ) : null}
           <p
             className={cn(
-              "mt-3 text-[1.05rem] font-semibold leading-snug md:text-lg line-clamp-2",
-              accent.headline,
+              "mt-3 text-[1.1rem] font-semibold leading-snug md:text-[1.2rem] break-words",
+              accent.title,
             )}
           >
-            {verdictLine}
+            {b.title}
           </p>
+          {b.subtitle ? (
+            <p
+              className={cn("mt-2 text-sm leading-relaxed max-w-2xl", accent.sub)}
+            >
+              {b.subtitle}
+            </p>
+          ) : null}
         </div>
 
         <div className="shrink-0 lg:max-w-[min(100%,20rem)] lg:text-right">

@@ -1,8 +1,8 @@
 /**
  * Executive summary verdict engine.
  *
- * Produces a top-level RECOMANDAT / ATENTIE / EVITA verdict plus
- * structured deal-killers and short actionable reasons.
+ * Internally uses RECOMANDAT / ATENTIE / EVITA for legacy scoring, plus
+ * `buyerVerdict`: nuanced Romanian labels for the report UI (no "Cumpără"/"Evită" absolutes).
  */
 
 // ---- Types ----
@@ -15,6 +15,19 @@ export interface DealKiller {
   type: string;
   text: string;
   severity: DealKillerSeverity;
+}
+
+export type BuyerVerdictKey =
+  | "merita_analizat"
+  | "pare_scump"
+  | "atentie_riscuri"
+  | "date_insuficiente";
+
+/** Cumpărător-facing line for the first screen. Not legal or investment advice. */
+export interface BuyerVerdictDisplay {
+  key: BuyerVerdictKey;
+  title: string;
+  subtitle: string;
 }
 
 export interface ExecutiveVerdict {
@@ -30,6 +43,8 @@ export interface ExecutiveVerdict {
   hiddenTruths: string[];
   nextChecks: string[];
   confidenceTone: string;
+  /** Nuanced copy for the report header (replaces hard buy/sell wording). */
+  buyerVerdict: BuyerVerdictDisplay;
 }
 
 export interface VerdictInput {
@@ -81,6 +96,19 @@ export interface VerdictInput {
   hasParking?: boolean | null;
   hasElevator?: boolean | null;
   heatingType?: string | null;
+
+  /** From `buildReportConfidenceExplanation`: avoid a firm "merită" when data is too thin. */
+  confidenceSuppressStrong?: boolean;
+
+  /** From `buildReportDataQualityGate`: cap confident price / location / risk copy. */
+  dataQuality?: {
+    canShowPriceVerdict: boolean;
+    canShowStrongOverUnderLanguage: boolean;
+    canShowLocationClaims: boolean;
+    canShowContextualRiskNarrative: boolean;
+    /** "Merită analizat" / firm shortlist — when false, show thin-data copy instead. */
+    canShowFirmBuyerRecommendation: boolean;
+  };
 
   // Enriched listing metadata (for better reviews)
   sellerType?: string | null;
@@ -162,6 +190,147 @@ function sortAndDedupeKillers(killers: DealKiller[]): DealKiller[] {
     });
 }
 
+/**
+ * Cumpărător-facing verdict for the first screen. Avoids "cumpără" / "evită" absolutes; uses
+ * four clear buckets aligned with the report UX.
+ */
+function buildBuyerVerdictDisplay(
+  input: VerdictInput,
+  sortedKillers: DealKiller[],
+  verdict: Verdict,
+  overpricingPct: number | null,
+  confidenceScore: number,
+): BuyerVerdictDisplay {
+  const compsCount = input.compsCount;
+  const avmMid = input.avmMid;
+  const hasCritical = sortedKillers.some((k) => k.severity === "critical");
+  const criticalSeismic = sortedKillers.some(
+    (k) => k.severity === "critical" && k.type === "seismic",
+  );
+  const criticalNonPrice = hasCritical
+    ? sortedKillers.filter(
+        (k) => k.severity === "critical" && k.type !== "price" && k.type !== "seismic",
+      )
+    : [];
+
+  if (input.dataQuality && !input.dataQuality.canShowPriceVerdict) {
+    return {
+      key: "date_insuficiente",
+      title: "Date insuficiente pentru a poziționa prețul",
+      subtitle:
+        "Lipsesc comparabile apropiate sau un reper de zonă. Nu oferim o etichetă fermă de „scump/ieftin” până se poate ancoră rezonabil.",
+    };
+  }
+
+  const dq = input.dataQuality;
+  const dataWeak =
+    compsCount < 2 ||
+    (compsCount < 3 && (avmMid == null || avmMid <= 0)) ||
+    confidenceScore < 25 ||
+    (compsCount === 0 && input.askingPrice != null);
+
+  if (dataWeak) {
+    return {
+      key: "date_insuficiente",
+      title: "Date insuficiente pentru un verdict puternic",
+      subtitle:
+        "Folosește materialul de mai jos ca reper, nu ca verdict final. Confirmă la fața locului și în acte ceea ce contează pentru tine.",
+    };
+  }
+
+  if (criticalSeismic) {
+    return {
+      key: "atentie_riscuri",
+      title: "Atenție la riscuri",
+      subtitle:
+        "Clasa de risc structural sau seismic cere clarificare înainte de orice ofertă. Citește secțiunea de riscuri de mai jos.",
+    };
+  }
+
+  if (criticalNonPrice.length > 0) {
+    return {
+      key: "atentie_riscuri",
+      title: "Atenție la riscuri",
+      subtitle:
+        "Sunt semnale serioase dincolo de preț. Parcurge riscurile și întrebările de mai jos înainte să te ancorezi emoțional.",
+    };
+  }
+
+  if (overpricingPct != null && overpricingPct > 10) {
+    if (dq && !dq.canShowStrongOverUnderLanguage) {
+      return {
+        key: "atentie_riscuri",
+        title: "Poziție de preț tensionată față de reper",
+        subtitle:
+          "Avem prea puține comparabile pentru a eticheta ferm „scump” vs piață. Tratează cifrele ca simulare, apoi ancorează din surse reale la fața locului.",
+      };
+    }
+    return {
+      key: "pare_scump",
+      title: "Pare scump față de piață",
+      subtitle:
+        "Prețul cerut iese peste intervalul de referință al modelului. Negocierea, starea reală și oferta reală a pieței pot schimba poziția.",
+    };
+  }
+
+  if (verdict === "ATENTIE" || verdict === "EVITA") {
+    if (overpricingPct != null && overpricingPct > 6) {
+      if (dq && !dq.canShowStrongOverUnderLanguage) {
+        return {
+          key: "atentie_riscuri",
+          title: "Atenție la riscuri",
+          subtitle:
+            "Poziția față de reper e tensionată, dar baza e subțire — citește riscurile și negocierea ca listă, nu ca verdict de preț final.",
+        };
+      }
+      return {
+        key: "pare_scump",
+        title: "Pare scump față de piață",
+        subtitle:
+          "Poziția de preț e tensionată față de estimare, alături de alte semnale de calibrat în detaliu.",
+      };
+    }
+    return {
+      key: "atentie_riscuri",
+      title: "Atenție la riscuri",
+      subtitle:
+        "Nu e un răspuns da sau nu, e o listă de puncte: risc, date parțiale, negociere. Citește secțiunile de mai jos.",
+    };
+  }
+
+  if (input.confidenceSuppressStrong) {
+    return {
+      key: "date_insuficiente",
+      title: "Date insuficiente pentru un verdict puternic",
+      subtitle:
+        "Încrederea în analiză e limitată (comparabile, localizare sau fișă). Continuă doar ca orientare, nu ca verdict ferm.",
+    };
+  }
+  if (dq && dq.canShowFirmBuyerRecommendation === false) {
+    return {
+      key: "date_insuficiente",
+      title: "Date insuficiente pentru a susține o concluzie puternică",
+      subtitle:
+        "Câteva câmpuri (comparabile, localizare sau straturi de risc) nu permit încă un semnal ferm pentru cumpărător. Parcurge detaliile ca reper, apoi ancorează pe verificări reale.",
+    };
+  }
+  if (dq && !dq.canShowStrongOverUnderLanguage) {
+    return {
+      key: "date_insuficiente",
+      title: "Date insuficiente pentru o concluzie puternică de preț",
+      subtitle:
+        "Comparabilele sunt prea puține pentru a susține o poziționare fermă. Folosește restul materialului ca reper, apoi ancorează pe verificări la fața locului.",
+    };
+  }
+
+  return {
+    key: "merita_analizat",
+    title: "Merită analizat mai departe",
+    subtitle:
+      "Nu e o recomandare de cumpărare. E un semn că are sens să treci la verificări concrete dacă ți se potrivește profilul.",
+  };
+}
+
 export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
   const killers: DealKiller[] = [];
   const reasons: string[] = [];
@@ -220,20 +389,39 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
       ? Math.round(((input.askingPrice - input.avmMid) / input.avmMid) * 100)
       : null;
 
+  const canStrongPrice =
+    !input.dataQuality || input.dataQuality.canShowStrongOverUnderLanguage;
+
   if (overpricingPct != null && overpricingPct > 20) {
-    killers.push({
-      type: "price",
-      text: `Supraevaluat cu ${overpricingPct}% fata de estimare`,
-      severity: overpricingPct > 35 ? "critical" : "warning",
-    });
-    score -= Math.min(overpricingPct, 40);
+    if (canStrongPrice) {
+      killers.push({
+        type: "price",
+        text: `Supraevaluat cu ${overpricingPct}% fata de estimare`,
+        severity: overpricingPct > 35 ? "critical" : "warning",
+      });
+    } else {
+      killers.push({
+        type: "data",
+        text: "Pret tensionat fata de reper, cu esantion de comparabile prea mic pentru o eticheta ferma.",
+        severity: "warning",
+      });
+    }
+    score -= canStrongPrice ? Math.min(overpricingPct, 40) : 8;
   } else if (overpricingPct != null && overpricingPct > 10) {
-    killers.push({
-      type: "price",
-      text: `Pret peste estimare cu ${overpricingPct}%`,
-      severity: "warning",
-    });
-    score -= Math.min(overpricingPct, 25);
+    if (canStrongPrice) {
+      killers.push({
+        type: "price",
+        text: `Pret peste estimare cu ${overpricingPct}%`,
+        severity: "warning",
+      });
+    } else {
+      killers.push({
+        type: "data",
+        text: "Pozitie de pret deasupra reperului, dar baza e limitata: verifica cu comparabile reale.",
+        severity: "info",
+      });
+    }
+    score -= canStrongPrice ? Math.min(overpricingPct, 25) : 5;
   } else if (overpricingPct != null && overpricingPct > 5) {
     reasons.push(`Pret usor peste estimare (+${overpricingPct}%)`);
     score -= 5;
@@ -405,6 +593,13 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
   );
   const confidenceTone = buildConfidenceTone(confidenceScore);
   const summary = buildSummary(headline, mustKnow, hiddenTruths, confidenceTone);
+  const buyerVerdict = buildBuyerVerdictDisplay(
+    input,
+    sortedKillers,
+    verdict,
+    overpricingPct,
+    confidenceScore,
+  );
 
   return {
     verdict,
@@ -419,6 +614,7 @@ export function computeExecutiveVerdict(input: VerdictInput): ExecutiveVerdict {
     hiddenTruths,
     nextChecks,
     confidenceTone,
+    buyerVerdict,
   };
 }
 
@@ -435,7 +631,12 @@ function buildHeadline(
   const location = inferLocation(input);
   const areaStr = input.areaM2 ? `${input.areaM2} mp` : null;
   const subject = [propType, areaStr].filter(Boolean).join(" de ");
-  const locationStr = location ? ` din ${location}` : "";
+  const locationStr =
+    input.dataQuality && !input.dataQuality.canShowLocationClaims
+      ? ""
+      : location
+        ? ` din ${location}`
+        : "";
 
   if (verdict === "EVITA") {
     if (overpricingPct != null && overpricingPct > 20) {
@@ -461,6 +662,15 @@ function buildMustKnow(
 ): string {
   if (seismic === "RsI" || seismic === "RsII") {
     return "Principalul lucru pe care trebuie sa-l clarifici este riscul structural: fara validarea documentelor tehnice, recomandarea nu se poate imbunatati.";
+  }
+
+  if (
+    input.dataQuality &&
+    !input.dataQuality.canShowContextualRiskNarrative &&
+    input.riskDominantKey &&
+    input.riskDominantKey !== "seismic"
+  ) {
+    return "Principalul risc aici e de informatie: straturi de mediu / zona nu au date suficiente in raport. Completeaza de la fata locului, nu de pe harta de probabilitati.";
   }
 
   if (
@@ -512,6 +722,7 @@ function buildHiddenTruths(
   }
 
   if (
+    !(input.dataQuality && !input.dataQuality.canShowContextualRiskNarrative) &&
     dominantRiskLabel &&
     input.riskDominantKey &&
     input.riskDominantKey !== "seismic" &&
@@ -693,13 +904,20 @@ export function buildQuickTake(input: VerdictInput, verdict: Verdict): string[] 
       : null;
 
   // Price bullet
+  const canStrongPrice =
+    !input.dataQuality || input.dataQuality.canShowStrongOverUnderLanguage;
   if (overpricingPct != null) {
-    if (overpricingPct < -5)
+    if (!canStrongPrice) {
+      bullets.push("Pret fata de reper: baza e limitata (putine comparabile) — ancoreaza local");
+    } else if (overpricingPct < -5) {
       bullets.push(`Pret bun - ${Math.abs(overpricingPct)}% sub media zonei`);
-    else if (overpricingPct <= 5) bullets.push("Pret corect pentru zona");
-    else if (overpricingPct <= 15)
+    } else if (overpricingPct <= 5) {
+      bullets.push("Pret corect pentru zona");
+    } else if (overpricingPct <= 15) {
       bullets.push(`Pret cu ${overpricingPct}% peste zona - negociabil`);
-    else bullets.push(`Supraevaluat cu ${overpricingPct}% fata de piata`);
+    } else {
+      bullets.push(`Supraevaluat cu ${overpricingPct}% fata de piata`);
+    }
   } else if (input.askingPrice && !input.avmMid) {
     bullets.push("Pretul nu poate fi validat - date insuficiente");
   }
@@ -734,6 +952,7 @@ export function buildQuickTake(input: VerdictInput, verdict: Verdict): string[] 
   if (seismic === "RsI") bullets.push("Risc seismic major (bulina rosie)");
   else if (seismic === "RsII") bullets.push("Risc seismic semnificativ");
   else if (
+    (!input.dataQuality || input.dataQuality.canShowContextualRiskNarrative) &&
     input.riskDominantLabel &&
     input.riskDominantKey &&
     input.riskDominantKey !== "seismic" &&

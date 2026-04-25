@@ -32,6 +32,8 @@ model User {
   analyses Analysis[]
   agentProfile AgentProfile?
   apiKeys  ApiKey[]
+  reportUnlocks ReportUnlock[]
+  reportFeedbacks ReportFeedback[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -176,6 +178,10 @@ model Analysis {
   snapshots        ListingSnapshot[]
   duplicatesA      ListingDuplicate[] @relation("dupA")
   duplicatesB      ListingDuplicate[] @relation("dupB")
+  reportUnlocks    ReportUnlock[]
+  funnelEvents     FunnelEvent[]
+  reportLeads      ReportLead[]
+  reportFeedback   ReportFeedback?
 
   @@index([sourceUrl])
   @@index([userId])
@@ -279,6 +285,55 @@ model AreaDaily {
   @@index([date])
 }
 
+/// One-time paid unlock of the full report for a specific analysis (not a subscription).
+model ReportUnlock {
+  id                    String   @id @default(cuid())
+  analysisId            String
+  userId                String?
+  email                 String?
+  stripeSessionId       String?  @unique
+  stripePaymentIntentId String?  @unique
+  amountCents           Int
+  currency              String   @default("RON")
+  /// pending | paid | refunded
+  status                String   @default("pending")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  /// One-time 24h abandon reminder; only with matching ReportLead consent
+  abandonmentReminderSentAt DateTime?
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  user     User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  feedback ReportFeedback[]
+
+  @@index([analysisId, status])
+  @@index([userId])
+  @@index([email])
+  @@index([status, createdAt])
+  @@index([status, abandonmentReminderSentAt])
+}
+
+/// Post-unlock satisfaction (per analysis; one row per deblocare plătită / feedback)
+model ReportFeedback {
+  id             String  @id @default(cuid())
+  analysisId     String  @unique
+  /// Latest paid `ReportUnlock` for this analysis when user submitted; optional
+  reportUnlockId String?
+  userId         String?
+  /// yes | partial | no
+  rating         String
+  comment        String? @db.Text
+  createdAt      DateTime @default(now())
+
+  analysis     Analysis     @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  reportUnlock ReportUnlock? @relation(fields: [reportUnlockId], references: [id], onDelete: SetNull)
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([reportUnlockId])
+  @@index([rating])
+}
+
 // Day 33: ML model persistence with versioning
 model ModelSnapshot {
   id        String   @id @default(cuid())
@@ -334,6 +389,26 @@ model ReportUsage {
   @@index([analysisId])
   @@index([action])
   @@index([createdAt])
+}
+
+/// Buyer-report funnel (ImobIntel); no PII in metadata — use codes / hashed ids only.
+model FunnelEvent {
+  id          String   @id @default(cuid())
+  eventName   String
+  analysisId  String?
+  userId      String?
+  anonymousId String?
+  sourceUrl   String?  @db.Text
+  path        String
+  referrer    String?  @db.Text
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  analysis Analysis? @relation(fields: [analysisId], references: [id], onDelete: SetNull)
+
+  @@index([eventName, createdAt])
+  @@index([createdAt])
+  @@index([analysisId])
 }
 
 model ShortLink {
@@ -506,6 +581,24 @@ model Lead {
 
   @@index([analysisId])
   @@index([assignedTo])
+}
+
+/// Lead from preview lock: email capture for users who did not unlock yet
+model ReportLead {
+  id          String   @id @default(cuid())
+  analysisId  String
+  email       String
+  /// e.g. report_preview_lock
+  source      String   @default("report_preview_lock")
+  consent     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  analysis Analysis @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+
+  @@unique([analysisId, email])
+  @@index([analysisId])
+  @@index([email])
+  @@index([createdAt])
 }
 
 // Day 17 - Import & Crawl v1

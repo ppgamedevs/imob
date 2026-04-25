@@ -224,6 +224,84 @@ export default async function AdminHomePage() {
           </Card>
         </Link>
 
+        <Link href="/admin/funnel">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader>
+              <CardTitle>Funnel (raport cumpărător)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Evenimente funnel, conversii și venit deblocări raport
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/money">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader>
+              <CardTitle>Bani (dashboard)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Rapoarte, previzualizare, deblocări, venit, calitate, surse
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/data-quality">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader>
+              <CardTitle>Calitate date</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Eșecuri, câmpuri lipsă, comparabile, încredere, risc de plată, rapoarte slabe
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/report-quality">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader>
+              <CardTitle>Calitate vânzare rapoarte</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Ultimele analize: sellability, paywall, încredere, potrivire pentru 49 RON
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/report-unlocks">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader>
+              <CardTitle>Abandon checkout</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Pending, plățile finalizate, conversie, restanțe, reamintiri
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/report-leads">
+          <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
+            <CardHeader>
+              <CardTitle>Leads raport (email)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Adrese lăsate din previzualizare blocată, fără deblocare
+              </p>
+            </CardContent>
+          </Card>
+        </Link>
+
         <Link href="/admin/flags">
           <Card className="hover:bg-accent/50 transition-colors cursor-pointer">
             <CardHeader>

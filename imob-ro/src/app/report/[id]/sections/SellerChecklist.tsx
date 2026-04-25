@@ -1,6 +1,8 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Props {
+  /** Titlu card principal. */
+  heading?: string;
   yearBuilt?: number | null;
   hasFloor?: boolean;
   hasAddress?: boolean;
@@ -27,6 +29,7 @@ interface Item {
 }
 
 export default function SellerChecklist(props: Props) {
+  const mainHeading = props.heading ?? "Checklist înainte să suni vânzătorul / agentul";
   const questions: Item[] = [];
   const tips: Item[] = [];
 
@@ -75,7 +78,7 @@ export default function SellerChecklist(props: Props) {
     questions.push({
       text: "Expertiza tehnica a cladirii este disponibila?",
       tip: props.yearBuilt < 1940
-        ? "Cladirile de dinainte de 1940 au risc seismic ridicat. Cereti expertiza tehnica."
+        ? "Clădirile vechi pot aduce risc structural; o expertiză tehnică e un reper serios înainte de cumpărare."
         : "Cladirile construite inainte de 1977 au trecut prin cutremurul din '77. Verificati starea structurala.",
     });
   }
@@ -160,7 +163,7 @@ export default function SellerChecklist(props: Props) {
   if (props.compsCount != null && props.compsCount < 3) {
     tips.push({
       text: "Putine comparabile in zona - solicitati o evaluare independenta",
-      tip: "Am gasit sub 3 proprietati similare in zona. Estimarea are o marja de eroare mai mare. Un evaluator ANEVAR poate oferi o evaluare precisa.",
+      tip: "Am găsit sub 3 proprietăți similare în zonă, deci marja e mai mare. Un evaluator ANEVAR poate emite o opinie de valoare în formatul așteptat de bănci sau părți, dacă îți trebuie așa ceva.",
     });
   }
 
@@ -185,9 +188,16 @@ export default function SellerChecklist(props: Props) {
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Intrebari pentru vanzator</CardTitle>
+          <CardTitle className="text-base">{mainHeading}</CardTitle>
+          <CardDescription>
+            Cadastru, an construcție, risc, datorii, vecini, acte, motiv vânzare, negociere: folosește
+            lista ca memento, adaptată situației.
+          </CardDescription>
         </CardHeader>
         <CardContent>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500 mb-2">
+            Întrebări (și puncte de) pentru vânzător
+          </p>
           <ul className="space-y-3">
             {questions.map((item, i) => (
               <li key={i} className="flex items-start gap-2">

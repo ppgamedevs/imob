@@ -93,17 +93,41 @@ export const adapterHomezz: SourceAdapter = {
     $('script[type="application/ld+json"]').each((_, el) => {
       if (ld) return;
       try {
-        const obj = JSON.parse($(el).html() ?? "");
-        const node = Array.isArray(obj) ? obj[0] : obj;
-        if (node?.["@type"] || node?.name) ld = node;
-      } catch { /* ignore */ }
+        const raw = $(el).html()?.trim();
+        if (!raw) return;
+        const obj = JSON.parse(raw) as unknown;
+        if (Array.isArray(obj)) {
+          const product = obj.find(
+            (n) =>
+              n &&
+              typeof n === "object" &&
+              /Product|RealEstate|Residence|Apartment|House|Offer/i.test(
+                String((n as { "@type"?: unknown })["@type"]),
+              ),
+          );
+          ld = product ?? obj[0];
+        } else if (obj && typeof obj === "object" && Array.isArray((obj as { "@graph"?: unknown[] })["@graph"])) {
+          const g = (obj as { "@graph": Record<string, unknown>[] })["@graph"];
+          ld =
+            g.find(
+              (n) =>
+                n?.name &&
+                /Product|RealEstate|Residence|Apartment|House|Offer/i.test(String(n["@type"])),
+            ) ?? g[0];
+        } else if (obj && typeof obj === "object") {
+          ld = obj;
+        }
+      } catch {
+        /* ignore */
+      }
     });
 
     const title =
-      (ld?.name as string) ??
+      (ld?.name as string) ||
+      $('meta[property="og:title"]').attr("content")?.trim() ||
       ($("h1").first().text().trim() ||
-      $("title").text().split(",")[0]?.trim() ||
-      $("title").text().split("-")[0]?.trim());
+        $("title").text().split(",")[0]?.trim() ||
+        $("title").text().split("-")[0]?.trim());
 
     let price: number | undefined;
     let currency = "EUR";
@@ -188,20 +212,67 @@ export const adapterHomezz: SourceAdapter = {
       }
     }
 
-    const photos: string[] = [];
-    $("img").each((_, el) => {
-      const src = $(el).attr("src") || $(el).attr("data-src");
+    function pushImageUrl(url: string, bucket: string[]) {
+      if (!url.startsWith("http")) return;
+      const s = url.toLowerCase();
       if (
-        src &&
-        src.startsWith("http") &&
-        !src.includes("placeholder") &&
-        !src.includes("logo") &&
-        !src.includes("icon") &&
-        !src.includes("avatar") &&
-        (src.includes("homezz") || src.includes("cdn") || src.includes("img"))
+        s.includes("logo") ||
+        s.includes("icon") ||
+        s.includes("avatar") ||
+        s.includes("placeholder") ||
+        s.includes("banner") ||
+        s.includes("sponsor") ||
+        s.includes("partner-") ||
+        s.includes("footer") ||
+        s.includes("nav-") ||
+        s.includes("recommend") ||
+        s.includes("related") ||
+        s.includes("categorie") ||
+        s.includes("category-icon")
       ) {
-        photos.push(src);
+        return;
       }
+      bucket.push(url);
+    }
+
+    const photos: string[] = [];
+    // 1) JSON-LD (listing images only)
+    if (ld?.image) {
+      const img = ld.image as string | { url?: string } | (string | { url?: string })[];
+      if (typeof img === "string") pushImageUrl(img, photos);
+      else if (Array.isArray(img)) {
+        for (const x of img) {
+          if (typeof x === "string") pushImageUrl(x, photos);
+          else if (x && typeof x === "object" && (x as { url?: string }).url) {
+            pushImageUrl((x as { url: string }).url, photos);
+          }
+        }
+      } else if (img && typeof img === "object" && "url" in (img as object)) {
+        const u = (img as { url: string }).url;
+        if (u) pushImageUrl(u, photos);
+      }
+    }
+    const og = $('meta[property="og:image"]').attr("content");
+    if (og) pushImageUrl(og, photos);
+
+    // 2) Doar imagini din zona conținutului anunțului (fără header/footer/recomandări)
+    const $inListing = $(
+      "main, [class*='AnuntDetali'], [class*='anunt-detalii'], [class*='listing-detail'], [class*='property-'], [class*='gallery'], article",
+    ).first();
+    const $scope = $inListing.length ? $inListing : $("#content, .content, #main").first();
+    const root = $scope.length ? $scope : $("body");
+    root.find("img").each((_, el) => {
+      const n = $(el);
+      const src = n.attr("src") || n.attr("data-src") || n.attr("data-lazy");
+      if (!src) return;
+      const full = src.startsWith("//") ? `https:${src}` : src.startsWith("/") ? new URL(src, "https://www.homezz.ro").toString() : src;
+      if (!full.startsWith("http")) return;
+      const alt = (n.attr("alt") || "").toLowerCase();
+      if (alt.includes("logo") || alt.includes("iconiț")) return;
+      if (!/homezz|hzz|img\.|imgr|static|cloudfront|amazonaws|twimg|wp-content/i.test(full)) {
+        if (!/\.(jpe?g|png|webp)/i.test(full)) return;
+      }
+      pushImageUrl(full, photos);
     });
 
     let lat: number | undefined;

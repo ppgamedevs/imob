@@ -1,23 +1,26 @@
 import { BarChart3, Clock, MapPin, MessageSquare, Shield } from "lucide-react";
+import Link from "next/link";
 
 const primary = {
   icon: BarChart3,
-  title: "Preț estimat corect",
+  title: "Reper de preț față de piață",
   description:
-    "Interval de piață derivat din AVM și tranzacții similare în zonă - reper clar înainte de ofertă sau negociere.",
+    "Interval orientativ din modelul AVM și din comparabile apropiate, nu o evaluare autorizată. Un semnal de piață înainte de ofertă sau negociere.",
 };
 
 const secondary = [
   {
     icon: Clock,
     title: "Viteză la vânzare",
-    description: "Estimare în luni, cu context de lichiditate în zonă.",
+    description:
+      "Estimare orientativă în luni, cu context de lichiditate în zonă (nu o dată la care se vinde neapărat).",
     tone: "text-blue-700 bg-blue-50/90 ring-blue-100/80",
   },
   {
     icon: Shield,
     title: "Risc seismic",
-    description: "Semnal orientativ din an construcție și localizare.",
+    description:
+      "Reper pe baza anului construcției și localizării; nu acoperă toate scenariile, verifici la fața locului.",
     tone: "text-amber-800 bg-amber-50/90 ring-amber-100/80",
   },
   {
@@ -37,15 +40,23 @@ const secondary = [
 export function HomeFeatures() {
   const PrimaryIcon = primary.icon;
   return (
-    <section className="py-20 md:py-28">
+    <section id="cum-functioneaza" className="py-20 md:py-28 scroll-mt-[72px]">
       <div className="mx-auto max-w-[1100px] px-5">
         <div className="mx-auto max-w-[640px] text-center">
           <h2 className="text-[26px] font-bold tracking-tight text-gray-950 md:text-[38px]">
-            Tot ce contează, într-un singur raport
+            Liniile esențiale, într-un singur raport
           </h2>
           <p className="mt-3 text-[15px] leading-relaxed text-gray-600 md:text-[16px]">
             Nu o listă de funcții - o structură gândită pentru cumpărători care vor să înțeleagă
             prețul înainte să se angajeze.
+          </p>
+          <p className="mt-3 text-[14px]">
+            <Link
+              href="/cum-functioneaza"
+              className="font-medium text-blue-600 hover:underline decoration-blue-500/30 underline-offset-2"
+            >
+              Cum funcționează pas cu pas (fluxul plătit)
+            </Link>
           </p>
         </div>
 

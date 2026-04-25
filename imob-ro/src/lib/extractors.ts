@@ -204,7 +204,7 @@ export function extractGeneric(html: string): Extracted {
 const FETCH_HEADERS_SETS: Record<string, string>[] = [
   {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
     "Accept-Language": "ro-RO,ro;q=0.9,en-US;q=0.8,en;q=0.7",
     "Accept-Encoding": "gzip, deflate, br",
     "Cache-Control": "no-cache",
@@ -216,21 +216,38 @@ const FETCH_HEADERS_SETS: Record<string, string>[] = [
   },
   {
     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "ro,en;q=0.5",
     "Upgrade-Insecure-Requests": "1",
   },
+  {
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:128.0) Gecko/20100101 Firefox/128.0",
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "ro-RO,ro;q=0.8,en-US;q=0.5,en;q=0.3",
+  },
+  {
+    "User-Agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15",
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "ro-RO,ro;q=0.9,en-US;q=0.8,en;q=0.7",
+  },
 ];
 
-const MAX_SERVER_FETCH_RETRIES = 2;
+/** Publi24 / Lajumate / Homezz often return 403 or empty shells to “bot” patterns — rotate UAs and referrers. */
+const MAX_SERVER_FETCH_RETRIES = 4;
 
 function extraFetchHeadersForHost(urlStr: string): Record<string, string> {
   try {
     const host = new URL(urlStr).hostname.replace(/^www\./, "").toLowerCase();
-    if (host === "publi24.ro") {
-      return {
-        Referer: "https://www.publi24.ro/",
-      };
+    if (host === "publi24.ro" || host === "m.publi24.ro") {
+      return { Referer: "https://www.publi24.ro/" };
+    }
+    if (host === "lajumate.ro") {
+      return { Referer: "https://lajumate.ro/" };
+    }
+    if (host === "homezz.ro") {
+      return { Referer: "https://www.homezz.ro/" };
     }
   } catch {
     /* ignore */
@@ -238,9 +255,18 @@ function extraFetchHeadersForHost(urlStr: string): Record<string, string> {
   return {};
 }
 
-async function fetchWithRetry(url: string, timeoutMs = 15_000): Promise<{ ok: boolean; html: string } | null> {
+type FetchWithRetryResult =
+  | { kind: "ok"; html: string }
+  | { kind: "no_html"; sub: "timeout" | "blocked" | "other" };
+
+function isAbortError(err: unknown): boolean {
+  return err instanceof Error && err.name === "AbortError";
+}
+
+async function fetchWithRetry(url: string, timeoutMs = 15_000): Promise<FetchWithRetryResult> {
   const log = logger.child({ url, fn: "fetchWithRetry" });
   const hostExtra = extraFetchHeadersForHost(url);
+  let noHtml: "timeout" | "blocked" | "other" = "other";
 
   for (let attempt = 0; attempt < MAX_SERVER_FETCH_RETRIES; attempt++) {
     const base = FETCH_HEADERS_SETS[attempt % FETCH_HEADERS_SETS.length];
@@ -258,27 +284,49 @@ async function fetchWithRetry(url: string, timeoutMs = 15_000): Promise<{ ok: bo
 
       if (!res.ok) {
         log.warn({ attempt, status: res.status }, "Server fetch non-OK status");
-        if (res.status === 403 || res.status === 503) {
+        if (res.status === 403 || res.status === 429 || res.status === 503) {
+          noHtml = "blocked";
           await new Promise((r) => setTimeout(r, 1000 + attempt * 1000));
           continue;
         }
-        return null;
-      }
-
-      const contentType = res.headers.get("content-type") || "";
-      if (!contentType.includes("text/html")) {
-        log.warn({ attempt, contentType }, "Server fetch non-HTML content type");
-        return null;
-      }
-
-      const html = await res.text();
-      if (html.length < 500) {
-        log.warn({ attempt, htmlLen: html.length }, "Server fetch returned suspiciously short HTML");
+        if (res.status === 408 || res.status === 504) {
+          noHtml = "timeout";
+        }
+        if (attempt < MAX_SERVER_FETCH_RETRIES - 1) {
+          await new Promise((r) => setTimeout(r, 1000 + attempt * 1000));
+        }
         continue;
       }
 
-      return { ok: true, html };
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("text/html") && !contentType.includes("application/xhtml")) {
+        log.warn({ attempt, contentType }, "Server fetch non-HTML content type");
+        if (attempt < MAX_SERVER_FETCH_RETRIES - 1) {
+          continue;
+        }
+        return { kind: "no_html", sub: noHtml };
+      }
+
+      const html = await res.text();
+      const looksLikeListing = /og:title|ld\+json|h1|anunt|pret|preț|price|vanzare/i.test(html);
+      if (html.length < 500 && !looksLikeListing) {
+        log.warn({ attempt, htmlLen: html.length }, "Server fetch returned suspiciously short HTML");
+        if (attempt < MAX_SERVER_FETCH_RETRIES - 1) {
+          continue;
+        }
+        return { kind: "no_html", sub: "other" };
+      }
+      if (html.length < 200) {
+        log.warn({ attempt, htmlLen: html.length }, "Server fetch HTML too short to parse");
+        if (attempt < MAX_SERVER_FETCH_RETRIES - 1) {
+          continue;
+        }
+        return { kind: "no_html", sub: "other" };
+      }
+
+      return { kind: "ok", html };
     } catch (err) {
+      if (isAbortError(err)) noHtml = "timeout";
       log.warn({ attempt, err }, "Server fetch attempt failed");
       if (attempt < MAX_SERVER_FETCH_RETRIES - 1) {
         await new Promise((r) => setTimeout(r, 1000 + attempt * 1000));
@@ -286,11 +334,55 @@ async function fetchWithRetry(url: string, timeoutMs = 15_000): Promise<{ ok: bo
     }
   }
 
-  return null;
+  return { kind: "no_html", sub: noHtml };
 }
 
-export async function maybeFetchServer(url: string) {
-  const log = logger.child({ url, fn: "maybeFetchServer" });
+/** Păstrează câmpurile bune din adapter, completează golurile din heuristica generică. */
+function mergeWithGenericExtraction(adapter: Extracted, html: string): Extracted {
+  const gen = extractGeneric(html);
+  return {
+    ...gen,
+    ...adapter,
+    title: (adapter.title && String(adapter.title).trim()) || gen.title,
+    price:
+      adapter.price != null && (adapter.price as number) > 0
+        ? adapter.price
+        : gen.price,
+    currency: adapter.currency || gen.currency,
+    areaM2:
+      adapter.areaM2 != null && (adapter.areaM2 as number) > 0
+        ? adapter.areaM2
+        : gen.areaM2,
+    titleAreaM2: adapter.titleAreaM2 ?? gen.titleAreaM2,
+    rooms:
+      adapter.rooms != null && (adapter.rooms as number) > 0
+        ? adapter.rooms
+        : gen.rooms,
+    floor: adapter.floor ?? gen.floor,
+    floorRaw: adapter.floorRaw || gen.floorRaw,
+    yearBuilt: adapter.yearBuilt ?? gen.yearBuilt,
+    addressRaw: adapter.addressRaw || gen.addressRaw,
+    lat: adapter.lat ?? gen.lat,
+    lng: adapter.lng ?? gen.lng,
+    photos: adapter.photos && adapter.photos.length > 0 ? adapter.photos : gen.photos,
+    sourceMeta: (() => {
+      const a = (adapter.sourceMeta as Record<string, unknown> | null) ?? null;
+      const g = (gen.sourceMeta as Record<string, unknown> | null) ?? null;
+      if (a && Object.keys(a).length > 0) return { ...g, ...a };
+      return g ?? a;
+    })(),
+  };
+}
+
+export type ServerScrapeDeclineReason = "fetch_timeout_blocked" | "extraction_failed";
+
+/**
+ * Server-side fetch + parse (when allowed). Distinguish timeout / blocked from generic extraction failure.
+ */
+export async function tryServerScrapeForAnalysis(
+  url: string,
+): Promise<{ ok: true; data: Extracted } | { ok: false; reason: ServerScrapeDeclineReason }> {
+  const log = logger.child({ url, fn: "tryServerScrapeForAnalysis" });
 
   try {
     const u = new URL(url);
@@ -298,12 +390,12 @@ export async function maybeFetchServer(url: string) {
 
     if (!process.env.ALLOW_SERVER_SCRAPE || process.env.ALLOW_SERVER_SCRAPE === "false") {
       log.debug("Server scraping disabled (ALLOW_SERVER_SCRAPE not set)");
-      return null;
+      return { ok: false, reason: "extraction_failed" };
     }
     const whitelist = getServerWhitelist();
     if (!whitelist.has(host)) {
       log.debug({ host }, "Host not in server whitelist");
-      return null;
+      return { ok: false, reason: "extraction_failed" };
     }
 
     const disallowed = (process.env.DISALLOWED_DOMAINS || "")
@@ -312,22 +404,26 @@ export async function maybeFetchServer(url: string) {
       .filter(Boolean);
     if (disallowed.includes(host)) {
       log.debug({ host }, "Host in disallowed domains");
-      return null;
+      return { ok: false, reason: "extraction_failed" };
     }
 
     const now = Date.now();
     const rl = rateLimits[host] || { last: 0 };
     if (now - rl.last < RATE_WINDOW_MS) {
       log.debug({ host }, "Host rate-limited");
-      return null;
+      return { ok: false, reason: "extraction_failed" };
     }
     rl.last = now;
     rateLimits[host] = rl;
 
     const result = await fetchWithRetry(url);
-    if (!result) {
+    if (result.kind === "no_html") {
+      if (result.sub === "timeout" || result.sub === "blocked") {
+        log.warn({ host, sub: result.sub }, "Server fetch not usable (timeout/blocked)");
+        return { ok: false, reason: "fetch_timeout_blocked" };
+      }
       log.warn({ host }, "Server fetch failed after retries");
-      return null;
+      return { ok: false, reason: "extraction_failed" };
     }
 
     const { html } = result;
@@ -336,18 +432,24 @@ export async function maybeFetchServer(url: string) {
       const adapter = pickAdapter(u);
       if (adapter.domain !== "*") {
         const adapterResult = await adapter.extract({ url: u, html });
-        log.info({ host, adapter: adapter.domain }, "Adapter extraction succeeded");
-        return adapterResult.extracted as Extracted;
+        const merged = mergeWithGenericExtraction(adapterResult.extracted as Extracted, html);
+        log.info({ host, adapter: adapter.domain }, "Adapter extraction + generic merge");
+        return { ok: true, data: merged };
       }
     } catch (err) {
       log.warn({ host, err }, "Adapter extraction failed, falling back to generic");
     }
 
-    return extractGeneric(html);
+    return { ok: true, data: extractGeneric(html) };
   } catch (err) {
-    log.error({ err }, "maybeFetchServer unexpected error");
-    return null;
+    log.error({ err }, "tryServerScrapeForAnalysis unexpected error");
+    return { ok: false, reason: "extraction_failed" };
   }
+}
+
+export async function maybeFetchServer(url: string): Promise<Extracted | null> {
+  const r = await tryServerScrapeForAnalysis(url);
+  return r.ok ? r.data : null;
 }
 
 export type { Extracted };

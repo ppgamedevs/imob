@@ -38,7 +38,7 @@ export default function GlossaryPage() {
       {/* Header */}
       <div className="mb-8">
         <Link
-          href="/discover"
+          href="/ghid"
           className="inline-flex items-center gap-2 text-sm text-[rgb(var(--muted))] hover:text-[rgb(var(--text))] mb-4 transition-colors"
         >
           <ArrowLeftIcon className="w-4 h-4" />

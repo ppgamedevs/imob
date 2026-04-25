@@ -1,30 +1,31 @@
 import { ANALYSIS_DEDUP_WINDOW_MS, ANALYSIS_POLL_INTERVAL_MS, ANALYSIS_POLL_TIMEOUT_MS } from "./constants";
 import { prisma } from "./db";
 import type { Extracted } from "./extractors";
-import { maybeFetchServer } from "./extractors";
+import type { AnalyzeFailureReason } from "./analyze/analyze-failure-reasons";
+import { tryServerScrapeForAnalysis } from "./extractors";
 import { logger } from "./obs/logger";
 import { detectPropertyType, isNonResidential } from "./property-type";
+import { trackFunnelEvent } from "./tracking/funnel";
+
+type ContentRejection = "rental" | "olx_non_realestate" | "non_residential";
 
 /**
- * Post-extraction check: detects rentals, non-real-estate, etc.
- * Returns "rental" | "not_realestate" | null (null = OK).
+ * Post-extraction check: rentals, OLX wrong category, non-residential, etc. Null = OK.
  */
 function checkExtractedContentType(
   title: string | null | undefined,
   description: string | null | undefined,
   url: string,
-): "rental" | "not_realestate" | null {
+): ContentRejection | null {
   const text = `${title ?? ""} ${description ?? ""}`.toLowerCase();
   const host = (() => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return ""; } })();
   const path = (() => { try { return new URL(url).pathname.toLowerCase(); } catch { return ""; } })();
 
-  // Rental detection
   if (/\bregim\s+hotelier\b/.test(text)) return "rental";
   if (/\bde\s+inchiriat\b/.test(text) && !/\bde\s+vanzare\b/.test(text)) return "rental";
   if (/\binchiriez\b/.test(text) && !/\bvand\b/.test(text)) return "rental";
   if (/\/inchirieri?\b/.test(path) || /\/de-inchiriat\b/.test(path)) return "rental";
 
-  // Non-real-estate detection (mainly OLX which has all categories)
   if (host === "olx.ro") {
     const REALESTATE_SIGNALS = [
       /\b(?:apartament|garsonier|camera|camere|casa|vila|teren|imobil|etaj|bloc|mansarda|penthouse|duplex|spatiu\s+comercial)\b/,
@@ -34,16 +35,15 @@ function checkExtractedContentType(
       /\b(?:sector\s*\d|bucuresti|cluj|iasi|timisoara|brasov|constanta)\b/,
     ];
     const hasRealEstateSignal = REALESTATE_SIGNALS.some((p) => p.test(text));
-    if (!hasRealEstateSignal) return "not_realestate";
+    if (!hasRealEstateSignal) return "olx_non_realestate";
   }
 
-  // Non-residential property type detection (commercial, terrain, office, etc.)
   const NON_RESIDENTIAL_RE =
     /\b(afacere|business|spatiu\s+comercial|magazin|hala|depozit|birou|office|teren|lot\s+de\s+casa|spatiu\s+industrial|pensiune|hotel|restaurant|bar|pub|fast\s*food|cafenea|ferma|livada|padure)\b/i;
   if (NON_RESIDENTIAL_RE.test(text)) {
     const propType = detectPropertyType(title, null);
     if (isNonResidential(propType) || propType === "unknown") {
-      return "not_realestate";
+      return "non_residential";
     }
   }
 
@@ -245,37 +245,61 @@ async function upsertExtractedListing(analysisId: string, data: Extracted): Prom
   });
 }
 
-async function setStatus(analysisId: string, status: string): Promise<void> {
+async function patchStatus(analysisId: string, status: string): Promise<void> {
   await prisma.analysis.update({ where: { id: analysisId }, data: { status } });
+}
+
+async function failAnalysis(
+  analysisId: string,
+  status: "error" | "failed" | "rejected_rental" | "rejected_not_realestate",
+  error: AnalyzeFailureReason,
+): Promise<void> {
+  await prisma.analysis.update({ where: { id: analysisId }, data: { status, error } });
 }
 
 export async function startAnalysis(analysisId: string, url: string) {
   const log = logger.child({ analysisId, url });
+  const analysisRow = await prisma.analysis.findUnique({
+    where: { id: analysisId },
+    select: { userId: true },
+  });
 
   try {
-    await setStatus(analysisId, "running");
+    await patchStatus(analysisId, "running");
+    void trackFunnelEvent("analysis_started", {
+      analysisId,
+      userId: analysisRow?.userId ?? null,
+      path: "/lib/analysis",
+    });
     log.info("Analysis started");
 
     // 1. Wait for client-pushed extract or try server-side fetch
     let extracted = await waitForClientExtract(analysisId);
 
     if (!extracted) {
-      const serverData = await maybeFetchServer(url);
-      if (!serverData) {
-        log.warn("No data from client or server");
-        await setStatus(analysisId, "error");
+      const serverTry = await tryServerScrapeForAnalysis(url);
+      if (!serverTry.ok) {
+        const reason: AnalyzeFailureReason = serverTry.reason;
+        log.warn({ reason }, "No data from client or server");
+        await failAnalysis(analysisId, "error", reason);
+        void trackFunnelEvent("analysis_failed", {
+          analysisId,
+          userId: analysisRow?.userId ?? null,
+          path: "/lib/analysis",
+          metadata: { reason },
+        });
         await prisma.provenanceEvent.create({
           data: {
             analysisId,
             kind: "NO_DATA",
             happenedAt: new Date(),
-            payload: { note: "No client extract and server scrape disabled or blocked" } as never,
+            payload: { note: reason, source: "server_try" } as never,
           },
         }).catch((e) => log.warn({ err: e }, "Failed to log NO_DATA provenance event"));
         return;
       }
-      await upsertExtractedListing(analysisId, serverData);
-      extracted = serverData;
+      await upsertExtractedListing(analysisId, serverTry.data);
+      extracted = serverTry.data;
     }
 
     // 2. Post-extraction content check (rental, non-real-estate)
@@ -286,7 +310,44 @@ export async function startAnalysis(analysisId: string, url: string) {
     );
     if (contentIssue) {
       log.info({ contentIssue }, "Listing rejected after extraction");
-      await setStatus(analysisId, contentIssue === "rental" ? "rejected_rental" : "rejected_not_realestate");
+      const failReason: AnalyzeFailureReason =
+        contentIssue === "rental"
+          ? "rental_not_sale"
+          : contentIssue === "olx_non_realestate"
+            ? "olx_non_realestate"
+            : "non_residential";
+      const st = contentIssue === "rental" ? "rejected_rental" : "rejected_not_realestate";
+      await failAnalysis(analysisId, st, failReason);
+      void trackFunnelEvent("analysis_failed", {
+        analysisId,
+        userId: analysisRow?.userId ?? null,
+        path: "/lib/analysis",
+        metadata: { reason: failReason },
+      });
+      return;
+    }
+
+    const priceOk = extracted.price != null && extracted.price > 0;
+    const areaCandidate = extracted.areaM2 ?? extracted.titleAreaM2;
+    const areaOk = areaCandidate != null && areaCandidate > 0;
+    if (!priceOk) {
+      await failAnalysis(analysisId, "failed", "missing_price");
+      void trackFunnelEvent("analysis_failed", {
+        analysisId,
+        userId: analysisRow?.userId ?? null,
+        path: "/lib/analysis",
+        metadata: { reason: "missing_price" },
+      });
+      return;
+    }
+    if (!areaOk) {
+      await failAnalysis(analysisId, "failed", "missing_area");
+      void trackFunnelEvent("analysis_failed", {
+        analysisId,
+        userId: analysisRow?.userId ?? null,
+        path: "/lib/analysis",
+        metadata: { reason: "missing_area" },
+      });
       return;
     }
 
@@ -298,15 +359,18 @@ export async function startAnalysis(analysisId: string, url: string) {
     }
 
     // 4. Normalize
-    await setStatus(analysisId, "normalizing");
+    await patchStatus(analysisId, "normalizing");
     await stepNormalize(analysisId);
 
     // 5. Scoring pipeline
-    await setStatus(analysisId, "scoring");
+    await patchStatus(analysisId, "scoring");
     await runScoringPipeline(analysisId);
 
     // 6. Done
-    await setStatus(analysisId, "done");
+    await prisma.analysis.update({
+      where: { id: analysisId },
+      data: { status: "done", error: null },
+    });
     log.info("Analysis completed");
 
     // 7. Async LLM enrichment (non-blocking, runs after report is available)
@@ -315,7 +379,14 @@ export async function startAnalysis(analysisId: string, url: string) {
     );
   } catch (err) {
     log.error({ err }, "Analysis pipeline failed");
-    await setStatus(analysisId, "failed").catch(() => {});
+    const message = err instanceof Error ? err.message : String(err);
+    void trackFunnelEvent("analysis_failed", {
+      analysisId,
+      userId: analysisRow?.userId ?? null,
+      path: "/lib/analysis",
+      metadata: { reason: "pipeline_error", detail: message.slice(0, 200) },
+    });
+    await failAnalysis(analysisId, "failed", "pipeline_error").catch(() => {});
   }
 }
 

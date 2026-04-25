@@ -60,7 +60,7 @@ export function mapSeismicExplainToBuyerView(
       state: "official_list",
       meaningLine: `Imobilul apare în lista publică AMCCRS cu clasă ${formatOfficialClass(riskClassRaw)}.`,
       forYouLine:
-        "Este un semnal oficial de risc structural — merită expertiză tehnică înainte de cumpărare.",
+        "Este un semnal din lista publică de risc structural, nu un aviz de construcție. Are sens să ceri expertiză tehnică înainte de cumpărare.",
       nextStep: "Pas următor: consultă expert tehnic atestat și documentele din dosarul clădirii.",
       titleMentionConflict: false,
     };
@@ -81,7 +81,8 @@ export function mapSeismicExplainToBuyerView(
       state: "insufficient",
       meaningLine:
         "Nu am putut potrivi adresa în lista publică AMCCRS; am folosit doar anul construcției ca reper orientativ.",
-      forYouLine: "Acest reper nu înlocuiește lista oficială și nu garantează clasificarea reală.",
+      forYouLine:
+        "Acest reper nu înlocuiește verificarea în listă / la dosar și poate diferi de clasificarea finală.",
       nextStep: "Pas următor: verifică în registrul public și cu un expert dacă imobilul apare la adresă.",
       titleMentionConflict: titleMentionsRisk,
     };

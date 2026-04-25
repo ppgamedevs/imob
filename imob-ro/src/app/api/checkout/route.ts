@@ -4,6 +4,10 @@ import Stripe from "stripe";
 import { auth } from "@/lib/auth";
 import { logger } from "@/lib/obs/logger";
 
+/**
+ * Single live subscription SKU: STRIPE_PRICE_PRO. Plan name in the DB (sync-subscription) is
+ * inferred from this price ID; we do not expose multiple subscription checkouts from the UI.
+ */
 export async function POST() {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });

@@ -3,6 +3,8 @@ import Link from "next/link";
 import Script from "next/script";
 import React from "react";
 
+import { ReportDisclaimer } from "@/components/common/ReportDisclaimer";
+
 export const metadata: Metadata = {
   title: "Cum estimam pretul apartamentului - Metodologie ImobIntel",
   description:
@@ -101,16 +103,23 @@ export default function HowWeEstimatePage() {
         </p>
       </section>
 
-      <div className="border-t pt-4">
-        <h3 className="font-medium mb-2">Disclaimer</h3>
-        <p className="text-sm text-muted-foreground">
-          Informațiile afișate sunt estimări automate; nu constituie consultanță financiară sau
-          juridică. Verificați întotdeauna la sursa originală.
+      <section className="border-t pt-6">
+        <h3 className="mb-2 font-medium">Riscuri și alte straturi</h3>
+        <p className="mb-4 text-sm text-muted-foreground">
+          Riscul seismic folosește lista publică atunci când adresa se potrivește automat; alte
+          riscuri (medie, inundații, etc.) apar doar când există surse conectate în produs, nu
+          acoperim exhaustiv fiecare tip de risc. Nu oferim o imagine exhaustivă a pericolelor, ci
+          semnale pe baza datelor disponibile.
         </p>
-      </div>
+        <h3 className="mb-2 font-medium">Raport cumpărător (ce nu este)</h3>
+        <ReportDisclaimer variant="legal" className="!text-sm !text-muted-foreground" />
+      </section>
 
-      <div className="mt-6">
-        <Link href="/" className="text-sm text-primary underline">
+      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
+        <Link href="/date-si-metodologie" className="text-sm text-primary underline">
+          De unde vin datele? (transparență)
+        </Link>
+        <Link href="/" className="text-sm text-muted-foreground underline">
           Înapoi la prima pagină
         </Link>
       </div>

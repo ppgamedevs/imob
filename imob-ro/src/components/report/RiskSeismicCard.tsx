@@ -3,7 +3,7 @@ import type { BuyerSeismicView } from "@/lib/risk/seismic-label";
 function headlineFor(state: BuyerSeismicView["state"]): string {
   switch (state) {
     case "official_list":
-      return "Risc seismic confirmat oficial";
+      return "Risc în listă publică (AMCCRS)";
     case "not_on_public_list":
       return "Nu apare în evidența publică";
     case "insufficient":

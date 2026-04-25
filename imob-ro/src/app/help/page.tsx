@@ -18,7 +18,7 @@ const categories = [
       </svg>
     ),
     questions: [
-      { q: "Cum functioneaza ImobIntel?", a: "Lipesti un link de anunt de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro, lajumate.ro sau homezz.ro si primesti un raport complet cu estimare de pret, comparabile, viteza de vanzare si risc seismic." },
+      { q: "Cum functioneaza ImobIntel?", a: "Lipesti un link de anunt de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro, lajumate.ro sau homezz.ro si primesti un raport orientativ: estimare de pret, comparabile, un reper de timp pana la vanzare si risc seismic acolo unde se pot lega surse. Nu e evaluare ANEVAR." },
       { q: "Ce surse de anunturi sunt suportate?", a: "Suportam imobiliare.ro, storia.ro, olx.ro, publi24.ro, lajumate.ro si homezz.ro. Lucram continuu sa adaugam surse noi." },
       { q: "Cat dureaza o analiza?", a: "De obicei 15-30 de secunde. Analizele complexe pot dura pana la un minut." },
       { q: "Trebuie sa imi creez cont?", a: "Poti face primele 3 cautari fara cont. Dupa, trebuie un cont gratuit (email) pentru inca 7 cautari gratuite pe luna." },
@@ -36,8 +36,8 @@ const categories = [
       </svg>
     ),
     questions: [
-      { q: "Cum se calculeaza pretul estimat?", a: "Folosim un model AVM (Automated Valuation Model) care combina comparabile din zona, statistici locale, ajustari pentru etaj, an constructie si suprafata. Vezi pagina Metodologie pentru detalii complete." },
-      { q: "Cat de precise sunt estimarile?", a: "Precizia depinde de numarul de comparabile din zona. Afisam un interval (low-high) si un nivel de incredere pentru fiecare raport." },
+      { q: "Cum se calculeaza pretul estimat?", a: "Folosim un model AVM (Automated Valuation Model) care combina comparabile din zona, statistici locale, ajustari pentru etaj, an constructie si suprafata. Vezi pagina Metodologie; rezultatul e un semnal de piață, nu o valoare certă." },
+      { q: "Cat de precise sunt estimarile?", a: "Strângerea intervalului depinde de câte comparabile există în zonă. Afișăm un interval (low–high) și o încredere (ridicată/medie/redusă), nu o singură cifră de la care să te ții necondiționat." },
       { q: "Ce inseamna riscul seismic?", a: "Verificam lista publica AMCCRS a cladirilor expertizate tehnic din Bucuresti. Afisam clasa de risc (RsI-RsIV) sau 'nu apare in lista publica'. Lipsa din lista NU inseamna ca un imobil este sigur." },
       { q: "Ce este Time-to-Sell (TTS)?", a: "TTS estimeaza timpul mediu pana la vanzare bazat pe diferenta fata de pretul estimat, cerere in zona si sezonalitate. Este o estimare, nu o garantie." },
     ],

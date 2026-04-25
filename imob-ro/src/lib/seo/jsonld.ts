@@ -65,3 +65,52 @@ export function jsonLdBreadcrumb(list: { name: string; url: string }[]) {
     })),
   };
 }
+
+/**
+ * FAQ rich results (Google) – use only când conținutul de pe pagină reflectă fidel întrebările.
+ */
+export function jsonLdFaqPage(
+  items: { question: string; answer: string }[],
+): Record<string, unknown> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((it) => ({
+      "@type": "Question",
+      name: it.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: it.answer,
+      },
+    })),
+  };
+}
+
+export function jsonLdArticleSeo({
+  headline,
+  description,
+  path,
+  datePublished,
+  dateModified,
+}: {
+  headline: string;
+  description: string;
+  path: string;
+  datePublished?: string;
+  dateModified?: string;
+}): Record<string, unknown> {
+  const url = path.startsWith("http")
+    ? path
+    : `${APP_URL.replace(/\/$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline,
+    description,
+    author: { "@type": "Organization", name: "ImobIntel", url: APP_URL },
+    publisher: { "@type": "Organization", name: "ImobIntel", url: APP_URL },
+    datePublished: datePublished ?? dateModified ?? new Date().toISOString().split("T")[0],
+    dateModified: dateModified ?? datePublished ?? new Date().toISOString().split("T")[0],
+    mainEntityOfPage: { "@type": "WebPage", "@id": url },
+  };
+}

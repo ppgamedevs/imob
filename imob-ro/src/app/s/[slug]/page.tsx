@@ -44,13 +44,19 @@ export async function generateMetadata({
   const desc =
     "Estimare preț, timp de vânzare, randament și risc seismic. Partajat prin ImobIntel.";
   const ogImageUrl = `/api/og/report/${data.a.id}`;
+  const base =
+    process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
   return {
     title,
     description: desc,
+    /** Evită duplicat cu /report/[id]: același conținut, URL canonic spre raport. */
+    alternates: { canonical: `${base.replace(/\/$/, "")}/report/${data.a.id}` },
+    robots: { index: false, follow: true },
     openGraph: {
       title,
       description: desc,
+      url: `${base.replace(/\/$/, "")}/report/${data.a.id}`,
       images: [{ url: ogImageUrl }],
       type: "article",
     },

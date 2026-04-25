@@ -2,6 +2,10 @@ import * as cheerio from "cheerio";
 
 import type { DiscoverResult, SourceAdapter } from "../types";
 
+function stripDiacritics(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 export const adapterLajumate: SourceAdapter = {
   domain: "lajumate.ro",
 
@@ -40,21 +44,50 @@ export const adapterLajumate: SourceAdapter = {
     const $ = cheerio.load(html);
     const rawHtml = html as string;
 
-    // --- JSON-LD ---
+    // --- JSON-LD (@graph, arrays; pick Product/Offer/RealEstate, not Breadcrumb) ---
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let ld: any = null;
+    const ldNodes: any[] = [];
     $('script[type="application/ld+json"]').each((_, el) => {
-      if (ld) return;
       try {
-        const obj = JSON.parse($(el).html() ?? "");
-        const node = Array.isArray(obj) ? obj[0] : obj;
-        if (node?.["@type"] || node?.name) ld = node;
-      } catch { /* ignore */ }
+        const raw = $(el).html()?.trim();
+        if (!raw) return;
+        const obj = JSON.parse(raw) as unknown;
+        if (Array.isArray(obj)) {
+          for (const n of obj) if (n && typeof n === "object") ldNodes.push(n);
+        } else if (obj && typeof obj === "object" && Array.isArray((obj as { "@graph"?: unknown[] })["@graph"])) {
+          for (const n of (obj as { "@graph": unknown[] })["@graph"]) {
+            if (n && typeof n === "object") ldNodes.push(n);
+          }
+        } else if (obj && typeof obj === "object") {
+          ldNodes.push(obj);
+        }
+      } catch {
+        /* ignore */
+      }
     });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const isProductLike = (n: any) => {
+      const t = n?.["@type"];
+      if (Array.isArray(t)) {
+        return t.some((x) => /Product|RealEstate|Residence|Apartment|House|Offer/i.test(String(x)));
+      }
+      if (typeof t === "string") {
+        return /Product|RealEstate|Residence|Apartment|House|Offer/i.test(t);
+      }
+      return false;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let ld: any =
+      ldNodes.find((n) => isProductLike(n) && (n.name || n.offers)) ??
+      ldNodes.find((n) => n.name && (n.offers || n.price)) ??
+      ldNodes.find((n) => n.offers) ??
+      ldNodes.find((n) => n.name) ??
+      null;
 
     // --- Title ---
     const title =
-      (ld?.name as string) ??
+      (ld?.name as string) ||
+      $('meta[property="og:title"]').attr("content")?.trim() ||
       ($("h1").first().text().trim() ||
         $("title").text().split("|")[0]?.trim() ||
         $("title").text().split("-")[0]?.trim());
@@ -92,18 +125,32 @@ export const adapterLajumate: SourceAdapter = {
 
     // Fallback: regex on full text near title
     if (!price) {
-      const priceMatch = rawHtml.match(/([\d][.\d\s]*\d)\s*(?:eur|€)/i);
-      if (priceMatch) price = parseInt(priceMatch[1].replace(/[\s.]/g, ""));
+      const eurM = rawHtml.match(/(\d{1,3}(?:[.\s]\d{3})*)\s*(?:EUR|€|eur)\b/i);
+      if (eurM) {
+        price = parseInt(eurM[1].replace(/[\s.]/g, ""), 10);
+        currency = "EUR";
+      } else {
+        const ronM = rawHtml.match(/(\d{1,3}(?:[.\s]\d{3})*)\s*(?:RON|lei|Lei)\b/i);
+        if (ronM) {
+          price = parseInt(ronM[1].replace(/[\s.]/g, ""), 10);
+          currency = "RON";
+        } else {
+          const priceMatch = rawHtml.match(/([\d][.\d\s]*\d)\s*(?:eur|€)/i);
+          if (priceMatch) price = parseInt(priceMatch[1].replace(/[\s.]/g, ""), 10);
+        }
+      }
     }
 
     // --- Specs: lajumate uses labeled pairs in the specs section ---
     function findSpecValue(label: string): string | undefined {
+      const lf = stripDiacritics(label.toLowerCase());
       let result: string | undefined;
       // Look for text nodes containing the label, then grab next sibling/adjacent value
       $("div, li, span, td, dt, th").each((_, el) => {
         if (result) return;
         const text = $(el).text().trim();
-        if (text.toLowerCase().includes(label.toLowerCase()) && text.length < 100) {
+        const tNorm = stripDiacritics(text.toLowerCase());
+        if (tNorm.includes(lf) && text.length < 200) {
           // Often the value is in the same element or the next sibling
           const next = $(el).next();
           const nextText = next.text().trim();
@@ -167,28 +214,30 @@ export const adapterLajumate: SourceAdapter = {
       $('[itemprop="address"]').text().trim() ||
       undefined;
 
-    // Photos
+    // Photos — prefer galeria anunțului, apoi orice imagini conținut
     const photos: string[] = [];
-    $("img").each((_, el) => {
+    const inScope = $(
+      "[class*='ad-detail'], [class*='Anunt'], [class*='gallery'], [class*='property'], [class*='photo'], main article",
+    ).first();
+    const $scope = inScope.length ? inScope : $("body");
+    $scope.find("img").each((_, el) => {
       const src = $(el).attr("src") || $(el).attr("data-src") || $(el).attr("data-lazy-src");
+      if (!src || !src.startsWith("http")) return;
+      const low = src.toLowerCase();
+      if (low.includes("placeholder") || low.includes("no-photo") || low.includes("logo") || low.includes("icon") || low.includes("badge") || low.includes("avatar")) {
+        return;
+      }
+      if (low.includes("google") || low.includes("facebook") || low.includes("gstatic.com")) return;
       if (
-        src &&
-        src.startsWith("http") &&
-        !src.includes("placeholder") &&
-        !src.includes("no-photo") &&
-        !src.includes("logo") &&
-        !src.includes("icon") &&
-        !src.includes("badge") &&
-        !src.includes("avatar") &&
-        !src.includes("google") &&
-        !src.includes("facebook") &&
-        (src.includes("lajumate") || src.includes("cloudfront") || src.includes("cdn"))
+        low.includes("lajumate") ||
+        low.includes("cloudfront") ||
+        /cdn|static|img\.|foto|pictures|media\./i.test(low) ||
+        /\.(jpe?g|png|webp)(?:\?|$)/i.test(low)
       ) {
         photos.push(src);
       }
     });
 
-    // Also try og:image
     const ogImage = $('meta[property="og:image"]').attr("content");
     if (ogImage && ogImage.startsWith("http")) photos.unshift(ogImage);
 

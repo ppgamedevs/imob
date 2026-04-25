@@ -21,10 +21,14 @@ type POILayerKey = (typeof POI_LAYERS)[number]["key"];
 export default function CompsClientBlock({
   comps,
   center,
+  listMode = "full",
 }: {
   comps: CompItem[];
   center?: { lat?: number | null; lng?: number | null };
+  /** `full` = carousel + map; `map` = map and layers only (when list is a table above). */
+  listMode?: "full" | "map";
 }) {
+  const showCarousel = listMode === "full";
   const [hoverId, setHoverId] = useState<string | null>(null);
 
   // Seismic state
@@ -144,8 +148,8 @@ export default function CompsClientBlock({
 
   return (
     <div>
-      <CompsCarousel items={comps} onHover={setHoverId} />
-      <div className="mt-3">
+      {showCarousel ? <CompsCarousel items={comps} onHover={setHoverId} /> : null}
+      <div className={showCarousel ? "mt-3" : ""}>
         <CompsMap
           items={comps.map((c) => ({ id: c.id, lat: c.lat, lng: c.lng }))}
           center={center}

@@ -1,18 +1,18 @@
 const proofItems = [
   {
-    value: "95%",
-    label: "Acuratețe estimări",
-    hint: "bazat pe modele și comparabile locale",
+    value: "AVM + comparabile",
+    label: "Reper de piață",
+    hint: "model intern calibrat pe anunțuri și tranzacții acolo unde sunt disponibile",
   },
   {
-    value: "10.000+",
-    label: "Analize efectuate",
-    hint: "de utilizatori care au verificat anunțuri reale",
+    value: "București · Ilfov",
+    label: "Acoperire principală",
+    hint: "precizia scade în zone cu mai puține date; îți spunem când e cazul",
   },
   {
-    value: "500+",
-    label: "Zone acoperite",
-    hint: "București și extindere continuă",
+    value: "Previzualizare",
+    label: "înainte de plată",
+    hint: "vezi o parte din raport gratuit, apoi alegi dacă deblochezi restul",
   },
 ] as const;
 

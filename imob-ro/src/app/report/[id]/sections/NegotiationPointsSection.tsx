@@ -11,6 +11,8 @@ interface Props {
   suggestedLow?: number | null;
   suggestedHigh?: number | null;
   currency?: string;
+  /** When false, show a thin-data notice instead of price-anchored arguments. */
+  canShowSubstantiveArguments?: boolean;
 }
 
 const ICON_MAP: Record<string, string> = {
@@ -134,7 +136,25 @@ export default function NegotiationPointsSection({
   suggestedLow,
   suggestedHigh,
   currency = "EUR",
+  canShowSubstantiveArguments = true,
 }: Props) {
+  if (!canShowSubstantiveArguments) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Asistent negociere</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-muted-foreground">
+          <p>
+            Nu afișăm încă argumente de negociere ancorate concret de preț: fie comparabilele sunt
+            prea puține, fie lipsește un reper de zonă. Poți nota 2–3 anunțuri reale comparabile, apoi
+            revin argumentele când baza e mai solidă.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (points.length === 0) return null;
   const fmt = (n: number) => n.toLocaleString("ro-RO");
 
@@ -142,7 +162,7 @@ export default function NegotiationPointsSection({
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base">Cum negociezi</CardTitle>
+          <CardTitle className="text-base">Asistent negociere</CardTitle>
           <Badge variant="outline" className="text-[10px]">
             {points.length} argumente
           </Badge>
@@ -150,7 +170,8 @@ export default function NegotiationPointsSection({
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-xs text-muted-foreground">
-          Argumente de negociere generate automat din datele raportului. Apasa pentru detalii si intrebari sugerate.
+          Argumente concrete, întrebări înainte de vizionare și un mesaj scurt gata de trimis. Deschide fiecare
+          punct pentru dovadă și text sugerat.
         </p>
 
         {suggestedLow != null && suggestedHigh != null && (

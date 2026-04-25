@@ -9,6 +9,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { prisma } from "@/lib/db";
+import { flags } from "@/lib/flags";
 
 export const metadata: Metadata = {
   title: "Preturi imobiliare Bucuresti - Statistici si tendinte 2026",
@@ -232,16 +233,39 @@ export default async function BucharestPage() {
             Descoperă statistici detaliate, tendințe și oferte pentru fiecare zonă
           </p>
           <div className="flex gap-4 justify-center flex-wrap">
-            <Link href="/discover">
-              <button className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90">
-                Caută proprietăți
+            <Link href="/analyze">
+              <button
+                type="button"
+                className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90"
+              >
+                Verifică un anunț
               </button>
             </Link>
-            <Link href="/search">
-              <button className="px-6 py-3 border rounded-lg font-semibold hover:bg-muted">
-                Browse toate zonele
+            <Link href="/ghid">
+              <button
+                type="button"
+                className="px-6 py-3 border rounded-lg font-semibold hover:bg-muted"
+              >
+                Ghiduri cumpărător
               </button>
             </Link>
+            {flags.discover && (
+              <Link href="/discover">
+                <button
+                  type="button"
+                  className="px-6 py-3 border border-primary/30 rounded-lg font-semibold hover:bg-muted text-primary"
+                >
+                  Caută în piață
+                </button>
+              </Link>
+            )}
+            {flags.navSearch && (
+              <Link href="/search">
+                <button type="button" className="px-6 py-3 border rounded-lg font-semibold hover:bg-muted">
+                  Zone (căutare)
+                </button>
+              </Link>
+            )}
           </div>
         </CardContent>
       </Card>

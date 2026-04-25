@@ -1,6 +1,9 @@
 /**
  * Confidence scoring for analysis reports.
  * Determines how reliable the AVM estimate is based on data quality.
+ *
+ * For stricter, report-wide guardrails (verdict, preview, PDF), use `buildReportDataQualityGate`
+ * in `src/lib/report/data-quality-gate.ts` next to this score.
  */
 
 import { CONFIDENCE_COMPS_LOW, CONFIDENCE_COMPS_MEDIUM, CONFIDENCE_MAX_AGE_DAYS } from "@/lib/constants";

@@ -48,22 +48,22 @@ const SITE_URL =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "ImobIntel - Analiza imobiliara inteligenta pentru Bucuresti",
+    default: "ImobIntel - Raport pentru cumpărători de apartamente (din anunț)",
     template: "%s | ImobIntel",
   },
   description:
-    "Pret estimat, comparabile, viteza de vanzare si risc seismic pentru apartamente din Bucuresti. Analiza gratuita bazata pe date reale.",
+    "Lipești linkul anunțului, primești o previzualizare, apoi poți debloca raportul complet: reper de preț, riscuri, negociere. Rezultate orientative, pe baza datelor publice; acoperire principală București și Ilfov.",
   keywords: [
     "imobiliare",
     "Bucuresti",
     "apartamente",
-    "pret estimat",
+    "reper pret",
     "AVM",
-    "evaluare proprietate",
+    "analiza anunt",
     "imobintel",
-    "analiza imobiliara",
-    "pret apartament bucuresti",
     "comparabile imobiliare",
+    "cumpărare apartament",
+    "verificare anunt imobiliare",
   ],
   authors: [{ name: "ImobIntel" }],
   creator: "ImobIntel",
@@ -84,23 +84,23 @@ export const metadata: Metadata = {
     locale: "ro_RO",
     url: SITE_URL,
     siteName: "ImobIntel",
-    title: "ImobIntel - Analiza imobiliara inteligenta pentru Bucuresti",
+    title: "ImobIntel - Raport pentru cumpărători de apartamente (din anunț)",
     description:
-      "Pret estimat, comparabile, viteza de vanzare si risc seismic pentru apartamente din Bucuresti.",
+      "Previzualizare apoi raport complet: reper, riscuri, negociere. Orientativ, pe date publice; nu este evaluare oficială.",
     images: [
       {
         url: `${SITE_URL}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "ImobIntel - Analiza imobiliara inteligenta",
+        alt: "ImobIntel - raport cumpărător",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "ImobIntel - Analiza imobiliara inteligenta pentru Bucuresti",
+    title: "ImobIntel - Raport pentru cumpărători de apartamente (din anunț)",
     description:
-      "Pret estimat, comparabile, viteza de vanzare si risc seismic pentru apartamente din Bucuresti.",
+      "Previzualizare apoi raport complet: reper, riscuri, negociere. Orientativ, pe date publice; nu este evaluare oficială.",
     images: [`${SITE_URL}/og-image.png`],
   },
   alternates: {
@@ -122,7 +122,7 @@ export default function RootLayout({
     name: "ImobIntel",
     url: SITE_URL,
     logo: `${SITE_URL}/logo.png`,
-    description: "Platforma de analiza imobiliara inteligenta pentru Bucuresti",
+    description: "Rapoarte din link de anunț pentru cumpărători; reper orientativ, nu evaluare oficială.",
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "Customer Service",
@@ -136,7 +136,7 @@ export default function RootLayout({
     "@type": "WebSite",
     name: "ImobIntel",
     url: SITE_URL,
-    description: "Analiza imobiliara inteligenta pentru Bucuresti",
+    description: "Rapoarte orientative din anunțuri pentru cumpărători de apartamente",
     potentialAction: {
       "@type": "SearchAction",
       target: {

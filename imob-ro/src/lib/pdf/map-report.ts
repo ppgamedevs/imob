@@ -6,8 +6,18 @@ import {
   detectDevelopmentStatus,
 } from "@/lib/analysis/development-detect";
 import { prisma } from "@/lib/db";
+import { flags } from "@/lib/feature-flags";
 import { inferLocationFromText, nearestStationM } from "@/lib/geo";
+import { sanitizeRooms } from "@/lib/property-type";
 import type { LlmTextExtraction } from "@/lib/llm/types";
+import {
+  buildReportDataQualityGate,
+  type ReportDataQuality,
+} from "@/lib/report/data-quality-gate";
+import { buildReportConfidenceExplanation } from "@/lib/report/report-confidence-explanation";
+import { buildNegotiationAssistant } from "@/lib/report/negotiation-assistant";
+import { findComparables, computeFairRange, type FairPriceResult } from "@/lib/report/pricing";
+import { generateNegotiationPoints, type NegotiationInput } from "@/lib/report/negotiation";
 import { computeExecutiveVerdict, type VerdictInput } from "@/lib/report/verdict";
 import {
   applyReportRiskVisibility,
@@ -71,7 +81,12 @@ export type PdfReportData = {
 
   // Executive verdict
   verdictLabel?: string | null;
+  buyerVerdictKey?: string | null;
+  buyerVerdictTitle?: string | null;
+  buyerVerdictSubtitle?: string | null;
   verdictSummary?: string | null;
+  reportConfidenceLabelRo?: string | null;
+  reportConfidenceShortRo?: string | null;
   confidenceScore?: number | null;
   confidenceLabel?: string | null;
   dealKillers?: string[] | null;
@@ -107,7 +122,77 @@ export type PdfReportData = {
   riskStackTopSummary?: string | null;
   riskStackInsights?: string[] | null;
   riskStackRecommendedNextStep?: string | null;
+
+  canShowYield?: boolean | null;
+  reportDataQuality?: ReportDataQuality | null;
+
+  /** PDF premium: metadata and structured sections */
+  reportDateRo?: string | null;
+  coverDisclaimerShortRo?: string | null;
+  /** fair range used for executive summary and negotiation (comparables when available) */
+  fairRangeLow?: number | null;
+  fairRangeMid?: number | null;
+  fairRangeHigh?: number | null;
+  /** "comparabile" when from computeFairRange, else AVM / model */
+  fairRangeSource?: "comparabile" | "model" | null;
+  diffVsFairPct?: number | null;
+  diffVsFairExplanationRo?: string | null;
+  executiveRisksRo?: string[];
+  executiveNegotiationAngleRo?: string | null;
+  dataGapsRo?: string[];
+  compsConfidenceNoteRo?: string | null;
+  compRows?: Array<{
+    distanceM: number | null;
+    areaM2: number | null;
+    rooms: number | null;
+    priceEur: number | null;
+    eurM2: number | null;
+    titleShort: string | null;
+  }>;
+  pdfNegotiation?: {
+    strategyTitleRo: string;
+    strategyBodyRo: string;
+    leverageBulletsRo: string[];
+    practicalQuestionsRo: string[];
+    suggestedMessageRo: string;
+  } | null;
+  finalChecklistRo?: string[];
+  methodologyBodyRo?: string | null;
 };
+
+export function pdfNoEmDash(s: string): string {
+  return s
+    .replace(/\u2014/g, ", ")
+    .replace(/\u2013/g, " ")
+    .replace(/[–—]/g, ", ");
+}
+
+export function buildPdfDiffExplanationRo(
+  pct: number | null,
+  canStrongPrice: boolean,
+  hasPriceAndBaseline: boolean,
+): string {
+  if (pct == null || !hasPriceAndBaseline) {
+    return "Nu putem descrie o diferență procentuală rezonabilă: lipsesc fie prețul listat, fie un reper de interval suficient de ancorat din datele curente. Folosește tabelul și secțiunile de mai jos doar ca reper, nu ca promisiune de tranzacție.";
+  }
+  const abs = Math.abs(pct);
+  const over = pct > 0;
+  if (canStrongPrice) {
+    return over
+      ? `Față de reperul central al intervalului folosit, prețul cerut este la aproximativ ${abs}% deasupra. Este o diferență orientativă din model și comparabile publice, nu o evaluare ANEVAR sau o cifră de negociere garantată.`
+      : `Față de reperul central, prețul cerut este la aproximativ ${abs}% sub reper (orientativ; surse: anunțuri și model, nu tranzacții oficiale centralizate aici).`;
+  }
+  return `Față de reperul central, diferența indicativă este de aproximativ ${abs}% ${over ? "peste" : "sub"} reper, dar baza e limitată (suficiente date lipsesc pentru o concluzie tare). Cere confirmări suplimentare la vizionare.`;
+}
+
+const PDF_FINAL_CHECKLIST_RO: string[] = [
+  "Extras CF (carte funciară) la zi, cu mențiuni despre sarcini, ipoteci, urmărire și notă de intabulare.",
+  "Situația la asociația de proprietari: datorii, fund de reparații, lucrări aprobate, procese, litigii.",
+  "Certificat energetic, plus avize (ISU) și acte de autorizație, dacă există finisaje sau compartimentări fără viza din proiect.",
+  "Garanții, recepții și documentație șantier, dacă e locuință nouă sau în finalizare.",
+  "Dacă imobilul e vechi sau e în clasă de risc seismic discutabilă, verificare de specialitate (tehnică, structură) înainte de ofertă fermă.",
+  "Scenarii notar, taxe, TVA, comisioane, bancă: sume și clauze pe hârtie înainte de antecontract.",
+];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -234,7 +319,14 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     riskInsights.dominantKey,
   );
 
-  const comps = await prisma.compMatch.count({ where: { analysisId } });
+  const [comps, compTableRowsRaw] = await Promise.all([
+    prisma.compMatch.count({ where: { analysisId } }),
+    prisma.compMatch.findMany({
+      where: { analysisId },
+      orderBy: [{ score: "desc" }, { distanceM: "asc" }],
+      take: 12,
+    }),
+  ]);
 
   const priceEur =
     typeof f?.priceEur === "number"
@@ -246,6 +338,7 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
       : ((a.extractedListing?.areaM2 as number | null) ?? null);
   const rooms =
     typeof f?.rooms === "number" ? f.rooms : ((a.extractedListing?.rooms as number | null) ?? null);
+  const saneRoomsForNeg = sanitizeRooms(rooms, a.extractedListing?.title ?? null);
   const yearBuilt =
     typeof f?.yearBuilt === "number"
       ? f.yearBuilt
@@ -293,6 +386,39 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     devPriceText,
   );
 
+  let compsFairRange: FairPriceResult | null = null;
+  if (flags.pricingV2 && areaM2 && areaM2 > 0) {
+    try {
+      const tightComps = await findComparables({
+        analysisId,
+        lat: typeof lat === "number" ? lat : null,
+        lng: typeof lng === "number" ? lng : null,
+        areaM2,
+        rooms: saneRoomsForNeg,
+        yearBuilt,
+      });
+      compsFairRange = computeFairRange(tightComps, areaM2);
+    } catch {
+      /* non-fatal: fall back to AVM band */
+    }
+  }
+
+  const bestRange: { low: number; mid: number; high: number } | null =
+    compsFairRange && compsFairRange.compsUsed > 0
+      ? {
+          low: compsFairRange.fairMin,
+          mid: compsFairRange.fairMid,
+          high: compsFairRange.fairMax,
+        }
+      : avmLow != null && avmMid != null && avmHigh != null
+        ? { low: avmLow, mid: avmMid, high: avmHigh }
+        : null;
+
+  const negotiationOverpricingPct =
+    priceEur && bestRange?.mid
+      ? Math.round(((priceEur - bestRange.mid) / bestRange.mid) * 100)
+      : null;
+
   // VAT computation
   const hasPlusTVA = pdfDevSignals.hasVAT || sm?.plusTVA === true;
   const vatRate = pdfDevSignals.vatRate ?? (hasPlusTVA ? 19 : null);
@@ -301,17 +427,117 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
   const reducedVATCheck =
     hasPlusTVA && priceEur ? checkReducedVATEligibility(priceEur, areaM2) : null;
 
+  const confFromExplain = isRecord(explainRecord?.confidence)
+    ? (explainRecord.confidence as { level?: string })
+    : null;
+  const pipelinePdfLevel =
+    confFromExplain?.level === "high" ||
+    confFromExplain?.level === "medium" ||
+    confFromExplain?.level === "low"
+      ? (confFromExplain.level as "high" | "medium" | "low")
+      : null;
+  const reportConfidenceForPdf = buildReportConfidenceExplanation({
+    features: f as import("@/lib/types/pipeline").NormalizedFeatures,
+    compCount: comps,
+    oldestCompDays:
+      typeof (compsExplain as { oldestCompDays?: unknown })?.oldestCompDays === "number"
+        ? ((compsExplain as { oldestCompDays: number }).oldestCompDays)
+        : null,
+    pipelineConfidenceLevel: pipelinePdfLevel,
+    hasListingPrice: priceEur != null && priceEur > 0,
+    hasListingArea: areaM2 != null && areaM2 > 0,
+    hasListingRooms: rooms != null,
+    hasFloor: level != null,
+    hasYearBuilt: yearBuilt != null,
+  });
+
+  const reportDataQualityForPdf = buildReportDataQualityGate({
+    features: f as import("@/lib/types/pipeline").NormalizedFeatures,
+    compCount: comps,
+    oldestCompDays:
+      typeof (compsExplain as { oldestCompDays?: unknown })?.oldestCompDays === "number"
+        ? ((compsExplain as { oldestCompDays: number }).oldestCompDays)
+        : null,
+    hasPrice: priceEur != null && priceEur > 0,
+    hasArea: areaM2 != null && areaM2 > 0,
+    hasRooms: rooms != null,
+    hasYearBuilt: yearBuilt != null,
+    hasAreaPriceBaseline: avmMid != null && avmMid > 0,
+    yieldGross,
+    yieldNet,
+    riskStack: normalizedRiskStack,
+  });
+
+  const negSeismicClass =
+    (seismicExplain?.riskClass as string) ??
+    (typeof riskClass === "string" ? riskClass : null);
+  const seismicNearbyPdf = seismicExplain?.nearby as
+    | { total?: number; buildings?: { distanceM: number }[] }
+    | undefined;
+
+  const negotiationInput: NegotiationInput = {
+    askingPrice: priceEur,
+    fairMin: compsFairRange?.fairMin ?? bestRange?.low ?? null,
+    fairMax: compsFairRange?.fairMax ?? bestRange?.high ?? null,
+    fairMid: compsFairRange?.fairMid ?? bestRange?.mid ?? null,
+    medianEurM2: compsFairRange?.medianEurM2 ?? compsStats?.median ?? null,
+    compsUsed: compsFairRange && compsFairRange.compsUsed > 0 ? compsFairRange.compsUsed : comps,
+    currency: (a.extractedListing?.currency as string) ?? "EUR",
+    areaM2,
+    rooms: saneRoomsForNeg,
+    yearBuilt,
+    floor: level,
+    hasParking: llmText?.hasParking ?? null,
+    hasElevator,
+    condition: llmText?.condition ?? null,
+    priceDrops: 0,
+    maxDropAmount: 0,
+    totalSnapshots: 0,
+    duplicateCount: 0,
+    wasRemoved: false,
+    seismicRiskClass: negSeismicClass,
+    seismicNearbyCount: typeof seismicNearbyPdf?.total === "number" ? seismicNearbyPdf.total : 0,
+    seismicNearbyClosestM: seismicNearbyPdf?.buildings?.[0]?.distanceM ?? null,
+    nightlifeScore: null,
+    zoneTypeKey: null,
+    transitScore: null,
+    nearestMetroName: metroData?.name ?? null,
+    nearestMetroMinutes: nearestMetroMinutes,
+  };
+  const negotiationPoints = generateNegotiationPoints(negotiationInput);
+  const pdfNegotiationAssistant = buildNegotiationAssistant({
+    title: a.extractedListing?.title ?? null,
+    overpricingPct: negotiationOverpricingPct,
+    confidenceLevel: confFromExplain?.level ?? null,
+    compsCount: comps,
+    canShowStrongPricePosition: reportDataQualityForPdf.canShowStrongPricePositionLanguage,
+    canShowSubstantiveNegotiation: reportDataQualityForPdf.canShowNegotiationArguments,
+    hasYearBuilt: yearBuilt != null,
+    seismicRiskClass: negSeismicClass,
+    isRender: pdfDevSignals.isRender,
+    isUnderConstruction: pdfDevSignals.isUnderConstruction,
+    points: negotiationPoints,
+  });
+
   // Compute executive verdict for PDF
   const verdictInput: VerdictInput = {
+    confidenceSuppressStrong: reportConfidenceForPdf.shouldSuppressStrongVerdict,
+    dataQuality: {
+      canShowPriceVerdict: reportDataQualityForPdf.canShowPriceVerdict,
+      canShowStrongOverUnderLanguage: reportDataQualityForPdf.canShowStrongPricePositionLanguage,
+      canShowLocationClaims: reportDataQualityForPdf.canShowNeighborhoodRiskClaims,
+      canShowContextualRiskNarrative: !reportDataQualityForPdf.contextualRiskDataInsufficient,
+      canShowFirmBuyerRecommendation: reportDataQualityForPdf.canShowStrongBuyerVerdict,
+    },
     askingPrice: priceEur,
-    avmLow: avmLow,
-    avmMid: avmMid,
-    avmHigh: avmHigh,
+    avmLow: bestRange?.low ?? avmLow,
+    avmMid: bestRange?.mid ?? avmMid,
+    avmHigh: bestRange?.high ?? avmHigh,
     currency: (a.extractedListing?.currency as string) ?? "EUR",
     confidenceLevel: null,
     confidenceScore: avmConf != null ? Math.round(avmConf * 100) : null,
     compsCount: comps,
-    seismicRiskClass: riskClass,
+    seismicRiskClass: negSeismicClass,
     seismicConfidence: null,
     seismicMethod: null,
     llmRedFlags: llmText?.redFlags ?? null,
@@ -353,8 +579,11 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     : undefined;
   const apartmentScoreResult = computeApartmentScore({
     listingPriceEur: priceEur ?? undefined,
-    fairLikelyEur: avmMid ?? 0,
-    range80: { min: avmLow ?? 0, max: avmHigh ?? 0 },
+    fairLikelyEur: bestRange?.mid ?? avmMid ?? 0,
+    range80: {
+      min: bestRange?.low ?? avmLow ?? 0,
+      max: bestRange?.high ?? avmHigh ?? 0,
+    },
     range95: { min: (avmLow ?? 0) * 0.9, max: (avmHigh ?? 0) * 1.1 },
     confidence: avmConf != null ? Math.round(avmConf * 100) : 30,
     yearBucket,
@@ -378,6 +607,63 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     isUnderConstruction: pdfDevSignals.isUnderConstruction,
     isNeverLivedIn: sm?.neverLivedIn === true,
   });
+
+  const compRowsMapped = compTableRowsRaw.map((r) => {
+    const t = r.title?.trim() ?? null;
+    const titleShort =
+      t && t.length > 44 ? `${t.slice(0, 42)}…` : t;
+    return {
+      distanceM: r.distanceM ?? null,
+      areaM2: r.areaM2 != null ? Math.round(r.areaM2 * 10) / 10 : null,
+      rooms: r.rooms != null ? Math.round(r.rooms) : null,
+      priceEur: r.priceEur ?? null,
+      eurM2: r.eurM2 != null ? Math.round(r.eurM2) : null,
+      titleShort,
+    };
+  });
+
+  const executiveRisksRo: string[] = [];
+  for (const d of verdict.dealKillers) {
+    if (d.text && executiveRisksRo.length < 3) executiveRisksRo.push(pdfNoEmDash(d.text));
+  }
+  for (const ins of riskInsights.items) {
+    if (executiveRisksRo.length >= 4) break;
+    const line = typeof ins === "string" ? ins : String(ins);
+    if (line && !executiveRisksRo.some((e) => e.slice(0, 40) === line.slice(0, 40))) {
+      executiveRisksRo.push(pdfNoEmDash(line));
+    }
+  }
+  if (executiveRisksRo.length === 0) {
+    executiveRisksRo.push(
+      "Nu am identificat riscuri critice explicite din motor; riscurile rămân la verificare practică.",
+    );
+  }
+
+  const firstLeverage = pdfNegotiationAssistant.leverageBulletsRo[0];
+  const executiveNegotiationAngleRo = pdfNoEmDash(
+    firstLeverage?.length
+      ? firstLeverage
+      : pdfNegotiationAssistant.strategy.bodyRo.length > 24
+        ? `${pdfNegotiationAssistant.strategy.bodyRo.split(".")[0] ?? pdfNegotiationAssistant.strategy.bodyRo}.`
+        : pdfNegotiationAssistant.strategy.bodyRo,
+  );
+
+  const hasBaseline = bestRange != null && priceEur != null;
+  const diffVsFairExplanationRo = buildPdfDiffExplanationRo(
+    negotiationOverpricingPct,
+    reportDataQualityForPdf.canShowStrongPricePositionLanguage,
+    hasBaseline,
+  );
+  const dataGapsRo = reportDataQualityForPdf.reasonsRo.map(pdfNoEmDash);
+  const methodologyBodyRo = pdfNoEmDash(
+    "Preturile de reper se bazează pe anunțuri similare din zonă, filtrate și ajustate în model. Concluzia nu e tranzacție, nu e evaluare ANEVAR, și nu ține loc de certitudine. Riscurile includ surse publice, cu posibile nepotriviri de adresă sau date incomplete. Pentru o decizie mare, validează pe teren, la asociație, la notar și, dacă e cazul, la specialist structură sau juridic.",
+  );
+  const reportDateRo = new Date().toLocaleDateString("ro-RO", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+  const compsConfidenceNoteRo = `${reportConfidenceForPdf.shortExplanationRo} Am folosit ${comps} comparabile apropiate în acest studiu, cu limitările domeniului public.`;
 
   return {
     id: a.id,
@@ -431,6 +717,11 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
     llmRedFlags: llmText?.redFlags ?? null,
     llmPositives: llmText?.positives ?? null,
     verdictLabel: verdict.verdict,
+    buyerVerdictKey: verdict.buyerVerdict.key,
+    buyerVerdictTitle: verdict.buyerVerdict.title,
+    buyerVerdictSubtitle: verdict.buyerVerdict.subtitle,
+    reportConfidenceLabelRo: reportConfidenceForPdf.labelRo,
+    reportConfidenceShortRo: reportConfidenceForPdf.shortExplanationRo,
     verdictSummary: verdict.summary,
     confidenceScore: verdict.confidenceScore,
     confidenceLabel: verdict.confidenceLabel,
@@ -461,5 +752,32 @@ export async function loadPdfReportData(analysisId: string): Promise<PdfReportDa
       : null,
     riskStackInsights: riskInsights.items,
     riskStackRecommendedNextStep: riskRecommendation,
+    canShowYield: reportDataQualityForPdf.canShowYield,
+    reportDataQuality: reportDataQualityForPdf.reportQuality,
+
+    reportDateRo,
+    coverDisclaimerShortRo:
+      "Document informativ pentru cumpărător, nu consultanță juridică și nu evaluare ANEVAR. Verifică orice cifră la fața locului.",
+    fairRangeLow: bestRange?.low ?? null,
+    fairRangeMid: bestRange?.mid ?? null,
+    fairRangeHigh: bestRange?.high ?? null,
+    fairRangeSource:
+      compsFairRange && compsFairRange.compsUsed > 0 ? ("comparabile" as const) : ("model" as const),
+    diffVsFairPct: negotiationOverpricingPct,
+    diffVsFairExplanationRo,
+    executiveRisksRo,
+    executiveNegotiationAngleRo,
+    dataGapsRo,
+    compsConfidenceNoteRo,
+    compRows: compRowsMapped,
+    pdfNegotiation: {
+      strategyTitleRo: pdfNegotiationAssistant.strategy.titleRo,
+      strategyBodyRo: pdfNegotiationAssistant.strategy.bodyRo,
+      leverageBulletsRo: pdfNegotiationAssistant.leverageBulletsRo,
+      practicalQuestionsRo: pdfNegotiationAssistant.practicalQuestionsRo,
+      suggestedMessageRo: pdfNegotiationAssistant.suggestedMessageRo,
+    },
+    finalChecklistRo: PDF_FINAL_CHECKLIST_RO,
+    methodologyBodyRo,
   };
 }

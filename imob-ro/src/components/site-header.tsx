@@ -1,3 +1,7 @@
+/**
+ * Legacy / alternate header (not mounted in `app/layout.tsx`).
+ * The public site uses `AppHeader` + `AppFooter` + `MobileBar`.
+ */
 import { Menu, Search } from "lucide-react";
 import Link from "next/link";
 

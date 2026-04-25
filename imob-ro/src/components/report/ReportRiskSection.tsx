@@ -46,6 +46,8 @@ export default function ReportRiskSection({
   seismic,
   vibeZoneTypeKey,
   seismicRiskClass,
+  contextualRiskDataInsufficient,
+  locationClaimsLimited,
 }: {
   airQuality: AirQualityReading | null;
   seismic: BuyerSeismicView;
@@ -53,10 +55,17 @@ export default function ReportRiskSection({
   vibeZoneTypeKey?: string | null;
   /** Pipeline / match seismic class when available. */
   seismicRiskClass?: string | null;
+  /** Pollution/traffic layers are placeholder — do not read as coverage. */
+  contextualRiskDataInsufficient?: boolean;
+  /** Weak geocoding: soften zone / traffic copy. */
+  locationClaimsLimited?: boolean;
 }) {
   const airLine = buildAirSummary(airQuality);
   const seismicLine = buildSeismicSummary(seismic, seismicRiskClass ?? null);
-  const trafficLine = trafficFromZone(vibeZoneTypeKey);
+  const trafficLine =
+    locationClaimsLimited
+      ? "Nu avem date suficiente pentru a rezuma traficul de zonă în mod fiabil (localizare aproximativă sau comparabile puține)."
+      : trafficFromZone(vibeZoneTypeKey);
 
   return (
     <section className="space-y-4" aria-labelledby="report-risk-heading">
@@ -72,6 +81,13 @@ export default function ReportRiskSection({
         </p>
       </div>
 
+      {contextualRiskDataInsufficient ? (
+        <p className="rounded-xl border border-amber-200/90 bg-amber-50/60 px-4 py-3 text-sm text-amber-950">
+          Risc & mediu (zone neintegrate):{" "}
+          <span className="font-medium">nu avem date suficiente</span> în acest moment pentru o hartă
+          completă de poluare / trafic. Semnalele de mai jos sunt generale, nu o evaluare pe stradă.
+        </p>
+      ) : null}
       <div className="rounded-xl border border-slate-200/90 bg-slate-50/40 px-4 py-3 text-sm text-slate-800 space-y-2.5">
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
           <span className="text-base" aria-hidden>

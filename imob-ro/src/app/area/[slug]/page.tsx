@@ -44,13 +44,15 @@ export async function generateMetadata({ params }: AreaPageProps): Promise<Metad
   return {
     title,
     description,
+    /** Zona publică indexabilă este /zona/[slug]; /area rămâne pentru UI detaliat fără duplicat SEO. */
     alternates: {
-      canonical: `/area/${slug}`,
+      canonical: `/zona/${slug}`,
     },
+    robots: { index: false, follow: true },
     openGraph: {
       title: `${kpis.name} - Date imobiliare în timp real`,
       description,
-      url: `/area/${slug}`,
+      url: `/zona/${slug}`,
       type: "website",
       images: [
         {

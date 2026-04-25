@@ -132,7 +132,7 @@ export default function PriceAnchorsSection({
               <SectionTrustFooter
                 className="mt-3 bg-white/80"
                 whatThisMeans="Fara estimare, nu stii daca listarea e la piata sau nu - nu te baza doar pe pretul din anunt."
-                nextStep="Recomandare: foloseste o evaluare independenta sau 3-4 anunturi comparabile verificate manual."
+                nextStep="Dacă vrei o opinie de valoare formală, cere o evaluare ANEVAR sau alătură 3-4 anunțuri verificate manual ca reper, pe lângă semnalul de aici."
               />
             </div>
 

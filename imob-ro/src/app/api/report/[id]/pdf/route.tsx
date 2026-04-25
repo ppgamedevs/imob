@@ -4,8 +4,19 @@ import { NextResponse } from "next/server";
 import ReportPdf from "@/components/pdf/ReportPdf";
 import { auth } from "@/lib/auth";
 import { canUse, incUsage } from "@/lib/billing/entitlements";
+import {
+  canViewFullReportFromRequest,
+  isPerReportUnlockPdfQuotaExempt,
+} from "@/lib/billing/report-unlock";
 import { loadPdfReportData } from "@/lib/pdf/map-report";
 
+/**
+ * PDF: acces = canViewFullReportFromRequest (plată per raport, Pro, abonament, cookie guest HMAC, sau `?unlock_token=` același token).
+ * Cota lunară PDF (abonament) nu se consumă la deblocare 49 RON / guest cookie; vezi isPerReportUnlockPdfQuotaExempt.
+ * Fără deblocare: 403 JSON (unlock_required). Previzualizarea nu afișează butonul PDF.
+ * Nu loga `req.url` complet: conținutul query poate include `unlock_token` (bearer) — acest route doar
+ * citește `unlock_token` și nu îl reafișează.
+ */
 function bool(q: URLSearchParams, key: string, def = true) {
   const v = q.get(key);
   if (v == null) return def;
@@ -16,10 +27,31 @@ export const runtime = "nodejs";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  // Day 23 - Check PDF generation limit
   const session = await auth();
-  if (session?.user?.id) {
-    const check = await canUse(session.user.id, "pdf");
+  const userId = session?.user?.id ?? null;
+  const cookieHeader = req.headers.get("cookie");
+  const url = new URL(req.url);
+  const unlockToken = url.searchParams.get("unlock_token");
+
+  const full = await canViewFullReportFromRequest(id, userId, cookieHeader, unlockToken);
+  if (!full) {
+    return NextResponse.json(
+      {
+        error: "unlock_required",
+        code: "unlock_required",
+        message:
+          "Pentru PDF ai nevoie de raportul complet deblocat: plată 49 RON per raport, abonament care include conținutul, sau cont Pro. " +
+          "Dacă ai plătit deja, folosește același browser (cookie) sau conectează-te la contul cu care s-a făcut plata. " +
+          "Autentificarea nu e obligatorie dacă ai cookie-ul de deblocare după checkout.",
+      },
+      { status: 403 },
+    );
+  }
+
+  // PDF quota: one-time per-report unlock does not consume the monthly PDF counter; subscriptions still do.
+  const fromPerReport = await isPerReportUnlockPdfQuotaExempt(id, userId, cookieHeader, unlockToken);
+  if (userId && !fromPerReport) {
+    const check = await canUse(userId, "pdf");
     if (!check.allowed) {
       return NextResponse.json(
         {
@@ -27,7 +59,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
           plan: check.plan,
           used: check.used,
           max: check.max,
-          message: `${check.plan === "free" ? "Free plan" : "Pro plan"} limit reached: ${check.used}/${check.max} PDF reports this month`,
+          message: `Limita de PDF-uri: ${check.used}/${check.max} pe luna. Deblocarea 49 RON per raport (sau cookie de plata pentru acel anunț) nu consumă acest contor; cota se aplică la abonamentul lunar.`,
         },
         { status: 402 },
       );
@@ -38,7 +70,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const data = await loadPdfReportData(id);
   if (!data) return NextResponse.json({ ok: false, error: "not_found" }, { status: 404 });
 
-  const url = new URL(req.url);
   const q = url.searchParams;
 
   let logoUrl = q.get("logo") ?? process.env.PDF_BRAND_LOGO_URL ?? undefined;
@@ -74,9 +105,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const pdf = <ReportPdf data={data} brand={brand} sections={sections} />;
   const stream = await renderToStream(pdf);
 
-  // Day 23 - Increment PDF usage counter
-  if (session?.user?.id) {
-    await incUsage(session.user.id, "pdf", 1);
+  if (userId && !fromPerReport) {
+    await incUsage(userId, "pdf", 1);
   }
 
   // renderToStream returns an async iterable/stream-like value; NextResponse accepts a Readable stream.

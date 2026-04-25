@@ -4,7 +4,9 @@ import { Link2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
 
+import { BuyerReportTrustNote } from "@/components/common/buyer-report-trust-note";
 import { HeroReportPreview } from "@/components/home/hero-report-preview";
+import { postFunnelEvent } from "@/lib/tracking/funnel-client";
 
 const PORTALS = [
   "imobiliare.ro",
@@ -26,6 +28,11 @@ export function HomeHero() {
     e.preventDefault();
     const query = inputRef.current?.value?.trim();
     if (!query) return;
+    postFunnelEvent({
+      eventName: "analyze_form_submit",
+      path: "/",
+      metadata: { origin: "hero" },
+    });
     router.push(`/analyze?url=${encodeURIComponent(query)}`);
   };
 
@@ -47,19 +54,25 @@ export function HomeHero() {
               className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"
               aria-hidden
             />
-            Inteligență imobiliară pentru decizii cu date reale
+            Raport pentru cumpărători de apartamente, din linkul anunțului
           </div>
 
           <h1 className="text-[2.25rem] font-bold leading-[1.08] tracking-[-0.035em] text-gray-950 sm:text-5xl md:text-[3.25rem] md:leading-[1.06]">
-            Claritate înainte de cumpărare.
+            Lipește linkul anunțului.
             <br />
-            <span className="text-gradient">Nu plăti peste piață fără să știi.</span>
+            <span className="text-gradient">
+              Vezi cum se poziționează prețul față de piață, înainte să suni agentul.
+            </span>
           </h1>
 
           <p className="mx-auto mt-4 max-w-[560px] text-[16px] leading-relaxed text-gray-600 md:text-[17px]">
-            Lipești URL-ul unui anunț - îți spunem dacă prețul are sens, cât ar putea dura vânzarea,
-            ce riscuri merită privite și cu ce te poți întoarce la negociere.
+            Primești o previzualizare gratuită, apoi poți debloca restul raportului: semnale de risc,
+            timp estimat la vânzare (orientativ), reper de preț față de piață și idei de negociere, pe
+            baza datelor disponibile public.
           </p>
+          <div className="mx-auto mt-4 max-w-[560px]">
+            <BuyerReportTrustNote variant="compact" className="text-center sm:text-left" />
+          </div>
         </div>
 
         <div className="mx-auto mt-10 grid max-w-[1120px] gap-10 lg:mt-12 lg:grid-cols-[1fr_minmax(280px,360px)] lg:items-start lg:gap-12">
@@ -88,12 +101,12 @@ export function HomeHero() {
                 type="submit"
                 className="shrink-0 rounded-xl bg-gray-900 px-6 py-3.5 text-[14px] font-semibold text-white shadow-sm transition-colors hover:bg-gray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900 active:bg-gray-950 sm:rounded-l-none sm:rounded-r-xl sm:px-8"
               >
-                Analizează anunțul
+                Verifică un anunț
               </button>
             </form>
 
-            <p className="mt-3 text-center text-[12px] text-gray-400 sm:text-left">
-              <span className="text-gray-500">Exemplu: </span>
+            <p className="mt-3 text-center text-[12px] text-gray-500 sm:text-left">
+              <span className="text-gray-500">Exemplu (poți apăsa pentru a completa câmpul): </span>
               <button
                 type="button"
                 className="max-w-full break-all text-left font-mono text-[11px] text-gray-600 underline decoration-gray-300 underline-offset-2 transition-colors hover:text-gray-900 hover:decoration-gray-500 sm:text-[12px]"

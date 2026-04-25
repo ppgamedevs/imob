@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { ReportConfidenceExplanation } from "@/lib/report/report-confidence-explanation";
 import type { FairPriceResult } from "@/lib/report/pricing";
 import ReportClarityBadge from "./ReportClarityBadge";
 
@@ -11,6 +12,10 @@ interface Props {
   currency?: string;
   /** For trust copy (comparables count in analysis). */
   compsCount?: number;
+  /** Card heading (default: preț: ce arată datele). */
+  cardTitle?: string;
+  /** Unified confidence story (comparabile, localizare, fișă). */
+  confidenceExplanation?: ReportConfidenceExplanation | null;
 }
 
 function fmt(n: number, currency = "EUR") {
@@ -178,6 +183,8 @@ export default function VerdictSection({
   compsFair,
   currency = "EUR",
   compsCount = 0,
+  cardTitle = "Preț: ce arată datele",
+  confidenceExplanation = null,
 }: Props) {
   const fair = compsFair && compsFair.compsUsed > 0 ? compsFair : null;
   const range = fair
@@ -190,10 +197,15 @@ export default function VerdictSection({
     return (
       <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base">Preț vs. piață</CardTitle>
+          <CardTitle className="text-base">{cardTitle}</CardTitle>
           <CardDescription>Interval estimat indisponibil pentru acest punct.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
+          {confidenceExplanation && (
+            <p className="text-xs text-muted-foreground">
+              {confidenceExplanation.labelRo}: {confidenceExplanation.shortExplanationRo}
+            </p>
+          )}
           <div className="flex flex-wrap items-center gap-2">
             <ReportClarityBadge kind="unknown" />
             <span className="text-muted-foreground">Fără interval AVM în datele curente.</span>
@@ -225,7 +237,7 @@ export default function VerdictSection({
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
-            <CardTitle className="text-base">Preț vs. piață</CardTitle>
+            <CardTitle className="text-base">{cardTitle}</CardTitle>
             <CardDescription className="mt-1">
               {compsCount < 3 ? (
                 <span className="inline-flex items-center gap-1 font-medium text-amber-800">
@@ -254,6 +266,12 @@ export default function VerdictSection({
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {confidenceExplanation && (
+          <p className="rounded-lg border border-slate-100 bg-slate-50/80 px-3 py-2 text-xs leading-relaxed text-slate-700">
+            <span className="font-semibold text-slate-800">{confidenceExplanation.labelRo}.</span>{" "}
+            {confidenceExplanation.shortExplanationRo}
+          </p>
+        )}
         {/* Verdict pill lives above the fold in ReportPriceFairnessBlock */}
 
         {/* Range display */}
@@ -330,7 +348,7 @@ export default function VerdictSection({
 
         {confLevel === "low" && (
           <div className="text-xs font-semibold text-amber-900 bg-amber-50 rounded p-2">
-            ⚠ Precizie scăzută — interval larg.
+            ⚠ Precizie scăzută, interval larg.
           </div>
         )}
 

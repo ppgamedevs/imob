@@ -75,7 +75,19 @@ export const adapterPubli24: SourceAdapter = {
       }
     });
 
+    const isProductLike = (n: Record<string, unknown>) => {
+      const t = n["@type"];
+      if (Array.isArray(t)) {
+        return t.some((x) => /Product|RealEstate|Residence|Apartment|House|Offer|ProductModel/i.test(String(x)));
+      }
+      if (typeof t === "string") {
+        return /Product|RealEstate|Residence|Apartment|House|Offer|ProductModel/i.test(t);
+      }
+      return false;
+    };
+
     let ldData: Record<string, unknown> =
+      ldNodes.find((n) => isProductLike(n) && (n.name || n.offers)) ??
       ldNodes.find((n) => n.name && (n.offers || n.price)) ??
       ldNodes.find((n) => n.name) ??
       ldNodes[0] ??
@@ -99,7 +111,8 @@ export const adapterPubli24: SourceAdapter = {
 
     // --- Title ---
     const title =
-      (ldData.name as string) ??
+      (ldData.name as string) ||
+      $('meta[property="og:title"]').attr("content")?.trim() ||
       ($("h1").first().text().trim() ||
         $("title").text().split("|")[0]?.trim() ||
         $("title").text().split("•")[0]?.trim());
@@ -264,7 +277,11 @@ export const adapterPubli24: SourceAdapter = {
     const ogImage = $('meta[property="og:image"]').attr("content");
     if (ogImage && ogImage.startsWith("http")) photos.push(ogImage);
 
-    $("img").each((_, el) => {
+    const $photoRoot = $(
+      "[class*='listing-'], [class*='gallery'], [class*='anunt-'], [id*='photo'], #listing, main article",
+    ).first();
+    const $pScope = $photoRoot.length ? $photoRoot : $("body");
+    $pScope.find("img").each((_, el) => {
       const src = $(el).attr("src") || $(el).attr("data-src");
       if (
         src &&

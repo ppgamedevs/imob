@@ -1,3 +1,4 @@
+import { ReportDisclaimer } from "@/components/common/ReportDisclaimer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface Props {
@@ -44,10 +45,15 @@ export default function MethodologySection({ baselineEurM2, adjustments, compsCo
           </div>
         )}
 
-        <p className="text-xs text-muted-foreground border-t pt-2">
-          Aceasta este o estimare automata si nu constituie o evaluare imobiliara oficiala.
-          Rezultatele pot diferi de pretul real de tranzactie.
-        </p>
+        <div className="space-y-3 border-t pt-3 text-xs text-muted-foreground">
+          <p>
+            Rezultatul este o <strong className="font-medium text-foreground">estimare orientativă</strong> și un{" "}
+            <strong className="font-medium text-foreground">semnal de piață</strong>, nu un preț „corect” sau
+            garantat. Poate diferi de prețul real de tranzacționare; încrederea depinde de comparabile,
+            localizare și completitudinea datelor din anunț.
+          </p>
+          <ReportDisclaimer />
+        </div>
       </CardContent>
     </Card>
   );

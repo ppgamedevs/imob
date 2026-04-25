@@ -1,5 +1,6 @@
 "use client";
 
+import { REPORT_DISCLAIMER_FULL } from "@/components/common/ReportDisclaimer";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
@@ -1006,8 +1007,10 @@ function ResultsPanel({
 
       {/* Disclaimer */}
       <div className="rounded-xl border border-gray-100 bg-gray-50 p-3 text-[11px] text-gray-500 leading-relaxed">
-        Estimarea este orientativa si se bazeaza pe date publice din anunturi similare. Nu
-        reprezinta o evaluare oficiala.
+        <span className="block font-medium text-gray-600">
+          Estimare rapidă (formular), nu e același raport cumpărător din anunț.
+        </span>
+        <span className="mt-1 block">{REPORT_DISCLAIMER_FULL}</span>
       </div>
 
       <CtaBlock />

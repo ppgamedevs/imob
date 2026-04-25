@@ -1,26 +1,44 @@
 import Link from "next/link";
 
-const productLinks = [
-  { href: "/analyze", label: "Analizeaza" },
-  { href: "/estimare", label: "Estimare pret" },
-  { href: "/pricing", label: "Preturi" },
-  { href: "/how-we-estimate", label: "Metodologie" },
-  { href: "/help", label: "Help Center" },
-];
+import { BuyerReportTrustNote } from "@/components/common/buyer-report-trust-note";
+import { flags } from "@/lib/flags";
 
-const legalLinks = [
-  { href: "/termeni", label: "Termeni si conditii" },
-  { href: "/confidentialitate", label: "Confidentialitate" },
-  { href: "/cookies", label: "Politica cookie-uri" },
-  { href: "/prelucrare-date", label: "Prelucrare date personale" },
-];
-
-const companyLinks = [
-  { href: "/despre", label: "Despre ImobIntel" },
+/** Core links shown in footer for buyer MVP (visible, working paths). */
+const primaryNavLinks = [
+  { href: "/analyze", label: "Verifică anunț" },
+  { href: "/cum-functioneaza", label: "Cum funcționează" },
+  { href: "/pricing", label: "Prețuri" },
+  { href: "/date-si-metodologie", label: "Metodologie" },
+  { href: "/ghid", label: "Ghiduri" },
   { href: "/contact", label: "Contact" },
-  { href: "/profile", label: "Rapoartele mele" },
-  { href: "/account", label: "Contul meu" },
-];
+  { href: "/termeni", label: "Termeni" },
+  { href: "/confidentialitate", label: "Confidențialitate" },
+] as const;
+
+const legalExtra = [
+  { href: "/cookies", label: "Cookie-uri" },
+  { href: "/prelucrare-date", label: "Prelucrare date" },
+] as const;
+
+function optionalProductLinks() {
+  const out: { href: string; label: string }[] = [];
+  if (flags.secondaryProductNav) {
+    out.push({ href: "/estimare", label: "Estimare rapidă" });
+  }
+  if (flags.navSearch) {
+    out.push({ href: "/search", label: "Căutare" });
+  }
+  if (flags.discover) {
+    out.push({ href: "/discover", label: "Descoperă anunțuri" });
+  }
+  if (flags.navBucharestZones) {
+    out.push({ href: "/bucuresti", label: "Zone București" });
+  }
+  if (flags.devProjects) {
+    out.push({ href: "/developments", label: "Proiecte" });
+  }
+  return out;
+}
 
 const socialLinks = [
   {
@@ -71,23 +89,25 @@ const socialLinks = [
 ];
 
 export default function AppFooter() {
+  const opt = optionalProductLinks();
   return (
     <footer className="border-t border-gray-200/90 bg-gray-50/40">
       <div className="mx-auto max-w-[1200px] px-5 py-16 md:py-20">
-        <div className="grid grid-cols-2 gap-10 md:grid-cols-5 md:gap-12">
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-12 md:gap-12">
+          <div className="md:col-span-4">
             <Link href="/" className="flex items-center gap-2">
               <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-[10px] font-extrabold text-white">
                 iI
               </span>
               <span className="text-[16px] font-bold tracking-tight text-gray-900">ImobIntel</span>
             </Link>
-            <p className="mt-4 max-w-[240px] text-[13px] leading-relaxed text-gray-600">
-              Inteligență imobiliară pentru cumpărători și investitori din România - claritate
-              înainte de decizie.
+            <p className="mt-4 max-w-[320px] text-[13px] leading-relaxed text-gray-600">
+              Raport pentru cumpărători: lipești un anunț, vezi o previzualizare, apoi deblochezi
+              detaliile când ești gata.
             </p>
-            {/* Social icons */}
+            <div className="mt-4 max-w-[320px]">
+              <BuyerReportTrustNote variant="compact" className="text-[11px] text-gray-500" />
+            </div>
             <div className="mt-5 flex flex-wrap items-center gap-2.5">
               {socialLinks.map((s) => (
                 <a
@@ -104,13 +124,12 @@ export default function AppFooter() {
             </div>
           </div>
 
-          {/* Produs */}
-          <div>
+          <div className="md:col-span-4">
             <h4 className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500">
-              Produs
+              Navigare
             </h4>
-            <ul className="mt-5 space-y-3">
-              {productLinks.map((l) => (
+            <ul className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-x-4">
+              {primaryNavLinks.map((l) => (
                 <li key={l.href}>
                   <Link
                     href={l.href}
@@ -121,73 +140,86 @@ export default function AppFooter() {
                 </li>
               ))}
             </ul>
+            {opt.length > 0 && (
+              <div className="mt-6">
+                <h4 className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500">
+                  Mai multe (opțional)
+                </h4>
+                <ul className="mt-3 space-y-2">
+                  {opt.map((l) => (
+                    <li key={l.href}>
+                      <Link
+                        href={l.href}
+                        className="text-[13px] text-gray-500 hover:text-gray-800 transition-colors"
+                      >
+                        {l.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
-          {/* Companie */}
-          <div>
+          <div className="md:col-span-4">
             <h4 className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500">
-              Companie
+              Cont
             </h4>
-            <ul className="mt-5 space-y-3">
-              {companyLinks.map((l) => (
-                <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    className="text-[13px] text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h4 className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500">
-              Legal
-            </h4>
-            <ul className="mt-5 space-y-3">
-              {legalLinks.map((l) => (
-                <li key={l.href}>
-                  <Link
-                    href={l.href}
-                    className="text-[13px] text-gray-600 hover:text-gray-900 transition-colors"
-                  >
-                    {l.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h4 className="text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500">
-              Contact
-            </h4>
-            <ul className="mt-5 space-y-3">
+            <ul className="mt-4 space-y-2.5">
               <li>
-                <a
-                  href="mailto:contact@imobintel.ro"
+                <Link
+                  href="/profile"
                   className="text-[13px] text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                  contact@imobintel.ro
-                </a>
+                  Rapoartele mele
+                </Link>
               </li>
               <li>
                 <Link
-                  href="/contact"
+                  href="/account"
                   className="text-[13px] text-gray-600 hover:text-gray-900 transition-colors"
                 >
-                  Formular contact
+                  Setări cont
                 </Link>
               </li>
             </ul>
+            <h4 className="mt-8 text-[11px] font-bold uppercase tracking-[0.12em] text-gray-500">
+              Legal (extra)
+            </h4>
+            <ul className="mt-3 space-y-2.5">
+              {legalExtra.map((l) => (
+                <li key={l.href}>
+                  <Link
+                    href={l.href}
+                    className="text-[13px] text-gray-500 hover:text-gray-800 transition-colors"
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-6 text-[12px] text-gray-500">
+              <a href="mailto:contact@imobintel.ro" className="hover:text-gray-800">
+                contact@imobintel.ro
+              </a>
+            </div>
+            {flags.agents && (
+              <p className="mt-1 text-[11px] text-gray-400">
+                <Link href="/a/signin" className="underline hover:text-gray-600">
+                  Spațiu agenți
+                </Link>
+              </p>
+            )}
+            {flags.owners && (
+              <p className="mt-1 text-[11px] text-gray-400">
+                <Link href="/vinde" className="underline hover:text-gray-600">
+                  Pentru proprietari
+                </Link>
+              </p>
+            )}
           </div>
         </div>
 
-        {/* ANPC / SOL badges */}
         <div className="mt-14 flex flex-wrap items-center justify-center gap-4">
           <a
             href="https://anpc.ro/ce-este-sal/"
@@ -223,7 +255,6 @@ export default function AppFooter() {
           </a>
         </div>
 
-        {/* Bottom bar */}
         <div className="mt-12 border-t border-gray-200/90 pt-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex flex-col sm:flex-row items-center gap-2 text-[12px] text-gray-400">

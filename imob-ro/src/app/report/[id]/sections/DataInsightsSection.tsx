@@ -136,14 +136,24 @@ export default function DataInsightsSection(props: Props) {
         ? "Lista de neclaritati e lunga: nu te baza doar pe raport pentru oferta fermă."
         : "Date incomplete - trateaza raportul ca ghid, nu ca verdict final.";
 
+  const estIncredere =
+    props.confidenceLevel === "high"
+      ? "Încredere la estimare de preț: ridicată (în cadrul limitelor de mai jos)."
+      : props.confidenceLevel === "medium"
+        ? "Încredere la estimare de preț: medie."
+        : props.confidenceLevel === "low"
+          ? "Încredere la estimare de preț: scăzută."
+          : "Încredere la estimare: neclarificată (vezi comparații și completare date).";
+
   return (
     <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
       <CardHeader className="pb-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <CardTitle className="text-base">Ce stim sigur si ce nu din acest anunt</CardTitle>
+            <CardTitle className="text-base">Încredere în analiză: ce știm, ce nu</CardTitle>
             <CardDescription className="mt-1">
-              ✔ = reiese clar din datele extrase. ? = gol sau neclar - merita verificat.
+              {estIncredere} ✔ = reiese din datele noastre. ? = neclar sau lipsă. Nu e expertiză juridică sau
+              evaluare oficială (ANEVAR, notar, etc.).
             </CardDescription>
           </div>
           <span

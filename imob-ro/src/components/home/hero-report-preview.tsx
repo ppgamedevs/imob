@@ -32,7 +32,7 @@ export function HeroReportPreview() {
         </div>
         <div className="rounded-xl bg-emerald-50/60 px-3.5 py-3 ring-1 ring-inset ring-emerald-100/80">
           <p className="text-[11px] font-medium uppercase tracking-wide text-emerald-800/80">
-            Estimare echitabilă
+            Reper model (AVM)
           </p>
           <p className="mt-0.5 flex flex-wrap items-baseline gap-2">
             <span className="text-[20px] font-semibold tabular-nums tracking-tight text-emerald-900">
@@ -52,7 +52,7 @@ export function HeroReportPreview() {
       <div className="mt-5 grid grid-cols-3 gap-2 border-t border-gray-100 pt-4">
         <div>
           <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400">
-            Timp până la vânzare
+            Timp până la vânzare (estimare)
           </p>
           <p className="mt-1 text-[13px] font-semibold text-gray-900">4–6 luni</p>
         </div>
@@ -71,7 +71,9 @@ export function HeroReportPreview() {
       </div>
 
       <p className="mt-4 border-t border-gray-100 pt-3 text-center text-[11px] leading-relaxed text-gray-400">
-        Bazat pe modele AVM, comparabile locale și semnale de risc
+        Exemplu static. Rezultatul real folosește AVM, comparabile și riscuri acolo unde există date;
+        nu e evaluare ANEVAR, nici preț corect la literă. Timpul până la vânzare (exemplu) e tot
+        orientativ.
       </p>
     </aside>
   );

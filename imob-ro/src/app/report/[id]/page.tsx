@@ -1,7 +1,13 @@
 import { notFound } from "next/navigation";
 import React from "react";
 
+import { BuyerReportTrustNote } from "@/components/common/buyer-report-trust-note";
+import { ReportDisclaimer } from "@/components/common/ReportDisclaimer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AnalysisFailureRecovery } from "@/components/analyze/AnalysisFailureRecovery";
+import { auth } from "@/lib/auth";
+import { reasonFromAnalysisRecord } from "@/lib/analyze/analyze-failure-reasons";
+import { canViewFullReport, formatUnlockButtonLabel } from "@/lib/billing/report-unlock";
 import {
   checkReducedVATEligibility,
   computePriceWithVAT,
@@ -9,6 +15,7 @@ import {
 } from "@/lib/analysis/development-detect";
 import { prisma } from "@/lib/db";
 import { flags } from "@/lib/feature-flags";
+import { flags as appFlags } from "@/lib/flags";
 import { geocodeWithNominatim, inferLocationFromText, nearestStationM } from "@/lib/geo";
 import { normalizeReportPhotoEntry } from "@/lib/media/normalize-report-photo";
 import { getTransportSummary } from "@/lib/geo/transport";
@@ -31,6 +38,15 @@ import {
 } from "@/lib/report/negotiation";
 import { computePriceVerdictPill } from "@/lib/report/price-verdict-badge";
 import { computeFairRange, type FairPriceResult, findComparables } from "@/lib/report/pricing";
+import { buildReportDataQualityGate } from "@/lib/report/data-quality-gate";
+import { medianEurM2FromCompRows } from "@/lib/report/comps-section-metrics";
+import { buildReportConfidenceExplanation } from "@/lib/report/report-confidence-explanation";
+import { buildReportSellability } from "@/lib/report/report-sellability";
+import { buildNegotiationAssistant } from "@/lib/report/negotiation-assistant";
+import {
+  isPublicSampleReportView,
+  PUBLIC_SAMPLE_REPORT_ANALYSIS_ID,
+} from "@/lib/report/sample-public-report";
 import { buildQuickTake, computeExecutiveVerdict, type VerdictInput } from "@/lib/report/verdict";
 import {
   applyReportRiskVisibility,
@@ -47,29 +63,42 @@ import { type ApartmentScoreInput, computeApartmentScore } from "@/lib/score/apa
 import type { NormalizedFeatures } from "@/lib/types/pipeline";
 
 import AnalysisLoading from "./AnalysisLoading";
-import CompsClientBlock from "./CompsClientBlock";
 import { LlmEnrichTrigger } from "./LlmEnrichTrigger";
 import NeighborhoodIntelV2 from "./NeighborhoodIntelV2Lazy";
 import { PdfActions } from "./PdfActions";
+import { ReportUnlockPostPaymentBanner } from "./ReportUnlockPostPaymentBanner";
 import ReportChat from "./ReportChat";
-import RetryAnalysisButton from "./RetryAnalysisButton";
 import AcquisitionCostsSection from "./sections/AcquisitionCostsSection";
 import ApartmentScoreSection from "./sections/ApartmentScoreSection";
+import BuyerInvestmentSection from "./sections/BuyerInvestmentSection";
 import DataInsightsSection from "./sections/DataInsightsSection";
 import ExecutiveSummarySection from "./sections/ExecutiveSummarySection";
 import ReportAboveFoldHeader from "./sections/ReportAboveFoldHeader";
 import ReportCollapsible from "./sections/ReportCollapsible";
+import ReportConfidenceStrip from "./sections/ReportConfidenceStrip";
 import type { QuickMetricItem } from "./sections/ReportQuickMetricsStrip";
 import ListingHistorySection from "./sections/ListingHistorySection";
 import ListingInsightsSection from "./sections/ListingInsightsSection";
 import MethodologySection from "./sections/MethodologySection";
-import NegotiationPointsSection from "./sections/NegotiationPointsSection";
+import NegotiationAssistantSection from "./sections/NegotiationAssistantSection";
 import PriceAnchorsSection from "./sections/PriceAnchorsSection";
+import ReportCompsSection from "./sections/ReportCompsSection";
 import SellerChecklist from "./sections/SellerChecklist";
 import TransportSection from "./sections/TransportSection";
 import ReportRiskSection from "@/components/report/ReportRiskSection";
 import VerdictSection from "./sections/VerdictSection";
+import { FunnelTrackReportUnlockedView } from "@/components/tracking/FunnelReportViews";
+
+import { ExempluRealListingCta } from "@/components/report/ExempluRealListingCta";
 import { ViewTracker } from "./ViewTracker";
+import {
+  buildPreliminarySignal,
+  buildPreviewTeaser,
+  ReportPreviewPanel,
+} from "./report-preview-panel";
+import { getLaunchPriceBadgeRo } from "@/lib/copy/launch-pricing-ro";
+import { getReportPageIndexable } from "@/lib/seo/report-page-indexing";
+import { PaidReportFeedback } from "./PaidReportFeedback";
 
 export const dynamic = "force-dynamic";
 
@@ -279,7 +308,19 @@ function displayFloor(val: unknown): string {
   return safeDisplay(val);
 }
 
-type Props = { params: Promise<{ id?: string | string[] }> };
+type Props = {
+  params: Promise<{ id?: string | string[] }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+function portalLabelFromUrl(sourceUrl: string | null | undefined): string {
+  if (!sourceUrl) return "—";
+  try {
+    return new URL(sourceUrl).hostname.replace(/^www\./, "");
+  } catch {
+    return "—";
+  }
+}
 
 async function loadAnalysis(id: string) {
   return prisma.analysis.findUnique({
@@ -293,11 +334,32 @@ async function loadAnalysis(id: string) {
   });
 }
 
-export default async function ReportPage({ params }: Props) {
+export default async function ReportPage({ params, searchParams }: Props) {
   const resolvedParams = await params;
   const id = Array.isArray(resolvedParams.id) ? resolvedParams.id[0] : resolvedParams.id;
   if (!id) throw new Error("Missing report id");
-  const analysis = await loadAnalysis(id);
+  const sp = (await searchParams) ?? {};
+  const exempluQ = sp.exemplu;
+  const isPublicSample = isPublicSampleReportView(
+    id,
+    typeof exempluQ === "string" ? exempluQ : Array.isArray(exempluQ) ? exempluQ[0] : undefined,
+  );
+  const unlockedQ = sp.unlocked;
+  const justPaid =
+    (typeof unlockedQ === "string" && unlockedQ === "1") ||
+    (Array.isArray(unlockedQ) && unlockedQ[0] === "1");
+  const [analysis, paidUnlockForFeedback, existingReportFeedback] = await Promise.all([
+    loadAnalysis(id),
+    prisma.reportUnlock.findFirst({
+      where: { analysisId: id, status: "paid" },
+      orderBy: { createdAt: "desc" },
+      select: { id: true },
+    }),
+    prisma.reportFeedback.findUnique({
+      where: { analysisId: id },
+      select: { id: true },
+    }),
+  ]);
 
   if (!analysis) {
     notFound();
@@ -410,6 +472,10 @@ export default async function ReportPage({ params }: Props) {
 
   // Score explain data
   const scoreExplain = analysis.scoreSnapshot?.explain as Record<string, unknown> | null;
+  const rentExplainBlock = scoreExplain?.rent as { rentEur?: number } | undefined;
+  const rentEurFromSnapshot = rentExplainBlock?.rentEur ?? null;
+  const yieldGrossSnapshot = analysis.scoreSnapshot?.yieldGross ?? null;
+  const yieldNetSnapshot = analysis.scoreSnapshot?.yieldNet ?? null;
   const notarialExplain = scoreExplain?.notarial as Record<string, unknown> | undefined;
   const compsExplain = scoreExplain?.comps as Record<string, unknown> | undefined;
   const compsStats = compsExplain?.eurM2 as
@@ -632,6 +698,11 @@ export default async function ReportPage({ params }: Props) {
     compsFairRange && compsFairRange.compsUsed > 0
       ? { low: compsFairRange.fairMin, mid: compsFairRange.fairMid, high: compsFairRange.fairMax }
       : priceRange;
+  /** Peste/sub reperul de preț folosit în restul raportului (comparabile când există, altfel AVM). */
+  const negotiationOverpricingPct =
+    actualPrice && bestRange?.mid
+      ? Math.round(((actualPrice - bestRange.mid) / bestRange.mid) * 100)
+      : null;
   // Negotiation points
   const seismicNearby = seismicExplain?.nearby as
     | { total?: number; buildings?: { distanceM: number }[] }
@@ -716,8 +787,86 @@ export default async function ReportPage({ params }: Props) {
       ? checkReducedVATEligibility(actualPrice, extracted?.areaM2 as number)
       : null;
 
+  // Data confidence (user-facing; caps strong buyer verdict when data is thin)
+  const featuresForConfidence = (f ?? {}) as NormalizedFeatures;
+  const pipelineConfLevel = confidenceData?.level;
+  const pipelineLevelResolved =
+    pipelineConfLevel === "high" || pipelineConfLevel === "medium" || pipelineConfLevel === "low"
+      ? pipelineConfLevel
+      : null;
+  const oldestCompDaysFromExplain =
+    typeof compsExplain?.oldestCompDays === "number" ? compsExplain.oldestCompDays : null;
+  const reportConfidenceExplanation = buildReportConfidenceExplanation({
+    features: featuresForConfidence,
+    compCount: comps.length,
+    oldestCompDays: oldestCompDaysFromExplain,
+    pipelineConfidenceLevel: pipelineLevelResolved,
+    hasListingPrice: actualPrice != null && actualPrice > 0,
+    hasListingArea:
+      (extracted?.areaM2 ?? f?.areaM2) != null && Number(extracted?.areaM2 ?? f?.areaM2) > 0,
+    hasListingRooms: saneRooms != null,
+    hasFloor:
+      extracted?.floor != null || extracted?.floorRaw != null || f?.level != null,
+    hasYearBuilt: !!(extracted?.yearBuilt ?? f?.yearBuilt),
+  });
+
+  const hasAreaPriceBaselineForGate =
+    (bestRange?.mid != null && bestRange.mid > 0) ||
+    (analysis.scoreSnapshot?.avmMid != null && analysis.scoreSnapshot.avmMid > 0);
+
+  const reportDataQualityGate = buildReportDataQualityGate({
+    features: featuresForConfidence,
+    compCount: comps.length,
+    oldestCompDays: oldestCompDaysFromExplain,
+    hasPrice: actualPrice != null && actualPrice > 0,
+    hasArea:
+      (extracted?.areaM2 ?? f?.areaM2) != null && Number(extracted?.areaM2 ?? f?.areaM2) > 0,
+    hasRooms: saneRooms != null,
+    hasYearBuilt: !!(extracted?.yearBuilt ?? f?.yearBuilt),
+    hasAreaPriceBaseline: hasAreaPriceBaselineForGate,
+    yieldGross: yieldGrossSnapshot,
+    yieldNet: yieldNetSnapshot,
+    riskStack: normalizedRiskStack,
+  });
+
+  const reportSellability = buildReportSellability({
+    hasListingPrice: actualPrice != null && actualPrice > 0,
+    hasListingArea:
+      (extracted?.areaM2 ?? f?.areaM2) != null && Number(extracted?.areaM2 ?? f?.areaM2) > 0,
+    compCount: comps.length,
+    hasAreaPriceBaseline: hasAreaPriceBaselineForGate,
+    confidenceLevel: confidenceData?.level,
+  });
+
+  const negotiationAssistant = buildNegotiationAssistant({
+    title: extracted?.title ?? null,
+    overpricingPct: negotiationOverpricingPct,
+    confidenceLevel: confidenceData?.level,
+    compsCount: comps.length,
+    canShowStrongPricePosition: reportDataQualityGate.canShowStrongPricePositionLanguage,
+    canShowSubstantiveNegotiation: reportDataQualityGate.canShowNegotiationArguments,
+    hasYearBuilt: !!(extracted?.yearBuilt ?? f?.yearBuilt),
+    seismicRiskClass: negotiationInput.seismicRiskClass,
+    isRender:
+      devSignals.isRender ||
+      (llmVision?.isRender === true && (llmVision?.renderConfidence ?? 0) >= 0.6),
+    isUnderConstruction: devSignals.isUnderConstruction,
+    points: negotiationPoints,
+  });
+  const agentQuestionsCopyText = negotiationAssistant.practicalQuestionsRo
+    .map((q, i) => `${i + 1}. ${q}`)
+    .join("\n");
+
   // Executive verdict (depends on devSignals, hasPlusTVA, sourceMeta)
   const verdictInput: VerdictInput = {
+    confidenceSuppressStrong: reportConfidenceExplanation.shouldSuppressStrongVerdict,
+    dataQuality: {
+      canShowPriceVerdict: reportDataQualityGate.canShowPriceVerdict,
+      canShowStrongOverUnderLanguage: reportDataQualityGate.canShowStrongPricePositionLanguage,
+      canShowLocationClaims: reportDataQualityGate.canShowNeighborhoodRiskClaims,
+      canShowContextualRiskNarrative: !reportDataQualityGate.contextualRiskDataInsufficient,
+      canShowFirmBuyerRecommendation: reportDataQualityGate.canShowStrongBuyerVerdict,
+    },
     askingPrice: actualPrice ?? null,
     avmLow: bestRange?.low ?? null,
     avmMid: bestRange?.mid ?? null,
@@ -836,6 +985,8 @@ export default async function ReportPage({ params }: Props) {
       : null;
 
   const reportPriceFairness =
+    reportDataQualityGate.canShowPriceVerdict &&
+    reportDataQualityGate.canShowStrongPricePositionLanguage &&
     actualPrice != null &&
     actualPrice > 0 &&
     priceAnchorsRange?.mid != null &&
@@ -876,7 +1027,11 @@ export default async function ReportPage({ params }: Props) {
     } else if (ttsResult?.bucket) {
       items.push({ icon: "⏱", value: ttsResult.bucket, label: "viteză vânzare" });
     }
-    if (overpricingPct != null && bestRange?.mid) {
+    if (
+      reportDataQualityGate.canShowStrongPricePositionLanguage &&
+      overpricingPct != null &&
+      bestRange?.mid
+    ) {
       const v = overpricingPct > 0 ? `+${overpricingPct}%` : `${overpricingPct}%`;
       items.push({ icon: "📉", value: v, label: "vs. piață (estimare)" });
     }
@@ -892,18 +1047,28 @@ export default async function ReportPage({ params }: Props) {
     return items;
   })();
 
+  const medianEurM2ForCompsSection =
+    compsFairRange && compsFairRange.compsUsed > 0
+      ? compsFairRange.medianEurM2
+      : medianEurM2FromCompRows(comps.map((c) => c.eurM2));
+
   const seismicRiskClassForReport =
     String(seismicExplain?.riskClass ?? "").trim() ||
     (seismic.level !== "None" ? seismic.level : "") ||
     null;
 
+  const siteBase = process.env.NEXT_PUBLIC_SITE_URL ?? "https://imobintel.ro";
   const reportJsonLd = extracted
     ? {
         "@context": "https://schema.org",
         "@type": "RealEstateListing",
-        name: extracted.title || "Apartament Bucuresti",
+        name: isPublicSample
+          ? "Raport exemplu ImobIntel (date demonstrative)"
+          : extracted.title || "Apartament Bucuresti",
         description: listingDescription ? String(listingDescription).slice(0, 300) : undefined,
-        url: `${process.env.NEXT_PUBLIC_SITE_URL ?? "https://imobintel.ro"}/report/${analysis.id}`,
+        url: isPublicSample
+          ? `${siteBase}/raport-exemplu`
+          : `${siteBase}/report/${analysis.id}`,
         datePosted: analysis.createdAt?.toISOString(),
         ...(extracted.price
           ? {
@@ -947,6 +1112,45 @@ export default async function ReportPage({ params }: Props) {
       }
     : null;
 
+  const session = await auth();
+  const userId = session?.user?.id ?? null;
+  const canUseStripeForUnlock = appFlags.reportUnlockGuestCheckout || !!userId;
+  const fullAccess =
+    isPublicSample || (await canViewFullReport({ analysisId: id, userId }));
+  const showPreview = analysis.status === "done" && !!extracted && !fullAccess;
+  const showFullReportBody = !!extracted && analysis.status === "done" && fullAccess;
+  const showFailureRecovery =
+    analysis.status === "error" ||
+    analysis.status === "failed" ||
+    analysis.status === "rejected_rental" ||
+    analysis.status === "rejected_not_realestate";
+  const failureReason = reasonFromAnalysisRecord({
+    status: analysis.status,
+    error: analysis.error,
+  });
+  const previewTeaser =
+    extracted && showPreview
+      ? buildPreviewTeaser({
+          askingEur: actualPrice,
+          rangeLow: bestRange?.low ?? null,
+          rangeMid: bestRange?.mid ?? null,
+          rangeHigh: bestRange?.high ?? null,
+          compsCount: comps.length,
+          confidenceLevel: confidenceData?.level,
+          canShowPriceVerdict: reportDataQualityGate.canShowPriceVerdict,
+          canShowStrongPricePositionLanguage:
+            reportDataQualityGate.canShowStrongPricePositionLanguage,
+        })
+      : null;
+  const preliminaryForPreview =
+    extracted && showPreview
+      ? buildPreliminarySignal({
+          compsCount: comps.length,
+          confidenceLevel: confidenceData?.level,
+          canShowFirmAnalysis: reportDataQualityGate.canShowStrongBuyerVerdict,
+        })
+      : "";
+
   return (
     <div className="container mx-auto py-8 px-4">
       {reportJsonLd && (
@@ -962,11 +1166,58 @@ export default async function ReportPage({ params }: Props) {
         priceEur={extracted?.price ?? null}
         rooms={extracted?.rooms ?? null}
       />
+      {analysis?.status === "done" && fullAccess && analysis.id && !isPublicSample ? (
+        <FunnelTrackReportUnlockedView analysisId={analysis.id} active />
+      ) : null}
 
-      <h1 className="text-2xl font-semibold mb-6">Raport analiza</h1>
+      <h1 className="text-2xl font-semibold mb-3">
+        {isPublicSample ? "Raport exemplu" : "Raport analiză"}
+      </h1>
+      {isPublicSample && (
+        <div className="mb-4 max-w-3xl rounded-lg border-2 border-indigo-300 bg-indigo-50/95 px-4 py-3 text-sm text-indigo-950">
+          <p className="font-semibold">Raport exemplu. Datele sunt demonstrative.</p>
+          <p className="mt-1.5 text-indigo-900/90 leading-relaxed">
+            Nu este extras din anunțuri reale de vânzare. Vezi structura, tonul explicațiilor și
+            modul de prezentare. Pentru o analiză pe un anunț adevărat, deschide analiza din
+            ImobIntel.
+          </p>
+        </div>
+      )}
+      {showFailureRecovery && (
+        <div className="mb-6 max-w-3xl">
+          <AnalysisFailureRecovery
+            variant="report"
+            reason={failureReason}
+            sourceUrl={analysis.sourceUrl}
+            analysisId={analysis.id}
+          />
+        </div>
+      )}
+
+      <div className="mb-6 max-w-3xl space-y-2 rounded-lg border border-gray-200 bg-gray-50/80 px-4 py-3">
+        <BuyerReportTrustNote variant="compact" className="text-gray-600" />
+        <ReportDisclaimer variant="legal" className="!border-0 !bg-white/50" />
+      </div>
+
+      {justPaid && !isPublicSample && (
+        <ReportUnlockPostPaymentBanner
+          justPaid={justPaid}
+          canViewFullReport={fullAccess}
+          isPublicSample={isPublicSample}
+          analysisId={analysis.id}
+          agentQuestionsText={agentQuestionsCopyText}
+          myReportsHref={
+            userId
+              ? "/profile"
+              : `/auth/signin?callbackUrl=${encodeURIComponent("/profile")}`
+          }
+          requireAccountForUnlock={!appFlags.reportUnlockGuestCheckout}
+        />
+      )}
 
       {/* Non-Bucharest disclaimer */}
       {(() => {
+        if (showFailureRecovery) return null;
         // Coordinate-based check: Bucharest metro area bounding box
         const inBucharestBbox =
           geoLat != null &&
@@ -1009,48 +1260,7 @@ export default async function ReportPage({ params }: Props) {
         return null;
       })()}
 
-      {String(analysis?.status ?? "") === "rejected_rental" && (
-        <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm">
-          <div className="font-medium text-blue-800">Anunt de inchiriere detectat</div>
-          <div className="mt-1 text-blue-700">
-            ImobIntel analizeaza momentan doar anunturi de vanzare. Suportul pentru chirii si regim
-            hotelier este in constructie si va fi disponibil in curand.
-          </div>
-        </div>
-      )}
-
-      {String(analysis?.status ?? "") === "rejected_not_realestate" && (
-        <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm">
-          <div className="font-medium text-red-800">Proprietate nerezidentiala detectata</div>
-          <div className="mt-1 text-red-700">
-            ImobIntel analizeaza doar proprietati rezidentiale: apartamente, garsoniere, case, vile,
-            studiouri, mansarde, penthouse-uri si duplex-uri. Spatiile comerciale, afacerile,
-            terenurile, birourile si halele industriale nu sunt suportate.
-          </div>
-        </div>
-      )}
-
-      {!extracted &&
-        !["rejected_rental", "rejected_not_realestate"].includes(
-          String(analysis?.status ?? ""),
-        ) && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm">
-            <div className="font-medium text-red-800">
-              {analysis?.status === "error" || analysis?.status === "failed"
-                ? "Analiza nu a putut fi finalizata"
-                : "Nu avem inca date extrase pentru acest raport"}
-            </div>
-            <div className="mt-1 text-red-700">
-              {analysis?.status === "error" || analysis?.status === "failed"
-                ? "Nu am reusit sa extragem datele din anunt. Acest lucru se poate intampla cand site-ul sursa blocheaza accesul automat. Incearca din nou - de obicei functioneaza la a doua incercare."
-                : `Status analiza: ${analysis?.status ?? "-"}`}
-            </div>
-            {(analysis?.status === "error" || analysis?.status === "failed") &&
-              analysis?.sourceUrl && <RetryAnalysisButton url={analysis.sourceUrl} />}
-          </div>
-        )}
-
-      {isUnsupportedType && extracted && (
+      {isUnsupportedType && extracted && !showFailureRecovery && (
         <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm">
           <div className="font-medium text-amber-800">Tip de proprietate nesustinut</div>
           <div className="mt-1 text-amber-700">
@@ -1062,7 +1272,7 @@ export default async function ReportPage({ params }: Props) {
       )}
 
       {/* TVA banner */}
-      {extracted && hasPlusTVA && vatComputed && (
+      {extracted && hasPlusTVA && vatComputed && !showFailureRecovery && (
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm flex items-start gap-3">
           <span className="text-amber-600 text-lg leading-none mt-0.5">⚠</span>
           <div>
@@ -1088,8 +1298,19 @@ export default async function ReportPage({ params }: Props) {
         </div>
       )}
 
+      {extracted &&
+        reportDataQualityGate.showYearBuiltWarning &&
+        !devSignals.isUnderConstruction &&
+        !showFailureRecovery && (
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50/80 p-3 text-sm text-amber-950">
+          <span className="font-medium">An construcție: lipsă din fișă. </span>
+          Vechimea afectează risc structural, costuri și negociere — confirmă la vizionare și din acte
+          când e posibil.
+        </div>
+      )}
+
       {/* Under construction + render warning banner */}
-      {extracted && devSignals.isUnderConstruction && (
+      {extracted && devSignals.isUnderConstruction && !showFailureRecovery && (
         <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 p-4 text-sm flex items-start gap-3">
           <span className="text-orange-600 text-xl leading-none mt-0.5">🏗️</span>
           <div>
@@ -1141,6 +1362,7 @@ export default async function ReportPage({ params }: Props) {
 
       {/* Render-only warning (when not under construction but photos look like renders) */}
       {extracted &&
+        !showFailureRecovery &&
         !devSignals.isUnderConstruction &&
         llmVision?.isRender &&
         (llmVision?.renderConfidence ?? 0) >= 0.6 && (
@@ -1158,8 +1380,41 @@ export default async function ReportPage({ params }: Props) {
           </div>
         )}
 
-      {/* 1-3 Decision -> TLDR -> pro/contra; 4 Pret+scor; then risk, harta, costuri, detalii */}
-      {extracted && (
+      {/* Preview panel; full report: verdict cumpărător, preț, comp, risc, negociere, randament, încredere, checklist, apoi context zonă */}
+      {showPreview && previewTeaser && extracted && (
+        <div className="mb-8">
+          <ReportPreviewPanel
+            analysisId={id}
+            title={(extracted.title as string) ?? null}
+            askingPrice={
+              extracted.price != null
+                ? `${(extracted.price as number).toLocaleString("ro-RO")} ${String(extracted.currency ?? "EUR")}`
+                : "—"
+            }
+            areaLine={extracted.areaM2 != null ? `${extracted.areaM2} mp` : "—"}
+            roomsLine={saneRooms != null ? String(saneRooms) : "—"}
+            locationLine={
+              approximateLocationLabel ??
+              (extracted.addressRaw
+                ? String(extracted.addressRaw).replace(/\s+/g, " ").trim().slice(0, 200)
+                : "—")
+            }
+            sourcePortal={portalLabelFromUrl(analysis.sourceUrl)}
+            preliminarySignal={preliminaryForPreview}
+            teaser={previewTeaser}
+            confidenceLine={`${reportConfidenceExplanation.labelRo}. ${reportConfidenceExplanation.shortExplanationRo}`}
+            unlockButtonLabel={formatUnlockButtonLabel()}
+            canUseStripeForUnlock={canUseStripeForUnlock}
+            canShowPaywall={reportSellability.canShowPaywall}
+            paywallBlockMessageRo={reportSellability.paywallBlockMessageRo}
+            shouldShowRefundFriendlyCopy={reportSellability.shouldShowRefundFriendlyCopy}
+            sellabilityTier={reportSellability.sellability}
+            launchPriceBadgeRo={getLaunchPriceBadgeRo()}
+          />
+        </div>
+      )}
+
+      {showFullReportBody && (
         <>
           <div className="mb-12 space-y-8 md:space-y-10">
             <ReportAboveFoldHeader
@@ -1178,15 +1433,19 @@ export default async function ReportPage({ params }: Props) {
               cons={apartmentScore.cons}
             />
 
+            <ReportConfidenceStrip explanation={reportConfidenceExplanation} />
+
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
               <div className="lg:col-span-7 space-y-5">
                 <VerdictSection
+                  cardTitle="Preț: inteligență (interval, diferențe, încredere)"
                   priceRange={priceRange}
                   actualPrice={actualPrice}
                   confidence={confidenceData ?? null}
                   compsFair={compsFairRange}
                   currency={extracted?.currency ?? "EUR"}
                   compsCount={comps.length}
+                  confidenceExplanation={reportConfidenceExplanation}
                 />
                 <PriceAnchorsSection
                   askingPrice={actualPrice ?? null}
@@ -1209,6 +1468,207 @@ export default async function ReportPage({ params }: Props) {
                 />
               </div>
             </div>
+          </div>
+
+          {isPublicSample && <ExempluRealListingCta className="mb-6" />}
+
+          <div className="space-y-10 mb-10">
+            <ReportCompsSection
+              comps={comps.map((c) => ({
+                id: c.id,
+                title: c.title,
+                photo: c.photo,
+                sourceUrl: c.sourceUrl,
+                priceEur: c.priceEur,
+                areaM2: c.areaM2,
+                rooms: c.rooms,
+                eurM2: c.eurM2,
+                distanceM: c.distanceM,
+                score: c.score,
+                lat: c.lat,
+                lng: c.lng,
+              }))}
+              center={{ lat: f?.lat ?? null, lng: f?.lng ?? null }}
+              medianEurM2={medianEurM2ForCompsSection}
+              subjectAskingPriceEur={actualPrice}
+              subjectAreaM2={
+                (extracted?.areaM2 as number | undefined) ?? (f?.areaM2 as number | undefined) ?? null
+              }
+              subjectRooms={saneRooms}
+              areaSlug={areaSlug ? String(areaSlug) : null}
+              city={typeof f?.city === "string" ? f.city : null}
+              hasSubjectCoords={geoLat != null && geoLng != null}
+              reportConfidenceLabelRo={reportConfidenceExplanation.labelRo}
+              reportConfidenceLevel={confidenceData?.level}
+              reportConfidenceShortRo={reportConfidenceExplanation.shortExplanationRo}
+            />
+
+            {isPublicSample && <ExempluRealListingCta className="mt-2" />}
+
+            <ReportRiskSection
+              airQuality={airQualityReading}
+              seismic={buyerSeismicView}
+              vibeZoneTypeKey={vibeResult?.scores?.zoneTypeKey ?? null}
+              seismicRiskClass={seismicRiskClassForReport}
+              contextualRiskDataInsufficient={
+                reportDataQualityGate.contextualRiskDataInsufficient
+              }
+              locationClaimsLimited={!reportDataQualityGate.canShowNeighborhoodRiskClaims}
+            />
+
+            {isPublicSample && <ExempluRealListingCta className="mt-2" />}
+
+            <div id="report-negotiation" className="scroll-mt-6">
+              <NegotiationAssistantSection
+                assistant={negotiationAssistant}
+                points={negotiationPoints}
+                legacyWhatsAppDraft={whatsAppDraft}
+                canShowSubstantiveArguments={reportDataQualityGate.canShowNegotiationArguments}
+                suggestedLow={
+                  negotiationAssistant.allowNumericOfferHint &&
+                  compsStats?.q1 &&
+                  f?.areaM2
+                    ? Math.round(compsStats.q1 * f.areaM2)
+                    : null
+                }
+                suggestedHigh={
+                  negotiationAssistant.allowNumericOfferHint &&
+                  compsStats?.median &&
+                  f?.areaM2
+                    ? Math.round(compsStats.median * f.areaM2)
+                    : null
+                }
+                currency={extracted?.currency ?? "EUR"}
+              />
+            </div>
+
+            <BuyerInvestmentSection
+              yieldGross={yieldGrossSnapshot}
+              yieldNet={yieldNetSnapshot}
+              rentEur={rentEurFromSnapshot}
+              currency={extracted?.currency ?? "EUR"}
+              canShowYield={reportDataQualityGate.canShowYield}
+            />
+
+            <DataInsightsSection
+              hasPrice={actualPrice != null}
+              hasPriceEstimate={bestRange?.mid != null}
+              hasArea={
+                (extracted?.areaM2 ?? (f?.areaM2 as number | undefined) ?? null) != null
+              }
+              hasRooms={saneRooms != null}
+              hasFloor={
+                extracted?.floor != null || extracted?.floorRaw != null || f?.level != null
+              }
+              hasYear={!!(extracted?.yearBuilt ?? f?.yearBuilt)}
+              hasAddress={!!extracted?.addressRaw}
+              isHouse={isHouse}
+              hasCoords={geoLat != null && geoLng != null}
+              hasPhotos={
+                Array.isArray(extracted?.photos) && (extracted.photos as unknown[]).length > 0
+              }
+              compsCount={comps.length}
+              estimateComparableCount={compsFairRange?.compsUsed ?? comps.length}
+              confidenceLevel={confidenceData?.level}
+              seismicLevel={seismic.level}
+              approximateLocationLabel={approximateLocationLabel}
+            />
+
+            {isPublicSample && <ExempluRealListingCta className="mt-2" />}
+
+            <SellerChecklist
+              heading="Ultimul check înainte de apel: cadastru, risc, negociere"
+              yearBuilt={extracted?.yearBuilt ?? f?.yearBuilt}
+              hasFloor={
+                extracted?.floor != null || extracted?.floorRaw != null || f?.level != null
+              }
+              hasAddress={!!extracted?.addressRaw}
+              hasCoords={f?.lat != null && f?.lng != null}
+              hasArea={!!extracted?.areaM2}
+              hasPhotos={
+                Array.isArray(extracted?.photos) && (extracted.photos as unknown[]).length > 0
+              }
+              seismicAttention={["RS1", "RS2", "RS3", "RsI", "RsII", "RsIII"].includes(
+                seismic.level,
+              )}
+              overpricingPct={overpricingPct}
+              compsCount={comps.length}
+              confidenceLevel={confidenceData?.level}
+              areaM2={extracted?.areaM2 ?? (f?.areaM2 as number) ?? null}
+              titleAreaM2={
+                ((extracted as Record<string, unknown>)?.titleAreaM2 as number) ?? null
+              }
+              rooms={saneRooms}
+              title={extracted?.title ?? null}
+              llmRedFlags={llmText?.redFlags ?? null}
+              llmCondition={llmText?.condition ?? null}
+              llmBalconyM2={llmText?.balconyM2 ?? null}
+              description={
+                ((extracted?.sourceMeta as Record<string, unknown>)?.description as string) ??
+                null
+              }
+            />
+
+            {isPublicSample && <ExempluRealListingCta className="mt-2" />}
+
+            <ReportCollapsible title="Zonă, transport, costuri asociate" defaultOpen={false}>
+              <div className="space-y-6">
+                {(() => {
+                  const effectiveLat = geoLat ?? f?.lat ?? 0;
+                  const effectiveLng = geoLng ?? f?.lng ?? 0;
+                  const staticMetro =
+                    effectiveLat !== 0 && effectiveLng !== 0
+                      ? nearestStationM(effectiveLat, effectiveLng)
+                      : null;
+                  return (
+                    <TransportSection
+                      transport={transportResult}
+                      legacyDistMetroM={f?.distMetroM ?? staticMetro?.distM ?? null}
+                      legacyNearestMetro={staticMetro?.name ?? null}
+                      locationInferred={locationInferred}
+                      propertyType={propLabel}
+                    />
+                  );
+                })()}
+
+                {geoLat != null &&
+                  geoLng != null &&
+                  reportDataQualityGate.canShowNeighborhoodRiskClaims && (
+                    <NeighborhoodIntelV2
+                      lat={geoLat}
+                      lng={geoLng}
+                      initialRadiusM={1000}
+                      mode="report"
+                    />
+                  )}
+                {geoLat != null &&
+                  geoLng != null &&
+                  !reportDataQualityGate.canShowNeighborhoodRiskClaims && (
+                    <p className="text-sm text-slate-600 rounded-lg border border-slate-200 bg-slate-50/60 px-4 py-3">
+                      Context cartier: localizarea e prea aproximativă sau comparabilele sunt prea
+                      puține — nu detaliem aici harta de context de zonă; o poți reveni când există
+                      adresă sau un punct mai clar pe hartă.
+                    </p>
+                  )}
+
+                <AcquisitionCostsSection
+                  priceEur={actualPrice}
+                  commissionStatus={
+                    sourceMeta?.zeroCommission === true
+                      ? "zero"
+                      : llmText?.redFlags?.some((rf) => /comision/i.test(rf))
+                        ? "standard"
+                        : "unknown"
+                  }
+                  hasPlusTVA={hasPlusTVA}
+                  vatRate={vatRate}
+                  vatAmount={vatComputed?.vatAmount ?? null}
+                  priceWithVAT={vatComputed?.priceWithVAT ?? null}
+                  reducedVATEligible={reducedVATCheck?.eligible}
+                  reducedVATReason={reducedVATCheck?.reason}
+                />
+              </div>
+            </ReportCollapsible>
 
             <ReportCollapsible title="Rezumat extins (opțional)" defaultOpen={false}>
               <ExecutiveSummarySection
@@ -1235,176 +1695,15 @@ export default async function ReportPage({ params }: Props) {
                 ]}
               />
             </ReportCollapsible>
-          </div>
 
-          <div className="space-y-10 mb-10">
-            <ReportRiskSection
-              airQuality={airQualityReading}
-              seismic={buyerSeismicView}
-              vibeZoneTypeKey={vibeResult?.scores?.zoneTypeKey ?? null}
-              seismicRiskClass={seismicRiskClassForReport}
-            />
-
-            {geoLat != null && geoLng != null && (
-              <NeighborhoodIntelV2 lat={geoLat} lng={geoLng} initialRadiusM={1000} mode="report" />
-            )}
-            {(() => {
-              const effectiveLat = geoLat ?? f?.lat ?? 0;
-              const effectiveLng = geoLng ?? f?.lng ?? 0;
-              const staticMetro =
-                effectiveLat !== 0 && effectiveLng !== 0
-                  ? nearestStationM(effectiveLat, effectiveLng)
-                  : null;
-              return (
-                <TransportSection
-                  transport={transportResult}
-                  legacyDistMetroM={f?.distMetroM ?? staticMetro?.distM ?? null}
-                  legacyNearestMetro={staticMetro?.name ?? null}
-                  locationInferred={locationInferred}
-                  propertyType={propLabel}
-                />
-              );
-            })()}
-
-            <Card className="border-0 shadow-sm ring-1 ring-slate-200/80">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Comparabile în zonă</CardTitle>
-                <CardDescription>
-                  {comps.length
-                    ? `${comps.length} rezultate · mediană ~ ${compsStats?.median ? `${Math.round(compsStats.median)} EUR/m²` : "—"}`
-                    : "⚠ Nu există comparabile suficiente în zonă."}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {comps.length ? (
-                  <CompsClientBlock
-                    comps={comps.map((c) => ({
-                      id: c.id,
-                      title: c.title,
-                      photo: c.photo,
-                      sourceUrl: c.sourceUrl,
-                      priceEur: c.priceEur,
-                      areaM2: c.areaM2,
-                      eurM2: c.eurM2,
-                      distanceM: c.distanceM,
-                      score: c.score,
-                      lat: c.lat,
-                      lng: c.lng,
-                    }))}
-                    center={{
-                      lat: f?.lat ?? null,
-                      lng: f?.lng ?? null,
-                    }}
-                  />
-                ) : (
-                  <div className="rounded-lg border border-amber-200/80 bg-amber-50/50 p-4 space-y-3">
-                    <p className="text-sm font-semibold text-amber-950">
-                      ⚠ Nu există comparabile suficiente în zonă (precizie redusă la preț).
-                    </p>
-                    <p className="text-xs text-slate-600">
-                      Poți adăuga manual 3–4 anunțuri similare ca reper în negociere.
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <AcquisitionCostsSection
-              priceEur={actualPrice}
-              commissionStatus={
-                sourceMeta?.zeroCommission === true
-                  ? "zero"
-                  : llmText?.redFlags?.some((rf) => /comision/i.test(rf))
-                    ? "standard"
-                    : "unknown"
-              }
-              hasPlusTVA={hasPlusTVA}
-              vatRate={vatRate}
-              vatAmount={vatComputed?.vatAmount ?? null}
-              priceWithVAT={vatComputed?.priceWithVAT ?? null}
-              reducedVATEligible={reducedVATCheck?.eligible}
-              reducedVATReason={reducedVATCheck?.reason}
-            />
-
-            <ReportCollapsible title="Detalii tehnice" defaultOpen={false}>
+            <ReportCollapsible title="Istoric preț, metodologie" defaultOpen={false}>
               <div className="space-y-4">
-                <NegotiationPointsSection
-                  points={negotiationPoints}
-                  whatsAppDraft={whatsAppDraft}
-                  suggestedLow={
-                    compsStats?.q1 && f?.areaM2 ? Math.round(compsStats.q1 * f.areaM2) : null
-                  }
-                  suggestedHigh={
-                    compsStats?.median && f?.areaM2
-                      ? Math.round(compsStats.median * f.areaM2)
-                      : null
-                  }
-                  currency={extracted?.currency ?? "EUR"}
-                />
-
-                <DataInsightsSection
-                  hasPrice={actualPrice != null}
-                  hasPriceEstimate={bestRange?.mid != null}
-                  hasArea={
-                    (extracted?.areaM2 ?? (f?.areaM2 as number | undefined) ?? null) != null
-                  }
-                  hasRooms={saneRooms != null}
-                  hasFloor={
-                    extracted?.floor != null || extracted?.floorRaw != null || f?.level != null
-                  }
-                  hasYear={!!(extracted?.yearBuilt ?? f?.yearBuilt)}
-                  hasAddress={!!extracted?.addressRaw}
-                  isHouse={isHouse}
-                  hasCoords={geoLat != null && geoLng != null}
-                  hasPhotos={
-                    Array.isArray(extracted?.photos) && (extracted.photos as unknown[]).length > 0
-                  }
-                  compsCount={comps.length}
-                  estimateComparableCount={compsFairRange?.compsUsed ?? comps.length}
-                  confidenceLevel={confidenceData?.level}
-                  seismicLevel={seismic.level}
-                  approximateLocationLabel={approximateLocationLabel}
-                />
-
                 <ListingHistorySection
                   snapshots={historySnapshots}
                   duplicates={historyDuplicates}
                   currency={extracted?.currency ?? "EUR"}
                 />
-
-                <SellerChecklist
-                  yearBuilt={extracted?.yearBuilt ?? f?.yearBuilt}
-                  hasFloor={
-                    extracted?.floor != null || extracted?.floorRaw != null || f?.level != null
-                  }
-                  hasAddress={!!extracted?.addressRaw}
-                  hasCoords={f?.lat != null && f?.lng != null}
-                  hasArea={!!extracted?.areaM2}
-                  hasPhotos={
-                    Array.isArray(extracted?.photos) && (extracted.photos as unknown[]).length > 0
-                  }
-                  seismicAttention={["RS1", "RS2", "RS3", "RsI", "RsII", "RsIII"].includes(
-                    seismic.level,
-                  )}
-                  overpricingPct={overpricingPct}
-                  compsCount={comps.length}
-                  confidenceLevel={confidenceData?.level}
-                  areaM2={extracted?.areaM2 ?? (f?.areaM2 as number) ?? null}
-                  titleAreaM2={
-                    ((extracted as Record<string, unknown>)?.titleAreaM2 as number) ?? null
-                  }
-                  rooms={saneRooms}
-                  title={extracted?.title ?? null}
-                  llmRedFlags={llmText?.redFlags ?? null}
-                  llmCondition={llmText?.condition ?? null}
-                  llmBalconyM2={llmText?.balconyM2 ?? null}
-                  description={
-                    ((extracted?.sourceMeta as Record<string, unknown>)?.description as string) ??
-                    null
-                  }
-                />
-
-                <div className="pt-6 border-t border-slate-100">
+                <div className="pt-2">
                   <h3 className="text-sm font-semibold text-slate-900 mb-3">Metodologie estimare</h3>
                   <MethodologySection
                     baselineEurM2={(avmExplain?.baselineEurM2 as number) ?? null}
@@ -1774,9 +2073,9 @@ export default async function ReportPage({ params }: Props) {
         </>
       )}
 
-      {/* PDF Download */}
-      {analysis?.status === "done" && (
-        <div className="mt-6">
+      {/* PDF Download (full access only) */}
+      {analysis?.status === "done" && fullAccess && !isPublicSample && (
+        <div className="mt-6 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Exporta raport</CardTitle>
@@ -1785,13 +2084,18 @@ export default async function ReportPage({ params }: Props) {
               <PdfActions analysisId={analysis.id} />
             </CardContent>
           </Card>
+          {paidUnlockForFeedback && !existingReportFeedback ? (
+            <PaidReportFeedback analysisId={analysis.id} reportUnlockId={paidUnlockForFeedback.id} />
+          ) : null}
         </div>
       )}
 
-      {isLlmEnriching && <LlmEnrichTrigger analysisId={analysis?.id ?? ""} />}
+      {isLlmEnriching && fullAccess && !isPublicSample && (
+        <LlmEnrichTrigger analysisId={analysis?.id ?? ""} />
+      )}
 
       {/* Chat assistant */}
-      {extracted && <ReportChat analysisId={analysis?.id ?? ""} />}
+      {extracted && fullAccess && !isPublicSample && <ReportChat analysisId={analysis?.id ?? ""} />}
     </div>
   );
 }
@@ -1803,14 +2107,33 @@ export async function generateMetadata(
     (props as { params?: { id?: string | string[] } })?.params,
   );
   const id = Array.isArray(maybeParams?.id) ? maybeParams.id[0] : maybeParams?.id;
-  const analysis = id
-    ? await prisma.analysis.findUnique({
-        where: { id },
-        include: { extractedListing: true },
-      })
-    : null;
+  const [analysis, indexRec] = id
+    ? await Promise.all([
+        prisma.analysis.findUnique({
+          where: { id },
+          include: { extractedListing: true },
+        }),
+        getReportPageIndexable(id),
+      ])
+    : [null, { indexable: false, sellability: null }];
   const base =
     process.env.NEXT_PUBLIC_SITE_URL ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+
+  if (id === PUBLIC_SAMPLE_REPORT_ANALYSIS_ID) {
+    return {
+      title: "Raport exemplu ImobIntel (demo)",
+      description:
+        "Demo: structură de raport cu date demonstrative. URL canonic: /raport-exemplu — acest /report/… rămâne neindexat pentru a evita duplicate.",
+      alternates: { canonical: "/raport-exemplu" },
+      robots: { index: false, follow: true },
+      openGraph: {
+        title: "Raport exemplu ImobIntel (date demonstrative)",
+        description: "Demo. Pentru piață reală, analizează un anunț suportat.",
+        url: `${base}/raport-exemplu`,
+        type: "article",
+      },
+    };
+  }
 
   const el = analysis?.extractedListing;
   const title = el?.title ?? "Raport analiza imobiliara";
@@ -1827,10 +2150,31 @@ export async function generateMetadata(
   const url = `${base}/report/${id ?? ""}`;
   const ogImage = `${base}/api/og/report/${id ?? ""}`;
 
+  if (!id || !analysis) {
+    return { title: "Raport", robots: { index: false, follow: false } };
+  }
+
+  if (!indexRec.indexable) {
+    return {
+      title,
+      description,
+      alternates: { canonical: `/report/${id}` },
+      robots: { index: false, follow: false },
+      openGraph: {
+        title,
+        description,
+        url,
+        type: "article",
+        images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+      },
+    };
+  }
+
   return {
     title,
     description,
-    alternates: { canonical: `/report/${id ?? ""}` },
+    alternates: { canonical: `/report/${id}` },
+    robots: { index: true, follow: true },
     openGraph: {
       title,
       description,

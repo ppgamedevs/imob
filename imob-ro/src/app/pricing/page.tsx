@@ -1,234 +1,262 @@
-"use client";
-
-import { Check, Minus } from "lucide-react";
+import { BuyerReportTrustNote } from "@/components/common/buyer-report-trust-note";
+import { ReportDisclaimer } from "@/components/common/ReportDisclaimer";
+import { getReportUnlockPriceRon } from "@/lib/billing/report-unlock";
+import { getLaunchPriceBadgeRo } from "@/lib/copy/launch-pricing-ro";
+import { flags } from "@/lib/flags";
+import {
+  pricingFaqRefunds,
+  REPORT_UNLOCK_NO_REFUND_FOR_DISAGREEMENT_RO,
+  REPORT_UNLOCK_REFUND_POLICY_RO,
+} from "@/lib/copy/report-unlock-refund-ro";
+import { RAPORT_EXEMPLU_PATH } from "@/lib/report/sample-public-report";
+import { Check } from "lucide-react";
 import Link from "next/link";
 
-const plans = [
-  {
-    code: "free",
-    name: "Free",
-    price: "0",
-    period: "/luna",
-    subtitle: "Pentru explorare",
-    cta: "Incepe gratuit",
-    ctaHref: "/analyze",
-    highlight: false,
-    badge: null,
-  },
-  {
-    code: "standard",
-    name: "Standard",
-    price: "49",
-    period: "RON/luna",
-    subtitle: "Pentru cumparatori activi",
-    cta: "Alege Standard",
-    ctaHref: "/subscribe?plan=standard",
-    highlight: true,
-    badge: "Popular",
-  },
-  {
-    code: "pro",
-    name: "Pro",
-    price: "99",
-    period: "RON/luna",
-    subtitle: "Pentru profesionisti",
-    cta: "Alege Pro",
-    ctaHref: "/subscribe?plan=pro",
-    highlight: false,
-    badge: null,
-  },
-  {
-    code: "enterprise",
-    name: "Enterprise",
-    price: "249",
-    period: "RON/luna",
-    subtitle: "Agentii si investitori",
-    cta: "Contacteaza-ne",
-    ctaHref: "/contact",
-    highlight: false,
-    badge: "Nelimitat",
-  },
-] as const;
+const BUNDLE_RON = 149;
+const proDisplayRon = process.env.NEXT_PUBLIC_SUBSCRIPTION_PRO_RON?.trim() || "99";
 
-type FeatureValue = boolean | string;
-
-interface FeatureRow {
-  label: string;
-  free: FeatureValue;
-  standard: FeatureValue;
-  pro: FeatureValue;
-  enterprise: FeatureValue;
-}
-
-const features: FeatureRow[] = [
-  { label: "Cautari/luna", free: "10", standard: "50", pro: "300", enterprise: "Nelimitat" },
-  { label: "Verdict (subevaluat/corect/supraevaluat)", free: true, standard: true, pro: true, enterprise: true },
-  { label: "Comparabile", free: "3 preview", standard: "Complete", pro: "Complete cu harta", enterprise: "Complete cu harta" },
-  { label: "Rapoarte PDF", free: "1/luna", standard: "10/luna", pro: "30/luna", enterprise: "Nelimitat" },
-  { label: "Scor detaliat (AVM, TTS, Yield, Risk)", free: false, standard: true, pro: true, enterprise: true },
-  { label: "Analiza AI (text)", free: true, standard: true, pro: true, enterprise: true },
-  { label: "Analiza AI (fotografii)", free: false, standard: false, pro: true, enterprise: true },
-  { label: "Ancore pret (grila notariala)", free: false, standard: true, pro: true, enterprise: true },
-  { label: "Istoric cautari", free: false, standard: "30 zile", pro: "90 zile", enterprise: "Nelimitat" },
-  { label: "Export CSV", free: false, standard: false, pro: true, enterprise: true },
-  { label: "Alerte salvate", free: false, standard: "5", pro: "20", enterprise: "Nelimitat" },
-  { label: "Link-uri share", free: false, standard: "10/luna", pro: "50/luna", enterprise: "Nelimitat" },
-  { label: "Suport", free: "Help center", standard: "Email", pro: "Prioritar", enterprise: "Dedicat" },
+const faqItems: { q: string; a: string }[] = [
+  {
+    q: "Este evaluare oficială?",
+    a: "Nu. ImobIntel nu oferă evaluare autorizată ANEVAR, expertiză juridică sau certificat notarial. Primești o analiză orientativă pe baza anunțurilor publice și a unor modele interne, ca să compari și să negociezi cu mai mult context.",
+  },
+  {
+    q: "De unde vin datele?",
+    a: "Din surse publice: anunțuri (de exemplu de pe imobiliare.ro, storia.ro, olx și altele, în funcție de integrări) și ceea ce reiese din conținutul introdus. Nu avem acces la contracte reale, dosare sau informații nepublicate despre fiecare apartament.",
+  },
+  ...pricingFaqRefunds,
+  {
+    q: "Pot folosi raportul la negociere?",
+    a: "Da, ca reper și punct de plecare, împreună cu alte verificări. Nu e o dovadă de valoare recunoscută instituțional în fața terților; folosește-l ca un brief, nu ca evaluare certificată.",
+  },
 ];
 
-function FeatureCell({ value }: { value: FeatureValue }) {
-  if (value === true) {
-    return (
-      <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-emerald-50 text-emerald-600">
-        <Check className="h-3.5 w-3.5" strokeWidth={2.5} />
-      </span>
-    );
-  }
-  if (value === false) {
-    return (
-      <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-gray-50 text-gray-300">
-        <Minus className="h-3.5 w-3.5" strokeWidth={2} />
-      </span>
-    );
-  }
-  return <span className="text-[13px] font-medium text-gray-700">{value}</span>;
-}
-
 export default function PricingPage() {
-  return (
-    <div className="mx-auto max-w-[1200px] px-5 py-16 md:py-24">
-      {/* Header */}
-      <div className="text-center mb-14">
-        <h1 className="text-[32px] md:text-[48px] font-bold tracking-tight text-gray-950">
-          Pricing simplu, transparent
-        </h1>
-        <p className="mt-3 text-[16px] md:text-[18px] text-gray-500 max-w-[560px] mx-auto">
-          Analizeaza proprietati din imobiliare.ro, storia.ro, olx.ro, publi24.ro, lajumate.ro si homezz.ro. Fara angajament, anulezi oricand.
-        </p>
-      </div>
+  const unlockRon = getReportUnlockPriceRon();
+  const launchBadge = getLaunchPriceBadgeRo();
+  const bundleIsLive = flags.reportBundle;
+  const cardCount =
+    1 + (flags.pricingShowBundleCard ? 1 : 0) + (flags.pricingShowSubscription ? 1 : 0);
+  const gridCols =
+    cardCount === 3
+      ? "md:grid-cols-3"
+      : cardCount === 2
+        ? "md:grid-cols-2"
+        : "md:max-w-md md:mx-auto";
 
-      {/* Plan Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-        {plans.map((plan) => (
+  return (
+    <div className="mx-auto max-w-[1100px] px-5 py-16 md:py-24">
+      <header className="mb-12 text-center">
+        <h1 className="text-[32px] font-bold tracking-tight text-gray-950 md:text-[44px]">
+          Plătești când vrei un raport complet
+        </h1>
+        <p className="mt-3 max-w-[600px] mx-auto text-[16px] leading-relaxed text-gray-600 md:text-[17px]">
+          Oferta principală este deblocarea o singură dată, pentru un apartament. Abonamentul Pro rămâne
+          opțional, pentru cine are multe analize.
+        </p>
+        <div className="mt-6 max-w-[640px] mx-auto text-left sm:text-center">
+          <BuyerReportTrustNote variant="compact" className="text-gray-500" />
+        </div>
+        <p className="mt-6 text-center text-[14px] text-gray-600">
+          <Link
+            href={RAPORT_EXEMPLU_PATH}
+            className="font-medium text-blue-600 underline decoration-blue-600/30 underline-offset-2 hover:text-blue-800"
+          >
+            Raport complet exemplu
+          </Link>
+          : vezi layoutul real (date demonstrative, fără plată).
+        </p>
+      </header>
+
+      {/* Product ladder */}
+      <div className={`grid grid-cols-1 gap-5 ${gridCols}`}>
+        {/* 1) One-time unlock */}
+        <div className="relative flex flex-col rounded-2xl border border-blue-200 bg-white p-6 shadow-xl shadow-blue-100/50 ring-1 ring-blue-100">
+          <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+            <span className="inline-flex items-center rounded-full bg-gradient-to-r from-blue-600 to-blue-700 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-white shadow-sm">
+              Recomandat
+            </span>
+          </div>
+          <h2 className="text-[18px] font-semibold text-gray-900">Raport complet</h2>
+          <p className="mt-0.5 text-[13px] text-gray-500">O singură plată, un apartament</p>
+          <div className="mb-1 mt-5">
+            {launchBadge ? (
+              <p className="mb-1 text-[12px] font-semibold uppercase tracking-wide text-gray-500">
+                {launchBadge}
+              </p>
+            ) : null}
+            <span className="text-[40px] font-bold tracking-tight text-gray-950">
+              {Number.isInteger(unlockRon) ? String(unlockRon) : unlockRon}
+            </span>
+            <span className="ml-1 text-[14px] font-medium text-gray-400">RON</span>
+            <span className="ml-1 text-[14px] text-gray-500">(o singură dată)</span>
+          </div>
+          <p className="mb-5 text-[12px] text-gray-400">
+            Prețul e configurat pe server; suma de mai sus e cea aplicată la deblocare.
+          </p>
+          <ul className="mb-6 flex-1 space-y-2.5 text-[13px] text-gray-600">
+            {[
+              "estimare de preț și semnale de piață (orientativ, nu ofertă de preț)",
+              "comparabile din surse publice",
+              "riscuri acolo unde există date",
+              "puncte de negociere ca reper",
+              "PDF (după deblocare)",
+            ].map((item) => (
+              <li key={item} className="flex items-start gap-2">
+                <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" strokeWidth={2.5} />
+                {item}
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/analyze"
+            className="block w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 py-3 text-center text-[14px] font-semibold text-white shadow-sm transition active:scale-[0.98] hover:brightness-110"
+          >
+            Deblochează un raport
+          </Link>
+          <p className="mt-2 text-center text-[12px] text-gray-500">
+            Începe cu o analiză; deblocarea o plătești când ești gata, din pagina de raport.
+          </p>
+          <p className="mt-3 text-center text-[12px] leading-relaxed text-gray-600">
+            {REPORT_UNLOCK_REFUND_POLICY_RO} {REPORT_UNLOCK_NO_REFUND_FOR_DISAGREEMENT_RO}
+          </p>
+        </div>
+
+        {flags.pricingShowBundleCard && (
           <div
-            key={plan.code}
-            className={`relative rounded-2xl border p-6 flex flex-col transition-all duration-300 ${
-              plan.highlight
-                ? "border-blue-200 bg-white shadow-xl shadow-blue-100/50 ring-1 ring-blue-100 scale-[1.02]"
-                : "border-gray-200 bg-white hover:shadow-md hover:border-gray-300"
+            className={`relative flex flex-col rounded-2xl border p-6 ${
+              bundleIsLive
+                ? "border-gray-200 bg-white hover:shadow-md"
+                : "border-dashed border-gray-300 bg-gray-50/80"
             }`}
           >
-            {plan.badge && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                <span
-                  className={`inline-flex items-center rounded-full px-3.5 py-1 text-[11px] font-semibold tracking-wide uppercase ${
-                    plan.highlight
-                      ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm"
-                      : "bg-gray-900 text-white"
-                  }`}
-                >
-                  {plan.badge}
+            <h2 className="text-[18px] font-semibold text-gray-900">Pachet cumpărător</h2>
+            <p className="mt-0.5 text-[13px] text-gray-500">Pentru cine compară mai multe apartamente</p>
+            <div className="mb-6 mt-5">
+              <span className="text-[32px] font-bold tracking-tight text-gray-950">{BUNDLE_RON}</span>
+              <span className="ml-1 text-[14px] font-medium text-gray-400">RON</span>
+              {!bundleIsLive && (
+                <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-semibold text-amber-800">
+                  în curând
                 </span>
-              </div>
-            )}
-
-            <div className="mb-5">
-              <h3 className="text-[18px] font-semibold text-gray-900">{plan.name}</h3>
-              <p className="mt-0.5 text-[13px] text-gray-500">{plan.subtitle}</p>
+              )}
             </div>
-
-            <div className="mb-6">
-              <span className="text-[40px] font-bold tracking-tight text-gray-950">{plan.price}</span>
-              <span className="ml-1 text-[14px] font-medium text-gray-400">{plan.period}</span>
-            </div>
-
-            <Link
-              href={plan.ctaHref}
-              className={`block w-full rounded-xl py-3 text-center text-[14px] font-semibold transition-all duration-200 active:scale-[0.97] ${
-                plan.highlight
-                  ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-sm hover:shadow-md hover:brightness-110"
-                  : plan.code === "enterprise"
-                    ? "bg-gray-900 text-white hover:bg-gray-800"
-                    : plan.code === "pro"
-                      ? "bg-gray-800 text-white hover:bg-gray-700"
-                      : "border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
-              }`}
-            >
-              {plan.cta}
-            </Link>
-
-            {/* Inline features for mobile */}
-            <ul className="mt-6 space-y-2.5 lg:hidden">
-              {features.map((f) => {
-                const val = f[plan.code as keyof Pick<FeatureRow, "free" | "standard" | "pro" | "enterprise">];
-                if (val === false) return null;
-                return (
-                  <li key={f.label} className="flex items-center gap-2 text-[13px] text-gray-600">
-                    <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" strokeWidth={2.5} />
-                    <span>
-                      {f.label}
-                      {typeof val === "string" ? `: ${val}` : ""}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
-      </div>
-
-      {/* Feature Comparison Table (desktop) */}
-      <div className="mt-16 hidden lg:block">
-        <h2 className="text-[20px] font-semibold text-gray-900 mb-6">
-          Comparatie detaliata
-        </h2>
-        <div className="rounded-2xl border border-gray-200 overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/80">
-                <th className="text-left text-[13px] font-medium text-gray-500 py-3.5 px-5 w-[30%]">
-                  Functionalitate
-                </th>
-                {plans.map((p) => (
-                  <th
-                    key={p.code}
-                    className={`text-center text-[13px] font-semibold py-3.5 px-3 ${
-                      p.highlight ? "text-blue-600" : "text-gray-900"
-                    }`}
-                  >
-                    {p.name}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {features.map((f, i) => (
-                <tr
-                  key={f.label}
-                  className={`border-b border-gray-50 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/40"}`}
-                >
-                  <td className="text-[13px] text-gray-700 py-3 px-5">{f.label}</td>
-                  {(["free", "standard", "pro", "enterprise"] as const).map((code) => (
-                    <td key={code} className="text-center py-3 px-3">
-                      <div className="flex justify-center">
-                        <FeatureCell value={f[code]} />
-                      </div>
-                    </td>
-                  ))}
-                </tr>
+            <ul className="mb-6 flex-1 space-y-2.5 text-[13px] text-gray-600">
+              {["5 rapoarte complete", "rapoarte salvate", "PDF", "comparație (suport)"].map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <Check
+                    className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${bundleIsLive ? "text-emerald-500" : "text-gray-300"}`}
+                    strokeWidth={2.5}
+                  />
+                  {item}
+                </li>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </ul>
+            {bundleIsLive ? (
+              <span className="block w-full rounded-xl border border-gray-300 py-3 text-center text-[14px] font-semibold text-gray-500">
+                În pregătire
+              </span>
+            ) : (
+              <span className="block w-full cursor-not-allowed rounded-xl border border-gray-200 bg-white py-3 text-center text-[14px] font-medium text-gray-400">
+                Disponibil în curând
+              </span>
+            )}
+          </div>
+        )}
+
+        {flags.pricingShowSubscription && (
+          <div className="flex flex-col rounded-2xl border border-gray-200 bg-white p-6">
+            <h2 className="text-[18px] font-semibold text-gray-900">Investitor / agent</h2>
+            <p className="mt-0.5 text-[13px] text-gray-500">Abonament lunar, utilizatori frecvenți</p>
+            <div className="mb-1 mt-5">
+              <span className="text-[32px] font-bold tracking-tight text-gray-950">{proDisplayRon}</span>
+              <span className="ml-1 text-[14px] font-medium text-gray-400">RON/lună</span>
+            </div>
+            <p className="mb-4 text-[12px] text-gray-400">Sumă indicativă, confirmi în Stripe</p>
+            <ul className="mb-6 flex-1 space-y-2.5 text-[13px] text-gray-600">
+              {[
+                "cote mai mari pentru analiză și PDF (vezi contul tău după abonare)",
+                "acces la scor detaliat și comparații avansate, conform planului Pro",
+                "export CSV: inclus pe Pro; acces prin API public: încă nu",
+              ].map((item) => (
+                <li key={item} className="flex items-start gap-2">
+                  <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" strokeWidth={2.5} />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <Link
+              href="/subscribe"
+              className="block w-full rounded-xl border border-gray-300 bg-white py-3 text-center text-[14px] font-semibold text-gray-800 transition hover:border-gray-400 hover:bg-gray-50"
+            >
+              Vezi abonamentul Pro
+            </Link>
+            <p className="mt-2 text-center text-[12px] text-gray-500">
+              O singură opțiune de plată în aplicație (Stripe) pentru acest abonament.
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Footer note */}
+      {/* Live vs roadmap */}
+      <section className="mt-14 rounded-2xl border border-gray-200 bg-gray-50/60 p-6 md:p-8">
+        <h2 className="text-[18px] font-semibold text-gray-900">Ce e activ acum</h2>
+        <ul className="mt-3 space-y-3 text-[14px] text-gray-600">
+          <li className="sm:flex sm:gap-3">
+            <span className="block shrink-0 font-medium text-gray-800 sm:min-w-[200px]">
+              Deblocare o singură dată
+            </span>
+            <span>Live: plată Stripe, acces la raportul complet și PDF, după deblocare.</span>
+          </li>
+          <li className="sm:flex sm:gap-3">
+            <span className="block shrink-0 font-medium text-gray-800 sm:min-w-[200px]">Abonament Pro</span>
+            <span>
+              Live: un singur preț de abonament în Stripe, mapat pe planul Pro. Nu îți arătăm mai multe plăți
+              lunare deconectate de ce există de fapt la gateway.
+            </span>
+          </li>
+          <li className="sm:flex sm:gap-3">
+            <span className="block shrink-0 font-medium text-gray-400 sm:min-w-[200px]">Pachet 5 rapoarte</span>
+            <span>Nu e încă deschis la plată. Poți folosi deblocări per raport până atunci.</span>
+          </li>
+          <li className="sm:flex sm:gap-3">
+            <span className="block shrink-0 font-medium text-gray-400 sm:min-w-[200px]">API public</span>
+            <span>Pe roadmap, fără dată. Nu e parte din oferta de mai sus.</span>
+          </li>
+        </ul>
+      </section>
+
+      <section className="mt-14">
+        <h2 className="mb-4 text-center text-[18px] font-semibold text-gray-900">Notă legală (produse raport)</h2>
+        <div className="mx-auto max-w-[720px]">
+          <ReportDisclaimer variant="legal" className="text-[13px] leading-relaxed text-gray-700" />
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="mt-14">
+        <h2 className="mb-6 text-center text-[20px] font-semibold text-gray-900">Întrebări frecvente</h2>
+        <div className="mx-auto max-w-[720px] space-y-2">
+          {faqItems.map((item) => (
+            <details
+              key={item.q}
+              className="group rounded-xl border border-gray-200 bg-white open:border-gray-300 open:shadow-sm"
+            >
+              <summary className="cursor-pointer px-4 py-3.5 text-left text-[14px] font-medium text-gray-900 marker:text-gray-400">
+                {item.q}
+              </summary>
+              <p className="border-t border-gray-100 px-4 pb-4 pt-0 text-[13px] leading-relaxed text-gray-600">
+                {item.a}
+              </p>
+            </details>
+          ))}
+        </div>
+      </section>
+
       <div className="mt-10 text-center">
-        <p className="text-[13px] text-gray-500">
-          Platile procesate securizat prin Stripe. Poti anula oricand din contul tau.
-        </p>
-        <p className="mt-2 text-[13px] text-gray-400">
-          Analizam date de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro, lajumate.ro si homezz.ro
+        <p className="text-[13px] text-gray-500">Plăți securizate prin Stripe unde este cazul.</p>
+        <p className="mt-1 text-[12px] text-gray-400">
+          Abonamentul poate fi gestionat din cont; deblocarea e per raport, nu o lunare obligatorie.
         </p>
       </div>
     </div>

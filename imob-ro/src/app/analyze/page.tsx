@@ -1,5 +1,14 @@
 "use client";
 
+import { AnalysisFailureRecovery } from "@/components/analyze/AnalysisFailureRecovery";
+import { BuyerReportTrustNote } from "@/components/common/buyer-report-trust-note";
+import { getAnalyzePortalExpectationLinesRo } from "@/lib/analyze/supported-portals-expectations-ro";
+import {
+  isAnalyzeFailureReason,
+  SUPPORTED_LISTING_DOMAINS_RO,
+  type AnalyzeFailureReason,
+} from "@/lib/analyze/analyze-failure-reasons";
+import { postFunnelEvent } from "@/lib/tracking/funnel-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 
@@ -8,11 +17,11 @@ export const dynamic = "force-dynamic";
 const MIN_LOADING_MS = 6000;
 
 const LOADING_STEPS = [
-  { label: "Se extrag datele din anunt...", durationPct: 15 },
-  { label: "Se identifica zona si comparabilele...", durationPct: 35 },
-  { label: "Se calculeaza estimarea de pret...", durationPct: 60 },
-  { label: "Se evalueaza riscurile si oportunitatile...", durationPct: 80 },
-  { label: "Se genereaza raportul complet...", durationPct: 95 },
+  { label: "Se extrag datele din anunț...", durationPct: 15 },
+  { label: "Se identifică zona și comparabilele...", durationPct: 35 },
+  { label: "Se calculează reperul de preț (AVM)...", durationPct: 60 },
+  { label: "Se evaluează riscurile și contextul...", durationPct: 80 },
+  { label: "Se generează raportul...", durationPct: 95 },
 ];
 
 function getStepIndex(elapsed: number, total: number): number {
@@ -29,6 +38,10 @@ function AnalyzePageContent() {
   const [url, setUrl] = useState(urlParam || "");
   const [status, setStatus] = useState<"idle" | "loading" | "done">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [syncFailure, setSyncFailure] = useState<{
+    reason: AnalyzeFailureReason;
+    sourceUrl: string;
+  } | null>(null);
   const [progress, setProgress] = useState(0);
   const [stepIdx, setStepIdx] = useState(0);
   const router = useRouter();
@@ -100,6 +113,7 @@ function AnalyzePageContent() {
     }
 
     setError(null);
+    setSyncFailure(null);
     pendingResultRef.current = null;
     startTimeRef.current = Date.now();
     setProgress(0);
@@ -117,12 +131,30 @@ function AnalyzePageContent() {
 
       if (res.ok && data?.id) {
         pendingResultRef.current = data.id;
+        postFunnelEvent({
+          eventName: "analyze_form_submit",
+          analysisId: data.id,
+          path: "/analyze",
+          metadata: {
+            origin: "analyze",
+            reused: data.reused === true,
+          },
+        });
       } else if (res.status === 402) {
         setStatus("idle");
         setError(`Limita atinsa: ${data.used ?? "?"}/${data.max ?? "?"} analize luna aceasta. Upgradeaza pentru mai multe.`);
       } else if (res.status === 429) {
         setStatus("idle");
         setError("Prea multe cereri. Incearca din nou in cateva secunde.");
+      } else if (res.status === 400) {
+        setStatus("idle");
+        const r = isAnalyzeFailureReason(String(data?.reason)) ? (data.reason as AnalyzeFailureReason) : "extraction_failed";
+        setSyncFailure({ reason: r, sourceUrl: trimmed });
+        postFunnelEvent({
+          eventName: "analysis_failed",
+          path: "/analyze",
+          metadata: { reason: r },
+        });
       } else {
         setStatus("idle");
         setError(data?.error || "Analiza nu a putut fi pornita. Verifica URL-ul si incearca din nou.");
@@ -203,17 +235,32 @@ function AnalyzePageContent() {
   return (
     <div className="mx-auto max-w-[680px] px-5 py-16 md:py-24">
       <h1 className="text-[28px] md:text-[36px] font-bold tracking-tight text-gray-950">
-        Analizeaza un anunt
+        Analiză din link
       </h1>
       <p className="mt-2 text-[15px] text-gray-500">
-        Introdu un link de pe imobiliare.ro, storia.ro, olx.ro, publi24.ro, lajumate.ro sau homezz.ro si primesti estimare de pret, comparabile si analiza completa.
+        Lipește un anunț de pe un portal suportat. Vei primi mai întâi o previzualizare; raportul
+        complet și PDF se deblochează când alegi, conform ofertei tale.
       </p>
+      <ul className="mt-3 space-y-1.5 text-[14px] leading-relaxed text-gray-600">
+        {getAnalyzePortalExpectationLinesRo().map((line) => (
+          <li key={line} className="flex gap-2">
+            <span className="text-gray-400" aria-hidden>
+              ·
+            </span>
+            <span>{line}</span>
+          </li>
+        ))}
+      </ul>
 
       <form onSubmit={handleSubmit} className="mt-8">
         <div className="flex items-center gap-2 rounded-2xl border border-gray-200 bg-white p-2 shadow-sm transition-shadow duration-300 focus-within:shadow-md focus-within:border-gray-300">
           <input
             value={url}
-            onChange={(e) => { setUrl(e.target.value); setError(null); }}
+            onChange={(e) => {
+              setUrl(e.target.value);
+              setError(null);
+              setSyncFailure(null);
+            }}
             type="url"
             placeholder="https://www.imobiliare.ro/vanzare-apartamente/bucuresti/zona/apartament-de-vanzare-2-camere-XY12345"
             className="flex-1 bg-transparent text-[14px] text-gray-900 placeholder:text-gray-400 px-3 py-3 outline-none"
@@ -226,12 +273,28 @@ function AnalyzePageContent() {
           </button>
         </div>
 
-        {error && (
+        {error && !syncFailure && (
           <div className="mt-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-[13px] text-red-700">
             {error}
           </div>
         )}
+        {syncFailure && (
+          <div className="mt-4">
+            <AnalysisFailureRecovery
+              variant="analyze"
+              reason={syncFailure.reason}
+              sourceUrl={syncFailure.sourceUrl}
+            />
+          </div>
+        )}
+        <p className="mt-2 text-[12px] text-gray-500">
+          Portaluri acceptate: {SUPPORTED_LISTING_DOMAINS_RO.join(", ")}
+        </p>
       </form>
+
+      <div className="mt-8 max-w-lg">
+        <BuyerReportTrustNote variant="compact" className="text-gray-500" />
+      </div>
     </div>
   );
 }

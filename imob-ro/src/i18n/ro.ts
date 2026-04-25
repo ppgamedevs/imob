@@ -59,14 +59,14 @@ export const ro = {
 
   // === Report Page ===
   report: {
-    title: "Raport de evaluare",
-    subtitle: "Analiză completă pentru {address}",
+    title: "Raport de analiză piață",
+    subtitle: "Analiză pentru {address} (estimare orientativă, nu document de valoare negociată)",
 
     avm: {
       title: "Estimarea ta",
       range: "Interval estimat: {min}–{max}",
       recommendation:
-        "Recomandare: publică între {recMin}–{recMax} pentru timp de vânzare mai scurt",
+        "Sugestie: publică între {recMin}–{recMax} ca reper (nu garantează vânzarea într-un termen anume)",
       confidenceLow: "Date puține în zonă; interval mai larg decât de obicei",
       confidenceMedium: "Estimare bazată pe date moderate",
       confidenceHigh: "Estimare bazată pe date extinse din zonă",
@@ -74,7 +74,7 @@ export const ro = {
 
     tts: {
       title: "Timp de vânzare",
-      estimate: "Se vinde probabil în {min}–{max} zile la prețul curent",
+      estimate: "Se estimează {min}–{max} zile la prețul curent (medie, nu program la zi)",
       fast: "Prețul e aliniat cu cererea; interes ridicat în ultimele 30 zile",
       slow: "Cerere redusă sau preț mai mare decât media zonei",
       normal: "Timp de vânzare în medie pentru această zonă",
@@ -161,7 +161,7 @@ export const ro = {
     },
 
     roi: {
-      title: "Pregătește anunțul perfect",
+      title: "Pregătește anunțul bine scris",
       subtitle: "Îmbunătățiri care aduc mai mulți cumpărători",
 
       photos: {
@@ -314,7 +314,7 @@ export const ro = {
       kpis: "Estimări pentru această proprietate. Apasă pe ⓘ pentru explicații",
     },
     owners: {
-      checklist: "Urmează acești pași pentru un anunț perfect",
+      checklist: "Pași scurți ca să fie anunțul tău clar și atractiv",
     },
   },
 } as const;

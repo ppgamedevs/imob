@@ -27,7 +27,7 @@ export default function NotFound() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>• Verifică dacă URL-ul este scris corect</li>
               <li>• Mergi la pagina principală și caută informațiile dorite</li>
-              <li>• Folosește căutarea pentru a găsi proprietăți</li>
+              <li>• Verifică un anunț sau consultă ghidurile pentru cumpărători</li>
             </ul>
           </div>
 
@@ -36,7 +36,7 @@ export default function NotFound() {
               <Link href="/">Acasă</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/discover">Caută proprietăți</Link>
+              <Link href="/analyze">Verifică un anunț</Link>
             </Button>
           </div>
         </CardContent>

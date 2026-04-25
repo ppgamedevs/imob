@@ -4,6 +4,8 @@ export const metadata: Metadata = {
   title: "Cauta apartamente in Bucuresti - ImobIntel",
   description:
     "Cauta si compara apartamente din Bucuresti. Filtreaza dupa zona, pret, camere si suprafata. Date actualizate zilnic.",
+  /** UI demonstrativ: nu indexăm până la un feed real de listări. */
+  robots: { index: false, follow: true },
   openGraph: {
     title: "Cauta apartamente in Bucuresti",
     description: "Cauta si compara apartamente din Bucuresti cu date actualizate zilnic.",

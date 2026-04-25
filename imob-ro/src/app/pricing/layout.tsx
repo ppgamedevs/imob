@@ -1,19 +1,18 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Preturi si abonamente - ImobIntel",
+  title: "Prețuri - ImobIntel",
   description:
-    "Alege planul potrivit pentru tine: gratuit, Pro sau Agent. Analiza imobiliara completa, rapoarte PDF, comparabile si estimari de pret.",
+    "Deblocare o singură dată pentru raportul complet, pachet în curând, abonament Pro opțional. Fără evaluare oficială. Date publice, analiză orientativă.",
   openGraph: {
-    title: "Preturi si abonamente - ImobIntel",
-    description:
-      "Alege planul potrivit: gratuit, Pro sau Agent. Rapoarte complete de analiza imobiliara.",
+    title: "Prețuri - ImobIntel",
+    description: "Raport complet per plată, abonament Pro pentru utilizare intensă, dezvoltare transparentă a pachetului pe mai multe rapoarte.",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Preturi ImobIntel",
-    description: "Planuri gratuite si Pro pentru analiza imobiliara.",
+    title: "Prețuri ImobIntel",
+    description: "Deblocare per raport și abonament Pro, afișate clar.",
   },
   alternates: { canonical: "/pricing" },
 };

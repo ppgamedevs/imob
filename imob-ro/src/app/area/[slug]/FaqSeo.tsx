@@ -3,6 +3,7 @@
 import { ChevronDown } from "lucide-react";
 import * as React from "react";
 
+import { flags } from "@/lib/flags";
 import { cn } from "@/lib/utils";
 
 export interface FaqSeoProps {
@@ -69,12 +70,27 @@ export default function FaqSeo({ areaName, faq }: FaqSeoProps) {
               în timp real pentru a vă ajuta să luați cele mai bune decizii.
             </p>
             <p className="mt-4">
-              Folosiți filtrele din pagina{" "}
-              <a href="/discover" className="text-primary hover:underline">
-                Descoperă
-              </a>{" "}
-              pentru a găsi proprietăți în {areaName} care corespund criteriilor dvs. sau salvați
-              zona pentru a primi notificări când apar oferte noi.
+              {flags.discover ? (
+                <>
+                  Folosiți filtrele din pagina{" "}
+                  <a href="/discover" className="text-primary hover:underline">
+                    Descoperă
+                  </a>{" "}
+                  pentru a găsi oferte în {areaName} care corespund criteriilor dvs.
+                </>
+              ) : (
+                <>
+                  Vedeți o analiză orientativă din orice anunț cu{" "}
+                  <a href="/analyze" className="text-primary hover:underline">
+                    Verifică anunț
+                  </a>{" "}
+                  sau ghidurile de pe{" "}
+                  <a href="/ghid" className="text-primary hover:underline">
+                    /ghid
+                  </a>
+                  .
+                </>
+              )}
             </p>
           </div>
         </div>
