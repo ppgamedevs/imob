@@ -13,6 +13,10 @@ const envDomains = raw
  */
 function serverActionAllowedOrigins(): string[] {
   const hosts = new Set<string>(["localhost:3000", "127.0.0.1:3000"]);
+  /** Domeniul public prod (fără/cu www) — fallback dacă `NEXT_PUBLIC_SITE_URL` lipsește pe build. */
+  for (const h of ["imobintel.ro", "www.imobintel.ro"] as const) {
+    hosts.add(h);
+  }
 
   const list = process.env.SERVER_ACTION_ALLOWED_ORIGINS?.split(",")
     .map((s) => s.trim().toLowerCase())
